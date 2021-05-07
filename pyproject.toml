@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "qcrew-rl"
+name = "qcrew"
 version = "0.1.0"
 description = ""
 authors = ["Atharv Joshi <atharvjoshi@ymail.com>"]

@@ -1,1 +1,1 @@
-from qcrew_rl.helpers.logger import logger 
+from qcrew.helpers.logger import logger 

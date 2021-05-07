@@ -10,6 +10,7 @@ dash = "^1.20.0"
 PyYAML = "^5.4.1"
 dash-bootstrap-components = "^0.12.2"
 loguru = "^0.5.3"
+rpyc = "^5.0.1"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"

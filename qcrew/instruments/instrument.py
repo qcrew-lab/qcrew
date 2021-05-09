@@ -8,7 +8,7 @@ from typing import Any, NoReturn
 
 from qcrew.helpers import Yamlable
 
-STATUS_DICT = {"connected": False, "running": False, "staged": False}
+STATUS_DICT = {"staged": False}
 
 
 @dataclass
@@ -20,8 +20,7 @@ class Instrument(Yamlable):
     @property
     @abstractmethod
     def parameters(self) -> dict[str, Any]:
-        """
-        """
+        """ """
 
     @property
     def yaml_map(self) -> dict[str, Any]:
@@ -37,20 +36,18 @@ class PhysicalInstrument(Instrument):
     _handle: Any = field(default=None, init=False, repr=False, compare=False)
 
     def __post_init__(self):
+        self.status.update({"connected": False, "running": False})
         self._connect()
         self._initialize()
 
     @abstractmethod
     def _connect(self) -> NoReturn:
-        """
-        """
+        """ """
 
     @abstractmethod
     def _initialize(self) -> NoReturn:
-        """
-        """
+        """ """
 
     @abstractmethod
     def disconnect(self) -> NoReturn:
-        """
-        """
+        """ """

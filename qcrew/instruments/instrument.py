@@ -1,16 +1,18 @@
 """
-This module defines base classes for encapsulating instruments in qcrew's lab.
+This module defines abstract base classes for encapsulating instruments in qcrew's lab.
 TODO WRITE DOCUMENTATION
 """
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from dataclasses import asdict, dataclass, field, fields
 from typing import Any, NoReturn
+
+from qcrew.helpers import Yamlable
 
 STATUS_DICT = {"connected": False, "running": False, "staged": False}
 
 
 @dataclass
-class Instrument(ABC):
+class Instrument(Yamlable):
     status: dict[str, bool] = field(
         default_factory=STATUS_DICT.copy, init=False, compare=False
     )
@@ -18,7 +20,8 @@ class Instrument(ABC):
     @property
     @abstractmethod
     def parameters(self) -> dict[str, Any]:
-        pass
+        """
+        """
 
     @property
     def yaml_map(self) -> dict[str, Any]:
@@ -39,12 +42,15 @@ class PhysicalInstrument(Instrument):
 
     @abstractmethod
     def _connect(self) -> NoReturn:
-        pass
+        """
+        """
 
     @abstractmethod
     def _initialize(self) -> NoReturn:
-        pass
+        """
+        """
 
     @abstractmethod
     def disconnect(self) -> NoReturn:
-        pass
+        """
+        """

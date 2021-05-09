@@ -1,7 +1,6 @@
 """
 Configures loguru's logger.
 """
-import sys
 from pathlib import Path
 
 from loguru import logger

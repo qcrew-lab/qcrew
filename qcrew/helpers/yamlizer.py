@@ -6,15 +6,15 @@ TODO WRITE DOCUMENTATION
 from abc import ABCMeta, abstractmethod
 import yaml
 
-YAML_TAG_PREFIX = u"1"
+YAML_TAG_PREFIX = u"!"
 
 
 # use scientific notation if abs(value) >= threshold
 def sci_not_representer(dumper, value):
     """ """
-    threshold = 1e3
+    threshold = 1e3  # arbitrarily set
     yaml_float_tag = u"tag:yaml.org,2002:float"
-    value_in_sci_not = "{:.2e}".format(value) if abs(value) >= threshold else str(value)
+    value_in_sci_not = "{:.7E}".format(value) if abs(value) >= threshold else str(value)
     return dumper.represent_scalar(yaml_float_tag, value_in_sci_not)
 
 
@@ -34,13 +34,16 @@ class YamlableMetaclass(ABCMeta):
         # set a consistent format for subclass yaml tags
         cls.yaml_tag = YAML_TAG_PREFIX + name
 
-        # register loader(s) and dumper(s)
-        yaml.SafeLoader.add_constructor(cls.yaml_tag, cls.from_yaml)
-        yaml.SafeDumper.add_representer(cls, cls.to_yaml)
-        # custom dumper for representing float in scientific notation
-        yaml.SafeDumper.add_representer(float, sci_not_representer)
-        # custom dumper for always representing tuples and lists in flow style
-        yaml.SafeDumper.add_representer(list, sequence_representer)
+        # register safe loader and safe dumper
+        cls.yaml_loader, cls.yaml_dumper = yaml.SafeLoader, yaml.SafeDumper
+
+        # custom constructor and representer for Yamlable objects
+        cls.yaml_loader.add_constructor(cls.yaml_tag, cls.from_yaml)
+        cls.yaml_dumper.add_representer(cls, cls.to_yaml)
+        # customise dumper to represent float values in scientific notation
+        cls.yaml_dumper.add_representer(float, sci_not_representer)
+        # customise dumper to represent tuples and lists in flow style
+        cls.yaml_dumper.add_representer(list, sequence_representer)
 
 
 class Yamlable(metaclass=YamlableMetaclass):

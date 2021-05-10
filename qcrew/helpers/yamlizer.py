@@ -7,6 +7,8 @@ import inspect
 
 import yaml
 
+from qcrew.helpers import logit
+
 # use scientific notation if abs(value) >= threshold
 def sci_not_representer(dumper, value):
     """ """
@@ -49,6 +51,7 @@ class Yamlable(metaclass=YamlableMetaclass):
     """ """
 
     @property
+    @logit(with_args=True, with_result=True)
     def yaml_map(self):
         """ """
         init_args_dict = inspect.signature(self.__init__).parameters
@@ -56,12 +59,14 @@ class Yamlable(metaclass=YamlableMetaclass):
         return yaml_map
 
     @classmethod
+    @logit(with_result=True)
     def from_yaml(cls, loader, node):
         """ """
         yaml_map = loader.construct_mapping(node)
         return cls(**yaml_map)
 
     @classmethod
+    @logit
     def to_yaml(cls, dumper, data):
         """ """
         return dumper.represent_mapping(data.yaml_tag, data.yaml_map)

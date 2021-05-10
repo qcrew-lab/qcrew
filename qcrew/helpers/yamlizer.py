@@ -1,13 +1,11 @@
 """
 This module supports serializing and deserializing of those Python classes in qcrew
-that inherit from Yamlable and implement the `yaml_map` property.
+that inherit from Yamlable.
 TODO WRITE DOCUMENTATION
 """
-from abc import ABCMeta, abstractmethod
+import inspect
+
 import yaml
-
-YAML_TAG_PREFIX = u"!"
-
 
 # use scientific notation if abs(value) >= threshold
 def sci_not_representer(dumper, value):
@@ -25,14 +23,15 @@ def sequence_representer(dumper, value):
     return dumper.represent_sequence(yaml_seq_tag, value, flow_style=True)
 
 
-class YamlableMetaclass(ABCMeta):
+class YamlableMetaclass(type):
     """ """
 
     def __init__(cls, name, bases, kwds):
         super(YamlableMetaclass, cls).__init__(name, bases, kwds)
 
         # set a consistent format for subclass yaml tags
-        cls.yaml_tag = YAML_TAG_PREFIX + name
+        # cls.yaml_tag = YAML_TAG_PREFIX + name
+        cls.yaml_tag = name
 
         # register safe loader and safe dumper
         cls.yaml_loader, cls.yaml_dumper = yaml.SafeLoader, yaml.SafeDumper
@@ -50,9 +49,11 @@ class Yamlable(metaclass=YamlableMetaclass):
     """ """
 
     @property
-    @abstractmethod
     def yaml_map(self):
         """ """
+        init_args_dict = inspect.signature(self.__init__).parameters
+        yaml_map = {k: v for (k, v) in self.__dict__.items() if k in init_args_dict}
+        return yaml_map
 
     @classmethod
     def from_yaml(cls, loader, node):

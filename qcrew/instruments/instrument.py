@@ -3,7 +3,7 @@ This module defines abstract base classes for encapsulating instruments in qcrew
 TODO WRITE DOCUMENTATION
 """
 from abc import abstractmethod
-from dataclasses import asdict, dataclass, field, fields
+from dataclasses import dataclass, field
 from typing import Any, NoReturn
 
 from qcrew.helpers import Yamlable
@@ -21,13 +21,6 @@ class Instrument(Yamlable):
     @abstractmethod
     def parameters(self) -> dict[str, Any]:
         """ """
-
-    @property
-    def yaml_map(self) -> dict[str, Any]:
-        init_fields_filter = filter(lambda f: f.init, fields(self))
-        init_field_names = tuple(map(lambda f: f.name, init_fields_filter))
-        yaml_map = {k: v for (k, v) in asdict(self).items() if k in init_field_names}
-        return yaml_map
 
 
 @dataclass

@@ -4,18 +4,26 @@ TODO WRITE DOCUMENTATION
 """
 from abc import abstractmethod
 from dataclasses import dataclass, field
-from typing import Any, NoReturn
+from typing import Any, ClassVar, NoReturn
 
 from qcrew.helpers import Yamlable
-
-STATUS_DICT = {"staged": False, "connected": False, "running": False}  # explain these
 
 
 @dataclass
 class Instrument(Yamlable):
     """ """
 
-    _status: dict[str, Any] = field(default_factory=STATUS_DICT.copy, init=False)
+    # class variable defining the dictionary of statuses for Instrument objects
+    instrument_status_dict: ClassVar[dict[str, bool]] = {
+        "staged": False,
+        "connected": False,
+        "running": False,
+    }
+
+    _status: dict[str, Any] = field(  # to store statuses of this Instrument instance
+        default_factory=instrument_status_dict.copy, init=False
+    )
+
     _parameters: dict[str, Any] = field(default_factory=dict, init=False)
 
     @property

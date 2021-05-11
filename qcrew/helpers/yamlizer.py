@@ -51,11 +51,11 @@ class Yamlable(metaclass=YamlableMetaclass):
     """ """
 
     @property
-    @logit(with_args=True, with_result=True)
+    @logit(with_result=True)
     def yaml_map(self):
         """ """
         init_args_dict = inspect.signature(self.__init__).parameters
-        yaml_map = {k: v for (k, v) in self.__dict__.items() if k in init_args_dict}
+        yaml_map = {k: getattr(self, k) for k in init_args_dict}
         return yaml_map
 
     @classmethod

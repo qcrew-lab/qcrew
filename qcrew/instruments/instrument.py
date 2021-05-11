@@ -3,7 +3,7 @@ This module defines abstract base classes for encapsulating instruments in qcrew
 TODO WRITE DOCUMENTATION
 """
 from abc import abstractmethod
-from dataclasses import dataclass, field, InitVar
+from dataclasses import dataclass, field
 from typing import Any, NoReturn
 
 from qcrew.helpers import Yamlable
@@ -13,6 +13,8 @@ STATUS_DICT = {"staged": False, "connected": False, "running": False}  # explain
 
 @dataclass
 class Instrument(Yamlable):
+    """ """
+
     _status: dict[str, Any] = field(default_factory=STATUS_DICT.copy, init=False)
     _parameters: dict[str, Any] = field(default_factory=dict, init=False)
 
@@ -31,6 +33,8 @@ class Instrument(Yamlable):
 
 @dataclass
 class PhysicalInstrument(Instrument):
+    """ """
+
     id: Any  # OK to shadow built-in `id` as instrument ids ought to be unique
 
     @abstractmethod

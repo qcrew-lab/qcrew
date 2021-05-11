@@ -3,7 +3,7 @@ Python driver for Vaunix Signal Generator LMS (LabBrick).
 """
 
 from dataclasses import InitVar, dataclass, field
-from typing import Any, NoReturn, Union
+from typing import Any, ClassVar, NoReturn, Union
 
 from qcrew.helpers import logger
 from qcrew.instruments import PhysicalInstrument
@@ -18,17 +18,20 @@ from qcrew.instruments.vaunix.labbrick_api import (
     vnx_set_use_internal_ref,
 )
 
-PARAM_DICT = {"frequency": None, "power": None}
-
 
 @dataclass
 class LabBrick(PhysicalInstrument):
     """ """
 
+    # class variable defining the dictionary of parameters for LabBrick objects
+    labbrick_param_dict: ClassVar[dict[str, Any]] = {"frequency": None, "power": None}
+
     frequency: InitVar[float]
     power: InitVar[float]
 
-    _parameters: dict[str, Any] = field(default_factory=PARAM_DICT.copy, init=False)
+    _parameters: dict[str, Any] = field(  # stores parameters of this LabBrick instance
+        default_factory=labbrick_param_dict.copy, init=False
+    )
     _handle: int = field(default=None, init=False, repr=False)
 
     def __post_init__(self, frequency: float, power: float) -> NoReturn:

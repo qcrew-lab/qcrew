@@ -18,11 +18,13 @@ logger.remove()
 
 # register log sinks with loguru logger
 logger.add(
-    LOG_FOLDER_PATH / "log_{time:YYYYMMDD}.log",  # log file
-    rotation="00:00",  # new log file will be created every day at midnight
-    level="TRACE",  # save trace level logs for developers
+    LOG_FOLDER_PATH / "session_{time:YYYY-MM-DD_HH-mm-ss}.log",  # new log file
+    rotation="6 hours",  # current log file closed and new one started every 6 hours
+    retention="1 week",  # log files created more than a week ago will be removed
+    level="TRACE",  # save up to "TRACE" level logs for debugging
+    backtrace=False,  # no need to save exception trace beyond catching point
 )
-logger.add(sys.stderr, level="INFO")  # send info level logs for users
+logger.add(sys.stderr, level="INFO")  # send logs with level "INFO" or higher to users
 
 logger.info("Logger activated")  # log first message
 

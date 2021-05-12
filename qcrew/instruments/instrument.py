@@ -13,14 +13,15 @@ from qcrew.helpers import Yamlable
 class Instrument(Yamlable):
     """ """
 
-    # class variable defining the default status dict for Instrument objects
+    # class variable defining the status keys for Instrument objects
     _status_dict: ClassVar[dict[str, bool]] = {"staged": False}
+    # class variable defining the default parameter set for Instrument objects
+    _parameters: ClassVar[dict[str]] = set()
 
     # subclasses to override these dictionaries as they deem fit
-    _status: dict[str, Any] = field(
+    _status: dict[str, bool] = field(
         default_factory=_status_dict.copy, init=False, repr=False
     )
-    _parameters: dict[str, Any] = field(default_factory=dict, init=False, repr=False)
 
     @property
     def status(self) -> dict[str, Any]:
@@ -34,14 +35,14 @@ class Instrument(Yamlable):
         """ """
         # condition - every key in self._parameters must be an instance attribute
         # subclasses are responsible for defining the attribute getter
-        return {k: getattr(self, k) for k in self._parameters}
+        return {param: getattr(self, param) for param in self._parameters}
 
 
 @dataclass
 class PhysicalInstrument(Instrument):
     """ """
 
-    # class variable defining the default status dict for PhysicalInstrument objects
+    # class variable defining the status keys for PhysicalInstrument objects
     _status_dict: ClassVar[dict[str, bool]] = {
         "staged": False,
         "connected": False,
@@ -49,7 +50,7 @@ class PhysicalInstrument(Instrument):
     }
 
     # stores statuses of this instance
-    _status: dict[str, Any] = field(default_factory=_status_dict.copy, init=False)
+    _status: dict[str, bool] = field(default_factory=_status_dict.copy, init=False)
 
     id: Any  # OK to shadow built-in `id` as instrument ids ought to be unique
 

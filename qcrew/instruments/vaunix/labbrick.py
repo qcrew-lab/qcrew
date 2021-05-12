@@ -22,16 +22,12 @@ from qcrew.instruments.vaunix.labbrick_api import (
 @dataclass
 class LabBrick(PhysicalInstrument):
     """ """
-
-    # class variable defining the dictionary of parameters for LabBrick objects
-    _parameters_dict: ClassVar[dict[str, Any]] = {"frequency": None, "power": None}
+    # class variable defining the parameter set for LabBrick objects
+    _parameters: ClassVar[set[str]] = {"frequency", "power"}
 
     frequency: InitVar[float]
     power: InitVar[float]
 
-    _parameters: dict[str, Any] = field(  # stores parameters of this LabBrick instance
-        default_factory=_parameters_dict.copy, init=False
-    )
     _handle: int = field(default=None, init=False, repr=False)
 
     def __post_init__(self, frequency: float, power: float) -> NoReturn:
@@ -84,7 +80,6 @@ class LabBrick(PhysicalInstrument):
             logger.exception("LB{} failed to get frequency", self.id)
             raise
         else:
-            self._parameters["frequency"] = current_frequency
             logger.success("LB{} got frequency {:.7E} Hz", self.id, current_frequency)
             return current_frequency
 
@@ -99,7 +94,6 @@ class LabBrick(PhysicalInstrument):
             logger.exception("LB{} failed to set frequency", self.id)
             raise
         else:
-            self._parameters["frequency"] = current_frequency
             logger.success("LB{} set frequency {:.7E} Hz", self.id, current_frequency)
 
     # pylint: disable=function-redefined, intentional shadowing of InitVar
@@ -113,7 +107,6 @@ class LabBrick(PhysicalInstrument):
             logger.exception("LB{} failed to get power", self.id)
             raise
         else:
-            self._parameters["power"] = current_power
             logger.success("LB{} got power {} dBm", self.id, current_power)
             return current_power
 
@@ -128,7 +121,6 @@ class LabBrick(PhysicalInstrument):
             logger.exception("LB{} failed to set power", self.id)
             raise
         else:
-            self._parameters["power"] = current_power
             logger.success("LB{} set power {} dBm", self.id, current_power)
 
     def disconnect(self):

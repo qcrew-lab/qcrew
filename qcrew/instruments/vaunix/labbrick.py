@@ -24,13 +24,13 @@ class LabBrick(PhysicalInstrument):
     """ """
 
     # class variable defining the dictionary of parameters for LabBrick objects
-    labbrick_param_dict: ClassVar[dict[str, Any]] = {"frequency": None, "power": None}
+    _parameters_dict: ClassVar[dict[str, Any]] = {"frequency": None, "power": None}
 
     frequency: InitVar[float]
     power: InitVar[float]
 
     _parameters: dict[str, Any] = field(  # stores parameters of this LabBrick instance
-        default_factory=labbrick_param_dict.copy, init=False
+        default_factory=_parameters_dict.copy, init=False
     )
     _handle: int = field(default=None, init=False, repr=False)
 
@@ -73,6 +73,8 @@ class LabBrick(PhysicalInstrument):
             "LB{} RF is {state}".format(self.id, state="ON" if toggle else "OFF")
         )
 
+    # pylint: disable=function-redefined, intentional shadowing of InitVar
+
     @property  # frequency getter
     def frequency(self) -> float:
         """ """
@@ -86,6 +88,8 @@ class LabBrick(PhysicalInstrument):
             logger.success("LB{} got frequency {:.7E} Hz", self.id, current_frequency)
             return current_frequency
 
+    # pylint: enable=function-redefined
+
     @frequency.setter
     def frequency(self, new_frequency: Union[int, float]) -> NoReturn:
         """ """
@@ -97,6 +101,8 @@ class LabBrick(PhysicalInstrument):
         else:
             self._parameters["frequency"] = current_frequency
             logger.success("LB{} set frequency {:.7E} Hz", self.id, current_frequency)
+
+    # pylint: disable=function-redefined, intentional shadowing of InitVar
 
     @property  # power getter
     def power(self) -> float:
@@ -110,6 +116,8 @@ class LabBrick(PhysicalInstrument):
             self._parameters["power"] = current_power
             logger.success("LB{} got power {} dBm", self.id, current_power)
             return current_power
+
+    # pylint: enable=function-redefined
 
     @power.setter
     def power(self, new_power: Union[int, float]) -> NoReturn:

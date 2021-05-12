@@ -97,7 +97,7 @@ def vnx_get_min_power(device_handle: int) -> float:
 
 def vnx_get_power(device_handle: int) -> float:
     power = VNX.fnLMS_GetAbsPowerLevel(device_handle) * POW_SCALAR
-    if power < -1e3:  # return values more negative than min power indicate read error
+    if power < -1e5:  # return values more negative than min power indicate read error
         raise ValueError("Got bad power value {} dBm".format(power))
     return power
 

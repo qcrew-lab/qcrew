@@ -23,7 +23,7 @@ from qcrew.instruments.vaunix.labbrick_api import (
 class LabBrick(PhysicalInstrument):
     """ """
     # class variable defining the parameter set for LabBrick objects
-    _parameters: ClassVar[set[str]] = {"frequency", "power"}
+    _parameters: ClassVar[frozenset[str]] = frozenset(["frequency", "power"])
 
     frequency: InitVar[float]
     power: InitVar[float]

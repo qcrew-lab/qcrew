@@ -16,7 +16,7 @@ class Instrument(Yamlable):
     # class variable defining the status keys for Instrument objects
     _status_dict: ClassVar[dict[str, bool]] = {"staged": False}
     # class variable defining the default parameter set for Instrument objects
-    _parameters: ClassVar[dict[str]] = set()
+    _parameters: ClassVar[frozenset[str]] = frozenset()
 
     # subclasses to override these dictionaries as they deem fit
     _status: dict[str, bool] = field(

@@ -28,12 +28,4 @@ class Stage(SimpleNamespace):
     """
     TODO write docu
     """
-
-    def __init__(self, **instruments):
-        for instrument in instruments:
-            if not isinstance(instrument, Instrument):
-                # throw warning
-                # remove key from instruments
-                # continue
-                pass
-        self._instruments = instruments
+    

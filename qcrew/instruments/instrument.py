@@ -6,19 +6,21 @@ from abc import abstractmethod
 from dataclasses import dataclass, field
 from typing import Any, ClassVar, NoReturn
 
-from qcrew.helpers import Yamlable
+from qcrew.helpers.yamlizer import Yamlable
 
 
 @dataclass
 class Instrument(Yamlable):
     """ """
 
+    # subclasses to override these _status_dict and _parameters as they deem fit
+
     # class variable defining the status keys for Instrument objects
-    _status_dict: ClassVar[dict[str, bool]] = {"staged": False}
+    _status_dict: ClassVar[dict[str, bool]] = dict()
     # class variable defining the default parameter set for Instrument objects
     _parameters: ClassVar[frozenset[str]] = frozenset()
 
-    # subclasses to override these dictionaries as they deem fit
+    # stores statuses of this Instrument instance
     _status: dict[str, bool] = field(
         default_factory=_status_dict.copy, init=False, repr=False
     )
@@ -36,6 +38,8 @@ class Instrument(Yamlable):
         # condition - every key in self._parameters must be an instance attribute
         # subclasses are responsible for defining the attribute getter
         return {param: getattr(self, param) for param in self._parameters}
+
+    # TODO parameters.setter
 
 
 @dataclass

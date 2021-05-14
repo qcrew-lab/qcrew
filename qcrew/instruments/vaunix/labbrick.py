@@ -3,7 +3,7 @@ Python driver for Vaunix Signal Generator LMS (LabBrick).
 """
 
 from dataclasses import InitVar, dataclass, field
-from typing import Any, ClassVar, NoReturn, Union
+from typing import ClassVar, NoReturn, Union
 
 from qcrew.helpers import logger
 from qcrew.instruments import PhysicalInstrument
@@ -22,6 +22,7 @@ from qcrew.instruments.vaunix.labbrick_api import (
 @dataclass
 class LabBrick(PhysicalInstrument):
     """ """
+
     # class variable defining the parameter set for LabBrick objects
     _parameters: ClassVar[frozenset[str]] = frozenset(["frequency", "power"])
 
@@ -69,7 +70,7 @@ class LabBrick(PhysicalInstrument):
             "LB{} RF is {state}".format(self.id, state="ON" if toggle else "OFF")
         )
 
-    # pylint: disable=function-redefined, intentional shadowing of InitVar
+    # pylint: disable=function-redefined, intentional shadowing of InitVar frequency
 
     @property  # frequency getter
     def frequency(self) -> float:
@@ -96,7 +97,7 @@ class LabBrick(PhysicalInstrument):
         else:
             logger.success("LB{} set frequency {:.7E} Hz", self.id, current_frequency)
 
-    # pylint: disable=function-redefined, intentional shadowing of InitVar
+    # pylint: disable=function-redefined, intentional shadowing of InitVar power
 
     @property  # power getter
     def power(self) -> float:

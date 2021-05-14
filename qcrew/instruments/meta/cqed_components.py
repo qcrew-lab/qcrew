@@ -14,51 +14,33 @@ class IQMixer(Instrument):
     _status_dict: ClassVar[dict[str, bool]] = {"staged": False, "tuned": False}
     # class variable defining the parameter set for IQMixer objects
     _parameters: ClassVar[frozenset[str]] = frozenset(["name", "offsets"])
-    # class variable defining the keys of the offsets dictionary of IQMixer objects
-    _offsets_keys: ClassVar[frozenset[str]] = frozenset(["I", "Q", "G", "P"])
+    # class variable defining the default offsets dictionary of IQMixer objects
+    _default_offsets_dict: ClassVar[dict[str, float]] = {
+        "I": 0.0,  # DC offset applied by a OPX AO port to the I port of the IQMixer
+        "Q": 0.0,  # DC offset applied by a OPX AO port to the Q port of the IQMixer
+        "G": 0.0,  # offset used by OPX to correct the gain imbalance of the IQMixer
+        "P": 0.0,  # offset used by OPX to correct the phase imbalance of the IQMixer
+    }
 
     # stores statuses of this instance
     _status: dict[str, Any] = field(default_factory=_status_dict.copy, init=False)
 
     # getters for this instance's parameterss
-    name: str
-    offsets: dict[str, float]
+    name: str = field(default=None)
+    offsets: dict[str, float] = field(default_factory=_default_offsets_dict.copy)
 
     def __post_init__(self) -> NoReturn:
         """ """
-        try:
-            self._validate_offsets_keys()
-        except (TypeError, ValueError):
-            logger.exception("Failed to validate {} offsets", self.name)
-            raise
-        else:
-            logger.success(
-                "Created {} with name: {}, offsets: {} ",
-                type(self).__name__,
-                self.name,
-                self.offsets,
-            )
-
-    def _validate_offsets_keys(self) -> NoReturn:
-        """ """
-        if not isinstance(self.offsets, dict):
-            raise TypeError(
-                "offsets must be of {}, not {}".format(dict, type(self.offsets))
-            )
-        elif not self.offsets:
-            logger.warning("{} initialized with no offsets", type(self).__name__)
-        elif not set(self.offsets).issubset(self._offsets_keys):  # not a subset
-            raise ValueError(
-                "Expect offset keys from {}, got invalid {}".format(
-                    self._offsets_keys, set(self.offsets) - self._offsets_keys
-                )
-            )
-        elif not set(self.offsets) < self._offsets_keys:  # not a proper subset
-            logger.warning(
-                "{} not initialized with all offsets {}",
-                type(self).__name__,
-                self._offsets_keys,
-            )
+        logger.info(
+            "Created {} with name: {}, offsets: {} ",
+            type(self).__name__,
+            self.name,
+            self.offsets,
+        )
+        if self.name is None:
+            logger.warning("{} name initialized as {}", type(self).__name__, None)
+        if self.offsets == self._default_offsets_dict:
+            logger.warning("{} initialized with default offsets", type(self).__name__)
 
 
 @dataclass
@@ -69,7 +51,8 @@ class QuantumElement(Instrument):
     _parameters: ClassVar[frozenset[str]] = frozenset(
         [
             "name",  # a unique name describing the QuantumElement
-            "lo_freq",  # frequency of the local oscillator driving the QuantumElement
+            "lo_freq",  # frequency of local oscillator driving the QuantumElement
+            "lo_power",  # output power of local oscillator driving the QuantumElement
             "int_freq",  # intermediate frequency driving the QuantumElement
             "ports",  # input and output ports of the QuantumElement
             "mixer",  # the IQMixer object associated with the QuantumElement
@@ -77,45 +60,37 @@ class QuantumElement(Instrument):
         ]
     )
 
-    # define valid key combinations of the ports dict of QuantumElement objects
-    # this class variable is meant to be overriden by subclasses
-    _ports_keys: ClassVar[frozenset[str]] = frozenset()
-
     name: str
     lo: LabBrick
     int_freq: Union[int, float]
     ports: dict[str, int]
     mixer: IQMixer = field(default=None)
-    operations: dict  # TODO operations is a dict of str keys and pulse values
+    # operations: dict  TODO operations is a dict of str keys and pulse values
 
-    def _validate_parameters(self):
+    def _validate_parameters(self) -> NoReturn:
+        """ """
         try:
             self._validate_lo()
-            self._validate_ports_keys()
             self._validate_mixer()
-        except (TypeError, ValueError):
+        except TypeError:
             logger.exception("Failed to validate {} parameters", self.name)
             raise
         else:
             logger.success(
-                "Created {} with name: {} and supplied parameters",
+                "Created {} with name: {}, get current state by calling .parameters",
                 type(self).__name__,
                 self.name,
             )
 
-    def _validate_lo(self):
+    def _validate_lo(self) -> NoReturn:
+        """ """
         if not isinstance(self.lo, LabBrick):
             raise TypeError("Expect lo of {}, got {}".format(LabBrick, type(self.lo)))
 
-    """def _validate_ports_keys(self):
-        if not isinstance(self.ports, dict):
-            raise TypeError(
-                "ports must be of {}, not {}".format(dict, type(self.offsets))
-            )"""
-
-    def _validate_mixer(self):
+    def _validate_mixer(self) -> NoReturn:
+        """ """
         if self.mixer is None:
-            logger.warning("{} not initialized with a mixer", self.name)
+            logger.warning("{} initialized without an {}", self.name, IQMixer.__name__)
         elif not isinstance(self.mixer, IQMixer):
             raise TypeError(
                 "Expect mixer of {}, got {}".format(IQMixer, type(self.mixer))
@@ -131,13 +106,22 @@ class QuantumElement(Instrument):
         """ """
         self.lo.frequency = new_frequency
 
+    @property  # lo_power getter
+    def lo_power(self) -> float:
+        """ """
+        return self.lo.power
+
+    @lo_power.setter
+    def lo_power(self, new_power: Union[int, float]) -> NoReturn:
+        """ """
+        self.lo.power = new_power
+
 
 @dataclass
-class Qubit(Instrument):
+class Qubit(QuantumElement):
     """ """
 
-    # define valid key combinations of the ports dict of Qubit objects
-    _ports_keys: ClassVar[set[str]] = set()
+    # define default operations dict
 
     def __post_init__(self) -> NoReturn:
         """ """
@@ -145,21 +129,75 @@ class Qubit(Instrument):
 
 
 @dataclass
-class ReadoutResonator(Instrument):
+class ReadoutResonator(QuantumElement):
     """ """
 
-    # define valid key combinations of the ports dict of ReadoutResonator objects
-    _ports_keys: ClassVar[set[str]] = set()
+    # define default operations dict
 
-    # qubit params AND tof, smearing, ro-related-params
+    time_of_flight: int = field(default=180)
+    smearing: int = field(default=0)
 
     def __post_init__(self) -> NoReturn:
         """ """
         self._validate_parameters()
+        if self.time_of_flight == 180:
+            logger.warning(
+                "{} {} time of flight set to default value {}ns",
+                type(self).__name__,
+                self.name,
+                self.time_of_flight,
+            )
+        if self.smearing == 0:
+            logger.warning(
+                "{} {} smearing set to default value {}ns",
+                type(self).__name__,
+                self.name,
+                self.smearing,
+            )
 
 
 @dataclass
 class QuantumDevice(Instrument):
     """ """
 
-    # container class, sets statuses for all meta-instruments it is composed of
+    # class variable defining the status keys for QuantumDevice objects
+    _status_dict: ClassVar[dict[str, bool]] = {"staged": False, "measuring": False}
+    # class variable defining the parameter set for QuantumDevice objects
+    _parameters: ClassVar[frozenset[str]] = frozenset(
+        [
+            "name",  # a unique name describing the QuantumDevice
+            "elements",  # set of QuantumElements that are part of the QuantumDevice
+        ]
+    )
+
+    name: str
+    elements: set[QuantumElement]
+
+    def __post_init__(self) -> NoReturn:
+        """ """
+        try:
+            self._validate_elements()
+        except TypeError:
+            logger.exception("Failed to validate {} parameters", self.name)
+            raise
+        else:
+            logger.success(
+                "Created {} with name: {}, get current state by calling .parameters",
+                type(self).__name__,
+                self.name,
+            )
+
+    def _validate_elements(self):
+        """ """
+        if not isinstance(self.elements, set):
+            raise TypeError(
+                "Expect elements container of {}, got {}".format(
+                    set, type(self.elements)
+                )
+            )
+
+        for element in self.elements:
+            if not isinstance(element, QuantumElement):
+                raise TypeError(
+                    "Expect element of {}, got {}".format(QuantumElement, type(element))
+                )

@@ -1,52 +1,168 @@
-""" """
-from dataclasses import dataclass, field
+"""
+TODO write proper docu
+TODO refactor param checks & logging with DRY
+"""
+from dataclasses import asdict, dataclass, field, InitVar
 from typing import Any, ClassVar, NoReturn, Union
 
 from qcrew.helpers import logger
+from qcrew.helpers.pulsemaker import (
+    Pulse,
+    DEFAULT_CW_PULSE,
+    DEFAULT_GAUSSIAN_PULSE,
+    DEFAULT_READOUT_PULSE,
+)
 from qcrew.instruments import Instrument, LabBrick
 
 
-@dataclass
+@dataclass(repr=False, eq=False)
+class IQMixerOffsets:
+    """ """
+
+    # class variable defining the keyset of the offsets of IQMixer objects
+    keyset: ClassVar[frozenset[str]] = frozenset(["I", "Q", "G", "P"])
+
+    # pylint: disable=invalid-name
+    # these names have specific meanings that are well understood by qcrew
+
+    # DC offset applied by a OPX AO port to the I port of the IQMixer
+    I: float = field(default=0.0)
+    # DC offset applied by a OPX AO port to the Q port of the IQMixer
+    Q: float = field(default=0.0)
+    # offset used by OPX to correct the gain imbalance of the IQMixer
+    G: float = field(default=0.0)
+    # offset used by OPX to correct the phase imbalance of the IQMixer
+    P: float = field(default=0.0)
+
+    # pylint: enable=invalid-name
+
+
+@dataclass(eq=False)
 class IQMixer(Instrument):
     """ """
 
     # class variable defining the status keys for IQMixer objects
-    _status_dict: ClassVar[dict[str, bool]] = {"staged": False, "tuned": False}
+    _status_dict: ClassVar[dict[str, bool]] = {"tuned": False}
     # class variable defining the parameter set for IQMixer objects
     _parameters: ClassVar[frozenset[str]] = frozenset(["name", "offsets"])
-    # class variable defining the default offsets dictionary of IQMixer objects
-    _default_offsets_dict: ClassVar[dict[str, float]] = {
-        "I": 0.0,  # DC offset applied by a OPX AO port to the I port of the IQMixer
-        "Q": 0.0,  # DC offset applied by a OPX AO port to the Q port of the IQMixer
-        "G": 0.0,  # offset used by OPX to correct the gain imbalance of the IQMixer
-        "P": 0.0,  # offset used by OPX to correct the phase imbalance of the IQMixer
-    }
+    # class variable defining the naming convention for IQMixer objects
+    default_name_prefix: ClassVar[str] = "mixer_"
 
     # stores statuses of this instance
     _status: dict[str, Any] = field(default_factory=_status_dict.copy, init=False)
 
-    # getters for this instance's parameterss
-    name: str = field(default=None)
-    offsets: dict[str, float] = field(default_factory=_default_offsets_dict.copy)
+    # getters for this instance's parameters
+    name: str
+    offsets: InitVar[dict[str, float]]
 
-    def __post_init__(self) -> NoReturn:
+    def __post_init__(self, offsets: dict[str, float]) -> NoReturn:
         """ """
+        self._offsets = self._create_offsets(offsets)
         logger.info(
             "Created {} with name: {}, offsets: {} ",
             type(self).__name__,
             self.name,
             self.offsets,
         )
-        if self.name is None:
-            logger.warning("{} name initialized as {}", type(self).__name__, None)
-        if self.offsets == self._default_offsets_dict:
-            logger.warning("{} initialized with default offsets", type(self).__name__)
+
+    def _create_offsets(self, initial_offsets: dict[str, float]) -> IQMixerOffsets:
+        """ """
+        if not isinstance(initial_offsets, dict) or not initial_offsets:
+            # user did not give any offsets
+            logger.warning(
+                "No {} offsets given, creating default offsets...", type(self).__name__
+            )
+            return IQMixerOffsets()
+        elif set(initial_offsets) == IQMixerOffsets.keyset:  # got all valid offsets
+            return IQMixerOffsets(**initial_offsets)
+        elif set(initial_offsets) < IQMixerOffsets.keyset:  # got some valid offsets
+            logger.warning(
+                "Setting default values for unspecified {} offsets...",
+                type(self).__name__,
+            )
+            return IQMixerOffsets(**initial_offsets)
+        else:  # got partially valid offsets dict
+            logger.warning(
+                "Got invalid {} offsets keys, will be ignored...", type(self).__name__
+            )
+            valid_offsets = dict()
+            for key in IQMixerOffsets.keyset:
+                if key in initial_offsets:
+                    valid_offsets[key] = initial_offsets[key]
+                else:
+                    logger.warning(
+                        "No {} offset given for {}, setting default value...",
+                        key,
+                        type(self).__name__,
+                    )
+            return IQMixerOffsets(**valid_offsets)
+
+    # pylint: disable=function-redefined, intentional shadowing of InitVar offsets
+
+    @property  # offsets getter
+    def offsets(self) -> dict[str, float]:
+        """ """
+        return asdict(self._offsets)
+
+    # pylint: enable=function-redefined
+
+    @offsets.setter
+    def offsets(self, new_offset: tuple[str, float]) -> NoReturn:
+        """ """
+        # e.g. of a valid new_offset argument: ("I", 0.25)
+        try:
+            if hasattr(self._offsets, new_offset[0]):
+                setattr(self._offsets, new_offset[0], new_offset[1])
+            else:
+                logger.warning("Got invalid offset key {}, ignored!", new_offset[0])
+        except (TypeError, KeyError, IndexError):
+            logger.exception(
+                "Setter expects {} with first value one of {} and second value of {}",
+                tuple,
+                IQMixerOffsets.keyset,
+                float,
+            )
+            raise
+        else:
+            logger.success(
+                "Set {} {} offset {} to {}",
+                type(self).__name__,
+                self.name,
+                new_offset[0],
+                new_offset[1],
+            )
+
+
+@dataclass(repr=False, eq=False)
+class QuantumElementPorts:
+    """ """
+
+    # pylint: disable=invalid-name
+    # these names have specific meanings that are well understood by qcrew
+
+    # OPX AO port connected to I port of this QuantumElement's IQMixer
+    I: int = field(default=None)
+    # OPX AO port connected to Q port of this QuantumElement's IQMixer
+    Q: int = field(default=None)
+    # single OPX AO port connected to this QuantumElement
+    inp: int = field(default=None)
+    # OPX AI port that the output of this QuantumElement is fed to
+    out: int = field(default=None)
+
+    # pylint: enable=invalid-name
+
+    @property  # has_mix_inputs getter
+    def has_mix_inputs(self) -> bool:
+        """ """
+        return self.I is not None and self.Q is not None
 
 
 @dataclass
 class QuantumElement(Instrument):
     """ """
 
+    # class variable defining the status keys for QuantumDevice objects
+    _status_dict: ClassVar[dict[str, bool]] = {"calibrated": False}
     # class variable defining the parameter set for QuantumElement objects
     _parameters: ClassVar[frozenset[str]] = frozenset(
         [
@@ -55,46 +171,117 @@ class QuantumElement(Instrument):
             "lo_power",  # output power of local oscillator driving the QuantumElement
             "int_freq",  # intermediate frequency driving the QuantumElement
             "ports",  # input and output ports of the QuantumElement
-            "mixer",  # the IQMixer object associated with the QuantumElement
+            "mixer",  # the IQMixer object (if any) associated with the QuantumElement
             "operations",  # the operations that can be performed on the QuantumElement
         ]
     )
+    # class variable defining the default operations for QuantumElement objects
+    _default_operations: ClassVar[dict[str, Pulse]] = {"CW": DEFAULT_CW_PULSE}
+
+    # stores statuses of this instance
+    _status: dict[str, Any] = field(default_factory=_status_dict.copy, init=False)
 
     name: str
     lo: LabBrick
     int_freq: Union[int, float]
-    ports: dict[str, int]
-    mixer: IQMixer = field(default=None)
-    # operations: dict  TODO operations is a dict of str keys and pulse values
+    mixer: IQMixer = field(default=None)  # will be created based on ports
+    operations: dict[str, Pulse] = field(default_factory=_default_operations.copy)
 
-    def _validate_parameters(self) -> NoReturn:
+    def _create_ports(self, initial_ports: dict[str, int]) -> QuantumElementPorts:
+        """ """
+        is_valid_ports = (
+            isinstance(initial_ports, dict)
+            and set(initial_ports) in self._ports_keysets
+        )
+
+        if is_valid_ports:
+            return QuantumElementPorts(**initial_ports)
+        elif not isinstance(initial_ports, dict):
+            logger.exception("Expected ports of {}, got {}", dict, type(initial_ports))
+            raise TypeError("ports must be {}".format(dict))
+        elif not set(initial_ports) in self._ports_keysets:
+            logger.exception(
+                "Set of keys in ports must be equal to one of {}", self._ports_keysets
+            )
+            raise ValueError("Invalid keys found in ports")
+
+    def _check_parameters(self) -> NoReturn:
         """ """
         try:
-            self._validate_lo()
-            self._validate_mixer()
+            self._check_lo()
+            self._check_mixer()
+            self._check_operations()
         except TypeError:
-            logger.exception("Failed to validate {} parameters", self.name)
+            logger.exception(
+                "Failed to validate {} {} parameters", type(self).__name__, self.name
+            )
             raise
         else:
-            logger.success(
+            logger.info(
                 "Created {} with name: {}, get current state by calling .parameters",
                 type(self).__name__,
                 self.name,
             )
 
-    def _validate_lo(self) -> NoReturn:
+    def _check_lo(self) -> NoReturn:
         """ """
         if not isinstance(self.lo, LabBrick):
             raise TypeError("Expect lo of {}, got {}".format(LabBrick, type(self.lo)))
 
-    def _validate_mixer(self) -> NoReturn:
+    def _check_mixer(self) -> NoReturn:
         """ """
-        if self.mixer is None:
-            logger.warning("{} initialized without an {}", self.name, IQMixer.__name__)
-        elif not isinstance(self.mixer, IQMixer):
+        if self._ports.has_mix_inputs:
+            if self.mixer is None:
+                logger.info(
+                    "{} {} with mix inputs initialized without {}, creating one now...",
+                    type(self).__name__,
+                    self.name,
+                    IQMixer.__name__,
+                )
+                self.mixer = IQMixer(name=IQMixer.default_name_prefix + self.name)
+            elif not isinstance(self.mixer, IQMixer):
+                raise TypeError(
+                    "Expect mixer of {}, got {}".format(IQMixer, type(self.mixer))
+                )
+        else:
+            if self.mixer is not None:
+                self.mixer = None
+                logger.warning(
+                    "{} {} with single input initialized with {}, setting it to {}",
+                    type(self).__name__,
+                    self.name,
+                    IQMixer.__name__,
+                    None,
+                )
+
+    def _check_operations(self) -> NoReturn:
+        """ """
+        if not isinstance(self.operations, dict):
             raise TypeError(
-                "Expect mixer of {}, got {}".format(IQMixer, type(self.mixer))
+                "Expect operations of {}, got {}".format(dict, type(self.operations))
             )
+
+        for name, operation in self.operations.items():
+            if not isinstance(name, str):
+                raise TypeError(
+                    "Expect operation name of {}, got {}".format(str, type(name))
+                )
+            if not isinstance(operation, Pulse):
+                raise TypeError(
+                    "Expect operation of {}, got {}".format(Pulse, type(operation))
+                )
+
+    @property  # has_valid_operations getter
+    def has_valid_operations(self) -> bool:
+        try:
+            self._check_operations()
+        except TypeError:
+            logger.warning(
+                "Failed to validate {} {} operations", type(self).__name__, self.name
+            )
+            return False
+        else:
+            return True
 
     @property  # lo_freq getter
     def lo_freq(self) -> float:
@@ -116,44 +303,80 @@ class QuantumElement(Instrument):
         """ """
         self.lo.power = new_power
 
+    @property  # ports getter
+    def ports(self) -> dict[str, int]:
+        """ """
+        return {k: v for (k, v) in asdict(self._ports).items() if v is not None}
+
 
 @dataclass
 class Qubit(QuantumElement):
     """ """
 
-    # define default operations dict
+    # class variable defining valid keyset(s) of ports of Qubit objects
+    _ports_keysets: ClassVar[frozenset[str]] = frozenset(
+        [
+            frozenset(["inp"]),
+            frozenset(["I", "Q"]),
+        ]
+    )
 
-    def __post_init__(self) -> NoReturn:
+    # class variable defining the default operations for Qubit objects
+    _default_operations: ClassVar[dict[str, Pulse]] = {
+        "CW": DEFAULT_CW_PULSE,
+        "gaussian": DEFAULT_GAUSSIAN_PULSE,
+    }
+
+    ports: InitVar[dict[str, int]]
+    operations: dict[str, Pulse] = field(default_factory=_default_operations.copy)
+
+    def __post_init__(self, ports: dict[str, int]) -> NoReturn:
         """ """
-        self._validate_parameters()
+        self._ports = self._create_ports(ports)
+        self._check_parameters()
 
 
 @dataclass
 class ReadoutResonator(QuantumElement):
     """ """
 
-    # define default operations dict
+    # class variable defining valid keyset(s) of ports of ReadoutResonator objects
+    _measure_keysets: ClassVar[frozenset[str]] = frozenset(
+        [
+            frozenset(["inp", "out"]),
+            frozenset(["I", "Q", "out"]),
+        ]
+    )
 
+    # class variable defining the default operations for Qubit objects
+    _default_operations: ClassVar[dict[str, Pulse]] = {
+        "CW": DEFAULT_CW_PULSE,
+        "readout": DEFAULT_READOUT_PULSE,
+    }
+
+    ports: InitVar[dict[str, int]]
+    operations: dict[str, Pulse] = field(default_factory=_default_operations.copy)
     time_of_flight: int = field(default=180)
     smearing: int = field(default=0)
 
-    def __post_init__(self) -> NoReturn:
+    def __post_init__(self, ports: dict[str, int]) -> NoReturn:
         """ """
-        self._validate_parameters()
+        self._ports = self._create_ports(ports)
         if self.time_of_flight == 180:
             logger.warning(
-                "{} {} time of flight set to default value {}ns",
+                "No {} {} time of flight given, set to default value {}ns",
                 type(self).__name__,
                 self.name,
                 self.time_of_flight,
             )
         if self.smearing == 0:
             logger.warning(
-                "{} {} smearing set to default value {}ns",
+                "No {} {} smearing given, set to default value {}ns",
                 type(self).__name__,
                 self.name,
                 self.smearing,
             )
+        self._check_parameters()
 
 
 @dataclass
@@ -176,18 +399,20 @@ class QuantumDevice(Instrument):
     def __post_init__(self) -> NoReturn:
         """ """
         try:
-            self._validate_elements()
+            self._check_elements()
         except TypeError:
-            logger.exception("Failed to validate {} parameters", self.name)
+            logger.exception(
+                "{} {} parameter check failed", type(self).__name__, self.name
+            )
             raise
         else:
-            logger.success(
+            logger.info(
                 "Created {} with name: {}, get current state by calling .parameters",
                 type(self).__name__,
                 self.name,
             )
 
-    def _validate_elements(self):
+    def _check_elements(self) -> NoReturn:
         """ """
         if not isinstance(self.elements, set):
             raise TypeError(
@@ -201,3 +426,16 @@ class QuantumDevice(Instrument):
                 raise TypeError(
                     "Expect element of {}, got {}".format(QuantumElement, type(element))
                 )
+
+    @property  # has_valid_elements getter
+    def has_valid_elements(self) -> bool:
+        """ """
+        try:
+            self._check_elements()
+        except TypeError:
+            logger.warning(
+                "Failed to validate {} {} elements", type(self).__name__, self.name
+            )
+            return False
+        else:
+            return True

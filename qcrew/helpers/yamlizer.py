@@ -7,7 +7,7 @@ import inspect
 
 import yaml
 
-from qcrew.helpers import logit
+from qcrew.helpers.logger import logit
 
 # use scientific notation if abs(value) >= threshold
 def sci_not_representer(dumper, value):

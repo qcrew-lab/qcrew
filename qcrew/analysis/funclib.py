@@ -1,13 +1,11 @@
 """ """
 
-from typing import Any
+from numbers import Number
 
 import numpy as np
 
-func_map = {"constant": constant_fn, "gaussian": gaussian_fn}
 
-
-def constant_fn(x: Any) -> Any:
+def constant_fn(x: Number) -> Number:
     """ """
     return x
 

@@ -117,10 +117,9 @@ class IQMixer(Instrument):
                 logger.warning("Got invalid offset key {}, ignored!", new_offset[0])
         except (TypeError, KeyError, IndexError):
             logger.exception(
-                "Setter expects {} with first value one of {} and second value of {}",
-                tuple,
-                IQMixerOffsets.keyset,
-                float,
+                "Setter expects {} with first value one of {}",
+                tuple[str, float],
+                set(IQMixerOffsets.keyset),
             )
             raise
         else:
@@ -197,11 +196,14 @@ class QuantumElement(Instrument):
         if is_valid_ports:
             return QuantumElementPorts(**initial_ports)
         elif not isinstance(initial_ports, dict):
-            logger.exception("Expected ports of {}, got {}", dict, type(initial_ports))
-            raise TypeError("ports must be {}".format(dict))
-        elif not set(initial_ports) in self._ports_keysets:
             logger.exception(
-                "Set of keys in ports must be equal to one of {}", self._ports_keysets
+                "Expected ports of {}, got {}", dict[str, int], type(initial_ports)
+            )
+            raise TypeError("ports must be {}".format(dict))
+        elif set(initial_ports) not in self._ports_keysets:
+            logger.exception(
+                "Set of keys in ports must be equal to one of {}",
+                [set(keyset) for keyset in self._ports_keysets],
             )
             raise ValueError("Invalid keys found in ports")
 
@@ -258,26 +260,40 @@ class QuantumElement(Instrument):
         """ """
         if not isinstance(self.operations, dict):
             raise TypeError(
-                "Expect operations of {}, got {}".format(dict, type(self.operations))
+                "Expect operations of {}, got {}".format(
+                    dict[str, Pulse], type(self.operations)
+                )
             )
 
-        for name, operation in self.operations.items():
+        for name, pulse in self.operations.items():
             if not isinstance(name, str):
                 raise TypeError(
                     "Expect operation name of {}, got {}".format(str, type(name))
                 )
-            if not isinstance(operation, Pulse):
+            if not isinstance(pulse, Pulse):
                 raise TypeError(
-                    "Expect operation of {}, got {}".format(Pulse, type(operation))
+                    "Expect operation of {}, got {}".format(Pulse, type(pulse))
                 )
+            if not pulse.has_valid_waveforms:
+                raise ValueError("Operation {} has invalid waveforms".format(name))
 
     @property  # has_valid_operations getter
     def has_valid_operations(self) -> bool:
         try:
             self._check_operations()
         except TypeError:
-            logger.warning(
-                "Failed to validate {} {} operations", type(self).__name__, self.name
+            logger.error(
+                "{} {} operations, must be {}",
+                type(self).__name__,
+                self.name,
+                dict[str, Pulse],
+            )
+            return False
+        except ValueError:
+            logger.error(
+                "{} {} has an operation with invalid waveforms",
+                type(self).__name__,
+                self.name,
             )
             return False
         else:
@@ -314,7 +330,7 @@ class Qubit(QuantumElement):
     """ """
 
     # class variable defining valid keyset(s) of ports of Qubit objects
-    _ports_keysets: ClassVar[frozenset[str]] = frozenset(
+    _ports_keysets: ClassVar[frozenset[frozenset[str]]] = frozenset(
         [
             frozenset(["inp"]),
             frozenset(["I", "Q"]),
@@ -341,7 +357,7 @@ class ReadoutResonator(QuantumElement):
     """ """
 
     # class variable defining valid keyset(s) of ports of ReadoutResonator objects
-    _measure_keysets: ClassVar[frozenset[str]] = frozenset(
+    _measure_keysets: ClassVar[frozenset[frozenset[str]]] = frozenset(
         [
             frozenset(["inp", "out"]),
             frozenset(["I", "Q", "out"]),
@@ -417,7 +433,7 @@ class QuantumDevice(Instrument):
         if not isinstance(self.elements, set):
             raise TypeError(
                 "Expect elements container of {}, got {}".format(
-                    set, type(self.elements)
+                    set[QuantumElement], type(self.elements)
                 )
             )
 

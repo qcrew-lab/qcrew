@@ -276,6 +276,12 @@ class QuantumElement(Instrument):
                 )
             if not pulse.has_valid_waveforms:
                 raise ValueError("Operation {} has invalid waveforms".format(name))
+            if self._ports.has_mix_inputs and pulse.has_single_waveform:
+                raise ValueError(
+                    "{} with mix inputs has operation {} with single waveform".format(
+                        type(self).__name__, name
+                    )
+                )
 
     @property  # has_valid_operations getter
     def has_valid_operations(self) -> bool:

@@ -103,6 +103,17 @@ class ControlPulse(Yamlable):
         else:
             return True
 
+    @property  # has_single_waveform getter
+    def has_single_waveform(self) -> bool:
+        """ """
+        try:
+            self._check_waveforms()
+        except (TypeError, ValueError):
+            logger.error("Failed to validate {} waveforms", type(self).__name__)
+            raise
+        else:
+            return len(self.waveforms) == 1
+
 
 IntegrationWeights = dict[
     str, tuple[Callable[int, np.ndarray], Callable[int, np.ndarray]]

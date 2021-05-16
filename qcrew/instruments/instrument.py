@@ -14,7 +14,7 @@ class Instrument(Yamlable):
     """ """
 
     # class variable defining the default parameter set for Instrument objects
-    _parameters: ClassVar[frozenset[str]] = frozenset()  # subclasses to override
+    _parameters: ClassVar[frozenset] = frozenset()  # subclasses to override
 
     @property
     def parameters(self) -> dict[str, Any]:

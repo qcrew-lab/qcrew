@@ -12,6 +12,7 @@ from qcrew.instruments.vaunix.labbrick_api import (
     vnx_close_device,
     vnx_get_frequency,
     vnx_get_power,
+    vnx_get_rf_on,
     vnx_set_frequency,
     vnx_set_power,
     vnx_set_rf_on,
@@ -44,7 +45,6 @@ class LabBrick(PhysicalInstrument):
             logger.exception("Failed to connect to LB{}", self.id)
             raise
         else:
-            self._status["connected"] = True
             logger.info("Connected to LB{}", self.id)
             return device_handle
 
@@ -63,9 +63,8 @@ class LabBrick(PhysicalInstrument):
 
     def toggle_rf(self) -> NoReturn:
         """ """
-        toggle = not self._status["running"]
+        toggle = not vnx_get_rf_on(self._handle)
         vnx_set_rf_on(self._handle, toggle)
-        self._status["running"] = toggle
         logger.success(
             "LB{} RF is {state}".format(self.id, state="ON" if toggle else "OFF")
         )
@@ -126,14 +125,13 @@ class LabBrick(PhysicalInstrument):
 
     def disconnect(self):
         """ """
+        if vnx_get_rf_on(self._handle):
+            self.toggle_rf()  # turn off RF if on
+
         try:
             vnx_close_device(self._handle)
         except ConnectionError:
             logger.exception("Failed to close LB{}", self.id)
             raise
         else:
-            self._status["connected"] = False
             logger.info("Disconnected LB{}", self.id)
-
-            if self._status["running"]:
-                self.toggle_rf()  # turn off RF if on

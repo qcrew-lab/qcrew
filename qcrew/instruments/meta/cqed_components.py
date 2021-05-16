@@ -3,7 +3,7 @@ TODO write proper docu
 TODO refactor param checks & logging with DRY
 """
 from dataclasses import asdict, dataclass, field, InitVar
-from typing import Any, ClassVar, NoReturn, Union
+from typing import ClassVar, NoReturn, Union
 
 from qcrew.helpers import logger
 from qcrew.helpers.pulsemaker import (
@@ -41,15 +41,10 @@ class IQMixerOffsets:
 class IQMixer(Instrument):
     """ """
 
-    # class variable defining the status keys for IQMixer objects
-    _status_dict: ClassVar[dict[str, bool]] = {"tuned": False}
     # class variable defining the parameter set for IQMixer objects
     _parameters: ClassVar[frozenset[str]] = frozenset(["name", "offsets"])
     # class variable defining the naming convention for IQMixer objects
     default_name_prefix: ClassVar[str] = "mixer_"
-
-    # stores statuses of this instance
-    _status: dict[str, Any] = field(default_factory=_status_dict.copy, init=False)
 
     # getters for this instance's parameters
     name: str
@@ -160,8 +155,6 @@ class QuantumElementPorts:
 class QuantumElement(Instrument):
     """ """
 
-    # class variable defining the status keys for QuantumDevice objects
-    _status_dict: ClassVar[dict[str, bool]] = {"calibrated": False}
     # class variable defining the parameter set for QuantumElement objects
     _parameters: ClassVar[frozenset[str]] = frozenset(
         [
@@ -176,9 +169,6 @@ class QuantumElement(Instrument):
     )
     # class variable defining the default operations for QuantumElement objects
     _default_operations: ClassVar[dict[str, Pulse]] = {"CW": DEFAULT_CW_PULSE}
-
-    # stores statuses of this instance
-    _status: dict[str, Any] = field(default_factory=_status_dict.copy, init=False)
 
     name: str
     lo: LabBrick
@@ -405,8 +395,6 @@ class ReadoutResonator(QuantumElement):
 class QuantumDevice(Instrument):
     """ """
 
-    # class variable defining the status keys for QuantumDevice objects
-    _status_dict: ClassVar[dict[str, bool]] = {"staged": False, "measuring": False}
     # class variable defining the parameter set for QuantumDevice objects
     _parameters: ClassVar[frozenset[str]] = frozenset(
         [

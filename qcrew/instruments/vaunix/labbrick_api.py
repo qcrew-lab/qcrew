@@ -15,11 +15,13 @@ FREQ_SCALAR = 10.0  # frequency is encoded as an integer of 10Hz steps
 POW_SCALAR = 0.25  # power level is encoded as an integer of 0.25dB steps
 
 # ------------------------------------- Functions --------------------------------------
+vnx_get_rf_on = VNX.fnLMS_GetRF_On
 vnx_set_rf_on = VNX.fnLMS_SetRFOn
 vnx_set_use_internal_ref = VNX.fnLMS_SetUseInternalRef
 
 
 def vnx_connect_to_device(serial_number: int) -> int:
+    """ """
     VNX.fnLMS_SetTestMode(False)  # we are using actual hardware
 
     num_devices = VNX.fnLMS_GetNumDevices()
@@ -43,27 +45,32 @@ def vnx_connect_to_device(serial_number: int) -> int:
 
 
 def vnx_close_device(device_handle: int) -> NoReturn:
+    """ """
     status_code = VNX.fnLMS_CloseDevice(device_handle)
     if status_code != 0:  # non-zero return values indicate disconnection error
         raise ConnectionError("Failed to close LabBrick")
 
 
 def vnx_get_max_frequency(device_handle: int) -> float:
+    """ """
     return VNX.fnLMS_GetMaxFreq(device_handle) * FREQ_SCALAR
 
 
 def vnx_get_min_frequency(device_handle: int) -> float:
+    """ """
     return VNX.fnLMS_GetMinFreq(device_handle) * FREQ_SCALAR
 
 
 def vnx_get_frequency(device_handle: int) -> float:
+    """ """
     frequency = VNX.fnLMS_GetFrequency(device_handle) * FREQ_SCALAR
     if frequency < 0:  # negative return values indicate error
         raise ValueError("Got bad frequency value {:.7e} Hz".format(frequency))
     return frequency
 
 
-def vnx_set_frequency(device_handle: int, new_frequency: Union[int, float]) -> NoReturn:
+def vnx_set_frequency(device_handle: int, new_frequency: Union[int, float]) -> float:
+    """ """
     if not isinstance(new_frequency, (int, float)):
         raise TypeError("Expect {}, {}; got {}".format(int, float, type(new_frequency)))
 
@@ -88,21 +95,25 @@ def vnx_set_frequency(device_handle: int, new_frequency: Union[int, float]) -> N
 
 
 def vnx_get_max_power(device_handle: int) -> float:
+    """ """
     return VNX.fnLMS_GetMaxPwr(device_handle) * POW_SCALAR
 
 
 def vnx_get_min_power(device_handle: int) -> float:
+    """ """
     return VNX.fnLMS_GetMinPwr(device_handle) * POW_SCALAR
 
 
 def vnx_get_power(device_handle: int) -> float:
+    """ """
     power = VNX.fnLMS_GetAbsPowerLevel(device_handle) * POW_SCALAR
     if power < -1e5:  # return values more negative than min power indicate read error
         raise ValueError("Got bad power value {} dBm".format(power))
     return power
 
 
-def vnx_set_power(device_handle: int, new_power: Union[int, float]) -> NoReturn:
+def vnx_set_power(device_handle: int, new_power: Union[int, float]) -> float:
+    """ """
     if not isinstance(new_power, (int, float)):
         raise TypeError("Expect {}, {}; got {}".format(int, float, type(new_power)))
 

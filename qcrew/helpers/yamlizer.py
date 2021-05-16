@@ -55,18 +55,18 @@ class Yamlable(metaclass=YamlableMetaclass):
         """ """
         init_args_dict = inspect.signature(self.__init__).parameters
         yaml_map = {k: getattr(self, k) for k in init_args_dict}
-        logger.info("Created .yaml mapping for {} object", type(self).__name__)
+        logger.info("Created .yaml mapping for {}", type(self).__name__)
         return yaml_map
 
     @classmethod
     def from_yaml(cls, loader, node):
         """ """
         yaml_map = loader.construct_mapping(node)
-        logger.info("Loading {} object from .yaml", cls.__name__)
+        logger.info("Loading {} from .yaml", cls.__name__)
         return cls(**yaml_map)
 
     @classmethod
     def to_yaml(cls, dumper, data):
         """ """
-        logger.info("Dumping {} object to .yaml", cls.__name__)
+        logger.info("Dumping {} to .yaml", cls.__name__)
         return dumper.represent_mapping(data.yaml_tag, data.yaml_map)

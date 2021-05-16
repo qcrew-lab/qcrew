@@ -42,10 +42,10 @@ class LabBrick(PhysicalInstrument):
         try:
             device_handle = vnx_connect_to_device(self.id)
         except ConnectionError:
-            logger.exception("Failed to connect to LB{}", self.id)
+            logger.exception(f"Failed to connect to LB{self.id}")
             raise
         else:
-            logger.info("Connected to LB{}", self.id)
+            logger.info(f"Connected to LB{self.id}")
             return device_handle
 
     def _initialize(self, frequency: float, power: float) -> NoReturn:
@@ -65,9 +65,7 @@ class LabBrick(PhysicalInstrument):
         """ """
         toggle = not vnx_get_rf_on(self._handle)
         vnx_set_rf_on(self._handle, toggle)
-        logger.success(
-            "LB{} RF is {state}".format(self.id, state="ON" if toggle else "OFF")
-        )
+        logger.success(f"LB{self.id} RF is {'ON' if toggle else 'OFF'}")
 
     # pylint: disable=function-redefined, intentional shadowing of InitVar frequency
 
@@ -77,10 +75,10 @@ class LabBrick(PhysicalInstrument):
         try:
             current_frequency = vnx_get_frequency(self._handle)
         except ValueError:
-            logger.exception("LB{} failed to get frequency", self.id)
+            logger.exception(f"LB{self.id} failed to get frequency")
             raise
         else:
-            logger.success("LB{} got frequency {:.7E} Hz", self.id, current_frequency)
+            logger.success(f"LB{self.id} got frequency {current_frequency:.7E} Hz")
             return current_frequency
 
     # pylint: enable=function-redefined
@@ -94,7 +92,7 @@ class LabBrick(PhysicalInstrument):
             logger.exception("LB{} failed to set frequency", self.id)
             raise
         else:
-            logger.success("LB{} set frequency {:.7E} Hz", self.id, current_frequency)
+            logger.success(f"LB{self.id} set frequency {current_frequency:.7E} Hz")
 
     # pylint: disable=function-redefined, intentional shadowing of InitVar power
 
@@ -104,10 +102,10 @@ class LabBrick(PhysicalInstrument):
         try:
             current_power = vnx_get_power(self._handle)
         except ValueError:
-            logger.exception("LB{} failed to get power", self.id)
+            logger.exception(f"LB{self.id} failed to get power")
             raise
         else:
-            logger.success("LB{} got power {} dBm", self.id, current_power)
+            logger.success(f"LB{self.id} got power {current_power} dBm")
             return current_power
 
     # pylint: enable=function-redefined
@@ -118,10 +116,10 @@ class LabBrick(PhysicalInstrument):
         try:
             current_power = vnx_set_power(self._handle, new_power)
         except (TypeError, ValueError, ConnectionError):
-            logger.exception("LB{} failed to set power", self.id)
+            logger.exception(f"LB{self.id} failed to set power")
             raise
         else:
-            logger.success("LB{} set power {} dBm", self.id, current_power)
+            logger.success(f"LB{self.id} set power {current_power} dBm")
 
     def disconnect(self):
         """ """
@@ -131,7 +129,7 @@ class LabBrick(PhysicalInstrument):
         try:
             vnx_close_device(self._handle)
         except ConnectionError:
-            logger.exception("Failed to close LB{}", self.id)
+            logger.exception(f"Failed to close LB{self.id}")
             raise
         else:
-            logger.info("Disconnected LB{}", self.id)
+            logger.info(f"Disconnected LB{self.id}")

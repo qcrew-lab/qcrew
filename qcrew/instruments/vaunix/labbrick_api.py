@@ -1,7 +1,7 @@
 """
 API for communicating with Vaunix Signal Generator LMS (LabBrick).
 """
-from ctypes import CDLL, c_int
+from ctypes import CDLL, c_int, Array
 from pathlib import Path
 from typing import Union, NoReturn
 
@@ -9,6 +9,7 @@ from typing import Union, NoReturn
 DLL_NAME = "vnx_fmsynth.dll"  # dll must be in the same directory as this driver
 PATH_TO_DLL = Path(__file__).resolve().parent / DLL_NAME  # returns Path object
 VNX = CDLL(str(PATH_TO_DLL))  # cast Path to string
+VNX.fnLMS_SetTestMode(False)  # we are using actual hardware
 
 # ------------------------------------- Globals ----------------------------------------
 FREQ_SCALAR = 10.0  # frequency is encoded as an integer of 10Hz steps
@@ -22,26 +23,42 @@ vnx_set_use_internal_ref = VNX.fnLMS_SetUseInternalRef
 
 def vnx_connect_to_device(serial_number: int) -> int:
     """ """
-    VNX.fnLMS_SetTestMode(False)  # we are using actual hardware
+    num_devices = _get_num_available_devices()
+    device_info_array = _get_devices_info(num_devices)
+    serial_numbers = _get_serial_numbers(num_devices, device_info_array)
 
+    if serial_number in serial_numbers:
+        device_handle = device_info_array[serial_numbers.index(serial_number)]
+        _initialize_device(device_handle)
+        return device_handle
+    raise ConnectionError("LabBrick with serial no. {} not found".format(serial_number))
+
+
+def _get_num_available_devices() -> int:
+    """ """
     num_devices = VNX.fnLMS_GetNumDevices()
     if num_devices == 0:
         raise ConnectionError("No LabBricks available to connect")
+    return num_devices
 
-    device_array = (c_int * num_devices)()  # initialize array
+
+def _get_devices_info(num_devices: int) -> Array:
+    """ """
+    device_array = (c_int * num_devices)()  # initialize array to hold device info
     VNX.fnLMS_GetDevInfo(device_array)  # fill array with info of all available devices
-    serial_numbers = [  # get serial numbers of all available devices
-        VNX.fnLMS_GetSerialNumber(device_array[i]) for i in range(num_devices)
-    ]
+    return device_array
 
-    if serial_number in serial_numbers:
-        device_handle = device_array[serial_numbers.index(serial_number)]
-        status_code = VNX.fnLMS_InitDevice(device_handle)
-        if status_code != 0:  # non-zero return values indicate initialization error
-            raise ConnectionError("Failed to open LabBrick {}".format(serial_number))
-        return device_handle
 
-    raise ConnectionError("LabBrick with serial no. {} not found".format(serial_number))
+def _get_serial_numbers(num_devices: int, device_array: Array) -> list:
+    """ """
+    return [VNX.fnLMS_GetSerialNumber(device_array[i]) for i in range(num_devices)]
+
+
+def _initialize_device(device_handle: int):
+    """ """
+    status_code = VNX.fnLMS_InitDevice(device_handle)
+    if status_code != 0:  # non-zero return values indicate initialization error
+        raise ConnectionError("Failed to open device")
 
 
 def vnx_close_device(device_handle: int) -> NoReturn:

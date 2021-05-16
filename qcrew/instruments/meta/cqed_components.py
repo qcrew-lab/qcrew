@@ -36,6 +36,14 @@ class IQMixerOffsets:
 
     # pylint: enable=invalid-name
 
+    def update(self, offset_key: str, new_value: float) -> NoReturn:
+        """ """
+        if hasattr(self, offset_key) and isinstance(new_value, float):
+            setattr(self, offset_key, new_value)
+            logger.success(f"Set IQMixer {offset_key} offset to {new_value}")
+        else:
+            logger.error(f"Invalid offset key value pair ({offset_key}, {new_value})")
+
 
 @dataclass(eq=False)
 class IQMixer(Instrument):
@@ -53,43 +61,22 @@ class IQMixer(Instrument):
     def __post_init__(self, offsets: dict[str, float]) -> NoReturn:
         """ """
         self._offsets = self._create_offsets(offsets)
-        logger.info(
-            "Created {} with name: {}, offsets: {} ",
-            type(self).__name__,
-            self.name,
-            self.offsets,
-        )
+        logger.info(f"Created IQMixer with name: {self.name}, offsets: {self.offsets}")
 
-    def _create_offsets(self, initial_offsets: dict[str, float]) -> IQMixerOffsets:
+    def _create_offsets(self, offsets: dict[str, float]) -> IQMixerOffsets:
         """ """
-        if not isinstance(initial_offsets, dict) or not initial_offsets:
-            # user did not give any offsets
-            logger.warning(
-                "No {} offsets given, creating default offsets...", type(self).__name__
-            )
+        valid_keys = IQMixerOffsets.keyset
+        if not isinstance(offsets, dict) or not offsets:
+            logger.warning("No IQMixer offsets given, setting default values...")
             return IQMixerOffsets()
-        elif set(initial_offsets) == IQMixerOffsets.keyset:  # got all valid offsets
-            return IQMixerOffsets(**initial_offsets)
-        elif set(initial_offsets) < IQMixerOffsets.keyset:  # got some valid offsets
-            logger.warning(
-                "Setting default values for unspecified {} offsets...",
-                type(self).__name__,
-            )
-            return IQMixerOffsets(**initial_offsets)
+        elif set(offsets) == valid_keys:  # got all valid offsets
+            return IQMixerOffsets(**offsets)
+        elif set(offsets) < valid_keys:  # got some valid offsets
+            logger.warning("Setting defaults for unspecified IQMixer offsets...")
+            return IQMixerOffsets(**offsets)
         else:  # got partially valid offsets dict
-            logger.warning(
-                "Got invalid {} offsets keys, will be ignored...", type(self).__name__
-            )
-            valid_offsets = dict()
-            for key in IQMixerOffsets.keyset:
-                if key in initial_offsets:
-                    valid_offsets[key] = initial_offsets[key]
-                else:
-                    logger.warning(
-                        "No {} offset given for {}, setting default value...",
-                        key,
-                        type(self).__name__,
-                    )
+            logger.warning("Found invalid IQMixer offset(s) keys, ignoring...")
+            valid_offsets = {k: offsets[k] for k in valid_keys if k in offsets}
             return IQMixerOffsets(**valid_offsets)
 
     # pylint: disable=function-redefined, intentional shadowing of InitVar offsets
@@ -104,27 +91,13 @@ class IQMixer(Instrument):
     @offsets.setter
     def offsets(self, new_offset: tuple[str, float]) -> NoReturn:
         """ """
-        # e.g. of a valid new_offset argument: ("I", 0.25)
+        # e.g. of a valid offset setter argument: ("I", 0.25)
         try:
-            if hasattr(self._offsets, new_offset[0]):
-                setattr(self._offsets, new_offset[0], new_offset[1])
-            else:
-                logger.warning("Got invalid offset key {}, ignored!", new_offset[0])
+            self._offsets.update(new_offset[0], new_offset[1])
         except (TypeError, KeyError, IndexError):
-            logger.exception(
-                "Setter expects {} with first value one of {}",
-                tuple[str, float],
-                set(IQMixerOffsets.keyset),
-            )
+            valid_keys = set(IQMixerOffsets.keyset)
+            logger.exception(f"Expect {tuple[str, float]} with str one of {valid_keys}")
             raise
-        else:
-            logger.success(
-                "Set {} {} offset {} to {}",
-                type(self).__name__,
-                self.name,
-                new_offset[0],
-                new_offset[1],
-            )
 
 
 @dataclass(repr=False, eq=False)

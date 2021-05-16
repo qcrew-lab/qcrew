@@ -31,7 +31,7 @@ def vnx_connect_to_device(serial_number: int) -> int:
         device_handle = device_info_array[serial_numbers.index(serial_number)]
         _initialize_device(device_handle)
         return device_handle
-    raise ConnectionError("LabBrick with serial no. {} not found".format(serial_number))
+    raise ConnectionError(f"LabBrick with serial no. {serial_number} not found")
 
 
 def _get_num_available_devices() -> int:
@@ -58,7 +58,7 @@ def _initialize_device(device_handle: int):
     """ """
     status_code = VNX.fnLMS_InitDevice(device_handle)
     if status_code != 0:  # non-zero return values indicate initialization error
-        raise ConnectionError("Failed to open device")
+        raise ConnectionError("Failed to open LabBrick")
 
 
 def vnx_close_device(device_handle: int) -> NoReturn:
@@ -82,33 +82,30 @@ def vnx_get_frequency(device_handle: int) -> float:
     """ """
     frequency = VNX.fnLMS_GetFrequency(device_handle) * FREQ_SCALAR
     if frequency < 0:  # negative return values indicate error
-        raise ValueError("Got bad frequency value {:.7e} Hz".format(frequency))
+        raise ValueError(f"Got bad frequency value: {frequency:.7e} Hz")
     return frequency
 
 
 def vnx_set_frequency(device_handle: int, new_frequency: Union[int, float]) -> float:
     """ """
     if not isinstance(new_frequency, (int, float)):
-        raise TypeError("Expect {}, {}; got {}".format(int, float, type(new_frequency)))
+        raise TypeError(f"Expect {int} or {float}; got {type(new_frequency)}")
 
     frequency_steps = int(new_frequency / FREQ_SCALAR)
     status_code = VNX.fnLMS_SetFrequency(device_handle, frequency_steps)
+    if status_code == 0:  # success
+        return float(new_frequency)
+    else:  # non-zero return values indicate error
+        _check_frequency_bounds(device_handle, float(new_frequency))
+        raise ConnectionError("Got bad response, check LabBrick connection")
 
-    if status_code != 0:  # non-zero return values indicate error
-        minimum_frequency = vnx_get_min_frequency(device_handle)
-        maximum_frequency = vnx_get_max_frequency(device_handle)
-        if not minimum_frequency <= new_frequency <= maximum_frequency:
-            raise ValueError(
-                "Frequency {:.7E} out of bounds; min: {:.2E}, max: {:.2E}".format(
-                    new_frequency, minimum_frequency, maximum_frequency
-                )
-            )
-        else:
-            raise ConnectionError(
-                "Got bad response {}, check LabBrick connection".format(status_code)
-            )
 
-    return float(new_frequency)
+def _check_frequency_bounds(device_handle: int, freq: float) -> NoReturn:
+    """ """
+    min_ = vnx_get_min_frequency(device_handle)
+    max_ = vnx_get_max_frequency(device_handle)
+    if not min_ <= freq <= max_:
+        raise ValueError(f"Frequency {freq:.7E} out of bounds [{min_:.2E}, {max_:.2E}]")
 
 
 def vnx_get_max_power(device_handle: int) -> float:
@@ -125,30 +122,28 @@ def vnx_get_power(device_handle: int) -> float:
     """ """
     power = VNX.fnLMS_GetAbsPowerLevel(device_handle) * POW_SCALAR
     if power < -1e5:  # return values more negative than min power indicate read error
-        raise ValueError("Got bad power value {} dBm".format(power))
+        raise ValueError(f"Got bad power value: {power} dBm")
     return power
 
 
 def vnx_set_power(device_handle: int, new_power: Union[int, float]) -> float:
     """ """
     if not isinstance(new_power, (int, float)):
-        raise TypeError("Expect {}, {}; got {}".format(int, float, type(new_power)))
+        raise TypeError(f"Expect {int} or {float}; got {type(new_power)}")
 
     power_level = int(new_power / POW_SCALAR)
     status_code = VNX.fnLMS_SetPowerLevel(device_handle, power_level)
 
-    if status_code != 0:  # non-zero return values indicate error
-        minimum_power = vnx_get_min_power(device_handle)
-        maximum_power = vnx_get_max_power(device_handle)
-        if not minimum_power <= new_power <= maximum_power:
-            raise ValueError(
-                "Power {} out of bounds; min: {}, max: {}".format(
-                    new_power, minimum_power, maximum_power
-                )
-            )
-        else:
-            raise ConnectionError(
-                "Got bad response {}, check LabBrick connection".format(status_code)
-            )
+    if status_code == 0:  # success
+        return float(new_power)
+    else:  # non-zero return values indicate error
+        _check_power_bounds(device_handle, float(new_power))
+        raise ConnectionError("Got bad response, check LabBrick connection")
 
-    return float(new_power)
+
+def _check_power_bounds(device_handle: int, power: float) -> NoReturn:
+    """ """
+    min_ = vnx_get_min_power(device_handle)
+    max_ = vnx_get_max_power(device_handle)
+    if not min_ <= power <= max_:
+        raise ValueError(f"Power {power} out of bounds [{min_}, {max_}]")

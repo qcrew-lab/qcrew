@@ -1,103 +1,16 @@
-"""
-TODO write proper docu
-TODO refactor param checks & logging with DRY
-"""
+""" """
 from dataclasses import asdict, dataclass, field, InitVar
 from typing import ClassVar, NoReturn, Union
 
 from qcrew.helpers import logger
-from qcrew.helpers.pulsemaker import (
+"""from qcrew.helpers.pulsemaker import (
     Pulse,
     DEFAULT_CW_PULSE,
     DEFAULT_GAUSSIAN_PULSE,
     DEFAULT_READOUT_PULSE,
-)
+)"""
 from qcrew.instruments import Instrument, LabBrick
 
-
-@dataclass(repr=False, eq=False)
-class IQMixerOffsets:
-    """ """
-
-    # class variable defining the keyset of the offsets of IQMixer objects
-    keyset: ClassVar[frozenset[str]] = frozenset(["I", "Q", "G", "P"])
-
-    # pylint: disable=invalid-name
-    # these names have specific meanings that are well understood by qcrew
-
-    # DC offset applied by a OPX AO port to the I port of the IQMixer
-    I: float = field(default=0.0)
-    # DC offset applied by a OPX AO port to the Q port of the IQMixer
-    Q: float = field(default=0.0)
-    # offset used by OPX to correct the gain imbalance of the IQMixer
-    G: float = field(default=0.0)
-    # offset used by OPX to correct the phase imbalance of the IQMixer
-    P: float = field(default=0.0)
-
-    # pylint: enable=invalid-name
-
-    def update(self, offset_key: str, new_value: float) -> NoReturn:
-        """ """
-        if hasattr(self, offset_key) and isinstance(new_value, float):
-            setattr(self, offset_key, new_value)
-            logger.success(f"Set IQMixer {offset_key} offset to {new_value}")
-        else:
-            logger.error(f"Invalid offset key value pair ({offset_key}, {new_value})")
-
-
-@dataclass(eq=False)
-class IQMixer(Instrument):
-    """ """
-
-    # class variable defining the parameter set for IQMixer objects
-    _parameters: ClassVar[frozenset[str]] = frozenset(["name", "offsets"])
-    # class variable defining the naming convention for IQMixer objects
-    default_name_prefix: ClassVar[str] = "mixer_"
-
-    # getters for this instance's parameters
-    name: str
-    offsets: InitVar[dict[str, float]]
-
-    def __post_init__(self, offsets: dict[str, float]) -> NoReturn:
-        """ """
-        self._offsets = self._create_offsets(offsets)
-        logger.info(f"Created IQMixer with name: {self.name}, offsets: {self.offsets}")
-
-    def _create_offsets(self, offsets: dict[str, float]) -> IQMixerOffsets:
-        """ """
-        valid_keys = IQMixerOffsets.keyset
-        if not isinstance(offsets, dict) or not offsets:
-            logger.warning("No IQMixer offsets given, setting default values...")
-            return IQMixerOffsets()
-        elif set(offsets) == valid_keys:  # got all valid offsets
-            return IQMixerOffsets(**offsets)
-        elif set(offsets) < valid_keys:  # got some valid offsets
-            logger.warning("Setting defaults for unspecified IQMixer offsets...")
-            return IQMixerOffsets(**offsets)
-        else:  # got partially valid offsets dict
-            logger.warning("Found invalid IQMixer offset(s) keys, ignoring...")
-            valid_offsets = {k: offsets[k] for k in valid_keys if k in offsets}
-            return IQMixerOffsets(**valid_offsets)
-
-    # pylint: disable=function-redefined, intentional shadowing of InitVar offsets
-
-    @property  # offsets getter
-    def offsets(self) -> dict[str, float]:
-        """ """
-        return asdict(self._offsets)
-
-    # pylint: enable=function-redefined
-
-    @offsets.setter
-    def offsets(self, new_offset: tuple[str, float]) -> NoReturn:
-        """ """
-        # e.g. of a valid offset setter argument: ("I", 0.25)
-        try:
-            self._offsets.update(new_offset[0], new_offset[1])
-        except (TypeError, KeyError, IndexError):
-            valid_keys = set(IQMixerOffsets.keyset)
-            logger.exception(f"Expect {tuple[str, float]} with str one of {valid_keys}")
-            raise
 
 
 @dataclass(repr=False, eq=False)
@@ -124,30 +37,12 @@ class QuantumElementPorts:
         return self.I is not None and self.Q is not None
 
 
-@dataclass
+#@dataclass
 class QuantumElement(Instrument):
     """ """
 
     # class variable defining the parameter set for QuantumElement objects
-    _parameters: ClassVar[frozenset[str]] = frozenset(
-        [
-            "name",  # a unique name describing the QuantumElement
-            "lo_freq",  # frequency of local oscillator driving the QuantumElement
-            "lo_power",  # output power of local oscillator driving the QuantumElement
-            "int_freq",  # intermediate frequency driving the QuantumElement
-            "ports",  # input and output ports of the QuantumElement
-            "mixer",  # the IQMixer object (if any) associated with the QuantumElement
-            "operations",  # the operations that can be performed on the QuantumElement
-        ]
-    )
-    # class variable defining the default operations for QuantumElement objects
-    _default_operations: ClassVar[dict[str, Pulse]] = {"CW": DEFAULT_CW_PULSE}
-
-    name: str
-    lo: LabBrick
-    int_freq: Union[int, float]
-    mixer: IQMixer = field(default=None)  # will be created based on ports
-    operations: dict[str, Pulse] = field(default_factory=_default_operations.copy)
+    _parameters: ClassVar[frozenset] = frozenset()  # subclasses to override
 
     def _create_ports(self, initial_ports: dict[str, int]) -> QuantumElementPorts:
         """ """
@@ -268,6 +163,10 @@ class QuantumElement(Instrument):
         else:
             return True
 
+    @property  # name getter
+    def name(self) -> str:
+        return self._name
+
     @property  # lo_freq getter
     def lo_freq(self) -> float:
         """ """
@@ -298,6 +197,19 @@ class QuantumElement(Instrument):
 class Qubit(QuantumElement):
     """ """
 
+    # class variable defining the parameter set for Qubit objects
+    _parameters: ClassVar[frozenset[str]] = frozenset(
+        [
+            "name",  # a unique name describing the Qubit
+            "lo_freq",  # frequency of local oscillator driving the Qubit
+            "lo_power",  # output power of local oscillator driving the Qubit
+            "int_freq",  # intermediate frequency driving the Qubit
+            "ports",  # input QuantumElementPorts of the Qubit
+            "mixer",  # the IQMixer (if any) associated with the Qubit
+            "operations",  # operations that can be performed on the Qubit
+        ]
+    )
+
     # class variable defining valid keyset(s) of ports of Qubit objects
     _ports_keysets: ClassVar[frozenset[frozenset[str]]] = frozenset(
         [
@@ -312,11 +224,18 @@ class Qubit(QuantumElement):
         "gaussian": DEFAULT_GAUSSIAN_PULSE,
     }
 
+    name: InitVar[str]
+    lo: LabBrick
+    int_freq: Union[int, float]
+    mixer: IQMixer = field(default=None)  # will be created based on ports
+    operations: dict[str, Pulse] = field(default_factory=_default_operations.copy)
+
     ports: InitVar[dict[str, int]]
     operations: dict[str, Pulse] = field(default_factory=_default_operations.copy)
 
-    def __post_init__(self, ports: dict[str, int]) -> NoReturn:
+    def __post_init__(self, name: str, ports: dict[str, int]) -> NoReturn:
         """ """
+        self._name = self._
         self._ports = self._create_ports(ports)
         self._check_parameters()
 
@@ -325,13 +244,31 @@ class Qubit(QuantumElement):
 class ReadoutResonator(QuantumElement):
     """ """
 
+    # class variable defining the parameter set for ReadoutResonator objects
+    _parameters: ClassVar[frozenset[str]] = frozenset(
+        [
+            "name",  # a unique name describing the ReadoutResonator
+            "lo_freq",  # frequency of local oscillator driving the ReadoutResonator
+            "lo_power",  # output power of local oscillator driving the ReadoutResonator
+            "int_freq",  # intermediate frequency driving the ReadoutResonator
+            "ports",  # input and output QuantumElementPorts of the ReadoutResonator
+            "mixer",  # the IQMixer (if any) associated with the ReadoutResonator
+            "operations",  # operations that can be performed on the ReadoutResonator
+            "time_of_flight",  # as defined in the QM configuration specification
+            "smearing",  # as defined in the QM configuration specification
+        ]
+    )
+
     # class variable defining valid keyset(s) of ports of ReadoutResonator objects
-    _measure_keysets: ClassVar[frozenset[frozenset[str]]] = frozenset(
+    _ports_keysets: ClassVar[frozenset[frozenset[str]]] = frozenset(
         [
             frozenset(["inp", "out"]),
             frozenset(["I", "Q", "out"]),
         ]
     )
+
+    # class variable defining the default name for Qubit objects
+    _default_name: ClassVar[str] = "rr"
 
     # class variable defining the default operations for Qubit objects
     _default_operations: ClassVar[dict[str, Pulse]] = {
@@ -344,8 +281,9 @@ class ReadoutResonator(QuantumElement):
     time_of_flight: int = field(default=180)
     smearing: int = field(default=0)
 
-    def __post_init__(self, ports: dict[str, int]) -> NoReturn:
+    def __post_init__(self, name: str, ports: dict[str, int]) -> NoReturn:
         """ """
+        self._name = name if isinstance(name, str) else self._default_name
         self._ports = self._create_ports(ports)
         if self.time_of_flight == 180:
             logger.warning(

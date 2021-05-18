@@ -3,13 +3,11 @@ This module defines abstract base classes for encapsulating instruments in qcrew
 TODO WRITE DOCUMENTATION
 """
 from abc import abstractmethod
-from dataclasses import dataclass
 from typing import Any, ClassVar, NoReturn
 
 from qcrew.helpers.yamlizer import Yamlable
 
 
-@dataclass
 class Instrument(Yamlable):
     """ """
 
@@ -26,11 +24,16 @@ class Instrument(Yamlable):
     # TODO parameters.setter
 
 
-@dataclass
 class PhysicalInstrument(Instrument):
     """ """
 
-    id: Any  # OK to shadow built-in `id` as instrument ids ought to be unique
+    # pylint: disable=redefined-builtin, intentional shadowing of `id`
+
+    def __init__(self, id) -> None:
+        """ """
+        self.id: Any = id
+
+    # pylint: enable=redefined-builtin
 
     @abstractmethod
     def _connect(self) -> NoReturn:

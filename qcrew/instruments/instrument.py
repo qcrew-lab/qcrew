@@ -19,7 +19,7 @@ class Instrument(Yamlable):
         """ """
         # condition - every key in self._parameters must be an instance attribute
         # subclasses are responsible for defining the attribute getter
-        return {param: getattr(self, param) for param in self._parameters}
+        return {param: getattr(self, param) for param in sorted(list(self._parameters))}
 
     # TODO parameters.setter
 

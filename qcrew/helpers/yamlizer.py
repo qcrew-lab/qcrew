@@ -54,7 +54,7 @@ class Yamlable(metaclass=YamlableMetaclass):
         try:
             yaml_map = {k: getattr(self, k) for k in init_args_dict}
         except AttributeError:
-            logger.exception(f"All __init__ args of Yamlables must also be attributes")
+            logger.exception("All arguments to Yamlable __init__() must be attributes")
             raise
         else:
             logger.info(f"Created .yaml mapping for {type(self).__name__}")

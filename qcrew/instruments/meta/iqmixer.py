@@ -3,7 +3,7 @@ from dataclasses import asdict, dataclass, field
 from typing import ClassVar, NoReturn
 
 from qcrew.helpers import logger
-from qcrew.instruments import Instrument
+from qcrew.instruments.instrument import Instrument
 
 
 @dataclass(repr=False, eq=False)
@@ -32,12 +32,16 @@ class IQMixer(Instrument):
     """ """
 
     # class variable defining the parameter set for IQMixer objects
-    _parameters: ClassVar[frozenset[str]] = frozenset(["name", "offsets"])
+    _parameters: ClassVar[set[str]] = set(["name", "offsets"])
 
     def __init__(self, name: str, offsets: dict[str, float] = None) -> None:
-        self._name: str = name
-        self._offsets: IQMixerOffsets = self._create_offsets(offsets)
-        logger.info("Created IQMixer, call `.parameters` to get current state")
+        self._name: str = str(name)  # only gettable, not settable
+        self._offsets: IQMixerOffsets = self._create_offsets(offsets)  # settable
+        logger.info(f"Created IQMixer '{name}', get current state with .parameters")
+
+    def __repr__(self):
+        """ """
+        return f"{type(self).__name__} {self.name}"
 
     @property  # name getter
     def name(self) -> str:
@@ -77,5 +81,4 @@ class IQMixer(Instrument):
                 else:
                     logger.warning(f"Ignored invalid offset {key = }, {valid_keys = }")
         except AttributeError:
-            logger.exception(f"Expect {dict[str, float]} with str one of {valid_keys}")
-            raise
+            logger.exception(f"Setter expects {dict[str, float]} with {valid_keys = }")

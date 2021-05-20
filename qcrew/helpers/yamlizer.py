@@ -43,6 +43,9 @@ class YamlableMetaclass(type):
         # customise dumper to represent tuples and lists in flow style
         cls.yaml_dumper.add_representer(list, sequence_representer)
 
+    def __repr__(cls):
+        """ """
+        return f"<class '{cls.__name__}'>"
 
 class Yamlable(metaclass=YamlableMetaclass):
     """ """
@@ -53,9 +56,9 @@ class Yamlable(metaclass=YamlableMetaclass):
         init_args_dict = inspect.signature(self.__init__).parameters
         try:
             yaml_map = {k: getattr(self, k) for k in init_args_dict}
-        except AttributeError:
+        except AttributeError as e:
             logger.exception("All arguments to Yamlable __init__() must be attributes")
-            raise
+            raise SystemExit("Failed to create yaml_map, exiting...") from e
         else:
             logger.info(f"Created .yaml mapping for {type(self).__name__}")
             return yaml_map

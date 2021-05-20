@@ -20,7 +20,7 @@ logger.level("ERROR", color="<red><bold>")
 
 log_record_fmt = (  # customise log record format
     "<cyan>[{time:YYYY-MM-DD HH:mm:ss.SSS}]</>  "
-    "<lvl>[{level}]  [{module}]  -  {message}</>"
+    "<lvl>{level: <7}  [{module}]  -  {message}</>"
 )
 
 # register log sinks with loguru logger

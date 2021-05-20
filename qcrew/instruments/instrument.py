@@ -47,6 +47,10 @@ class PhysicalInstrument(Instrument):
 
     # pylint: enable=redefined-builtin
 
+    def __repr__(self) -> str:
+        """ """
+        return f"{type(self).__name__} {self.id}"
+
     @abstractmethod
     def _connect(self) -> NoReturn:
         """ """

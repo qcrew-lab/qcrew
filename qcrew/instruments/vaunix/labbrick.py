@@ -22,10 +22,6 @@ class LabBrick(PhysicalInstrument):
 
     # pylint: enable=redefined-builtin
 
-    def __repr__(self):
-        """ """
-        return f"{type(self).__name__} {self.id}"
-
     def _connect(self) -> int:
         """ """
         try:

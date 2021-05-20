@@ -43,7 +43,7 @@ class YamlableMetaclass(type):
         # customise dumper to represent tuples and lists in flow style
         cls.yaml_dumper.add_representer(list, sequence_representer)
 
-    def __repr__(cls):
+    def __repr__(cls) -> str:
         """ """
         return f"<class '{cls.__name__}'>"
 

@@ -79,8 +79,8 @@ def get_min_frequency(device_handle: int) -> float:
 def get_frequency(device_handle: int) -> float:
     """ """
     frequency = VNX.fnLMS_GetFrequency(device_handle) * FREQ_SCALAR
-    if frequency < 0:  # negative return values indicate error
-        raise ValueError(f"Got invalid {frequency:.7e = } Hz")
+    if frequency < 0:  # negative return values indicate read error
+        raise ConnectionError("Got bad response, check LabBrick connection")
     return frequency
 
 
@@ -120,7 +120,7 @@ def get_power(device_handle: int) -> float:
     """ """
     power = VNX.fnLMS_GetAbsPowerLevel(device_handle) * POW_SCALAR
     if power < -1e5:  # return values more negative than min power indicate read error
-        raise ValueError(f"Got invalid {power = } dBm")
+        raise ConnectionError("Got bad response, check LabBrick connection")
     return power
 
 

@@ -39,7 +39,7 @@ class IQMixer(Instrument):
         self._offsets: IQMixerOffsets = self._create_offsets(offsets)  # settable
         logger.info(f"Created IQMixer '{name}', get current state with .parameters")
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """ """
         return f"{type(self).__name__} {self.name}"
 

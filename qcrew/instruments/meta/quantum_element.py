@@ -3,7 +3,7 @@ from dataclasses import asdict, dataclass, field
 from typing import ClassVar, NoReturn
 
 from qcrew.helpers import logger
-from qcrew.helpers.pulsemaker import Pulse
+from qcrew.helpers.pulsemaker import Pulse, PulseType
 from qcrew.instruments import LabBrick
 from qcrew.instruments.instrument import Instrument
 from qcrew.instruments.meta.iqmixer import IQMixer
@@ -48,7 +48,7 @@ class QuantumElement(Instrument):
     _ports_keysets: ClassVar[set[frozenset[str]]] = set()  # subclasses to override
 
     # class variable defining the default operations dict for QuantumElement objects
-    _default_ops: ClassVar[dict[str, Pulse]] = dict()  # subclasses to populate
+    _default_ops: ClassVar[dict[str, PulseType]] = dict()  # subclasses to populate
 
     def __init__(
         self,
@@ -57,7 +57,7 @@ class QuantumElement(Instrument):
         int_freq: float,
         ports: dict[str, int],
         mixer: IQMixer = None,
-        ops: dict[str, Pulse] = None,
+        operations: dict[str, PulseType] = None,
     ) -> None:
         """ """
         self._cls = type(self).__name__  # subclass name
@@ -71,9 +71,9 @@ class QuantumElement(Instrument):
 
         self._mixer: IQMixer = self._check_mixer(mixer)  # set once, then only gettable
 
-        self._ops: dict[str, Pulse] = self._default_ops.copy()  # settable
-        if ops is not None:
-            self.ops = ops  # update default ops with user supplied ops
+        self._operations: dict[str, PulseType] = self._default_ops.copy()  # settable
+        if operations is not None:
+            self.operations = operations  # update default ops with user supplied ops
 
         logger.info(f"Created {self._cls} '{name}', get current state with .parameters")
 
@@ -150,19 +150,19 @@ class QuantumElement(Instrument):
         return self._mixer
 
     @property  # operations getter
-    def ops(self) -> dict[str, Pulse]:
+    def operations(self) -> dict[str, PulseType]:
         """ """
-        return self._ops
+        return self._operations
 
-    @ops.setter
-    def ops(self, new_ops: dict[str, Pulse]) -> NoReturn:
+    @operations.setter
+    def operations(self, new_ops: dict[str, PulseType]) -> NoReturn:
         """ """
         try:
             for name, pulse in new_ops.items():
                 if not isinstance(pulse, Pulse):
                     logger.warning(f"Ignored invalid {pulse = }, must be of {Pulse}")
                 else:
-                    self._ops[str(name)] = pulse
+                    self._operations[str(name)] = pulse
                     logger.success(f"Set {self.name} op with {name = }, {pulse = }")
         except AttributeError:
-            logger.exception(f"Ops setter expects {dict[str, Pulse]}")
+            logger.exception(f"Expect {dict} with keys of {str} and values in {Pulse}")

@@ -77,7 +77,7 @@ class QuantumElement(Instrument):
 
         logger.info(f"Created {self._cls} '{name}', get current state with .parameters")
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """ """
         return f"{self._cls} {self.name}"
 

@@ -1,5 +1,5 @@
 """ """
-from dataclasses import dataclass, field
+
 from numbers import Number
 from typing import Callable, ClassVar, NoReturn, Union
 
@@ -11,135 +11,121 @@ from qcrew.helpers.yamlizer import Yamlable
 func_map = {"constant": constant_fn, "gaussian": gaussian_fn}
 
 
-@dataclass
 class Waveform(Yamlable):
     """ """
 
-    # class variable defining the name suffix of Waveform objects
-    _name_suffix: ClassVar[str] = "_wf"
-
-    fn: str  # the key in func_map that corresponds to the waveform generator function
-    args: tuple[Number]  # the arguments passed to the waveform generator function
-
-    def __post_init__(self) -> NoReturn:
+    def __init__(self, fn: str, args: tuple[Number]) -> None:
         """ """
-        self.name = self.fn + self._name_suffix
-        logger.success("Created {} named {}", self, self.name)
+        self._fn: str = str(fn)  # the key in func_map of the waveform's function
+        self.args: tuple[Number] = args  # arguments passed to the waveform's function
+        logger.info(f"Created {self}")
 
-    @property  # samples getter
-    def samples(self) -> Union[Number, list]:
-        try:
-            samples = func_map[self.fn](*self.args)
-        except KeyError:
-            logger.exception("{} does not exist in funclib", self.fn)
-            raise
-        except TypeError:
-            logger.exception("Invalid args {} passed to {}", self.args, self.fn)
-            raise
-        else:
-            logger.success("Got {} sample(s) of {}", len(samples), self)
-            return samples
+    def __repr__(self) -> str:
+        """ """
+        return f"{type(self).__name__}[{self.fn}, {self.args}]"
+
+    @property  # function name getter
+    def fn(self) -> str:
+        return self._fn
 
     @property  # is_constant getter
     def is_constant(self) -> bool:
-        return self.fn == "constant"
+        return self._fn == "constant"
+
+    @property  # samples getter
+    def samples(self) -> Union[Number, np.ndarray]:
+        try:
+            samples = func_map[self.fn](*self.args)
+        except KeyError as ke:
+            logger.exception(f"Unrecognized function '{self.fn}'")
+            raise SystemExit("Failed to get waveform samples, exiting...") from ke
+        except TypeError as te:
+            logger.exception(f"Invalid arguments = {self.args} passed to {self.fn} fn")
+            raise SystemExit("Failed to get waveform samples, exiting...") from te
+        else:
+            logger.success(f"Got {len(samples)} sample(s) of {self}")
+            return samples
 
 
-@dataclass
 class ControlPulse(Yamlable):
     """ """
 
-    # class variable defining the keyset of the waveforms of ControlPulse objects
-    _waveforms_keyset: ClassVar[frozenset[frozenset[str]]] = frozenset(
+    # class variable defining the valid keysets of the waveforms of ControlPulse objects
+    _wfs_keysets: ClassVar[set[frozenset[str]]] = set(
         [
             frozenset(["single"]),
             frozenset(["I", "Q"]),
         ]
     )
 
-    length: int
-    waveforms: dict[str, Waveform]
-
-    def __post_init__(self) -> NoReturn:
+    def __init__(self, length: int, waveforms: dict[str, Waveform]) -> None:
         """ """
-        try:
-            self._check_waveforms()
-        except (TypeError, ValueError):
-            logger.exception("Failed to validate {} waveforms", type(self).__name__)
-            raise
-        else:
-            logger.success("Created {}", self)
+        self.length: int = length
+        self._waveforms: dict[str, Waveform] = dict()  # to be updated by setter
+        self.waveforms = waveforms
+        logger.info(f"Created {self}")
 
-    def _check_waveforms(self) -> NoReturn:
-        if not isinstance(self.waveforms, dict):
-            raise TypeError(
-                "Expect waveforms of {}, got {}".format(
-                    dict[str, Waveform], type(self.waveforms)
-                )
-            )
-        elif set(self.waveforms) not in self._waveforms_keyset:
-            logger.exception(
-                "Set of keys in waveforms must be equal to one of {}",
-                [set(keyset) for keyset in self._waveforms_keyset],
-            )
-            raise ValueError("Invalid keys found in waveforms")
-        else:
-            for waveform in self.waveforms.values():
-                if not isinstance(waveform, Waveform):
-                    logger.exception(
-                        "Expected values in waveforms dict of {}, got {}",
-                        Waveform,
-                        type(waveform),
-                    )
-                    raise ValueError("Invalid waveform found in waveforms")
+    def __repr__(self) -> str:
+        """ """
+        return f"{type(self).__name__}[len: {self.length}, {self.waveforms}]"
 
-    @property  # has_valid_waveforms getter
-    def has_valid_waveforms(self) -> bool:
+    @property  # waveforms getter
+    def waveforms(self) -> dict[str, Waveform]:
+        """ """
+        return self._waveforms
+
+    @waveforms.setter
+    def waveforms(self, new_wfs: dict[str, Waveform]) -> NoReturn:
+        """ """
+        valid_keysets = [set(keyset) for keyset in self._wfs_keysets]
         try:
-            self._check_waveforms()
-        except (TypeError, ValueError):
-            logger.error("Failed to validate {} waveforms", type(self).__name__)
-            return False
-        else:
-            return True
+            if set(new_wfs) in valid_keysets:
+                for key, waveform in new_wfs.items():
+                    if not isinstance(waveform, Waveform):
+                        logger.warning(f"Invalid {waveform = }, must be of {Waveform}")
+                    else:
+                        self._waveforms[key] = waveform
+                        logger.success(f"Set '{key}' to {waveform}")
+            else:
+                logger.warning(f"Invalid keys found, must be one of {valid_keysets = }")
+        except (TypeError, AttributeError):
+            logger.exception(f"Expect {dict[str, Waveform]} with {valid_keysets = }")
 
     @property  # has_single_waveform getter
     def has_single_waveform(self) -> bool:
         """ """
-        try:
-            self._check_waveforms()
-        except (TypeError, ValueError):
-            logger.error("Failed to validate {} waveforms", type(self).__name__)
-            raise
-        else:
-            return len(self.waveforms) == 1
+        return set(self._waveforms) == {"single"}
 
 
-IntegrationWeights = dict[
-    str, tuple[Callable[int, np.ndarray], Callable[int, np.ndarray]]
-]
+IWType = dict[str, tuple[Callable[int, np.ndarray], Callable[int, np.ndarray]]]
 
 
-@dataclass
 class MeasurementPulse(ControlPulse):
     """ """
 
     # class variable defining default integration weights for MeasurementPulse objects
-    default_iw: ClassVar[IntegrationWeights] = {
+    default_iw: ClassVar[IWType] = {
         "iw1": (np.ones, np.zeros),  # iw_name: (cos_fn, sin_fn)
         "iw2": (np.zeros, np.ones),
     }
 
-    iw: IntegrationWeights = field(default_factory=default_iw.copy, init=False)
+    def __init__(self, iw: IWType = default_iw.copy(), **kwargs) -> None:
+        """ """
+        self.iw: IWType = iw
+        super().__init__(**kwargs)
 
     @property  # integration weights names list getter
     def iw_names(self) -> list[str]:
         return [*self.iw]
 
 
-Pulse = Union[ControlPulse, MeasurementPulse]
+Pulse = (ControlPulse, MeasurementPulse)  # for isinstance checks
+PulseType = Union[ControlPulse, MeasurementPulse]  # for typing hints
+
 
 # ------------------------ Archetypical waveforms and pulses ---------------------------
+
+logger.disable(__name__)  # do not log creation of these waveforms and pulses
 
 ZERO_WAVEFORM = Waveform(fn="constant", args=(0.0))
 DEFAULT_CONSTANT_WAVEFORM = Waveform(fn="constant", args=(0.32))
@@ -149,9 +135,11 @@ DEFAULT_CW_PULSE = ControlPulse(
     length=1000, waveforms={"I": DEFAULT_CONSTANT_WAVEFORM, "Q": ZERO_WAVEFORM}
 )
 DEFAULT_GAUSSIAN_PULSE = ControlPulse(
-    length=len(DEFAULT_GAUSSIAN_WAVEFORM.samples),
+    length=4000,
     waveforms={"I": DEFAULT_GAUSSIAN_WAVEFORM, "Q": ZERO_WAVEFORM},
 )
 DEFAULT_READOUT_PULSE = MeasurementPulse(
     length=1000, waveforms={"I": DEFAULT_CONSTANT_WAVEFORM, "Q": ZERO_WAVEFORM}
 )
+
+logger.enable(__name__)  # resume logging

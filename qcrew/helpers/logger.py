@@ -14,7 +14,7 @@ logger.remove()
 # customise logging levels
 logger.level("INFO", color="<white><bold>")
 logger.level("SUCCESS", color="<green>")
-logger.level("WARNING", color="<magenta><bold>")
+logger.level("WARNING", color="<magenta>")
 logger.level("ERROR", color="<red><bold>")
 
 

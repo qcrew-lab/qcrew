@@ -1,6 +1,6 @@
 """ """
 from dataclasses import asdict, dataclass, field
-from typing import ClassVar, NoReturn
+from typing import ClassVar
 
 from qcrew.helpers import logger
 from qcrew.helpers.pulsemaker import Pulse, PulseType
@@ -21,7 +21,7 @@ class QuantumElementPorts:
     # OPX AO port connected to Q port of this QuantumElement's IQMixer
     Q: int = field(default=None)
     # single OPX AO port connected to this QuantumElement
-    inp: int = field(default=None)
+    single: int = field(default=None)
     # OPX AI port that the output of this QuantumElement is fed to
     out: int = field(default=None)
 
@@ -31,11 +31,6 @@ class QuantumElementPorts:
     def has_mix_inputs(self) -> bool:
         """ """
         return self.I is not None and self.Q is not None
-
-    @property  # has_output getter
-    def has_output(self) -> bool:
-        """ """
-        return self.out is not None
 
 
 class QuantumElement(Instrument):
@@ -63,11 +58,11 @@ class QuantumElement(Instrument):
         self._cls = type(self).__name__  # subclass name
         self._name: str = str(name)  # only gettable, not settable
 
-        self._lo: LabBrick = lo  # only frequency and power gettable and settable
+        self.lo: LabBrick = lo  # only frequency and power gettable and settable
         self.int_freq: float = int_freq  # settable
 
         self._ports: QuantumElementPorts = None  # set once, then only gettable
-        self._create_ports(ports) # will set self._ports
+        self._create_ports(ports)  # will set self._ports
 
         self._mixer: IQMixer = self._check_mixer(mixer)  # set once, then only gettable
 
@@ -89,33 +84,17 @@ class QuantumElement(Instrument):
     def lo_freq(self) -> float:
         """ """
         try:
-            return self._lo.frequency
+            return self.lo.frequency
         except AttributeError:
-            logger.exception(f"Expect lo of {LabBrick}, got {type(self._lo)}")
+            logger.exception(f"Expect lo of {LabBrick}, got {type(self.lo)}")
 
     @lo_freq.setter
-    def lo_freq(self, new_frequency: float) -> NoReturn:
+    def lo_freq(self, new_frequency: float) -> None:
         """ """
         try:
-            self._lo.frequency = new_frequency
+            self.lo.frequency = new_frequency
         except AttributeError:
-            logger.exception(f"Expect lo of {LabBrick}, got {type(self._lo)}")
-
-    @property  # lo_power getter
-    def lo_power(self) -> float:
-        """ """
-        try:
-            return self._lo.power
-        except AttributeError:
-            logger.exception(f"Expect lo of {LabBrick}, got {type(self._lo)}")
-
-    @lo_power.setter
-    def lo_power(self, new_power: float) -> NoReturn:
-        """ """
-        try:
-            self._lo.power = new_power
-        except AttributeError:
-            logger.exception(f"Expect lo of {LabBrick}, got {type(self._lo)}")
+            logger.exception(f"Expect lo of {LabBrick}, got {type(self.lo)}")
 
     def _create_ports(self, initial_ports: dict[str, int]) -> QuantumElementPorts:
         """ """
@@ -140,7 +119,7 @@ class QuantumElement(Instrument):
         """ """
         if self._ports.has_mix_inputs and not isinstance(mixer, IQMixer):
             logger.warning(f"No IQMixer found for {self.name}, creating one now...")
-            return IQMixer(name="mixer_" + self.name)
+            return IQMixer()
         else:
             return mixer
 
@@ -155,14 +134,20 @@ class QuantumElement(Instrument):
         return self._operations
 
     @operations.setter
-    def operations(self, new_ops: dict[str, PulseType]) -> NoReturn:
+    def operations(self, new_ops: dict[str, PulseType]) -> None:
         """ """
         try:
             for name, pulse in new_ops.items():
-                if not isinstance(pulse, Pulse):
-                    logger.warning(f"Ignored invalid {pulse = }, must be of {Pulse}")
+                wf_keys = set(pulse.waveforms)
+                if  wf_keys != {"I", "Q"} and self._ports.has_mix_inputs:
+                    logger.error(f"Invalid {pulse = } for {self} with mix inputs")
+                    raise SystemExit("Failed to set element operations, exiting...")
+                elif not self._ports.has_mix_inputs and wf_keys != {"single"}:
+                    logger.error(f"Invalid {pulse = } for {self} with single input")
+                    raise SystemExit("Failed to set element operations, exiting...")
                 else:
                     self._operations[str(name)] = pulse
                     logger.success(f"Set {self.name} op with {name = }, {pulse = }")
-        except AttributeError:
-            logger.exception(f"Expect {dict} with keys of {str} and values in {Pulse}")
+        except AttributeError as e:
+            logger.exception(f"Expect {dict} with valid pulses {Pulse} as values")
+            raise SystemExit("Failed to set element operations, exiting...") from e

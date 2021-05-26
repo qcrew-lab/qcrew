@@ -1,7 +1,6 @@
 """ """
 from ctypes import CDLL, c_int, Array
 from pathlib import Path
-from typing import NoReturn
 
 # ------------------------------------- Driver -----------------------------------------
 DLL_NAME = "vnx_fmsynth.dll"  # dll must be in the same directory as this driver
@@ -59,7 +58,7 @@ def _initialize_device(device_handle: int):
         raise ConnectionError("Failed to open LabBrick")
 
 
-def close_device(device_handle: int) -> NoReturn:
+def close_device(device_handle: int) -> None:
     """ """
     status_code = VNX.fnLMS_CloseDevice(device_handle)
     if status_code != 0:  # non-zero return values indicate disconnection error
@@ -98,7 +97,7 @@ def set_frequency(device_handle: int, new_frequency: float) -> float:
         raise ConnectionError("Got bad response, check LabBrick connection")
 
 
-def _check_frequency_bounds(device_handle: int, frequency: float) -> NoReturn:
+def _check_frequency_bounds(device_handle: int, frequency: float) -> None:
     """ """
     min_ = get_min_frequency(device_handle)
     max_ = get_max_frequency(device_handle)
@@ -139,7 +138,7 @@ def set_power(device_handle: int, new_power: float) -> float:
         raise ConnectionError("Got bad response, check LabBrick connection")
 
 
-def _check_power_bounds(device_handle: int, power: float) -> NoReturn:
+def _check_power_bounds(device_handle: int, power: float) -> None:
     """ """
     min_ = get_min_power(device_handle)
     max_ = get_max_power(device_handle)

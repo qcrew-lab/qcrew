@@ -1,5 +1,6 @@
 """ """
-from typing import ClassVar, NoReturn
+
+from typing import ClassVar
 
 import qcrew.instruments.vaunix.labbrick_api as vnx
 from qcrew.helpers import logger
@@ -34,7 +35,7 @@ class LabBrick(PhysicalInstrument):
             logger.info(f"Connected to LB{self.id}, get current state with .parameters")
             return device_handle
 
-    def _initialize(self, frequency: float, power: float) -> NoReturn:
+    def _initialize(self, frequency: float, power: float) -> None:
         """ """
         vnx.set_use_internal_ref(self._handle, False)  # use external 10MHz reference
         self.toggle_rf()  # turn on RF, guaranteed to be off
@@ -44,7 +45,7 @@ class LabBrick(PhysicalInstrument):
         self.frequency = frequency if frequency is not None else self.frequency
         self.power = power if power is not None else self.power
 
-    def toggle_rf(self) -> NoReturn:
+    def toggle_rf(self) -> None:
         """ """
         toggle = not vnx.get_rf_on(self._handle)
         vnx.set_rf_on(self._handle, toggle)
@@ -63,7 +64,7 @@ class LabBrick(PhysicalInstrument):
             return frequency
 
     @frequency.setter
-    def frequency(self, new_frequency: float) -> NoReturn:
+    def frequency(self, new_frequency: float) -> None:
         """ """
         try:
             frequency = vnx.set_frequency(self._handle, new_frequency)
@@ -88,7 +89,7 @@ class LabBrick(PhysicalInstrument):
             return power
 
     @power.setter
-    def power(self, new_power: float) -> NoReturn:
+    def power(self, new_power: float) -> None:
         """ """
         try:
             power = vnx.set_power(self._handle, new_power)

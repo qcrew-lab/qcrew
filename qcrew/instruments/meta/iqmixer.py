@@ -1,6 +1,6 @@
 """ """
 from dataclasses import asdict, dataclass, field
-from typing import ClassVar, NoReturn
+from typing import ClassVar
 
 from qcrew.helpers import logger
 from qcrew.instruments.instrument import Instrument
@@ -32,21 +32,15 @@ class IQMixer(Instrument):
     """ """
 
     # class variable defining the parameter set for IQMixer objects
-    _parameters: ClassVar[set[str]] = set(["name", "offsets"])
+    _parameters: ClassVar[set[str]] = set(["offsets"])
 
-    def __init__(self, name: str, offsets: dict[str, float] = None) -> None:
-        self._name: str = str(name)  # only gettable, not settable
+    def __init__(self, offsets: dict[str, float] = None) -> None:
         self._offsets: IQMixerOffsets = self._create_offsets(offsets)  # settable
-        logger.info(f"Created IQMixer '{name}', get current state with .parameters")
+        logger.info("Created IQMixer, get current state with .parameters")
 
     def __repr__(self) -> str:
         """ """
-        return f"{type(self).__name__} {self.name}"
-
-    @property  # name getter
-    def name(self) -> str:
-        """ """
-        return self._name
+        return f"{type(self).__name__}, offsets: {self.offsets}"
 
     def _create_offsets(self, offsets: dict[str, float]) -> IQMixerOffsets:
         """ """
@@ -70,7 +64,7 @@ class IQMixer(Instrument):
         return asdict(self._offsets)
 
     @offsets.setter
-    def offsets(self, new_offsets: dict[str, float]) -> NoReturn:
+    def offsets(self, new_offsets: dict[str, float]) -> None:
         """ """
         valid_keys = set(IQMixerOffsets.keyset)
         try:

@@ -1,12 +1,14 @@
 """ """
 import inspect
+from pathlib import Path
+from typing import Any, Type, TypeVar
 
 import yaml
 
 from qcrew.helpers import logger
 
 # use scientific notation if abs(value) >= threshold
-def sci_not_representer(dumper, value):
+def sci_not_representer(dumper, value) -> yaml.ScalarNode:
     """ """
     threshold = 1e3  # arbitrary value
     yaml_float_tag = "tag:yaml.org,2002:float"
@@ -15,7 +17,7 @@ def sci_not_representer(dumper, value):
 
 
 # lists must be always represented in flow style, not block style
-def sequence_representer(dumper, value):
+def sequence_representer(dumper, value) -> yaml.SequenceNode:
     """ """
     yaml_seq_tag = "tag:yaml.org,2002:seq"
     return dumper.represent_sequence(yaml_seq_tag, value, flow_style=True)
@@ -24,7 +26,7 @@ def sequence_representer(dumper, value):
 class YamlableMetaclass(type):
     """ """
 
-    def __init__(cls, name, bases, kwds):
+    def __init__(cls, name, bases, kwds) -> None:
         """ """
         super(YamlableMetaclass, cls).__init__(name, bases, kwds)
 
@@ -47,11 +49,15 @@ class YamlableMetaclass(type):
         """ """
         return f"<class '{cls.__name__}'>"
 
+
+YamlableType = TypeVar("Yamlable", bound="Yamlable")  # for providing type hints
+
+
 class Yamlable(metaclass=YamlableMetaclass):
     """ """
 
     @property
-    def yaml_map(self):
+    def yaml_map(self) -> dict[str, Any]:
         """ """
         init_args_dict = inspect.signature(self.__init__).parameters
         try:
@@ -64,14 +70,26 @@ class Yamlable(metaclass=YamlableMetaclass):
             return yaml_map
 
     @classmethod
-    def from_yaml(cls, loader, node):
+    def from_yaml(cls: Type[YamlableType], loader, node) -> YamlableType:
         """ """
         yaml_map = loader.construct_mapping(node)
         logger.info(f"Loading {cls.__name__} from .yaml")
         return cls(**yaml_map)
 
     @classmethod
-    def to_yaml(cls, dumper, data):
+    def to_yaml(cls, dumper, data) -> yaml.MappingNode:
         """ """
         logger.info(f"Dumping {cls.__name__} to .yaml")
         return dumper.represent_mapping(data.yaml_tag, data.yaml_map)
+
+
+def load(path: Path) -> Any:
+    """ """
+    with path.open(mode="r") as file:
+        return yaml.safe_load(file)
+
+
+def save(yamlable: Yamlable, path: Path, mode: str = "a") -> None:
+    """ """
+    with path.open(mode=mode) as file:
+        yaml.safe_dump(yamlable, file, sort_keys=False)

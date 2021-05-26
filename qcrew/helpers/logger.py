@@ -1,15 +1,14 @@
 """ """
+
 from pathlib import Path
 import sys
 
 from loguru import logger
 
-# log folder path is relative to project directory
 LOG_FOLDER_NAME = "logs"
-LOG_FOLDER_PATH = Path.cwd() / LOG_FOLDER_NAME
+LOG_FOLDER_PATH = Path.cwd() / LOG_FOLDER_NAME  # relative to project directory
 
-# remove default handlers
-logger.remove()
+logger.remove()  # remove default handlers
 
 # customise logging levels
 logger.level("INFO", color="<white><bold>")

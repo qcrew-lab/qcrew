@@ -1,4 +1,5 @@
 """ """
+
 from typing import ClassVar
 
 from qcrew.helpers.pulsemaker import DEFAULT_CW_PULSE, DEFAULT_GAUSSIAN_PULSE, Pulse
@@ -11,20 +12,17 @@ class Qubit(QuantumElement):
     # class variable defining the parameter set for Qubit objects
     _parameters: ClassVar[set[str]] = set(
         [
-            "name",  # a unique name describing the Qubit
             "lo_freq",  # frequency of local oscillator driving the Qubit
-            "lo_power",  # output power of local oscillator driving the Qubit
             "int_freq",  # intermediate frequency driving the Qubit
-            "ports",  # input QuantumElementPorts of the Qubit
             "mixer",  # the IQMixer (if any) associated with the Qubit
-            "ops",  # operations that can be performed on the Qubit
+            "operations",  # operations that can be performed on the Qubit
         ]
     )
 
     # class variable defining the valid keysets of the ports of Qubit objects
     _ports_keysets: ClassVar[set[frozenset[str]]] = set(
         [
-            frozenset(["inp"]),
+            frozenset(["single"]),
             frozenset(["I", "Q"]),
         ]
     )

@@ -11,13 +11,10 @@ class ReadoutResonator(QuantumElement):
     # class variable defining the parameter set for ReadoutResonator objects
     _parameters: ClassVar[set[str]] = set(
         [
-            "name",  # a unique name describing the ReadoutResonator
             "lo_freq",  # frequency of local oscillator driving the ReadoutResonator
-            "lo_power",  # output power of local oscillator driving the ReadoutResonator
             "int_freq",  # intermediate frequency driving the ReadoutResonator
-            "ports",  # input and output QuantumElementPorts of the ReadoutResonator
             "mixer",  # the IQMixer (if any) associated with the ReadoutResonator
-            "ops",  # operations that can be performed on the ReadoutResonator
+            "operations",  # operations that can be performed on the ReadoutResonator
             "time_of_flight",  # as defined in the QM configuration specification
             "smearing",  # as defined in the QM configuration specification
         ]
@@ -26,13 +23,13 @@ class ReadoutResonator(QuantumElement):
     # class variable defining the valid keysets of the ports of ReadoutResonator objects
     _ports_keysets: ClassVar[set[frozenset[str]]] = set(
         [
-            frozenset(["inp", "out"]),
+            frozenset(["single", "out"]),
             frozenset(["I", "Q", "out"]),
         ]
     )
 
     # class variable defining the default operations dict for ReadoutResonator objects
-    _default_operations: ClassVar[dict[str, Pulse]] = {
+    _default_ops: ClassVar[dict[str, Pulse]] = {
         "CW": DEFAULT_CW_PULSE,
         "readout": DEFAULT_READOUT_PULSE,
     }

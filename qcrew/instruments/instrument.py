@@ -3,7 +3,7 @@ This module defines abstract base classes for encapsulating instruments in qcrew
 TODO WRITE DOCUMENTATION
 """
 from abc import abstractmethod
-from typing import Any, ClassVar, NoReturn
+from typing import Any, ClassVar
 
 from qcrew.helpers import logger
 from qcrew.helpers.yamlizer import Yamlable
@@ -43,7 +43,7 @@ class PhysicalInstrument(Instrument):
 
     def __init__(self, id) -> None:
         """ """
-        self.id: Any = id
+        self._id: Any = id
 
     # pylint: enable=redefined-builtin
 
@@ -51,14 +51,18 @@ class PhysicalInstrument(Instrument):
         """ """
         return f"{type(self).__name__} {self.id}"
 
+    @property  # id getter
+    def id(self) -> Any:
+        return self._id
+
     @abstractmethod
-    def _connect(self) -> NoReturn:
+    def _connect(self) -> None:
         """ """
 
     @abstractmethod
-    def _initialize(self, *initial_parameters) -> NoReturn:
+    def _initialize(self, *initial_parameters) -> None:
         """ """
 
     @abstractmethod
-    def disconnect(self) -> NoReturn:
+    def disconnect(self) -> None:
         """ """

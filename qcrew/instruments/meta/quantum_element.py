@@ -1,4 +1,5 @@
 """ """
+
 from dataclasses import asdict, dataclass, field
 from typing import ClassVar
 
@@ -57,6 +58,7 @@ class QuantumElement(Instrument):
         """ """
         self._cls = type(self).__name__  # subclass name
         self._name: str = str(name)  # only gettable, not settable
+        logger.info(f"Creating {self}...")
 
         self.lo: LabBrick = lo  # only frequency and power gettable and settable
         self.int_freq: float = int_freq  # settable
@@ -70,11 +72,11 @@ class QuantumElement(Instrument):
         if operations is not None:
             self.operations = operations  # update default ops with user supplied ops
 
-        logger.info(f"Created {self._cls} '{name}', get current state with .parameters")
+        logger.info(f"Created {self}, call `.parameters` to get current state")
 
     def __repr__(self) -> str:
         """ """
-        return f"{self._cls} {self.name}"
+        return f"{self._cls} '{self.name}'"
 
     @property  # name getter
     def name(self) -> str:
@@ -119,7 +121,7 @@ class QuantumElement(Instrument):
         """ """
         if self._ports.has_mix_inputs and not isinstance(mixer, IQMixer):
             logger.warning(f"No IQMixer found for {self.name}, creating one now...")
-            return IQMixer()
+            return IQMixer(name=self._name + ".mixer")
         else:
             return mixer
 
@@ -131,7 +133,7 @@ class QuantumElement(Instrument):
     @property  # operations getter
     def operations(self) -> dict[str, PulseType]:
         """ """
-        return self._operations
+        return {}
 
     @operations.setter
     def operations(self, new_ops: dict[str, PulseType]) -> None:
@@ -139,10 +141,10 @@ class QuantumElement(Instrument):
         try:
             for name, pulse in new_ops.items():
                 wf_keys = set(pulse.waveforms)
-                if  wf_keys != {"I", "Q"} and self._ports.has_mix_inputs:
+                if wf_keys != {"I", "Q"} and self._ports.has_mix_inputs:
                     logger.error(f"Invalid {pulse = } for {self} with mix inputs")
                     raise SystemExit("Failed to set element operations, exiting...")
-                elif not self._ports.has_mix_inputs and wf_keys != {"single"}:
+                elif wf_keys != {"single"} and not self._ports.has_mix_inputs:
                     logger.error(f"Invalid {pulse = } for {self} with single input")
                     raise SystemExit("Failed to set element operations, exiting...")
                 else:
@@ -151,3 +153,8 @@ class QuantumElement(Instrument):
         except AttributeError as e:
             logger.exception(f"Expect {dict} with valid pulses {Pulse} as values")
             raise SystemExit("Failed to set element operations, exiting...") from e
+
+    @operations.deleter
+    def operations(self) -> None:
+        """ """
+        self._operations = self._default_ops.copy()

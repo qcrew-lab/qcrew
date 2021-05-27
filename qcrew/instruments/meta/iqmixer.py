@@ -34,9 +34,9 @@ class IQMixer(Instrument):
     # class variable defining the parameter set for IQMixer objects
     _parameters: ClassVar[set[str]] = set(["offsets"])
 
-    def __init__(self, offsets: dict[str, float] = None) -> None:
+    def __init__(self, name: str, offsets: dict[str, float] = None) -> None:
+        self._name = str(name)
         self._offsets: IQMixerOffsets = self._create_offsets(offsets)  # settable
-        logger.info("Created IQMixer, get current state with .parameters")
 
     def __repr__(self) -> str:
         """ """
@@ -46,17 +46,22 @@ class IQMixer(Instrument):
         """ """
         valid_keys = IQMixerOffsets.keyset
         if not isinstance(offsets, dict) or not offsets:
-            logger.warning("No IQMixer offsets given, setting default values...")
+            logger.warning(f"No {self._name} offsets given, setting default values...")
             return IQMixerOffsets()
         elif set(offsets) == valid_keys:  # got all valid offsets
             return IQMixerOffsets(**offsets)
         elif set(offsets) < valid_keys:  # got some valid offsets
-            logger.warning("Setting defaults for unspecified IQMixer offsets...")
+            logger.warning(f"Setting defaults for unspecified {self._name} offsets...")
             return IQMixerOffsets(**offsets)
         else:  # got partially valid offsets dict
-            logger.warning("Found invalid IQMixer offset(s) keys, ignoring...")
+            logger.warning(f"Ignoring invalid {self._name} offset(s) keys...")
             valid_offsets = {k: offsets[k] for k in valid_keys if k in offsets}
             return IQMixerOffsets(**valid_offsets)
+
+    @property  # name getter
+    def name(self) -> str:
+        """ """
+        return self._name
 
     @property  # offsets getter
     def offsets(self) -> dict[str, float]:
@@ -71,7 +76,7 @@ class IQMixer(Instrument):
             for key, value in new_offsets.items():
                 if key in valid_keys:
                     setattr(self._offsets, key, value)
-                    logger.success(f"Set IQMixer {key} offset to {value}")
+                    logger.success(f"Set {self._name} {key} offset to {value}")
                 else:
                     logger.warning(f"Ignored invalid offset {key = }, {valid_keys = }")
         except AttributeError:

@@ -24,7 +24,7 @@ log_record_fmt = (  # customise log record format
 
 # register log sinks with loguru logger
 logger.add(  # save up to "TRACE" level logs in a log file for debugging
-    LOG_FOLDER_PATH / "session_{time:YYYY-MM-DD_HH-mm-ss}.log",  # new log file
+    LOG_FOLDER_PATH / "session.log",
     format=log_record_fmt,
     rotation="6 hours",  # current log file closed and new one started every 6 hours
     retention="1 week",  # log files created more than a week ago will be removed

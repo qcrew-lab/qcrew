@@ -7,18 +7,19 @@ import yaml
 
 from qcrew.helpers import logger
 
-# use scientific notation if abs(value) >= threshold
-def sci_not_representer(dumper, value) -> yaml.ScalarNode:
+
+def _sci_not_representer(dumper, value) -> yaml.ScalarNode:
     """ """
-    threshold = 1e3  # arbitrary value
+    # use scientific notation if abs(value) >= threshold
+    threshold = 1e3  # based on the feeling that values > 1e3 are better read in sci not
     yaml_float_tag = "tag:yaml.org,2002:float"
     value_in_sci_not = f"{value:.7E}" if abs(value) >= threshold else str(value)
     return dumper.represent_scalar(yaml_float_tag, value_in_sci_not)
 
 
-# lists must be always represented in flow style, not block style
-def sequence_representer(dumper, value) -> yaml.SequenceNode:
+def _sequence_representer(dumper, value) -> yaml.SequenceNode:
     """ """
+    # lists must be always represented in flow style, not block style
     yaml_seq_tag = "tag:yaml.org,2002:seq"
     return dumper.represent_sequence(yaml_seq_tag, value, flow_style=True)
 
@@ -41,9 +42,9 @@ class YamlableMetaclass(type):
         cls.yaml_loader.add_constructor(cls.yaml_tag, cls.from_yaml)
         cls.yaml_dumper.add_representer(cls, cls.to_yaml)
         # customise dumper to represent float values in scientific notation
-        cls.yaml_dumper.add_representer(float, sci_not_representer)
+        cls.yaml_dumper.add_representer(float, _sci_not_representer)
         # customise dumper to represent tuples and lists in flow style
-        cls.yaml_dumper.add_representer(list, sequence_representer)
+        cls.yaml_dumper.add_representer(list, _sequence_representer)
 
     def __repr__(cls) -> str:
         """ """

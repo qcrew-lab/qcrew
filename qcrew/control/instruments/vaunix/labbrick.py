@@ -4,10 +4,10 @@ from typing import ClassVar
 
 import qcrew.instruments.vaunix.labbrick_api as vnx
 from qcrew.helpers import logger
-from qcrew.instruments.instrument import PhysicalInstrument
+from qcrew.control.instruments.instrument import Instrument
 
 
-class LabBrick(PhysicalInstrument):
+class LabBrick(Instrument):
     """ """
 
     # class variable defining the parameter set for LabBrick objects
@@ -18,12 +18,13 @@ class LabBrick(PhysicalInstrument):
     def __init__(self, id: int, frequency: float = None, power: float = None) -> None:
         """ """
         super().__init__(id)
-        self._handle: int = self._connect()
+        self._handle: int = None  # will be updated by self._connect()
+        self._connect()
         self._initialize(frequency, power)
 
     # pylint: enable=redefined-builtin
 
-    def _connect(self) -> int:
+    def _connect(self) -> None:
         """ """
         try:
             device_handle = vnx.connect_to_device(self.id)
@@ -33,7 +34,7 @@ class LabBrick(PhysicalInstrument):
 
         else:
             logger.info(f"Connected to LB{self.id}, get current state with .parameters")
-            return device_handle
+            self._handle = device_handle
 
     def _initialize(self, frequency: float, power: float) -> None:
         """ """
@@ -101,7 +102,7 @@ class LabBrick(PhysicalInstrument):
         else:
             logger.success(f"LB{self.id} set {power = } dBm")
 
-    def disconnect(self):
+    def disconnect(self) -> None:
         """ """
         if vnx.get_rf_on(self._handle):
             self.toggle_rf()  # turn off RF if on

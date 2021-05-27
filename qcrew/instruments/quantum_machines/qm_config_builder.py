@@ -62,7 +62,7 @@ def _set_default_waveforms(config: QMConfig) -> None:
     config["waveforms"]["zero_wf"] = {"type": "constant", "sample": 0.0}
 
 
-def _check_value(value: int, min_: int, max_: int) -> None:
+def _check_bounds(value: int, min_: int, max_: int) -> None:
     """ """
     if not min_ < value < max_:
         raise ValueError(f"{value = } out of bounds ({min_}, {max_})")
@@ -71,7 +71,7 @@ def _check_value(value: int, min_: int, max_: int) -> None:
 def _create_ports(config: QMConfig, ports: dict[str, dict[str, int]]) -> None:
     """ """
     for e_name in ports:
-        logger.info(f"Setting '{e_name}' ports to {ports[e_name]}...")
+        logger.info(f"Setting {e_name} ports to {ports[e_name]}...")
         for port in ports[e_name]:
             try:
                 port_value = ports[e_name][port]
@@ -88,10 +88,16 @@ def _set_controller_port(config: QMConfig, key: str, value: int) -> None:
     """ """
     controller_config = config["controllers"][CONTROLLER_NAME]
     if key in ("I", "Q", "single"):
-        _check_value(value, min_=AO_PORT_BOUNDS[0], max_=AO_PORT_BOUNDS[1])
+        if value in controller_config["analog_outputs"]:
+            logger.error(f"Analog output port {value} has already been assigned")
+            raise ValueError("Duplicate port assignment")
+        _check_bounds(value, min_=AO_PORT_BOUNDS[0], max_=AO_PORT_BOUNDS[1])
         controller_config["analog_outputs"][value]["offset"] = 0.0
     elif key == "out":
-        _check_value(value, min_=AI_PORT_BOUNDS[0], max_=AI_PORT_BOUNDS[1])
+        if value in controller_config["analog_inputs"]:
+            logger.error(f"Analog input port {value} has already been assigned")
+            raise ValueError("Duplicate port assignment")
+        _check_bounds(value, min_=AI_PORT_BOUNDS[0], max_=AI_PORT_BOUNDS[1])
         controller_config["analog_inputs"][value]["offset"] = 0.0
 
 
@@ -102,7 +108,7 @@ def _set_element_port(config: QMConfig, e_name: str, key: str, value: int) -> No
         element_config["mixInputs"][key] = (CONTROLLER_NAME, value)
     elif key == "out":
         key = key + str(value)  # valid config keys are "out1" or "out2"
-        element_config["singleInput"]["outputs"][key] = (CONTROLLER_NAME, value)
+        element_config["outputs"][key] = (CONTROLLER_NAME, value)
     elif key == "single":
         element_config["singleInput"]["port"] = (CONTROLLER_NAME, value)
 
@@ -111,7 +117,7 @@ def _create_mixers(config: QMConfig, ports: dict[str, dict[str, int]]) -> None:
     """ """
     mixer_dict_keys = {"intermediate_frequency", "lo_frequency", "correction"}
     for e_name in ports:
-        if set(ports[e_name]) == {"I", "Q"}:  # if element has mix input ports
+        if set(ports[e_name]) >= {"I", "Q"}:  # if element has mix input ports
             mixer_name = get_mixer_name(e_name)
             logger.info(f"Creating '{mixer_name}'...")
             config["mixers"][mixer_name] = [{key: None for key in mixer_dict_keys}]
@@ -121,26 +127,24 @@ def _create_mixers(config: QMConfig, ports: dict[str, dict[str, int]]) -> None:
 def _set_mixer(config: QMConfig, e_name: str, new_val: _Mixer, old_val: _Mixer) -> None:
     """ """
     element_config = config["elements"][e_name]
-    if ["mixInputs"] not in element_config:
+    if "mixInputs" not in element_config:
         logger.warning(f"Ignored mixer defined for element {e_name} with no mix inputs")
         return
 
     mixer_name = get_mixer_name(e_name)
     analog_outputs_config = config["controllers"]["con1"]["analog_outputs"]
     offsets = new_val["offsets"]
-    logger.info(f"Setting {mixer_name} {offsets = }...")
-
     diff = set(offsets) if old_val is None else (set(offsets) - set(old_val["offsets"]))
     try:
         if "I" in diff:
-            i_port = element_config["mixInputs"]["I"][1]
             i_offset = float(offsets["I"])
-            _check_value(i_offset, min_=VOLTAGE_BOUNDS[0], max_=VOLTAGE_BOUNDS[1])
+            _check_bounds(i_offset, min_=VOLTAGE_BOUNDS[0], max_=VOLTAGE_BOUNDS[1])
+            i_port = element_config["mixInputs"]["I"][1]
             analog_outputs_config[i_port]["offset"] = i_offset
         if "Q" in diff:
-            q_port = element_config["mixInputs"]["Q"][1]
             q_offset = float(offsets["Q"])
-            _check_value(i_offset, min_=VOLTAGE_BOUNDS[0], max_=VOLTAGE_BOUNDS[1])
+            _check_bounds(i_offset, min_=VOLTAGE_BOUNDS[0], max_=VOLTAGE_BOUNDS[1])
+            q_port = element_config["mixInputs"]["Q"][1]
             analog_outputs_config[q_port]["offset"] = q_offset
         if "G" in diff or "P" in diff:
             g_offset, p_offset = float(offsets["G"]), float(offsets["P"])
@@ -149,6 +153,8 @@ def _set_mixer(config: QMConfig, e_name: str, new_val: _Mixer, old_val: _Mixer) 
     except (TypeError, ValueError) as e:
         logger.exception(f"Invalid value found in {mixer_name} {offsets = }")
         raise SystemExit("Failed to set mixer offsets in QM config, exiting...") from e
+    else:
+        logger.success(f"Set {mixer_name} {offsets = }")
 
 
 def _get_mixer_correction_matrix(gain: float, phase: float) -> list[float]:
@@ -159,7 +165,7 @@ def _get_mixer_correction_matrix(gain: float, phase: float) -> list[float]:
     matrix = [(1 - gain) * cos, (1 + gain) * sin, (1 - gain) * sin, (1 + gain) * cos]
     correction_matrix = [float(coeff * x) for x in matrix]
     for value in correction_matrix:
-        _check_value(value, min_=CORRECTION_BOUNDS[0], max_=CORRECTION_BOUNDS[1])
+        _check_bounds(value, min_=CORRECTION_BOUNDS[0], max_=CORRECTION_BOUNDS[1])
     return correction_matrix
 
 
@@ -222,29 +228,29 @@ def _set_ops(config: QMConfig, e_name: str, new_val: _Ops, old_val: _Ops) -> Non
     for op_name in symm_diff:  # symm_diff means symmetric difference
         pulse_name = get_pulse_name(e_name, op_name)  # name to be set in QM config
         operations_config = config["elements"][e_name]["operations"]
-        new_pulse, old_pulse = new_val[op_name], old_val[op_name]
         if op_name not in new_val:  # op has been removed
             del operations_config[op_name]
-            _remove_pulse(config, pulse_name, old_pulse)
-            logger.success(f"Removed {e_name} operation {op_name} with {old_pulse}")
-        elif op_name in operations_config:  # op updated
-            logger.info(f"Updating {e_name} operation {op_name}...")
-            _set_pulse(config, pulse_name, new_pulse, old_pulse)
-        else:  # op added
+            old_pulse = old_val[op_name]
+            _del_pulse(config, pulse_name, old_pulse)
+            logger.success(f"Deleted {e_name} operation '{op_name}'")
+        else:  # op added or updated
+            new_pulse = new_val[op_name]
             operations_config[op_name] = pulse_name
-            _create_pulse(config, pulse_name, new_pulse)
-            logger.success(f"Added {e_name} operation {op_name} with {new_pulse}")
+            logger.info(f"Setting {e_name} operation '{op_name}'...")
+            _set_pulse(config, pulse_name, new_pulse)
 
 
-def _create_pulse(config: QMConfig, p_name: str, pulse: _Pulse) -> None:
+def _set_pulse(config: QMConfig, p_name: str, pulse: _Pulse) -> None:
     """ """
     pulse_config = config["pulses"][p_name]
     _set_pulse_len(config, p_name, pulse.length, None)
 
-    for key, waveform in pulse.waveforms:
+    for key, waveform in pulse.waveforms.items():
         wf_name = "zero_wf" if waveform == ZERO_WAVEFORM else get_wf_name(p_name, key)
         pulse_config["waveforms"][key] = wf_name
-        _set_waveform(config, wf_name, waveform)
+        if wf_name != "zero_wf":
+            _set_waveform(config, wf_name, waveform)
+        logger.success(f"Set {p_name} '{key}' to {waveform}")
 
     if isinstance(pulse, MeasurementPulse):
         pulse_config["operation"] = "measurement"
@@ -257,7 +263,7 @@ def _create_pulse(config: QMConfig, p_name: str, pulse: _Pulse) -> None:
         pulse_config["operation"] = "control"
 
 
-def _remove_pulse(config: QMConfig, p_name: str, pulse: _Pulse) -> None:
+def _del_pulse(config: QMConfig, p_name: str, pulse: _Pulse) -> None:
     """ """
     for wf_name in config["pulses"][p_name]["waveforms"].values():
         if wf_name != "zero_wf":
@@ -268,31 +274,6 @@ def _remove_pulse(config: QMConfig, p_name: str, pulse: _Pulse) -> None:
             del config["integration_weights"][get_iw_name(p_name, iw_key)]
 
     del config["pulses"][p_name]
-
-
-def _set_pulse(config: QMConfig, p_name: str, new_val: _Pulse, old_val: _Pulse) -> None:
-    """ """
-    # pylint: disable=unidiomatic-typecheck, type check is necessary to update QM config
-    if type(new_val) != type(old_val):
-        logger.warning(f"{p_name} changed from {type(old_val)} to {type(new_val)}")
-        _remove_pulse(config, p_name, old_val)
-        _create_pulse(config, p_name, new_val)
-        return  # pylint: enable=unidiomatic-typecheck
-
-    if new_val.length != old_val.length:
-        _set_pulse_len(config, p_name, new_val.length, old_val.length)
-        if isinstance(new_val, MeasurementPulse):
-            _set_integration_weights(config, p_name, new_val)
-
-    pulse_wf_config = config["pulses"][p_name]["waveforms"]
-    for key, new_wf in new_val.waveforms:
-        old_wf = old_val.waveforms[key]
-        if new_wf != old_wf:  # waveform has been updated
-            wf_name = get_wf_name(p_name, key)
-            pulse_wf_config[key] = "zero_wf" if new_wf == ZERO_WAVEFORM else wf_name
-            if new_wf != ZERO_WAVEFORM:
-                _set_waveform(config, wf_name, new_wf)
-            logger.success(f"Set {p_name} {key} waveform from {old_wf} to {new_wf}")
 
 
 def _set_pulse_len(config: QMConfig, p_name: str, new_val: int, old_val: int) -> None:
@@ -312,7 +293,7 @@ def _set_pulse_len(config: QMConfig, p_name: str, new_val: int, old_val: int) ->
 
 def _set_integration_weights(config: QMConfig, p_name: str, pulse: _Pulse) -> None:
     """ """
-    for key, fns in pulse.iw:
+    for key, fns in pulse.iw.items():
         iw_config = config["integration_weights"][get_iw_name(p_name, key)]
         try:
             iw_config["cosine"] = fns[0](int(pulse.length / CLOCK_CYCLE))
@@ -320,7 +301,7 @@ def _set_integration_weights(config: QMConfig, p_name: str, pulse: _Pulse) -> No
         except (TypeError, IndexError) as e:
             logger.exception(f"Invalid integration weight '{key}' generator {fns = }")
             raise SystemExit("Failed to set integration weights, exiting...") from e
-    logger.success(f"Set {p_name} with integration weights from {pulse.iw}")
+    logger.success(f"Set integration weights for {p_name}")
 
 
 def _set_waveform(config: QMConfig, wf_name: str, waveform: Waveform) -> None:
@@ -332,12 +313,12 @@ def _set_waveform(config: QMConfig, wf_name: str, waveform: Waveform) -> None:
     try:
         if wf_type == "constant":
             sample = float(waveform.samples)
-            _check_value(sample, min_=VOLTAGE_BOUNDS[0], max_=VOLTAGE_BOUNDS[1])
+            _check_bounds(sample, min_=VOLTAGE_BOUNDS[0], max_=VOLTAGE_BOUNDS[1])
             wf_config["sample"] = sample
         else:
             samples = [float(sample) for sample in waveform.samples]
-            _check_value(max(samples), min_=VOLTAGE_BOUNDS[0], max_=VOLTAGE_BOUNDS[1])
-            _check_value(min(samples), min_=VOLTAGE_BOUNDS[0], max_=VOLTAGE_BOUNDS[1])
+            _check_bounds(max(samples), min_=VOLTAGE_BOUNDS[0], max_=VOLTAGE_BOUNDS[1])
+            _check_bounds(min(samples), min_=VOLTAGE_BOUNDS[0], max_=VOLTAGE_BOUNDS[1])
             wf_config["samples"] = samples
     except (TypeError, ValueError) as e:
         logger.exception(f"Invalid {waveform} sample(s) obtained")
@@ -360,22 +341,18 @@ method_map: dict[str, Callable] = {
 }
 
 
-# _state_map = {element_name: (current_state, previous_state)}
-_StateMap = dict[str, tuple[dict[str, Any], Union[None, dict[str, Any]]]]
-
-
 class QMConfigBuilder:
     """ """
+
+    # instance variable to save the previous state of all elements
+    _state_map: dict[str, Union[None, dict[str, Any]]] 
 
     def __init__(self, *elements: QuantumElement) -> None:
         """ """
         self._elements: set[QuantumElement] = self._check_elements(*elements)
-
-        # _state_map and _config are set on first `.config` call by _create_config()
-        self._state_map: _StateMap = None  # to save current & previous elements' state
-        self._config: QMConfig = None
-
-        logger.info(f"Call `.config` to build QM config for {elements = }")
+        self._state_map = {e.name: None for e in self._elements}  # {e.name: e.params}
+        self._config: QMConfig = None  # set on first `.config` call by _create_config()
+        logger.info(f"Call `.config` to build QM config for {self._elements}")
 
     def _check_elements(self, *elements: QuantumElement) -> set[QuantumElement]:
         """ """
@@ -399,16 +376,12 @@ class QMConfigBuilder:
         if self._config is None:  # user has called `.config` for the first time
             logger.info(f"Creating QM config for {self._elements}...")
             self._create_config()
-
-        logger.info(f"Updating QM config for {self._elements}...")
         self._update_config()
-
         logger.info("QM config is ready!")
         return self._config
 
     def _create_config(self) -> None:
         """ """
-        self._state_map = {e.name: (e.parameters, None) for e in self._elements}
         self._config = QMConfig()
         _set_version(self._config)  # set non-element related config fields
         _set_controller_type(self._config)
@@ -422,13 +395,13 @@ class QMConfigBuilder:
     def _update_config(self) -> None:
         """ """
         for element in self._elements:
+            logger.info(f"Checking for updates to {element}...")
             e_name = element.name  # e means element
-            curr_state = self._state_map[e_name][0]  # curr means current
-            prev_state = self._state_map[e_name][1]  # prev means previous
+            curr_state = element.parameters  # curr means current
+            prev_state = self._state_map[e_name] # prev means previous
             for param in curr_state:
                 curr_value = curr_state[param]
                 prev_value = None if prev_state is None else prev_state[param]
                 if curr_value != prev_value:  # update config if param value changed
                     method_map[param](self._config, e_name, curr_value, prev_value)
-            self._state_map[e_name][0] = element.parameters  # save curr state
-            self._state_map[e_name][1] = curr_state  # update prev state
+            self._state_map[e_name] = curr_state  # update prev state for next update

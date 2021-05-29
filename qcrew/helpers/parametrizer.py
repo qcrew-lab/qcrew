@@ -20,7 +20,7 @@ class Paramable(Yamlable):
             try:
                 param_value = getattr(self, param)
             except AttributeError as e:
-                cls_ = type(self).__name__
+                cls_ = type(self).__name__  # get subclass name
                 logger.exception(f"Parameter '{param}' must be an attribute of {cls_}")
                 raise SystemExit("Failed to get parameters, exiting...") from e
             else:

@@ -3,7 +3,7 @@ from dataclasses import asdict, dataclass, field
 from typing import ClassVar
 
 from qcrew.helpers import logger
-from qcrew.instruments.instrument import Instrument
+from qcrew.helpers.parametrizer import Paramable
 
 
 @dataclass(repr=False, eq=False)
@@ -28,7 +28,7 @@ class IQMixerOffsets:
     # pylint: enable=invalid-name
 
 
-class IQMixer(Instrument):
+class IQMixer(Paramable):
     """ """
 
     # class variable defining the parameter set for IQMixer objects
@@ -36,27 +36,13 @@ class IQMixer(Instrument):
 
     def __init__(self, name: str, offsets: dict[str, float] = None) -> None:
         self._name = str(name)
-        self._offsets: IQMixerOffsets = self._create_offsets(offsets)  # settable
+        self._offsets: IQMixerOffsets = IQMixerOffsets()  # initialize default offsets
+        if offsets is not None:
+            self.offsets = offsets  # set offsets if specified by user
 
     def __repr__(self) -> str:
         """ """
         return f"{type(self).__name__}, offsets: {self.offsets}"
-
-    def _create_offsets(self, offsets: dict[str, float]) -> IQMixerOffsets:
-        """ """
-        valid_keys = IQMixerOffsets.keyset
-        if not isinstance(offsets, dict) or not offsets:
-            logger.warning(f"No {self._name} offsets given, setting default values...")
-            return IQMixerOffsets()
-        elif set(offsets) == valid_keys:  # got all valid offsets
-            return IQMixerOffsets(**offsets)
-        elif set(offsets) < valid_keys:  # got some valid offsets
-            logger.warning(f"Setting defaults for unspecified {self._name} offsets...")
-            return IQMixerOffsets(**offsets)
-        else:  # got partially valid offsets dict
-            logger.warning(f"Ignoring invalid {self._name} offset(s) keys...")
-            valid_offsets = {k: offsets[k] for k in valid_keys if k in offsets}
-            return IQMixerOffsets(**valid_offsets)
 
     @property  # name getter
     def name(self) -> str:

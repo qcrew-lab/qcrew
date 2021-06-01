@@ -25,7 +25,7 @@ log_record_fmt = (  # customise log record format
 logger.add(  # save up to "TRACE" level logs in a log file for debugging
     LOG_FOLDER_PATH / "session.log",
     format=log_record_fmt,
-    rotation="6 hours",  # current log file closed and new one started every 6 hours
+    rotation="24 hours",  # current log file closed and new one started every 24 hours
     retention="1 week",  # log files created more than a week ago will be removed
     level="TRACE",
     backtrace=False,  # no need to save exception trace beyond catching point

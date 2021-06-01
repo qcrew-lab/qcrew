@@ -12,7 +12,7 @@ from qcrew.helpers.pulsemaker import (
     PulseType,
     Waveform,
 )
-from qcrew.control.cqed_components import QuantumElement
+from qcrew.control.elements import QuantumElement
 
 CONFIG_VERSION = 1
 CONTROLLER_NAME = "con1"

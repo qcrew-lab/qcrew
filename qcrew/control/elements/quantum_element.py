@@ -4,10 +4,10 @@ from dataclasses import asdict, dataclass, field
 from typing import ClassVar
 
 from qcrew.helpers import logger
+from qcrew.helpers.parametrizer import Paramable
 from qcrew.helpers.pulsemaker import Pulse, PulseType
-from qcrew.instruments import LabBrick
-from qcrew.instruments.instrument import Instrument
-from qcrew.instruments.meta.iqmixer import IQMixer
+from qcrew.control.instruments import LabBrick
+from qcrew.control.elements.iqmixer import IQMixer
 
 
 @dataclass(repr=False, eq=False)
@@ -34,7 +34,7 @@ class QuantumElementPorts:
         return self.I is not None and self.Q is not None
 
 
-class QuantumElement(Instrument):
+class QuantumElement(Paramable):
     """ """
 
     # class variable defining the parameter set for QuantumElement objects

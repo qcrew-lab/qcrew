@@ -10,8 +10,7 @@ from qcrew.helpers.parametrizer import Paramable
 class IQMixerOffsets:
     """ """
 
-    # class variable defining the keyset of the offsets of IQMixer objects
-    keyset: ClassVar[frozenset[str]] = frozenset(["I", "Q", "G", "P"])
+    keyset: ClassVar[tuple[str]] = ("I", "Q", "G", "P")
 
     # pylint: disable=invalid-name
     # these names have specific meanings that are well understood by qcrew
@@ -31,8 +30,7 @@ class IQMixerOffsets:
 class IQMixer(Paramable):
     """ """
 
-    # class variable defining the parameter set for IQMixer objects
-    _parameters: ClassVar[set[str]] = set(["offsets"])
+    _parameters: ClassVar[set[str]] = {"offsets"}
 
     def __init__(self, name: str, offsets: dict[str, float] = None) -> None:
         self._name = str(name)
@@ -57,7 +55,7 @@ class IQMixer(Paramable):
     @offsets.setter
     def offsets(self, new_offsets: dict[str, float]) -> None:
         """ """
-        valid_keys = set(IQMixerOffsets.keyset)
+        valid_keys = IQMixerOffsets.keyset
         try:
             for key, value in new_offsets.items():
                 if key in valid_keys:

@@ -2,10 +2,10 @@
 from abc import abstractmethod
 from typing import Any
 
-from qcrew.helpers.parametrizer import Paramable
+from qcrew.helpers.parametrizer import Parametrized
 
 
-class Instrument(Paramable):
+class Instrument(Parametrized):
     """ """
 
     # pylint: disable=redefined-builtin, intentional shadowing of `id`

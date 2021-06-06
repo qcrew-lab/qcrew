@@ -97,6 +97,11 @@ class GaussianPulse(Pulse):
             self.Q = GaussianDragWave(drag, sigma, chop)
 
 
+# NOTE to add a new control pulse, subclass 'Pulse', write __init__ and __call__ dunder methods to initialize and set waveform parameters respectively when called with the correct arguments.
+
+# NOTE the code for measurement pulses is still under development...
+
+
 class ConstantReadoutPulse(ConstantPulse):
     """ """
 

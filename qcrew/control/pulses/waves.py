@@ -126,4 +126,4 @@ class TanhRampWave(Wave):
         # NOTE perhaps we can add a start y offset so we end exactly at amp?
 
 
-# NOTE to add a new wave, subclass 'Wave', define the new wave's parameter set, write __init__ and __call__ dunder methods to initialize and generate wave samples respectively when called with the correct arguments.
+# NOTE to add a new wave, subclass 'Wave', define the parameter set of the wave, write __init__ and __call__ dunder methods to initialize and generate wave samples respectively when called with the correct arguments.

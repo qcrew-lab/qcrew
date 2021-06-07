@@ -10,8 +10,7 @@ from qcrew.control.instruments.instrument import Instrument
 class LabBrick(Instrument):
     """ """
 
-    # class variable defining the parameter set for LabBrick objects
-    _parameters: ClassVar[set[str]] = set(["frequency", "power"])
+    _parameters: ClassVar[set[str]] = {"id", "frequency", "power"}
 
     # pylint: disable=redefined-builtin, intentional shadowing of `id`
 

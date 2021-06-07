@@ -18,7 +18,7 @@ class Mode(Parametrized):
 
     _parameters: ClassVar[set[str]] = {
         "name",  # a string to identify the Mode in the QM config file
-        "lo_freq",  # frequency of local oscillator driving the Mode
+        "lo",  # reference to the local oscillator object driving the Mode
         "int_freq",  # intermediate frequency driving the Mode
         "ports",  # OPX ports connected to this Mode
         "offsets",  # offsets used to tune the Mode's IQ mixer
@@ -34,20 +34,26 @@ class Mode(Parametrized):
         int_freq: float,
         ports: dict[str, int],
         offsets: dict[str, float] = None,
+        operations: dict[str, Pulse] = None,
     ) -> None:
         """ """
         self.name: str = name
+
         self.lo: LabBrick = lo
         self.int_freq: float = int_freq
 
         self._ports: dict[str, int] = {key: None for key in self._ports_keys}
         self.ports = ports
 
-        self._offsets: dict[str, float] = {key: None for key in self._offsets_keys}
+        self._offsets: dict[str, float] = {key: 0.0 for key in self._offsets_keys}
         if offsets is not None:
             self.offsets = offsets
 
-        self.operations: dict[str, Pulse] = {  # "unselective" operations
+        self._operations: dict[str, Pulse] = dict()
+        if operations is not None:
+            self.operations = operations
+        else:
+            self.operations = {  # set default "unselective" operations
             "CW": ConstantPulse(amp=0.4, length=1000),
             "gaussian": GaussianPulse(amp=0.4, sigma=15, chop=4),
         }
@@ -57,24 +63,6 @@ class Mode(Parametrized):
     def __repr__(self) -> str:
         """ """
         return f"{type(self).__name__} '{self.name}'"
-
-    @property  # lo_freq getter
-    def lo_freq(self) -> float:
-        """ """
-        try:
-            return self.lo.frequency
-        except AttributeError as e:
-            logger.exception(f"Expect lo of {LabBrick}, got {type(self.lo)}")
-            raise SystemExit(f"Failed to get {self} lo frequency, exiting...") from e
-
-    @lo_freq.setter
-    def lo_freq(self, new_frequency: float) -> None:
-        """ """
-        try:
-            self.lo.frequency = new_frequency
-        except AttributeError:
-            logger.exception(f"Expect lo of {LabBrick}, got {type(self.lo)}")
-            raise SystemExit(f"Failed to set {self} lo frequency, exiting...") from e
 
     @property  # ports getter
     def ports(self) -> dict[str, int]:
@@ -93,7 +81,7 @@ class Mode(Parametrized):
                 else:
                     logger.warning(f"Ignoring invalid key '{key}', {valid_keys = }")
         except TypeError as e:
-            logger.exception(f"Ports must be {dict[str, int]} with {valid_keys = }")
+            logger.exception(f"Setter expects {dict[str, int]} with {valid_keys = }")
             raise SystemExit(f"Failed to set {self} ports, exiting...") from e
 
     @property  # offsets getter
@@ -113,8 +101,27 @@ class Mode(Parametrized):
                 else:
                     logger.warning(f"Ignoring invalid key '{key}', {valid_keys = }")
         except TypeError as e:
-            logger.exception(f"Offsets must be {dict[str, float]} with {valid_keys = }")
+            logger.exception(f"Setter expects {dict[str, float]} with {valid_keys = }")
             raise SystemExit(f"Failed to set {self} offsets, exiting...") from e
+
+    @property  # operations getter
+    def operations(self) -> dict[str, Pulse]:
+        """ """
+        return {name: pulse.parameters for name, pulse in self._operations}
+
+    @operations.setter
+    def operations(self, new_operations: dict[str, Pulse]) -> None:
+        """ """
+        try:
+            for name, pulse in new_operations.items():
+                if isinstance(pulse, Pulse):
+                    self._operations[name] = pulse
+                    logger.success(f"Set {self} '{name}' operation to {pulse}")
+                else:
+                    logger.warning(f"Ignoring invalid value '{pulse}', must be {Pulse}")
+        except TypeError as e:
+            logger.exception(f"Setter expects {dict[str, Pulse]}")
+            raise SystemExit(f"Failed to set {self} operations, exiting...") from e
 
 
 class ReadoutMode(Mode):

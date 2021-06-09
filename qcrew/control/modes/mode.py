@@ -54,8 +54,8 @@ class Mode(Parametrized):
             self.operations = operations
         else:
             self.operations = {  # set default "unselective" operations
-            "CW": ConstantPulse(amp=0.4, length=1000),
-            "gaussian": GaussianPulse(amp=0.4, sigma=15, chop=4),
+            "constant_pulse": ConstantPulse(amp=0.4, length=1000),
+            "gaussian_pulse": GaussianPulse(amp=0.4, sigma=15, chop=4),
         }
 
         logger.info(f"Created {self}, call `.parameters` to get current state")
@@ -116,12 +116,22 @@ class Mode(Parametrized):
             for name, pulse in new_operations.items():
                 if isinstance(pulse, Pulse):
                     self._operations[name] = pulse
-                    logger.success(f"Set {self} '{name}' operation to {pulse}")
+                    setattr(self, name, pulse)  # for easy access
+                    logger.success(f"Set {self} operation '{name}'")
                 else:
                     logger.warning(f"Ignoring invalid value '{pulse}', must be {Pulse}")
         except TypeError as e:
             logger.exception(f"Setter expects {dict[str, Pulse]}")
             raise SystemExit(f"Failed to set {self} operations, exiting...") from e
+
+    def remove_operation(self, name: str) -> None:
+        """ """
+        if hasattr(self, name):
+            del self._operations[name]
+            delattr(self, name)
+            logger.success(f"Removed {self} operation '{name}'")
+        else:
+            logger.warning(f"Operation '{name}' does not exist for {self}")
 
 
 class ReadoutMode(Mode):
@@ -137,8 +147,6 @@ class ReadoutMode(Mode):
         self.time_of_flight: int = time_of_flight
         self.smearing: int = smearing
 
-        self.operations.update(
-            {
-                "readout": ConstantReadoutPulse(amp=0.4, length=800),
+        self.operations = {
+                "readout_pulse": ConstantReadoutPulse(amp=0.4, length=800),
             }
-        )

@@ -9,6 +9,7 @@ from qcrew.helpers.parametrizer import Parametrized
 
 # TODO logging, error handling, documentation
 
+DEFAULT_AMP = 0.25
 
 class Wave(Parametrized):
     """ """
@@ -32,16 +33,16 @@ class Wave(Parametrized):
 class ConstantWave(Wave):
     """ """
 
-    _parameters: ClassVar[set[str]] = {"amp", "length"}
+    _parameters: ClassVar[set[str]] = {"ampx", "length"}
 
-    def __init__(self, amp: float, length: int = None) -> None:
+    def __init__(self, ampx: float, length: int = None) -> None:
         """ """
-        self.amp: float = amp
+        self.ampx: float = ampx
         self.length: int = length
 
-    def __call__(self, amp: float, length: int) -> np.ndarray:
+    def __call__(self, ampx: float, length: int) -> np.ndarray:
         """ """
-        return np.full(length, amp)
+        return np.full(length, (DEFAULT_AMP * ampx))
 
     @property  # waveform type_ getter for building QM config
     def type_(self) -> str:
@@ -52,18 +53,18 @@ class ConstantWave(Wave):
 class GaussianWave(Wave):
     """ """
 
-    _parameters: ClassVar[set[str]] = {"amp", "sigma", "chop"}
+    _parameters: ClassVar[set[str]] = {"ampx", "sigma", "chop"}
 
-    def __init__(self, amp: float, sigma: int, chop: int) -> None:
+    def __init__(self, ampx: float, sigma: int, chop: int) -> None:
         """ """
-        self.amp: float = amp
+        self.ampx: float = ampx
         self.sigma: int = sigma
         self.chop: int = chop
 
-    def __call__(self, amp: float, sigma: int, chop: int) -> np.ndarray:
+    def __call__(self, ampx: float, sigma: int, chop: int) -> np.ndarray:
         """ """
         ts = np.linspace(-chop / 2 * sigma, chop / 2 * sigma, chop * sigma)
-        return amp * np.exp(-(ts ** 2) / (2.0 * sigma ** 2))
+        return DEFAULT_AMP * ampx * np.exp(-(ts ** 2) / (2.0 * sigma ** 2))
 
 
 class GaussianDragWave(Wave):
@@ -81,23 +82,23 @@ class GaussianDragWave(Wave):
         """ """
         ts = np.linspace(-chop / 2 * sigma, chop / 2 * sigma, chop * sigma)
         return drag * (0.25 / sigma ** 2) * ts * np.exp(-(ts ** 2) / (2.0 * sigma ** 2))
-        # NOTE where did the 0.25 come from??? where's the anharmonicity??
+        # NOTE where did the 0.25 come from???
 
 
 class CosRampWave(Wave):
     """ """
 
-    _parameters: ClassVar[set[str]] = {"length", "amp", "flip"}
+    _parameters: ClassVar[set[str]] = {"length", "ampx", "flip"}
 
-    def __init__(self, length: int, amp: float, flip: bool = False) -> None:
+    def __init__(self, length: int, ampx: float, flip: bool = False) -> None:
         """ """
         self.length: int = length
-        self.amp: float = amp
+        self.ampx: float = ampx
         self.flip: bool = flip
 
-    def __call__(self, length: int, amp: float, flip: bool = False) -> np.ndarray:
+    def __call__(self, length: int, ampx: float, flip: bool = False) -> np.ndarray:
         """ """
-        samples = amp * 0.5 * (1 - np.cos(np.linspace(0.0, np.pi, length)))
+        samples = DEFAULT_AMP * ampx * 0.5 * (1 - np.cos(np.linspace(0, np.pi, length)))
         if flip:
             return samples[::-1]
         return samples
@@ -108,17 +109,17 @@ class CosRampWave(Wave):
 class TanhRampWave(Wave):
     """ """
 
-    _parameters: ClassVar[set[str]] = {"length", "amp", "flip"}
+    _parameters: ClassVar[set[str]] = {"length", "ampx", "flip"}
 
-    def __init__(self, length: int, amp: float, flip: bool = False) -> None:
+    def __init__(self, length: int, ampx: float, flip: bool = False) -> None:
         """ """
         self.length: int = length
-        self.amp: float = amp
+        self.ampx: float = ampx
         self.flip: bool = flip
 
-    def __call__(self, length: int, amp: float, flip: bool = False) -> np.ndarray:
+    def __call__(self, length: int, ampx: float, flip: bool = False) -> np.ndarray:
         """ """
-        samples = amp * 0.5 * (1 + np.tanh(np.linspace(-2, 2, length)))
+        samples = DEFAULT_AMP * ampx * 0.5 * (1 + np.tanh(np.linspace(-2, 2, length)))
         if flip:
             return samples[::-1]
         return samples

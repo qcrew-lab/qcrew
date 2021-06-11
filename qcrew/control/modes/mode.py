@@ -37,7 +37,7 @@ class Mode(Parametrized):
         operations: dict[str, Pulse] = None,
     ) -> None:
         """ """
-        self.name: str = name
+        self._name: str = str(name)
 
         self.lo: LabBrick = lo
         self.int_freq: float = int_freq
@@ -54,15 +54,20 @@ class Mode(Parametrized):
             self.operations = operations
         else:
             self.operations = {  # set default "unselective" operations
-            "constant_pulse": ConstantPulse(amp=0.4, length=1000),
-            "gaussian_pulse": GaussianPulse(amp=0.4, sigma=15, chop=4),
-        }
+                "constant_pulse": ConstantPulse(amp=0.4, length=1000),
+                "gaussian_pulse": GaussianPulse(amp=0.4, sigma=15, chop=4),
+            }
 
         logger.info(f"Created {self}, call `.parameters` to get current state")
 
     def __repr__(self) -> str:
         """ """
         return f"{type(self).__name__} '{self.name}'"
+
+    @property  # name getter
+    def name(self) -> str:
+        """ """
+        return self._name
 
     @property  # ports getter
     def ports(self) -> dict[str, int]:
@@ -139,6 +144,7 @@ class ReadoutMode(Mode):
 
     _parameters: ClassVar[set[str]] = Mode._parameters | {"time_of_flight", "smearing"}
     _ports_keys: ClassVar[tuple[str]] = (*Mode._ports_keys, "out")
+    _offsets_keys: ClassVar[tuple[str]] = (*Mode._offsets_keys, "out")
 
     def __init__(self, time_of_flight: int, smearing: int, **parameters) -> None:
         """ """
@@ -148,5 +154,5 @@ class ReadoutMode(Mode):
         self.smearing: int = smearing
 
         self.operations = {
-                "readout_pulse": ConstantReadoutPulse(amp=0.4, length=800),
-            }
+            "readout_pulse": ConstantReadoutPulse(amp=0.4, length=800),
+        }

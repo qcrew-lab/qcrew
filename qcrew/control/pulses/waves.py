@@ -131,6 +131,10 @@ class IntegrationWeight(Parametrized):
 
     _parameters: ClassVar[set[str]] = {"cos", "sin", "length"}
 
+    def __repr__(self) -> str:
+        """ """
+        return f"{type(self).__name__}({self.parameters})"
+
     def __call__(self, *args: Real) -> tuple[np.ndarray]:
         """ """
         raise NotImplementedError  # subclasses must implement

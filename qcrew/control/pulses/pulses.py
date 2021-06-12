@@ -127,16 +127,16 @@ class ReadoutPulse(Pulse):
 class ConstantPulse(Pulse):
     """ """
 
-    def __init__(self, amp: float, length: int) -> None:
+    def __init__(self, ampx: float, length: int) -> None:
         """ """
-        i_wave = ConstantWave(amp, length)
+        i_wave = ConstantWave(ampx, length)
         q_wave = ConstantWave(0.0, length)
         super().__init__(length=length, I=i_wave, Q=q_wave)
 
-    def __call__(self, amp: float, length: int) -> None:
+    def __call__(self, ampx: float, length: int) -> None:
         """ """
         self.length = length
-        self.I.parameters = {"length": length, "amp": amp}
+        self.I.parameters = {"length": length, "ampx": ampx}
         self.Q.parameters = {"length": length}
 
 
@@ -144,11 +144,11 @@ class GaussianPulse(Pulse):
     """ """
 
     def __init__(
-        self, amp: float, sigma: int, chop: int = 4, drag: float = None
+        self, ampx: float, sigma: int, chop: int = 4, drag: float = None
     ) -> None:
         """ """
         length = sigma * chop
-        i_wave = GaussianWave(amp, sigma, chop)
+        i_wave = GaussianWave(ampx, sigma, chop)
         if drag is None:
             q_wave = ConstantWave(0.0, length)
         else:
@@ -156,13 +156,13 @@ class GaussianPulse(Pulse):
         super().__init__(length=length, I=i_wave, Q=q_wave)
 
     def __call__(
-        self, amp: float, sigma: int, chop: int = 4, drag: float = None
+        self, ampx: float, sigma: int, chop: int = 4, drag: float = None
     ) -> None:
         """ """
         self.length = sigma * chop
-        self.I.parameters = {"amp": amp, "sigma": sigma, "chop": chop}
+        self.I.parameters = {"ampx": ampx, "sigma": sigma, "chop": chop}
         if drag is None:
-            self.Q.parameters = {"amp": 0.0, "length": self.length}
+            self.Q.parameters = {"ampx": 0.0, "length": self.length}
         elif drag is not None and isinstance(self.Q, GaussianDragWave):
             self.Q.parameters = {"drag": drag, "sigma": sigma, "chop": chop}
         else:
@@ -172,12 +172,12 @@ class GaussianPulse(Pulse):
 class ConstantReadoutPulse(ReadoutPulse, ConstantPulse):
     """ """
 
-    def __init__(self, amp: float, length: int) -> None:
+    def __init__(self, ampx: float, length: int) -> None:
         """ """
-        super().__init__(amp=amp, length=length)
+        super().__init__(ampx=ampx, length=length)
 
         iw_length = int(self.length / CLOCK_CYCLE)
         self.integration_weights = {  # add default integration weights
             "iw1": ConstantIntegrationWeight(cos=1.0, sin=0.0, length=iw_length),
-            "iw2": ConstantIntegrationWeight(cos=0.0, sin=1.0, length=iw_length)
+            "iw2": ConstantIntegrationWeight(cos=0.0, sin=1.0, length=iw_length),
         }

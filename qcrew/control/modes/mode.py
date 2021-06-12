@@ -2,7 +2,7 @@
 
 from typing import  Any, ClassVar
 
-from qcrew.control.instruments import LabBrick
+from qcrew.control.instruments.vaunix.labbrick import LabBrick
 from qcrew.control.pulses.pulses import (
     ConstantPulse,
     ConstantReadoutPulse,
@@ -54,8 +54,8 @@ class Mode(Parametrized):
             self.operations = operations
         else:
             self.operations = {  # set default "unselective" operations
-                "constant_pulse": ConstantPulse(amp=0.4, length=1000),
-                "gaussian_pulse": GaussianPulse(amp=0.4, sigma=15, chop=4),
+                "constant_pulse": ConstantPulse(ampx=1.0, length=1000),
+                "gaussian_pulse": GaussianPulse(ampx=1.0, sigma=15, chop=4),
             }
 
         logger.info(f"Created {self}, call `.parameters` to get current state")
@@ -151,7 +151,7 @@ class ReadoutMode(Mode):
     _ports_keys: ClassVar[tuple[str]] = (*Mode._ports_keys, "out")
     _offsets_keys: ClassVar[tuple[str]] = (*Mode._offsets_keys, "out")
 
-    def __init__(self, time_of_flight: int, smearing: int, **parameters) -> None:
+    def __init__(self, time_of_flight: int, smearing: int = 0, **parameters) -> None:
         """ """
         super().__init__(**parameters)
 
@@ -159,5 +159,5 @@ class ReadoutMode(Mode):
         self.smearing: int = smearing
 
         self.operations = {
-            "readout_pulse": ConstantReadoutPulse(amp=0.4, length=16),
+            "readout_pulse": ConstantReadoutPulse(ampx=1.0, length=16),
         }

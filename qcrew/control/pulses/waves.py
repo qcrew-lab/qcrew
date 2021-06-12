@@ -7,9 +7,8 @@ import numpy as np
 
 from qcrew.helpers.parametrizer import Parametrized
 
-# TODO logging, error handling, documentation
+from qcrew.control.instruments.quantum_machines import DEFAULT_AMP
 
-DEFAULT_AMP = 0.25
 
 class Wave(Parametrized):
     """ """
@@ -127,4 +126,27 @@ class TanhRampWave(Wave):
         # NOTE perhaps we can add a start y offset so we end exactly at amp?
 
 
-# NOTE to add a new wave, subclass 'Wave', define the parameter set of the wave, write __init__ and __call__ dunder methods to initialize and generate wave samples respectively when called with the correct arguments.
+class IntegrationWeight(Parametrized):
+    """ """
+
+    _parameters: ClassVar[set[str]] = {"cos", "sin", "length"}
+
+    def __call__(self, *args: Real) -> tuple[np.ndarray]:
+        """ """
+        raise NotImplementedError  # subclasses must implement
+
+
+class ConstantIntegrationWeight(IntegrationWeight):
+    """ """
+
+    _parameters: ClassVar[set[str]] = {"cos", "sin", "length"}
+
+    def __init__(self, cos: float, sin: float, length: int) -> None:
+        """ """
+        self.cos: float = cos
+        self.sin: float = sin
+        self.length: int = length
+
+    def __call__(self, cos: float, sin: float, length: int) -> tuple[np.ndarray]:
+        """ """
+        return np.full(length, cos), np.full(length, sin)

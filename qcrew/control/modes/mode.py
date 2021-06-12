@@ -1,9 +1,9 @@
 """ """
 
-from typing import ClassVar
+from typing import  Any, ClassVar
 
 from qcrew.control.instruments import LabBrick
-from qcrew.control.pulses import (
+from qcrew.control.pulses.pulses import (
     ConstantPulse,
     ConstantReadoutPulse,
     GaussianPulse,
@@ -84,7 +84,7 @@ class Mode(Parametrized):
                     self._ports[key] = port
                     logger.success(f"Set {self} '{key}' {port = }")
                 else:
-                    logger.warning(f"Ignoring invalid key '{key}', {valid_keys = }")
+                    logger.warning(f"Invalid key '{key}', {valid_keys = }")
         except TypeError as e:
             logger.exception(f"Setter expects {dict[str, int]} with {valid_keys = }")
             raise SystemExit(f"Failed to set {self} ports, exiting...") from e
@@ -104,15 +104,15 @@ class Mode(Parametrized):
                     self._offsets[key] = offset
                     logger.success(f"Set {self} '{key}' {offset = }")
                 else:
-                    logger.warning(f"Ignoring invalid key '{key}', {valid_keys = }")
+                    logger.warning(f"Invalid key '{key}', {valid_keys = }")
         except TypeError as e:
             logger.exception(f"Setter expects {dict[str, float]} with {valid_keys = }")
             raise SystemExit(f"Failed to set {self} offsets, exiting...") from e
 
     @property  # operations getter
-    def operations(self) -> dict[str, Pulse]:
+    def operations(self) -> dict[str, Any]:
         """ """
-        return {name: pulse.parameters for name, pulse in self._operations}
+        return {name: pulse.parameters for name, pulse in self._operations.items()}
 
     @operations.setter
     def operations(self, new_operations: dict[str, Pulse]) -> None:
@@ -124,7 +124,7 @@ class Mode(Parametrized):
                     setattr(self, name, pulse)  # for easy access
                     logger.success(f"Set {self} operation '{name}'")
                 else:
-                    logger.warning(f"Ignoring invalid value '{pulse}', must be {Pulse}")
+                    logger.warning(f"Invalid value '{pulse}', must be {Pulse}")
         except TypeError as e:
             logger.exception(f"Setter expects {dict[str, Pulse]}")
             raise SystemExit(f"Failed to set {self} operations, exiting...") from e
@@ -137,6 +137,11 @@ class Mode(Parametrized):
             logger.success(f"Removed {self} operation '{name}'")
         else:
             logger.warning(f"Operation '{name}' does not exist for {self}")
+
+    @property  # has_mix_inputs getter
+    def has_mix_inputs(self) -> bool:
+        """ """
+        return self._ports["I"] is not None and self._ports["Q"] is not None
 
 
 class ReadoutMode(Mode):
@@ -154,5 +159,5 @@ class ReadoutMode(Mode):
         self.smearing: int = smearing
 
         self.operations = {
-            "readout_pulse": ConstantReadoutPulse(amp=0.4, length=800),
+            "readout_pulse": ConstantReadoutPulse(amp=0.4, length=16),
         }

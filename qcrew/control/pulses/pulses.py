@@ -1,18 +1,20 @@
 """ """
 
 from numbers import Real
-from typing import ClassVar
+from typing import Any, ClassVar
 
 import numpy as np
 from qcrew.control.pulses.waves import (
     ConstantWave,
+    ConstantIntegrationWeight,
     GaussianWave,
     GaussianDragWave,
+    IntegrationWeight,
     Wave,
 )
+from qcrew.helpers import logger
 from qcrew.helpers.parametrizer import Parametrized
-
-# TODO logging, error handling, documentation
+from qcrew.control.instruments.quantum_machines import CLOCK_CYCLE
 
 
 class Pulse(Parametrized):
@@ -25,9 +27,9 @@ class Pulse(Parametrized):
 
     def __init__(self, length: int, I: Wave, Q: Wave = None) -> None:
         """ """
-        self.length = length
-        self.I = I
-        self.Q = Q
+        self.length: int = length
+        self.I: Wave = I
+        self.Q: Wave = Q
 
     # pylint: enable=invalid-name
 
@@ -44,12 +46,82 @@ class Pulse(Parametrized):
         """ """
         return "control"
 
+    @property  # has_mix_waveforms getter
+    def has_mix_waveforms(self) -> bool:
+        """ """
+        return self.I is not None and self.Q is not None
+
     @property  # pulse samples getter
     def samples(self) -> tuple[np.ndarray]:
         """ """
-        i_samples = self.I(**self.I.parameters)
-        q_samples = None if self.Q is None else self.Q(**self.Q.parameters)
+        try:
+            i_samples = self.I(**self.I.parameters)
+            q_samples = None if self.Q is None else self.Q(**self.Q.parameters)
+        except TypeError as e:
+            logger.error(f"Expect {self} waveforms to be called with their parameters")
+            raise SystemExit("Failed to get pulse samples, exiting...") from e
         return i_samples, q_samples
+
+
+class ReadoutPulse(Pulse):
+    """ """
+
+    _parameters: ClassVar[set[str]] = Pulse._parameters | {"integration_weights"}
+
+    def __init__(self, **parameters) -> None:
+        """ """
+        super().__init__(**parameters)
+        self._integration_weights: dict[str, IntegrationWeight] = dict()
+
+    @property  # pulse type_ getter for building QM config
+    def type_(self) -> str:
+        """ """
+        return "measurement"
+
+    @property  # integration weights getter
+    def integration_weights(self) -> dict[str, Any]:
+        """ """
+        return {name: iw.parameters for name, iw in self._integration_weights.items()}
+
+    @property  # integration weights samples getter
+    def integration_weights_samples(self) -> dict[str, dict[str, np.ndarray]]:
+        """ """
+        iw_config = dict()
+        try:
+            for key, iw in self._integration_weights.items():
+                iw_config[key] = {"cosine": None, "sine": None}
+                cos_samples, sin_samples = iw(**iw.parameters)
+                iw_config[key]["cosine"] = cos_samples
+                iw_config[key]["sine"] = sin_samples
+        except TypeError as te:
+            logger.error(f"Expect {iw} to be called with its parameters")
+            raise SystemExit("Failed to get integration weights, exiting...") from te
+        else:
+            return iw_config
+
+    @integration_weights.setter
+    def integration_weights(self, new_iw: dict[str, IntegrationWeight]) -> None:
+        """ """
+        try:
+            for iw_name, iw in new_iw.items():
+                if isinstance(iw, IntegrationWeight):
+                    self._integration_weights[iw_name] = iw
+                    setattr(self, iw_name, iw)  # for easy access
+                    logger.success(f"Set readout pulse {iw} named '{iw_name}'")
+                else:
+                    logger.warning(f"Invalid value '{iw}', must be {IntegrationWeight}")
+        except TypeError as e:
+            logger.error(f"Setter expects {dict[str, IntegrationWeight]}")
+            raise SystemExit("Failed to set integration weights, exiting...") from e
+
+    def remove_integration_weight(self, iw_name: str) -> None:
+        """ """
+        if iw_name in self._integration_weights:
+            del self._integration_weights[iw_name]
+            delattr(self, iw_name)
+            logger.success(f"Removed integration weight '{iw_name}'")
+        else:
+            logger.warning(f"Integration weight '{iw_name}' does not exist")
 
 
 class ConstantPulse(Pulse):
@@ -97,44 +169,15 @@ class GaussianPulse(Pulse):
             self.Q = GaussianDragWave(drag, sigma, chop)
 
 
-# NOTE to add a new control pulse, subclass 'Pulse', write __init__ and __call__ dunder methods to initialize and set waveform parameters respectively when called with the correct arguments.
-
-# NOTE the code for measurement pulses is still under development...
-
-
-class ConstantReadoutPulse(ConstantPulse):
+class ConstantReadoutPulse(ReadoutPulse, ConstantPulse):
     """ """
 
-    @property  # pulse type_ getter for building QM config
-    def type_(self) -> str:
+    def __init__(self, amp: float, length: int) -> None:
         """ """
-        return "measurement"
+        super().__init__(amp=amp, length=length)
 
-    @property  # integration weights getter
-    def integration_weights(self) -> dict[str, dict[str, np.ndarray]]:
-        """ """
-        clock_cycles = int(self.length / 4)
-        return {
-            "iw1": {
-                "cosine": np.ones(clock_cycles),
-                "sine": np.zeros(clock_cycles),
-            },
-            "iw2": {
-                "cosine": np.zeros(clock_cycles),
-                "sine": np.ones(clock_cycles),
-            },
+        iw_length = int(self.length / CLOCK_CYCLE)
+        self.integration_weights = {  # add default integration weights
+            "iw1": ConstantIntegrationWeight(cos=1.0, sin=0.0, length=iw_length),
+            "iw2": ConstantIntegrationWeight(cos=0.0, sin=1.0, length=iw_length)
         }
-
-
-class GaussianReadoutPulse(GaussianPulse):
-    """ """
-
-    @property  # pulse type_ getter for building QM config
-    def type_(self) -> str:
-        """ """
-        return "measurement"
-
-    @property  # integration weights getter
-    def integration_weights(self) -> None:
-        """ """
-        pass  # TODO

@@ -61,7 +61,7 @@ class QMConfig(defaultdict):
                 mixer_name = self.get_mixer_name(mode.name)
                 self["mixers"][mixer_name] = [{key: None for key in mixer_config_keys}]
                 self["elements"][mode.name]["mixInputs"]["mixer"] = mixer_name
-                logger.success(f"Set mixer for {mode} with mix inputs")
+                logger.success(f"Set '{mixer_name}' for {mode}")
 
     def set_lo_freq(self, mode: Mode, old_value: dict[str, Any] = None) -> None:
         """ """
@@ -74,7 +74,7 @@ class QMConfig(defaultdict):
             self["elements"][mode.name]["mixInputs"]["lo_frequency"] = lo_freq
             self["mixers"][self.get_mixer_name(mode.name)][0]["lo_frequency"] = lo_freq
             old_value = None if old_value is None else old_value["frequency"]
-            logger.success(f"Set {mode} LO frequency from {old_value} to {lo_freq}")
+            logger.success(f"Set {mode} lo freq from {old_value} to {lo_freq}")
 
     def set_int_freq(self, mode: Mode, old_value: float = None) -> None:
         """ """
@@ -100,6 +100,7 @@ class QMConfig(defaultdict):
         old_ports = old_ports if old_ports is not None else dict()
         diff_ports = dict(set(new_ports.items()) - set(old_ports.items()))
         for key, port_num in diff_ports.items():
+            logger.info(f"Setting {mode} ports...")
             self.set_controller_port(mode, key, port_num)
             self.set_element_port(mode, key, port_num)
 
@@ -112,13 +113,13 @@ class QMConfig(defaultdict):
                 logger.error(f"Analog output port value {port_num} out of bounds")
                 raise ValueError(f"Out of bounds [{self.ao_min}, {self.ao_max}]")
             controllers_config["analog_outputs"][port_num]["offset"] = offset
-            logger.success(f"Assigned OPX analog output port {port_num} to {mode}")
+            logger.success(f"Assigned analog output port {port_num} to {mode}")
         elif key == "out":
             if not self.ai_min <= port_num <= self.ai_max:
                 logger.error(f"Analog input port value {port_num} out of bounds")
                 raise ValueError(f"Out of bounds [{self.ai_min}, {self.ai_max}]")
             controllers_config["analog_inputs"][port_num]["offset"] = offset
-            logger.success(f"Assigned OPX analog input port {port_num} to {mode}")
+            logger.success(f"Assigned analog input port {port_num} to {mode}")
 
     def set_element_port(self, mode: Mode, key: str, port_num: int) -> None:
         """ """
@@ -168,7 +169,7 @@ class QMConfig(defaultdict):
                 raise ValueError(f"Out of bounds ({self.mcm_min}, {self.mcm_max})")
 
         self["mixers"][mixer][0]["correction"] = correction_matrix
-        logger.success(f"Set {mixer} correction matrix to {correction_matrix}")
+        logger.success(f"Set '{mixer}' correction matrix to {correction_matrix}")
 
     def set_dc_offset(self, mode: Mode, key: str, offset: float) -> None:
         """ """
@@ -224,7 +225,8 @@ class QMConfig(defaultdict):
                 pulse_name = self.get_pulse_name(mode.name, op_name)
                 ops_config[op_name] = pulse_name
                 logger.info(f"Setting {mode} operation '{op_name}'...")
-                self.set_pulse(mode.op_name, pulse_name, op_name, ops[op_name], old_ops)
+                pulse = getattr(mode, op_name)  # attr guaranteed by Mode
+                self.set_pulse(pulse, pulse_name, op_name, ops[op_name], old_ops)
             else:  # op removed
                 del ops_config[op_name]
                 logger.info(f"Deleting {mode} operation '{op_name}'...")
@@ -374,9 +376,10 @@ class QMConfigBuilder:
             if not isinstance(mode, Mode):
                 logger.error(f"QMConfigBuilder __init_() *args must be of {Mode}")
                 raise SystemExit("Failed to initialize QMConfigBuilder, exiting...")
+            self._modes.add(mode)
             self._state_map[mode.name] = None
 
-        if len(self._state_map) != len(modes):
+        if len(self._modes) != len(modes):
             logger.error(f"Mode names must be unique, found duplicate name in {modes}")
             raise SystemExit("Failed to initialize QMConfigBuilder, exiting...")
 
@@ -387,7 +390,9 @@ class QMConfigBuilder:
             logger.info("Initializing QM config...")
             self._config.set_version()
             self._config.set_controllers()
-            self._config.set_mixers(self._modes)
+            self._config.set_mixers(
+                *self._modes,
+            )  # unpacking set -> tuple
         self._build_config()
         logger.info("Done building QM config!")
         return self._config

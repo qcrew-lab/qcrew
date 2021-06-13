@@ -76,12 +76,48 @@ class Mode(Parametrized):
             return self._lo.parameters
         except AttributeError as e:
             logger.exception(f"Expect {self} lo of {LabBrick}")
-            raise SystemExit("Failed to get local oscillator, exiting...") from e
+            raise SystemExit("Failed to get local oscillator params, exiting...") from e
 
     @lo.setter
     def lo(self, new_lo: LabBrick) -> None:
         """ """
         self._lo = new_lo
+
+    @property  # lo frequency getter
+    def lo_freq(self) -> float:
+        """ """
+        try:
+            return self._lo.frequency
+        except AttributeError as e:
+            logger.exception(f"Expect {self} lo of {LabBrick}")
+            raise SystemExit("Failed to get lo frequency, exiting...") from e
+
+    @lo_freq.setter
+    def lo_freq(self, new_lo_freq: float) -> None:
+        """ """
+        try:
+            self._lo.frequency = new_lo_freq
+        except AttributeError as e:
+            logger.exception(f"Expect {self} lo of {LabBrick}")
+            raise SystemExit("Failed to set lo frequency, exiting...") from e
+
+    @property  # lo power getter
+    def lo_power(self) -> float:
+        """ """
+        try:
+            return self._lo.power
+        except AttributeError as e:
+            logger.exception(f"Expect {self} lo of {LabBrick}")
+            raise SystemExit("Failed to get lo power, exiting...") from e
+
+    @lo_power.setter
+    def lo_power(self, new_power: float) -> None:
+        """ """
+        try:
+            self._lo.power = new_power
+        except AttributeError as e:
+            logger.exception(f"Expect {self} lo of {LabBrick}")
+            raise SystemExit("Failed to set lo power, exiting...") from e
 
     @property  # ports getter
     def ports(self) -> dict[str, int]:

@@ -143,30 +143,34 @@ class ConstantPulse(Pulse):
 class GaussianPulse(Pulse):
     """ """
 
-    def __init__(
-        self, ampx: float, sigma: int, chop: int = 4, drag: float = None
-    ) -> None:
+    def __init__(self, ampx: float, sigma: int, chop) -> None:
         """ """
         length = sigma * chop
         i_wave = GaussianWave(ampx, sigma, chop)
-        if drag is None:
-            q_wave = ConstantWave(0.0, length)
-        else:
-            q_wave = GaussianDragWave(drag, sigma, chop)
+        q_wave = ConstantWave(0.0, length)
         super().__init__(length=length, I=i_wave, Q=q_wave)
 
-    def __call__(
-        self, ampx: float, sigma: int, chop: int = 4, drag: float = None
-    ) -> None:
+    def __call__(self, ampx: float, sigma: int, chop: int) -> None:
         """ """
         self.length = sigma * chop
         self.I.parameters = {"ampx": ampx, "sigma": sigma, "chop": chop}
-        if drag is None:
-            self.Q.parameters = {"ampx": 0.0, "length": self.length}
-        elif drag is not None and isinstance(self.Q, GaussianDragWave):
-            self.Q.parameters = {"drag": drag, "sigma": sigma, "chop": chop}
-        else:
-            self.Q = GaussianDragWave(drag, sigma, chop)
+        self.Q.parameters = {"ampx": 0.0, "length": self.length}
+
+class GaussianDragPulse(Pulse):
+    """ """
+
+    def __init__(self, ampx: float, sigma: int, chop: int, drag: float) -> None:
+        """ """
+        length = sigma * chop
+        i_wave = GaussianWave(ampx, sigma, chop)
+        q_wave = GaussianDragWave(drag, sigma, chop)
+        super().__init__(length=length, I=i_wave, Q=q_wave)
+
+    def __call__(self, ampx: float, sigma: int, chop: int, drag: float) -> None:
+        """ """
+        self.length = sigma * chop
+        self.I.parameters = {"ampx": ampx, "sigma": sigma, "chop": chop}
+        self.Q.parameters = {"drag": drag, "sigma": sigma, "chop": chop}
 
 
 class ConstantReadoutPulse(ReadoutPulse, ConstantPulse):

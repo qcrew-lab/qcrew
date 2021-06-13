@@ -185,3 +185,9 @@ class ConstantReadoutPulse(ReadoutPulse, ConstantPulse):
             "iw1": ConstantIntegrationWeight(cos=1.0, sin=0.0, length=iw_length),
             "iw2": ConstantIntegrationWeight(cos=0.0, sin=1.0, length=iw_length),
         }
+
+    def __call__(self, ampx: float, length: int) -> None:
+        """ """
+        super().__call__(ampx=ampx, length=length)
+        for iw in self._integration_weights.values():
+            iw.parameters = {"length": int(self.length / CLOCK_CYCLE)}

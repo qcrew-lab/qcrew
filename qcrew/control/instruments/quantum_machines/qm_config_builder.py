@@ -66,8 +66,8 @@ class QMConfig(defaultdict):
     def set_lo_freq(self, mode: Mode, old_value: dict[str, Any] = None) -> None:
         """ """
         try:
-            lo_freq = int(mode.lo.frequency)
-        except AttributeError as e:
+            lo_freq = int(mode.lo["frequency"])
+        except KeyError as e:
             logger.exception(f"Failed to get {mode} LO frequency")
             raise SystemExit("Failed to set lo freq in QM config, exiting...") from e
         else:
@@ -99,8 +99,9 @@ class QMConfig(defaultdict):
 
         old_ports = old_ports if old_ports is not None else dict()
         diff_ports = dict(set(new_ports.items()) - set(old_ports.items()))
-        for key, port_num in diff_ports.items():
+        if diff_ports:
             logger.info(f"Setting {mode} ports...")
+        for key, port_num in diff_ports.items():
             self.set_controller_port(mode, key, port_num)
             self.set_element_port(mode, key, port_num)
 

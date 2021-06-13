@@ -29,7 +29,7 @@ qubit = Mode(
     ports = {"I": 1, "Q": 2}
 )
 
-"""readout_mode = ReadoutMode(
+rr = ReadoutMode(
     name = "rr",
     lo = TestLabBrick(frequency=8e9),
     int_freq = -75e6,
@@ -37,15 +37,15 @@ qubit = Mode(
     time_of_flight = 180,
     smearing = 0,
 )
-"""
+
 
 tmt = TestMixerTuner()
 tmt.tune(qubit)
 
 pprint.pp(qubit.parameters)
-#pprint.pp(readout_mode.parameters)
+pprint.pp(rr.parameters)
 
-qcb = QMConfigBuilder(qubit)
+qcb = QMConfigBuilder(qubit, rr)
 config = qcb.config
 
 
@@ -68,3 +68,5 @@ qubit.operations = {
     "saturation_pulse": ConstantPulse(0.5, 1200)
 }
 config = qcb.config
+
+rr.readout_pulse(0.25, 100)

@@ -3,13 +3,15 @@ import random
 
 from qcrew.control.modes.mode import Mode, ReadoutMode
 from qcrew.control.instruments.quantum_machines.qm_config_builder import QMConfigBuilder
+from qcrew.control.pulses.pulses import ConstantPulse
 
 class TestLabBrick:
     def __init__(self, frequency):
         self.frequency = frequency
 
-    def __repr__(self):
-        return f"{self.frequency = }"
+    @property
+    def parameters(self):
+        return {"frequency": self.frequency}
 
 class TestMixerTuner:
     def tune(self, mode):
@@ -20,14 +22,14 @@ class TestMixerTuner:
             "P": random.uniform(-0.25, 0.25),
         }
 
-control_mode = Mode(
+qubit = Mode(
     name = "qubit",
     lo = TestLabBrick(frequency=5e9),
     int_freq = -50e6,
     ports = {"I": 1, "Q": 2}
 )
 
-readout_mode = ReadoutMode(
+"""readout_mode = ReadoutMode(
     name = "rr",
     lo = TestLabBrick(frequency=8e9),
     int_freq = -75e6,
@@ -35,12 +37,34 @@ readout_mode = ReadoutMode(
     time_of_flight = 180,
     smearing = 0,
 )
+"""
 
 tmt = TestMixerTuner()
-tmt.tune(control_mode)
+tmt.tune(qubit)
 
-pprint.pp(control_mode.parameters)
-pprint.pp(readout_mode.parameters)
+pprint.pp(qubit.parameters)
+#pprint.pp(readout_mode.parameters)
 
-qcb = QMConfigBuilder(control_mode)
-pprint.pp(qcb.config)
+qcb = QMConfigBuilder(qubit)
+config = qcb.config
+
+
+qubit.lo_freq = 5.5e9
+config = qcb.config
+qubit.int_freq = -55e6
+config = qcb.config
+qubit.ports = {"I": 3, "Q": 4}
+config = qcb.config
+tmt.tune(qubit)
+config = qcb.config
+
+
+qubit.constant_pulse(0.5, 500)
+config = qcb.config
+qubit.gaussian_pulse(0.5, 20, 3)
+config = qcb.config
+
+qubit.operations = {
+    "saturation_pulse": ConstantPulse(0.5, 1200)
+}
+config = qcb.config

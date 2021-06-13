@@ -39,7 +39,7 @@ class Mode(Parametrized):
         """ """
         self._name: str = str(name)
 
-        self.lo: LabBrick = lo
+        self._lo: LabBrick = lo
         self.int_freq: float = int_freq
 
         self._ports: dict[str, int] = {key: None for key in self._ports_keys}
@@ -68,6 +68,20 @@ class Mode(Parametrized):
     def name(self) -> str:
         """ """
         return self._name
+
+    @property  # lo parameters getter
+    def lo(self) -> dict[str, Any]:
+        """ """
+        try:
+            return self._lo.parameters
+        except AttributeError as e:
+            logger.exception(f"Expect {self} lo of {LabBrick}")
+            raise SystemExit("Failed to get local oscillator, exiting...") from e
+
+    @lo.setter
+    def lo(self, new_lo: LabBrick) -> None:
+        """ """
+        self._lo = new_lo
 
     @property  # ports getter
     def ports(self) -> dict[str, int]:

@@ -1,5 +1,5 @@
 """ """
-import inspect
+
 from pathlib import Path
 from typing import Any, Type, TypeVar
 
@@ -13,7 +13,7 @@ def _sci_not_representer(dumper, value) -> yaml.ScalarNode:
     # use scientific notation if abs(value) >= threshold
     threshold = 1e3  # based on the feeling that values > 1e3 are better read in sci not
     yaml_float_tag = "tag:yaml.org,2002:float"
-    value_in_sci_not = f"{value:.7E}" if abs(value) >= threshold else str(value)
+    value_in_sci_not = f"{value:E}" if abs(value) >= threshold else str(value)
     return dumper.represent_scalar(yaml_float_tag, value_in_sci_not)
 
 
@@ -51,37 +51,24 @@ class YamlableMetaclass(type):
         return f"<class '{cls.__name__}'>"
 
 
-YamlableType = TypeVar("Yamlable", bound="Yamlable")  # for providing type hints
+YamlableType = TypeVar("Yamlable", bound="Yamlable")  # for type hints
 
 
 class Yamlable(metaclass=YamlableMetaclass):
     """ """
 
-    @property
-    def yaml_map(self) -> dict[str, Any]:
-        """ """
-        init_args_dict = inspect.signature(self.__init__).parameters
-        try:
-            yaml_map = {k: getattr(self, k) for k in init_args_dict}
-        except AttributeError as e:
-            logger.exception("All arguments to Yamlable __init__() must be attributes")
-            raise SystemExit("Failed to create yaml_map, exiting...") from e
-        else:
-            logger.info(f"Created .yaml mapping for {type(self).__name__}")
-            return yaml_map
-
     @classmethod
     def from_yaml(cls: Type[YamlableType], loader, node) -> YamlableType:
-        """ """
-        yaml_map = loader.construct_mapping(node)
+        """ """  # TODO error handling
+        parameters = loader.construct_mapping(node)
         logger.info(f"Loading {cls.__name__} from .yaml")
-        return cls(**yaml_map)
+        return cls(**parameters)
 
     @classmethod
     def to_yaml(cls, dumper, data) -> yaml.MappingNode:
-        """ """
+        """ """  # TODO error handling
         logger.info(f"Dumping {cls.__name__} to .yaml")
-        return dumper.represent_mapping(data.yaml_tag, data.yaml_map)
+        return dumper.represent_mapping(data.yaml_tag, data.parameters)
 
 
 def load(path: Path) -> Any:

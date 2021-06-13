@@ -5,6 +5,7 @@ from typing import Any, ClassVar
 from qcrew.helpers import logger
 from qcrew.helpers.yamlizer import Yamlable
 
+
 class Parametrized(Yamlable):
     """ """
 

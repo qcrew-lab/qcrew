@@ -31,9 +31,7 @@ class YamlableMetaclass(type):
         """ """
         super(YamlableMetaclass, cls).__init__(name, bases, kwds)
 
-        # set a consistent format for subclass yaml tags
-        # cls.yaml_tag = YAML_TAG_PREFIX + name
-        cls.yaml_tag = name
+        cls.yaml_tag = name  # set a consistent format for subclass yaml tags
 
         # register safe loader and safe dumper
         cls.yaml_loader, cls.yaml_dumper = yaml.SafeLoader, yaml.SafeDumper
@@ -41,6 +39,7 @@ class YamlableMetaclass(type):
         # custom constructor and representer for Yamlable objects
         cls.yaml_loader.add_constructor(cls.yaml_tag, cls.from_yaml)
         cls.yaml_dumper.add_representer(cls, cls.to_yaml)
+
         # customise dumper to represent float values in scientific notation
         cls.yaml_dumper.add_representer(float, _sci_not_representer)
         # customise dumper to represent tuples and lists in flow style
@@ -59,16 +58,23 @@ class Yamlable(metaclass=YamlableMetaclass):
 
     @classmethod
     def from_yaml(cls: Type[YamlableType], loader, node) -> YamlableType:
-        """ """  # TODO error handling
+        """ """
         parameters = loader.construct_mapping(node)
         logger.info(f"Loading {cls.__name__} from .yaml")
-        return cls(**parameters)
+        try:
+            return cls(**parameters)
+        except TypeError as e:
+            logger.error(f"{cls.__name__} 'yaml_map' is incompatible with __init__()")
+            raise SystemExit(f"Failed to load {cls.__name__}, exiting...") from e
 
     @classmethod
     def to_yaml(cls, dumper, data) -> yaml.MappingNode:
         """ """  # TODO error handling
         logger.info(f"Dumping {cls.__name__} to .yaml")
-        return dumper.represent_mapping(data.yaml_tag, data.parameters)
+        try:
+            return dumper.represent_mapping(data.yaml_tag, data.yaml_map)
+        except AttributeError:
+            logger.warning("Failed to dump: no 'yaml_map' attribute found")
 
 
 def load(path: Path) -> Any:

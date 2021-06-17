@@ -27,6 +27,9 @@ salib = CDLL(str(PATH_TO_DLL))  # AJ
 
 # ---------------------------------- Defines -----------------------------------
 
+# AJ: dict containing serial numbers (key) and device handles (value) of connected SAs
+ACTIVE_CONNECTIONS = dict()  # AJ
+
 SA_TRUE = 1
 SA_FALSE = 0
 
@@ -77,6 +80,12 @@ SA_AUDIO_CW = 4
 # AJ: add timebase constants
 SA_REF_INTERNAL_OUT = 1  # AJ
 SA_REF_EXTERNAL_IN = 2  # AJ
+
+# AJ: add sweep parameter bounds
+MAX_CENTER = 13e9  # AJ
+MIN_CENTER = 100e3  # AJ
+MIN_SPAN = 1.0  # AJ
+MAX_REF_POWER = 20  # AJ
 
 # --------------------------------- Mappings ----------------------------------
 
@@ -201,14 +210,13 @@ def error_check(func):
         if "status" not in return_vars.keys():
             return return_vars
         status = return_vars["status"]
-        if status != 0:
-            logger.error(  # AJ: use logger instead of print statement
-                f"{'Error' if status < 0 else 'Warning'} "
-                f"{status}: {sa_get_error_string(status)} in {func.__name__}()"
-            )
-        if status < 0:
-            # AJ: replace exit() with raise SystemExit()
-            raise SystemExit("Exiting, see error message for details...")
+        if status != 0:  # AJ: refactor error handling, use logger, raise SystemExit
+            msg = f"{status}: {sa_get_error_string(status)} in {func.__name__}()"  # AJ
+            if status < 0:
+                logger.error(msg)  # AJ
+                raise SystemExit("Exiting, see error message for details...")  # AJ
+            else:  # AJ
+                logger.warning(msg)  # AJ
         return return_vars
 
     return print_status_if_error

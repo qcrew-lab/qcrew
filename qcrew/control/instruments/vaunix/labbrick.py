@@ -10,7 +10,7 @@ from qcrew.control.instruments.instrument import Instrument
 class LabBrick(Instrument):
     """ """
 
-    _parameters: ClassVar[set[str]] = {"id", "frequency", "power"}
+    _parameters: ClassVar[set[str]] = {"frequency", "power"}
 
     # pylint: disable=redefined-builtin, intentional shadowing of `id`
 
@@ -32,7 +32,7 @@ class LabBrick(Instrument):
             raise SystemExit("LabBrick connection error, exiting...") from e
 
         else:
-            logger.info(f"Connected to LB{self.id}, get current state with .parameters")
+            logger.info(f"Connected to {self}, call .parameters to get current state")
             self._handle = device_handle
 
     def _initialize(self, frequency: float, power: float) -> None:
@@ -112,4 +112,4 @@ class LabBrick(Instrument):
             logger.exception(f"Failed to close LB{self.id}")
             raise SystemExit("LabBrick connection error, exiting...") from e
         else:
-            logger.info(f"Disconnected LB{self.id}")
+            logger.info(f"Disconnected {self}")

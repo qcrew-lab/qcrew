@@ -6,60 +6,60 @@ from qcrew.control.instruments.instrument import Instrument
 import qcrew.control.instruments.signal_hound.sa_api as sa
 from qcrew.helpers import logger
 
-# -------------------------------------- Globals ---------------------------------------
 
-# pylint: disable=line-too-long, long docstrings for top-level constants are OK
-
-DETECTOR: int = sa.SA_AVERAGE
-""" `DETECTOR` decides if overlapping results from signal processing should be averaged (`SA_AVERAGE`) or if minimum and maximum values should be maintained (`SA_MIN_MAX`). """
-
-SCALE: int = sa.SA_LOG_SCALE
-""" `SCALE` changes units of returned amplitudes. Use `SA_LOG_SCALE` for dBm, `SA_LIN_SCALE` for millivolts, and `SA_LOG_FULL_SCALE` and `SA_LIN_FULL_SCALE` for amplitudes to be returned from the full scale input. """
-
-RBW_SHAPE: int = sa.SA_RBW_SHAPE_FLATTOP
-""" `RBW_SHAPE` specifies the RBW filter shape. The shape is applied by changing the window function. If set as `SA_RBW_SHAPE_FLATTOP`, a custom bandwidth flat-top window measured at the 3dB cutoff point is used. If set as `SA_RBW_SHAPE_CISPR`, a Gaussian window with zero-padding measured at the 6dB cutoff point is used. """
-
-VID_PROCESSING_UNITS: int = sa.SA_LOG_UNITS
-""" `VID_PROCESSING_UNITS` specifies units for video processing. For “average power” measurements, `SA_POWER_UNITS` should be selected. For cleaning up an amplitude modulated signal, `SA_VOLT_UNITS` would be a good choice. To emulate a traditional spectrum analyzer, select `SA_LOG_UNITS`. To minimize processing power and bypass video bandwidth processing, select `SA_BYPASS`. """
-
-DOES_IMAGE_REJECT: int = sa.SA_TRUE
-""" `DOES_IMAGE_REJECT` determines whether software image reject will be performed. Generally, set reject to true for continuous signals, and false to catch short duration signals at a known frequency. """
-
-DEFAULT_CENTER: float = 8e9
-""" Default value for the frequency sweep center, in Hz """
-
-DEFAULT_SPAN: float = 2e9
-""" Default value for the frequency sweep span, in Hz """
-
-DEFAULT_RBW: float = 250e3
-""" Default value for the resolution bandwidth (rbw), in Hz. The amplitude value for each frequency bin represents total energy from rbw / 2 below and above the bin's center. Available values are [0.1Hz-100kHz], 250kHz, 6MHz. See `_is_valid_rbw()` for exceptions to available values. """
-
-DEFAULT_REF_POWER: float = 0.0
-""" Reference power level of the device in dBm. To achieve the best results, ensure gain and attenuation are set to AUTO and reference level is set at or slightly above expected input power for best sensitivity. """
-
-# pylint: enable=line-too-long
-
-# ---------------------------------- Class -------------------------------------
 class Sa124(Instrument):
     """ """
 
     _parameters: ClassVar[set[str]] = {
-        "center",
-        "span",
-        "sweep_len",
-        "rbw",
-        "ref_power",
+        "center",  # frequency sweep center, in Hz
+        "span",  # frequency sweep span, in Hz
+        "sweep_len",  # frequency sweep length
+        "rbw",  # resolution bandwidth, in Hz
+        "ref_power",  # reference power level in dBm
     }
 
+    # pylint: disable=line-too-long, long docstrings for top-level constants are OK
+
+    detector: int = sa.SA_AVERAGE
+    """ `detector` specifies if overlapping results from signal processing should be averaged (`SA_AVERAGE`) or if minimum and maximum values should be maintained (`SA_MIN_MAX`). """
+
+    scale: int = sa.SA_LOG_SCALE
+    """ `scale` changes units of returned amplitudes. Use `SA_LOG_SCALE` for dBm, `SA_LIN_SCALE` for millivolts, and `SA_LOG_FULL_SCALE` and `SA_LIN_FULL_SCALE` for amplitudes to be returned from the full scale input. """
+
+    rbw_shape: int = sa.SA_RBW_SHAPE_FLATTOP
+    """ `rbw_shape` specifies the RBW filter shape. The shape is applied by changing the window function. If set as `SA_RBW_SHAPE_FLATTOP`, a custom bandwidth flat-top window measured at the 3dB cutoff point is used. If set as `SA_RBW_SHAPE_CISPR`, a Gaussian window with zero-padding measured at the 6dB cutoff point is used. """
+
+    vid_proc_units: int = sa.SA_LOG_UNITS
+    """ `vid_proc_units` specifies units for video processing. For “average power” measurements, `SA_POWER_UNITS` should be selected. For cleaning up an amplitude modulated signal, `SA_VOLT_UNITS` would be a good choice. To emulate a traditional spectrum analyzer, select `SA_LOG_UNITS`. To minimize processing power and bypass video bandwidth processing, select `SA_BYPASS`. """
+
+    does_image_reject: int = sa.SA_TRUE
+    """ `does_image_reject` determines whether software image reject will be performed. Generally, set reject to true for continuous signals, and false to catch short duration signals at a known frequency. """
+
+    timebase: int = sa.SA_REF_EXTERNAL_IN
+    """ `timebase` can be set to `SA_REF_EXTERNAL_IN` to use an external 10 MHz reference or `SA_REF_INTERNAL_OUT` to use an internal clock reference. """
+
+    default_center: float = 8e9
+    """ Default value for the frequency sweep center, in Hz """
+
+    default_span: float = 2e9
+    """ Default value for the frequency sweep span, in Hz """
+
+    default_rbw: float = 250e3
+    """ Default value for the resolution bandwidth (rbw), in Hz. The amplitude value for each frequency bin represents total energy from rbw / 2 below and above the bin's center. Available values are [0.1Hz-100kHz], 250kHz, 6MHz. See `_is_valid_rbw()` for exceptions to available values. """
+
+    default_ref_power: float = 0.0
+    """ Reference power level of the device in dBm. To achieve the best results, ensure gain and attenuation are set to AUTO and reference level is set at or slightly above expected input power for best sensitivity. """
+
+    # pylint: enable=line-too-long
     # pylint: disable=redefined-builtin, intentional shadowing of `id`
 
     def __init__(
         self,
         id: int,
-        center: float = DEFAULT_CENTER,
-        span: float = DEFAULT_SPAN,
-        rbw: float = DEFAULT_RBW,
-        ref_power: float = DEFAULT_REF_POWER,
+        center: float = Sa124.default_center,
+        span: float = Sa124.default_span,
+        rbw: float = Sa124.default_rbw,
+        ref_power: float = Sa124.default_ref_power,
     ) -> None:
         super().__init__(id)
         self._handle: int = None  # will be updated by _connect()
@@ -70,6 +70,7 @@ class Sa124(Instrument):
         self.rbw: float = rbw
         self.ref_power: float = ref_power
         self._sweep_info: dict[str, Any] = None  # will be updated by _set_sweep()
+
         self._initialize()
 
     # pylint: enable=redefined-builtin
@@ -91,13 +92,13 @@ class Sa124(Instrument):
         """ """
 
         # use external 10MHz reference
-        sa.sa_set_timebase(self._handle, sa.SA_REF_EXTERNAL_IN)
+        sa.sa_set_timebase(self._handle, Sa124.timebase)
         # configure acquisition settings
-        sa.sa_config_acquisition(self._handle, DETECTOR, SCALE)
+        sa.sa_config_acquisition(self._handle, Sa124.detector, Sa124.scale)
         # configure rbw filter shape
-        sa.sa_config_RBW_shape(self._handle, RBW_SHAPE)
+        sa.sa_config_RBW_shape(self._handle, Sa124.rbw_shape)
         # configure video processing unit type
-        sa.sa_config_proc_units(self._handle, VID_PROCESSING_UNITS)
+        sa.sa_config_proc_units(self._handle, Sa124.vid_proc_units)
 
         # set sweep parameters
         self._set_sweep(
@@ -135,7 +136,7 @@ class Sa124(Instrument):
         if "rbw" in sweep_params:
             self._set_rbw(sweep_params["rbw"])  # set instance attribute
             sa.sa_config_sweep_coupling(  # set on device
-                self._handle, self.rbw, self.rbw, DOES_IMAGE_REJECT
+                self._handle, self.rbw, self.rbw, Sa124.does_image_reject
             )
 
         if "ref_power" in sweep_params:
@@ -178,8 +179,8 @@ class Sa124(Instrument):
                 is_valid_rbw = False
 
         if not is_valid_rbw:
-            logger.warning(f"Invalid {rbw = }, set to default value {DEFAULT_RBW:E} Hz")
-            self.rbw = DEFAULT_RBW
+            logger.warning(f"Invalid {rbw = }, set to default {Sa124.default_rbw:E} Hz")
+            self.rbw = Sa124.default_rbw
         else:
             self.rbw = rbw
             logger.success(f"Set frequency sweep rbw to {self.rbw:E} Hz")

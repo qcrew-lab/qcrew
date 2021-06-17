@@ -1,5 +1,6 @@
 """ """
 
+import inspect
 from pathlib import Path
 from typing import Any, Type, TypeVar
 
@@ -56,6 +57,19 @@ YamlableType = TypeVar("Yamlable", bound="Yamlable")  # for type hints
 class Yamlable(metaclass=YamlableMetaclass):
     """ """
 
+    @property
+    def yaml_map(self) -> dict[str, Any]:
+        """ """
+        init_args_dict = inspect.signature(self.__init__).parameters
+        try:
+            yaml_map = {arg: getattr(self, arg) for arg in init_args_dict}
+        except AttributeError as e:
+            logger.exception("All arguments to Yamlable __init__() must be attributes")
+            raise SystemExit("Failed to create yaml_map, exiting...") from e
+        else:
+            logger.info(f"Created .yaml mapping for {type(self).__name__}")
+            return yaml_map
+
     @classmethod
     def from_yaml(cls: Type[YamlableType], loader, node) -> YamlableType:
         """ """
@@ -69,13 +83,9 @@ class Yamlable(metaclass=YamlableMetaclass):
 
     @classmethod
     def to_yaml(cls, dumper, data) -> yaml.MappingNode:
-        """ """  # TODO error handling
+        """ """
         logger.info(f"Dumping {cls.__name__} to .yaml")
-        try:
-            return dumper.represent_mapping(data.yaml_tag, data.yaml_map)
-        except AttributeError:
-            logger.warning("Failed to dump: no 'yaml_map' attribute found")
-
+        return dumper.represent_mapping(data.yaml_tag, data.yaml_map)
 
 def load(path: Path) -> Any:
     """ """

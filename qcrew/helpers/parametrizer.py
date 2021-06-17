@@ -15,9 +15,8 @@ class Parametrized(Yamlable):
     @property
     def parameters(self) -> dict[str, Any]:
         """ """
-        param_list = sorted(list(self._parameters))
         param_dict = dict()
-        for param in param_list:
+        for param in self._parameters:
             try:
                 param_value = getattr(self, param)
             except AttributeError as e:

@@ -1,272 +1,200 @@
-""" """
+""" Sa124 class written to support the SA124B's frequency sweep mode. A frequency sweep displays amplitude on the vertical axis and frequency on the horizontal axis """
 
-import numpy as np
+from typing import Any, ClassVar
 
-from qcrew.codebase.instruments.instrument import PhysicalInstrument
-from qcrew.codebase.instruments.signal_hound.sa_api import (
-    SA_AVERAGE,
-    SA_FALSE,
-    SA_IDLE,
-    SA_LOG_SCALE,
-    SA_LOG_UNITS,
-    SA_RBW_SHAPE_FLATTOP,
-    SA_REF_EXTERNAL_IN,
-    SA_SWEEPING,
-    SA_TRUE,
-    sa_close_device,
-    sa_config_acquisition,
-    sa_config_center_span,
-    sa_config_level,
-    sa_config_proc_units,
-    sa_config_RBW_shape,
-    sa_config_sweep_coupling,
-    sa_get_sweep_64f,
-    sa_initiate,
-    sa_open_device_by_serial,
-    sa_query_sweep_info,
-    sa_set_timebase,
-)
+from qcrew.control.instruments.instrument import Instrument
+import qcrew.control.instruments.signal_hound.sa_api as sa
+from qcrew.helpers import logger
 
-# ----------------------------------- Globals ----------------------------------
-# dict containing serial numbers and device handles of connected SAs
-# key is serial number (int) and value is device handle (int)
-ACTIVE_SA_CONNECTIONS = dict()
+# -------------------------------------- Globals ---------------------------------------
 
-# detector parameter decides if overlapping results from signal processing
-# should be averaged (`SA_AVERAGE`) or if minimum and maximum values should be
-# maintained (`SA_MIN_MAX`)
-DETECTOR = SA_AVERAGE
+# pylint: disable=line-too-long, long docstrings for top-level constants are OK
 
-# scale parameter changes units of returned amplitudes. Use `SA_LOG_SCALE` for
-# dBm, `SA_LIN_SCALE` for millivolts, `SA_LOG_FULL_SCALE` and
-# `SA_LIN_FULL_SCALE` for amplitudes to be returned from the full scale input
-SCALE = SA_LOG_SCALE
+DETECTOR: int = sa.SA_AVERAGE
+""" `DETECTOR` decides if overlapping results from signal processing should be averaged (`SA_AVERAGE`) or if minimum and maximum values should be maintained (`SA_MIN_MAX`). """
 
-# Specify the RBW filter shape, which is achieved by changing the window
-# function. When specifying SA_RBW_SHAPE_FLATTOP, a custom bandwidth flat-top
-# window is used measured at the 3dB cutoff point. When specifying
-# SA_RBW_SHAPE_CISPR, a Gaussian window with zero-padding is used to achieve
-# the specified RBW. The Gaussian window is measured at the 6dB cutoff point.
-RBW_SHAPE = SA_RBW_SHAPE_FLATTOP
+SCALE: int = sa.SA_LOG_SCALE
+""" `SCALE` changes units of returned amplitudes. Use `SA_LOG_SCALE` for dBm, `SA_LIN_SCALE` for millivolts, and `SA_LOG_FULL_SCALE` and `SA_LIN_FULL_SCALE` for amplitudes to be returned from the full scale input. """
 
-# specify units for video processing. For “average power” measurements,
-# SA_POWER_UNITS should be selected. For cleaning up an amplitude modulated
-# signal, SA_VOLT_UNITS would be a good choice. To emulate a traditional
-# spectrum analyzer, select SA_LOG_UNITS. To minimize processing power and
-# bypass video bandwidth processing, select SA_BYPASS.
-VID_PROCESSING_UNITS = SA_LOG_UNITS
+RBW_SHAPE: int = sa.SA_RBW_SHAPE_FLATTOP
+""" `RBW_SHAPE` specifies the RBW filter shape. The shape is applied by changing the window function. If set as `SA_RBW_SHAPE_FLATTOP`, a custom bandwidth flat-top window measured at the 3dB cutoff point is used. If set as `SA_RBW_SHAPE_CISPR`, a Gaussian window with zero-padding measured at the 6dB cutoff point is used. """
 
-# image reject determines whether software image reject will be performed.
-# generally, set reject to true for continuous signals, and false to catch
-# short duration signals at a known frequency.
-DOES_IMAGE_REJECT = SA_TRUE
+VID_PROCESSING_UNITS: int = sa.SA_LOG_UNITS
+""" `VID_PROCESSING_UNITS` specifies units for video processing. For “average power” measurements, `SA_POWER_UNITS` should be selected. For cleaning up an amplitude modulated signal, `SA_VOLT_UNITS` would be a good choice. To emulate a traditional spectrum analyzer, select `SA_LOG_UNITS`. To minimize processing power and bypass video bandwidth processing, select `SA_BYPASS`. """
 
-# ----------------------- Constructor argument names ---------------------------
-NAME = "name"  # gettable
-SERIAL_NUMBER = "serial_number"  # gettable
+DOES_IMAGE_REJECT: int = sa.SA_TRUE
+""" `DOES_IMAGE_REJECT` determines whether software image reject will be performed. Generally, set reject to true for continuous signals, and false to catch short duration signals at a known frequency. """
 
-# frequency sweep center in Hz
-CENTER = "center"  # gettable and settable
-DEFAULT_CENTER = 8e9
-MAX_CENTER = 13e9  # set by vendor in sa_api.h
-MIN_CENTER = 100e3  # set by vendor in sa_api.h
+DEFAULT_CENTER: float = 8e9
+""" Default value for the frequency sweep center, in Hz """
 
-# frequency sweep span in Hz
-SPAN = "span"  # gettable and settable
-DEFAULT_SPAN = 2e9
-MIN_SPAN = 1.0  # set by vendor in sa_api.h
+DEFAULT_SPAN: float = 2e9
+""" Default value for the frequency sweep span, in Hz """
 
-# resolution bandwidth in Hz. Available values are [0.1Hz-100kHz], 250kHz, 6MHz.
-# see _is_valid_rbw() for exceptions to available values.
-# definition: amplitude value for each frequency bin represents total energy
-# from rbw / 2 below and above the bin's center.
-RBW = "rbw"  # gettable and settable
-DEFAULT_RBW = 250e3
+DEFAULT_RBW: float = 250e3
+""" Default value for the resolution bandwidth (rbw), in Hz. The amplitude value for each frequency bin represents total energy from rbw / 2 below and above the bin's center. Available values are [0.1Hz-100kHz], 250kHz, 6MHz. See `_is_valid_rbw()` for exceptions to available values. """
 
-# reference power level of device in dBm.
-# set it at or slightly about your expected input power for best sensitivity.
-REF_POWER = "ref_power"  # gettable and settable
-DEFAULT_REF_POWER = 0
-MAX_REF_POWER = 20  # in dBm, set by vendor in sa_api.h
+DEFAULT_REF_POWER: float = 0.0
+""" Reference power level of the device in dBm. To achieve the best results, ensure gain and attenuation are set to AUTO and reference level is set at or slightly above expected input power for best sensitivity. """
+
+# pylint: enable=line-too-long
 
 # ---------------------------------- Class -------------------------------------
-class Sa124(PhysicalInstrument):
-    """
-    SA124. TODO - WRITE CLASS DOCU
-    """
+class Sa124(Instrument):
+    """ """
 
-    # pylint: disable=too-many-arguments
-    # this is a physical instrument and requires all these arguments for proper
-    # initialisation in frequency sweep mode.
+    _parameters: ClassVar[set[str]] = {
+        "center",
+        "span",
+        "sweep_len",
+        "rbw",
+        "ref_power",
+    }
+
+    # pylint: disable=redefined-builtin, intentional shadowing of `id`
+
     def __init__(
         self,
-        name: str,
-        serial_number: int,
+        id: int,
         center: float = DEFAULT_CENTER,
         span: float = DEFAULT_SPAN,
         rbw: float = DEFAULT_RBW,
         ref_power: float = DEFAULT_REF_POWER,
-    ):
-        # TODO use try catch block in case device not authenticated
-        print("Trying to initialize " + name + ", will take about 5s...")
-        self._device_handle = self._connect(serial_number)
-        super().__init__(name=name, uid=serial_number)
-        print("Connnected to SA124B " + str(self._uid))
+    ) -> None:
+        super().__init__(id)
+        self._handle: int = None  # will be updated by _connect()
+        self._connect()
 
-        self._center = center
-        self._span = span
-        self._rbw = rbw
-        self._ref_power = ref_power
+        self.center: float = center
+        self.span: float = span
+        self.rbw: float = rbw
+        self.ref_power: float = ref_power
+        self._sweep_info: dict[str, Any] = None  # will be updated by _set_sweep()
         self._initialize()
 
-    def _create_yaml_map(self):
-        yaml_map = {
-            NAME: self._name,
-            SERIAL_NUMBER: self._uid,
-            CENTER: self._center,
-            SPAN: self._span,
-            RBW: self._rbw,
-            REF_POWER: self._ref_power,
-        }
-        return yaml_map
+    # pylint: enable=redefined-builtin
 
-    def _connect(self, uid: int):
-        try:
-            device_handle = sa_open_device_by_serial(uid)["handle"]
-            ACTIVE_SA_CONNECTIONS[uid] = device_handle
-            return device_handle
-        except RuntimeError as runtime_error:
-            if uid in ACTIVE_SA_CONNECTIONS:
-                print("You are trying to open an already open SA")
-                print("PLEASE DO NOT DO THIS AGAIN WTF")
-                device_handle = ACTIVE_SA_CONNECTIONS[uid]
-                return device_handle
-            else:
-                raise runtime_error
+    def _connect(self) -> None:
+        """ """
+        logger.info(f"Connecting to {self}, please wait 5 seconds...")
 
-    def _initialize(self):
-        # this group of settings is set to global default values
-        # always use external 10MHz reference
-        sa_set_timebase(self._device_handle, SA_REF_EXTERNAL_IN)
+        if self.id in sa.ACTIVE_CONNECTIONS:
+            logger.warning(f"{self} is already connected")
+            self._handle = sa.ACTIVE_CONNECTIONS[self.id]
+            return
+
+        self._handle = sa.sa_open_device_by_serial(self.id)["handle"]
+        sa.ACTIVE_CONNECTIONS[self.id] = self._handle
+        logger.info(f"Connected to {self}, call .parameters to get current state")
+
+    def _initialize(self) -> None:
+        """ """
+
+        # use external 10MHz reference
+        sa.sa_set_timebase(self._handle, sa.SA_REF_EXTERNAL_IN)
         # configure acquisition settings
-        sa_config_acquisition(self._device_handle, DETECTOR, SCALE)
+        sa.sa_config_acquisition(self._handle, DETECTOR, SCALE)
         # configure rbw filter shape
-        sa_config_RBW_shape(self._device_handle, RBW_SHAPE)
+        sa.sa_config_RBW_shape(self._handle, RBW_SHAPE)
         # configure video processing unit type
-        sa_config_proc_units(self._device_handle, VID_PROCESSING_UNITS)
+        sa.sa_config_proc_units(self._handle, VID_PROCESSING_UNITS)
 
-        # sweep parameters are set to user defined values, if given
-        # else set to default values
-        self._configure_sweep(
-            center=self._center,
-            span=self._span,
-            rbw=self._rbw,
-            ref_power=self._ref_power,
+        # set sweep parameters
+        self._set_sweep(
+            center=self.center, span=self.span, rbw=self.rbw, ref_power=self.ref_power
         )
 
-    def _is_valid_rbw(self, rbw: float):
-        # TODO remove hard coding, do proper logging and error handling, DRY
-        start_freq = self._center - (self._span / 2)
+    @property  # sweep length getter
+    def sweep_len(self) -> int:
+        """ """
+        return self._sweep_info["sweep_length"]
 
-        # these two conditions are obtained from the manual
-        if (
-            self._span >= 100e6 or (self._span > 200e3 and start_freq < 16e6)
-        ) and rbw < 6.5e3:
-            is_valid_rbw = False
-        elif (
-            (0.1 <= rbw <= 100e3)
-            or (rbw == 250e3)
-            or (rbw == 6e6 and start_freq >= 200e6 and self._span >= 200e6)
-        ):
-            is_valid_rbw = True
-        else:
-            is_valid_rbw = False
+    def sweep(self, **sweep_params) -> tuple[list, list]:
+        """ """
+        if sweep_params:
+            self._set_sweep(**sweep_params)
 
-        if not is_valid_rbw:
-            print("Bad RBW value given, rbw set to default " + str(DEFAULT_RBW))
+        f_start = self._sweep_info["start_freq"]
+        bin_size = self._sweep_info["bin_size"]
+        sweep_len = self._sweep_info["sweep_length"]
 
-        return is_valid_rbw
+        freqs = [f_start + i * bin_size for i in range(sweep_len)]
+        amps = sa.sa_get_sweep_64f(self._handle)["max"]
+        return freqs, amps
 
-    def _configure_sweep(self, **sweep_parameters):
-        # device must be in idle mode before it is configured
-        # the third argument is an inconsequential flag that can be ignored
-        sa_initiate(self._device_handle, SA_IDLE, SA_FALSE)
+    def _set_sweep(self, **sweep_params) -> None:
+        """ """
+        sa.sa_initiate(self._handle, sa.SA_IDLE, sa.SA_FALSE)  # idle before configuring
 
-        if "center" in sweep_parameters:
-            new_center = sweep_parameters["center"]
-            if MIN_CENTER <= new_center <= MAX_CENTER:
-                self._center = new_center
-            else:
-                raise ValueError(
-                    "Center out of bounds, must be between "
-                    + str(MIN_CENTER)
-                    + "-"
-                    + str(MAX_CENTER)
-                )
+        if "center" in sweep_params:
+            self._set_center(sweep_params["center"])  # set instance attribute
+        if "span" in sweep_params:
+            self._set_span(sweep_params["span"])  # set instance attribute
+        sa.sa_config_center_span(self._handle, self.center, self.span)  # set on device
 
-        if "span" in sweep_parameters:
-            new_span = sweep_parameters["span"]
-            if new_span < MIN_SPAN:
-                raise ValueError(
-                    "Span out of bounds, must be greater than " + str(MIN_SPAN)
-                )
-            else:
-                self._span = new_span
-
-        sa_config_center_span(self._device_handle, self._center, self._span)
-
-        if "rbw" in sweep_parameters:
-            new_rbw = sweep_parameters["rbw"]
-            if self._is_valid_rbw(new_rbw):
-                self._rbw = new_rbw
-            else:
-                self._rbw = DEFAULT_RBW
-            sa_config_sweep_coupling(
-                self._device_handle, self._rbw, self._rbw, DOES_IMAGE_REJECT
+        if "rbw" in sweep_params:
+            self._set_rbw(sweep_params["rbw"])  # set instance attribute
+            sa.sa_config_sweep_coupling(  # set on device
+                self._handle, self.rbw, self.rbw, DOES_IMAGE_REJECT
             )
 
-        if "ref_power" in sweep_parameters:
-            new_ref_power = sweep_parameters["ref_power"]
-            if new_ref_power > MAX_REF_POWER:
-                print("Ref power out of bounds, clamping to " + str(MAX_REF_POWER))
-                self._ref_power = MAX_REF_POWER
-            else:
-                self._ref_power = new_ref_power
-            sa_config_level(self._device_handle, self._ref_power)
+        if "ref_power" in sweep_params:
+            self._set_ref_power(sweep_params["ref_power"])  # set instance attribute
+            sa.sa_config_level(self._handle, self.ref_power)  # set on device
 
-        # device is ready to sweep
-        sa_initiate(self._device_handle, SA_SWEEPING, SA_FALSE)
+        sa.sa_initiate(self._handle, sa.SA_SWEEPING, sa.SA_FALSE)  # ready to sweep
+        self._sweep_info = sa.sa_query_sweep_info(self._handle)  # get from device
 
-        #print("Configured sweep! Sweep info: ")
-        #print(self.parameters)
+    def _set_center(self, center: float) -> None:
+        """ """
+        if not sa.MIN_CENTER <= center <= sa.MAX_CENTER:
+            logger.error(f"Center out of bounds [{sa.MIN_CENTER, sa.MAX_CENTER}]")
+            raise ValueError("Value out of bounds")
+        self.center = center
+        logger.success(f"Set frequency sweep center to {self.center:E} Hz")
 
-    def sweep(self, **sweep_parameters):
-        if sweep_parameters:
-            self._configure_sweep(**sweep_parameters)
+    def _set_span(self, span: float) -> None:
+        """ """
+        if span < sa.MIN_SPAN:
+            logger.warning(f"Span set to minimum value of {sa.MIN_SPAN} Hz")
+            self.span = sa.MIN_SPAN
+        elif self.center + span > sa.MAX_CENTER or self.center - span < sa.MIN_CENTER:
+            logger.error(f"Sweep range out of bounds [{sa.MIN_CENTER, sa.MAX_CENTER}]")
+            raise ValueError("Value out of bounds")
+        else:
+            self.span = span
+            logger.success(f"Set frequency sweep span to {self.span:E} Hz")
 
-        sweep_info = sa_query_sweep_info(self._device_handle)
-        frequencies = [
-            sweep_info["start_freq"] + i * sweep_info["bin_size"]
-            for i in range(sweep_info["sweep_length"])
-        ]
-        amplitudes = sa_get_sweep_64f(self._device_handle)["max"]
-        return (np.array(frequencies), np.array(amplitudes))
+    def _set_rbw(self, rbw: float) -> None:
+        """ """
+        start = self.center - (self.span / 2)
+        # is_valid_rbw conditions are obtained from the SA124 API manual
+        is_valid_rbw = False
+        if (rbw == 6e6 and start >= 2e8 and self.span >= 2e8) or rbw == 250e3:
+            is_valid_rbw = True
+        elif 0.1 <= rbw <= 1e5:
+            is_valid_rbw = True
+            if (self.span >= 1e8 or (self.span > 2e5 and start < 16e6)) and rbw < 6.5e3:
+                is_valid_rbw = False
 
-    def disconnect(self):
-        sa_close_device(self._device_handle)
-        del ACTIVE_SA_CONNECTIONS[self._uid]
-        #print(self._name + " disconnected!")
+        if not is_valid_rbw:
+            logger.warning(f"Invalid {rbw = }, set to default value {DEFAULT_RBW:E} Hz")
+            self.rbw = DEFAULT_RBW
+        else:
+            self.rbw = rbw
+            logger.success(f"Set frequency sweep rbw to {self.rbw:E} Hz")
 
-    @property  # sweep parameters getter
-    def parameters(self):
-        sweep_info = sa_query_sweep_info(self._device_handle)
-        sweep_info.pop("status")
-        return {
-            "start": "{:.7E}".format(sweep_info["start_freq"]),
-            CENTER: "{:.7E}".format(self._center),
-            SPAN: "{:.3E}".format(self._span),
-            "sweep_length": sweep_info["sweep_length"],
-            RBW: "{:.3E}".format(self._rbw),
-            REF_POWER: self._ref_power,
-            "bin_size": "{:.3E}".format(sweep_info["bin_size"]),
-        }
+    def _set_ref_power(self, ref_power: float) -> None:
+        """ """
+        if ref_power > sa.MAX_REF_POWER:
+            logger.warning(f"Ref power set to maximum value of {sa.MAX_REF_POWER} Hz")
+            self.ref_power = sa.MAX_REF_POWER
+        else:
+            self.ref_power = ref_power
+            logger.success(f"Set ref power to {self.ref_power} dBm")
+
+    def disconnect(self) -> None:
+        """ """
+        sa.sa_close_device(self._device_handle)
+        del sa.ACTIVE_CONNECTIONS[self.id]
+        logger.info(f"Disconnected {self}")

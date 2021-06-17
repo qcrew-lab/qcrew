@@ -4,16 +4,19 @@ from ctypes import CDLL, c_int, Array
 from pathlib import Path
 
 # ------------------------------------- Driver -----------------------------------------
+
 DLL_NAME = "vnx_fmsynth.dll"  # dll must be in the same directory as this driver
 PATH_TO_DLL = Path(__file__).resolve().parent / DLL_NAME  # returns Path object
 VNX = CDLL(str(PATH_TO_DLL))  # cast Path to string
 VNX.fnLMS_SetTestMode(False)  # we are using actual hardware
 
 # ------------------------------------- Globals ----------------------------------------
+
 FREQ_SCALAR = 10.0  # frequency is encoded as an integer of 10Hz steps
 POW_SCALAR = 0.25  # power level is encoded as an integer of 0.25dB steps
 
-# -------------------------------------- Methods ---------------------------------------
+# ------------------------------------- Methods ---------------------------------------
+
 get_rf_on = VNX.fnLMS_GetRF_On
 set_rf_on = VNX.fnLMS_SetRFOn
 set_use_internal_ref = VNX.fnLMS_SetUseInternalRef

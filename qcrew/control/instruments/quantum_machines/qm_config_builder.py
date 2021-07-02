@@ -380,7 +380,7 @@ class QMConfigBuilder:
         """ """
         for mode in modes:
             if not isinstance(mode, Mode):
-                logger.error(f"QMConfigBuilder __init_() *args must be of {Mode}")
+                logger.error(f"All QMConfigBuilder init *args must be of {Mode}")
                 raise SystemExit("Failed to initialize QMConfigBuilder, exiting...")
             self._modes.add(mode)
             self._state_map[mode.name] = None

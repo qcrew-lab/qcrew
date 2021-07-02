@@ -28,7 +28,7 @@ class LabBrick(Instrument):
         try:
             device_handle = vnx.connect_to_device(self.id)
         except ConnectionError as e:
-            logger.exception(f"Failed to connect to LB{self.id}")
+            logger.exception(f"Failed to connect to {self}")
             raise SystemExit("LabBrick connection error, exiting...") from e
 
         else:
@@ -38,18 +38,23 @@ class LabBrick(Instrument):
     def _initialize(self, frequency: float, power: float) -> None:
         """ """
         vnx.set_use_internal_ref(self._handle, False)  # use external 10MHz reference
-        self.toggle_rf()  # turn on RF, guaranteed to be off
 
         # if user specifies initial frequency and power, set them
         # else, get current frequency and power from device and set those
         self.frequency = frequency if frequency is not None else self.frequency
         self.power = power if power is not None else self.power
 
-    def toggle_rf(self) -> None:
+    @property  # rf on getter
+    def rf(self) -> bool:
         """ """
-        toggle = not vnx.get_rf_on(self._handle)
+        is_on = vnx.get_rf_on(self._handle)
+        return is_on
+
+    @rf.setter
+    def rf(self, toggle: bool) -> None:
+        """ """
         vnx.set_rf_on(self._handle, toggle)
-        logger.success(f"LB{self.id} RF is {'ON' if toggle else 'OFF'}")
+        logger.success(f"{self} RF is {'ON' if toggle else 'OFF'}")
 
     @property  # frequency getter
     def frequency(self) -> float:
@@ -74,18 +79,20 @@ class LabBrick(Instrument):
             logger.exception(f"LB{self.id} failed to set frequency")
             raise SystemExit("LabBrick is disconnected, exiting...") from e
         else:
-            logger.success(f"LB{self.id} set {frequency:.7E = } Hz")
+            logger.success(f"{self} set {frequency:.7E = } Hz")
+            if not self.rf:
+                self.rf = True
 
     @property  # power getter
     def power(self) -> float:
         """ """
         try:
             power = vnx.get_power(self._handle)
-        except ConnectionError:
-            logger.exception(f"LB{self.id} failed to get power")
-            raise SystemExit("LabBrick is disconnected, exiting...") from e
+        except ConnectionError as e:
+            logger.exception(f"{self} failed to get power")
+            raise SystemExit(f"{self} is disconnected, exiting...") from e
         else:
-            logger.success(f"LB{self.id} current {power = } dBm")
+            logger.success(f"{self} current {power = } dBm")
             return power
 
     @power.setter
@@ -94,22 +101,20 @@ class LabBrick(Instrument):
         try:
             power = vnx.set_power(self._handle, new_power)
         except (TypeError, ValueError):
-            logger.exception(f"LB{self.id} failed to set power")
+            logger.exception(f"{self} failed to set power")
         except ConnectionError as e:
             logger.exception(f"LB{self.id} failed to set power")
-            raise SystemExit("LabBrick is disconnected, exiting...") from e
+            raise SystemExit(f"{self} is disconnected, exiting...") from e
         else:
-            logger.success(f"LB{self.id} set {power = } dBm")
+            logger.success(f"{self} set {power = } dBm")
 
     def disconnect(self) -> None:
         """ """
-        if vnx.get_rf_on(self._handle):
-            self.toggle_rf()  # turn off RF if on
-
+        self.rf = False  # turn off RF
         try:
             vnx.close_device(self._handle)
         except ConnectionError as e:
-            logger.exception(f"Failed to close LB{self.id}")
+            logger.exception(f"Failed to close {self}")
             raise SystemExit("LabBrick connection error, exiting...") from e
         else:
             logger.info(f"Disconnected {self}")

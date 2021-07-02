@@ -66,7 +66,7 @@ class GaussianWave(Wave):
         return DEFAULT_AMP * ampx * np.exp(-(ts ** 2) / (2.0 * sigma ** 2))
 
 
-class GaussianDragWave(Wave):
+class GaussianDerivativeWave(Wave):
     """ """
 
     _parameters: ClassVar[set[str]] = {"drag", "sigma", "chop"}
@@ -81,7 +81,6 @@ class GaussianDragWave(Wave):
         """ """
         ts = np.linspace(-chop / 2 * sigma, chop / 2 * sigma, chop * sigma)
         return drag * (0.25 / sigma ** 2) * ts * np.exp(-(ts ** 2) / (2.0 * sigma ** 2))
-        # NOTE where did the 0.25 come from???
 
 
 class CosRampWave(Wave):
@@ -154,3 +153,4 @@ class ConstantIntegrationWeight(IntegrationWeight):
     def __call__(self, cos: float, sin: float, length: int) -> tuple[np.ndarray]:
         """ """
         return np.full(length, cos), np.full(length, sin)
+

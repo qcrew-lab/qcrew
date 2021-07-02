@@ -1,20 +1,64 @@
 """ """
 
 from numbers import Real
-from typing import Any, ClassVar
+from typing import Any, ClassVar, Union
 
 import numpy as np
 from qcrew.control.pulses.waves import (
     ConstantWave,
     ConstantIntegrationWeight,
     GaussianWave,
-    GaussianDragWave,
+    GaussianDerivativeWave,
     IntegrationWeight,
     Wave,
 )
 from qcrew.helpers import logger
 from qcrew.helpers.parametrizer import Parametrized
-from qcrew.control.instruments.quantum_machines import CLOCK_CYCLE
+from qcrew.control.instruments.quantum_machines import CLOCK_CYCLE, DEFAULT_AMP
+
+
+class Pulse(Parametrized):
+
+    _parameters: ClassVar[set[str]] = {"length"}
+
+    def __init__(
+        self,
+        length: int,
+        has_mix_waveforms: bool = True,
+        integration_weights: tuple[np.ndarray] = None,
+    ) -> None:
+        """ """
+        self.length: int = length
+        self.has_mix_waveforms: bool = has_mix_waveforms
+        self.is_readout_pulse: bool = False
+
+        if integration_weights is not None:
+            self.is_readout_pulse = True
+            self.integration_weights: tuple[np.ndarray] = integration_weights
+
+    def __repr__(self) -> str:
+        """ """
+        return f"{type(self).__name__}{self.parameters}"
+
+    def __call__(
+        self, *args: Real, get_samples: bool = False
+    ) -> Union[None, tuple[np.ndarray]]:
+        """ """
+        raise NotImplementedError  # subclasses must implement
+
+    @property  # pulse type_ getter for building QM config
+    def type_(self) -> Union[str, None]:
+        """ """
+        return "measurement" if self.is_readout_pulse else "control"
+
+
+class GaussianPulse(Pulse):
+    _parameters: ClassVar[set[str]] = Pulse._parameters | {
+        "ampx",
+        "drag",
+        "sigma",
+        "chop",
+    }
 
 
 class Pulse(Parametrized):
@@ -143,34 +187,28 @@ class ConstantPulse(Pulse):
 class GaussianPulse(Pulse):
     """ """
 
-    def __init__(self, ampx: float, sigma: int, chop) -> None:
+    # TODO set default ampx = 1, chop = 6
+    def __init__(self, ampx: float, sigma: int, chop: int, drag: float = None) -> None:
         """ """
         length = sigma * chop
         i_wave = GaussianWave(ampx, sigma, chop)
-        q_wave = ConstantWave(0.0, length)
+
+        if drag is None:
+            q_wave = ConstantWave(0.0, length)
+        else:
+            q_wave = GaussianDerivativeWave(drag, sigma, chop)
+
+        self.is_drag_pulse: float = drag is not None
         super().__init__(length=length, I=i_wave, Q=q_wave)
 
-    def __call__(self, ampx: float, sigma: int, chop: int) -> None:
+    def __call__(self, ampx: float, sigma: int, chop: int, drag: float = None) -> None:
         """ """
         self.length = sigma * chop
         self.I.parameters = {"ampx": ampx, "sigma": sigma, "chop": chop}
-        self.Q.parameters = {"ampx": 0.0, "length": self.length}
-
-class GaussianDragPulse(Pulse):
-    """ """
-
-    def __init__(self, ampx: float, sigma: int, chop: int, drag: float) -> None:
-        """ """
-        length = sigma * chop
-        i_wave = GaussianWave(ampx, sigma, chop)
-        q_wave = GaussianDragWave(drag, sigma, chop)
-        super().__init__(length=length, I=i_wave, Q=q_wave)
-
-    def __call__(self, ampx: float, sigma: int, chop: int, drag: float) -> None:
-        """ """
-        self.length = sigma * chop
-        self.I.parameters = {"ampx": ampx, "sigma": sigma, "chop": chop}
-        self.Q.parameters = {"drag": drag, "sigma": sigma, "chop": chop}
+        if self.is_drag_pulse and drag is not None:
+            self.Q.parameters = {"drag": drag, "sigma": sigma, "chop": chop}
+        elif not self.is_drag_pulse:
+            self.Q.parameters = {"ampx": 0.0, "length": self.length}
 
 
 class ConstantReadoutPulse(ReadoutPulse, ConstantPulse):

@@ -1,20 +1,11 @@
 """ """
 
 from numbers import Real
-from typing import Any, ClassVar, Union
+from typing import Any, ClassVar
 
 import numpy as np
-from qcrew.control.pulses.waves import (
-    ConstantWave,
-    ConstantIntegrationWeight,
-    GaussianWave,
-    GaussianDerivativeWave,
-    IntegrationWeight,
-    Wave,
-)
-from qcrew.helpers import logger
 from qcrew.helpers.parametrizer import Parametrized
-from qcrew.control.instruments.quantum_machines import CLOCK_CYCLE, DEFAULT_AMP
+from qcrew.control.instruments.quantum_machines import BASE_AMP
 
 
 class Pulse(Parametrized):
@@ -25,207 +16,93 @@ class Pulse(Parametrized):
         self,
         length: int,
         has_mix_waveforms: bool = True,
-        integration_weights: tuple[np.ndarray] = None,
+        integration_weights: dict[str, np.ndarray] = None,
     ) -> None:
         """ """
         self.length: int = length
         self.has_mix_waveforms: bool = has_mix_waveforms
         self.is_readout_pulse: bool = False
-
         if integration_weights is not None:
             self.is_readout_pulse = True
-            self.integration_weights: tuple[np.ndarray] = integration_weights
+            self._parameters.add("integration_weights")
+            self.integration_weights: dict[str, np.ndarray] = integration_weights
 
     def __repr__(self) -> str:
         """ """
         return f"{type(self).__name__}{self.parameters}"
 
-    def __call__(
-        self, *args: Real, get_samples: bool = False
-    ) -> Union[None, tuple[np.ndarray]]:
+    def __call__(self, **parameters: Real) -> None:
         """ """
-        raise NotImplementedError  # subclasses must implement
+        for name, value in parameters.items():
+            if hasattr(self, name):
+                setattr(self, name, value)
 
-    @property  # pulse type_ getter for building QM config
-    def type_(self) -> Union[str, None]:
-        """ """
-        return "measurement" if self.is_readout_pulse else "control"
-
-
-class GaussianPulse(Pulse):
-    _parameters: ClassVar[set[str]] = Pulse._parameters | {
-        "ampx",
-        "drag",
-        "sigma",
-        "chop",
-    }
-
-
-class Pulse(Parametrized):
-    """ """
-
-    _parameters: ClassVar[set[str]] = {"length", "I", "Q"}
-
-    # pylint: disable=invalid-name
-    # "I" and "Q" have specific meanings that are well understood by qcrew
-
-    def __init__(self, length: int, I: Wave, Q: Wave = None) -> None:
-        """ """
-        self.length: int = length
-        self.I: Wave = I
-        self.Q: Wave = Q
-
-    # pylint: enable=invalid-name
-
-    def __repr__(self) -> str:
-        """ """
-        return f"{type(self).__name__}({self.length}ns, I = {self.I}, Q = {self.Q})"
-
-    def __call__(self, *args: Real) -> None:
-        """ """
-        raise NotImplementedError  # subclasses must implement
-
-    @property  # pulse type_ getter for building QM config
-    def type_(self) -> str:
-        """ """
-        return "control"
-
-    @property  # has_mix_waveforms getter
-    def has_mix_waveforms(self) -> bool:
-        """ """
-        return self.I is not None and self.Q is not None
-
-    @property  # pulse samples getter
+    @property  # waveform amplitude samples getter
     def samples(self) -> tuple[np.ndarray]:
         """ """
-        try:
-            i_samples = self.I(**self.I.parameters)
-            q_samples = None if self.Q is None else self.Q(**self.Q.parameters)
-        except TypeError as e:
-            logger.error(f"Expect {self} waveforms to be called with their parameters")
-            raise SystemExit("Failed to get pulse samples, exiting...") from e
-        return i_samples, q_samples
-
-
-class ReadoutPulse(Pulse):
-    """ """
-
-    _parameters: ClassVar[set[str]] = Pulse._parameters | {"integration_weights"}
-
-    def __init__(self, **parameters) -> None:
-        """ """
-        super().__init__(**parameters)
-        self._integration_weights: dict[str, IntegrationWeight] = dict()
+        raise NotImplementedError  # subclasses must implements
 
     @property  # pulse type_ getter for building QM config
     def type_(self) -> str:
         """ """
-        return "measurement"
-
-    @property  # integration weights getter
-    def integration_weights(self) -> dict[str, Any]:
-        """ """
-        return {name: iw.parameters for name, iw in self._integration_weights.items()}
-
-    @property  # integration weights samples getter
-    def integration_weights_samples(self) -> dict[str, dict[str, np.ndarray]]:
-        """ """
-        iw_config = dict()
-        try:
-            for key, iw in self._integration_weights.items():
-                iw_config[key] = {"cosine": None, "sine": None}
-                cos_samples, sin_samples = iw(**iw.parameters)
-                iw_config[key]["cosine"] = cos_samples
-                iw_config[key]["sine"] = sin_samples
-        except TypeError as te:
-            logger.error(f"Expect {iw} to be called with its parameters")
-            raise SystemExit("Failed to get integration weights, exiting...") from te
-        else:
-            return iw_config
-
-    @integration_weights.setter
-    def integration_weights(self, new_iw: dict[str, IntegrationWeight]) -> None:
-        """ """
-        try:
-            for iw_name, iw in new_iw.items():
-                if isinstance(iw, IntegrationWeight):
-                    self._integration_weights[iw_name] = iw
-                    setattr(self, iw_name, iw)  # for easy access
-                    logger.success(f"Set readout pulse {iw} named '{iw_name}'")
-                else:
-                    logger.warning(f"Invalid value '{iw}', must be {IntegrationWeight}")
-        except TypeError as e:
-            logger.error(f"Setter expects {dict[str, IntegrationWeight]}")
-            raise SystemExit("Failed to set integration weights, exiting...") from e
-
-    def remove_integration_weight(self, iw_name: str) -> None:
-        """ """
-        if iw_name in self._integration_weights:
-            del self._integration_weights[iw_name]
-            delattr(self, iw_name)
-            logger.success(f"Removed integration weight '{iw_name}'")
-        else:
-            logger.warning(f"Integration weight '{iw_name}' does not exist")
+        return "measurement" if self.is_readout_pulse else "control"
 
 
 class ConstantPulse(Pulse):
     """ """
 
-    def __init__(self, ampx: float, length: int) -> None:
-        """ """
-        i_wave = ConstantWave(ampx, length)
-        q_wave = ConstantWave(0.0, length)
-        super().__init__(length=length, I=i_wave, Q=q_wave)
+    _parameters: ClassVar[set[str]] = Pulse._parameters | {"ampx"}
 
-    def __call__(self, ampx: float, length: int) -> None:
+    def __init__(
+        self,
+        ampx: float = 1.0,
+        length: int = 400,
+        integration_weights: dict[str, np.ndarray] = None,
+    ) -> None:
         """ """
-        self.length = length
-        self.I.parameters = {"length": length, "ampx": ampx}
-        self.Q.parameters = {"length": length}
+        self.ampx: float = ampx
+        super().__init__(length=length, integration_weights=integration_weights)
+
+    @property
+    def samples(self) -> tuple[np.ndarray]:
+        i_wave = np.full(self.length, (BASE_AMP * self.ampx))
+        q_wave = np.zeros(self.length)
+        return i_wave, q_wave
 
 
 class GaussianPulse(Pulse):
-    """ """
+    _parameters: ClassVar[set[str]] = Pulse._parameters | {
+        "sigma",
+        "chop",
+        "ampx",
+        "drag",
+    }
 
-    # TODO set default ampx = 1, chop = 6
-    def __init__(self, ampx: float, sigma: int, chop: int, drag: float = None) -> None:
+    def __init__(
+        self,
+        sigma: float,
+        chop: int = 6,
+        ampx: float = 1.0,
+        drag: float = 0.0,
+        integration_weights: dict[str, np.ndarray] = None,
+    ) -> None:
         """ """
-        length = sigma * chop
-        i_wave = GaussianWave(ampx, sigma, chop)
+        self.sigma: float = sigma
+        self.chop: int = chop
+        self.ampx: float = ampx
+        self.drag: float = drag
+        length = int(sigma * chop)
+        super().__init__(length=length, integration_weights=integration_weights)
 
-        if drag is None:
-            q_wave = ConstantWave(0.0, length)
-        else:
-            q_wave = GaussianDerivativeWave(drag, sigma, chop)
-
-        self.is_drag_pulse: float = drag is not None
-        super().__init__(length=length, I=i_wave, Q=q_wave)
-
-    def __call__(self, ampx: float, sigma: int, chop: int, drag: float = None) -> None:
+    def __call__(self, sigma: float, chop: int, ampx: float, drag: float) -> None:
         """ """
-        self.length = sigma * chop
-        self.I.parameters = {"ampx": ampx, "sigma": sigma, "chop": chop}
-        if self.is_drag_pulse and drag is not None:
-            self.Q.parameters = {"drag": drag, "sigma": sigma, "chop": chop}
-        elif not self.is_drag_pulse:
-            self.Q.parameters = {"ampx": 0.0, "length": self.length}
+        super().__call__(sigma=sigma, chop=chop, ampx=ampx, drag=drag)
+        self.length = int(sigma * chop)
 
-
-class ConstantReadoutPulse(ReadoutPulse, ConstantPulse):
-    """ """
-
-    def __init__(self, ampx: float, length: int) -> None:
-        """ """
-        super().__init__(ampx=ampx, length=length)
-
-        iw_length = int(self.length / CLOCK_CYCLE)
-        self.integration_weights = {  # add default integration weights
-            "iw1": ConstantIntegrationWeight(cos=1.0, sin=0.0, length=iw_length),
-            "iw2": ConstantIntegrationWeight(cos=0.0, sin=1.0, length=iw_length),
-        }
-
-    def __call__(self, ampx: float, length: int) -> None:
-        """ """
-        super().__call__(ampx=ampx, length=length)
-        for iw in self._integration_weights.values():
-            iw.parameters = {"length": int(self.length / CLOCK_CYCLE)}
+    @property
+    def samples(self) -> tuple[np.ndarray]:
+        start, stop = -self.chop / 2 * self.sigma, self.chop / 2 * self.sigma
+        ts = np.linspace(start, stop, self.length)
+        i_wave = BASE_AMP * self.ampx * np.exp(-(ts ** 2) / (2.0 * self.sigma ** 2))
+        q_wave = self.drag * (np.exp(0.5) / self.sigma) * i_wave
+        return i_wave, q_wave

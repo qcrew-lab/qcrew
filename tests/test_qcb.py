@@ -45,9 +45,11 @@ tmt.tune(qubit)
 pprint.pp(qubit.parameters)
 pprint.pp(rr.parameters)
 
-qcb = QMConfigBuilder(qubit, rr)
+qcb = QMConfigBuilder(qubit, rr, cavity)
 config = qcb.config
 
+#make changes here
+qmm.open_qm(qcb.config)
 
 qubit.lo_freq = 5.5e9
 config = qcb.config

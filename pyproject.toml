@@ -9,6 +9,8 @@ python = "^3.9"
 PyYAML = "^5.4.1"
 loguru = "^0.5.3"
 numpy = "^1.21.0"
+Pyro5 = "^5.12"
+qm = { path = "./qm.tgz", develop = false }
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"

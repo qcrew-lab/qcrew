@@ -8,6 +8,7 @@ authors = ["Atharv Joshi <atharvjoshi@ymail.com>"]
 python = "^3.9"
 PyYAML = "^5.4.1"
 loguru = "^0.5.3"
+numpy = "^1.21.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"

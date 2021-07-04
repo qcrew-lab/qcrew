@@ -159,7 +159,8 @@ class QMConfig(InfinitelyNestableDict):
             for key, offset in diff_offsets.items():
                 self.set_dc_offset(mode, key, offset)
 
-    def get_mixer_correction_matrix(self, g: float, p: float) -> tuple[float]:
+    @classmethod
+    def get_mixer_correction_matrix(cls, g: float, p: float) -> tuple[float]:
         """ """
         try:
             cos = np.cos(p)

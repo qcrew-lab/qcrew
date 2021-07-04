@@ -1,11 +1,12 @@
 """ """
 
-from typing import  Any, ClassVar
+from typing import Any, ClassVar
+
+import qm.qua as qua  # TODO
 
 from qcrew.control.instruments.vaunix.labbrick import LabBrick
 from qcrew.control.pulses.pulses import (
     ConstantPulse,
-    ConstantReadoutPulse,
     GaussianPulse,
     Pulse,
 )
@@ -18,7 +19,7 @@ class Mode(Parametrized):
 
     _parameters: ClassVar[set[str]] = {
         "name",  # a string to identify the Mode in the QM config file
-        "lo",  # reference to the local oscillator object driving the Mode
+        "lo_freq",  # local oscillator frequency driving the Mode
         "int_freq",  # intermediate frequency driving the Mode
         "ports",  # OPX ports connected to this Mode
         "offsets",  # offsets used to tune the Mode's IQ mixer
@@ -39,7 +40,7 @@ class Mode(Parametrized):
         """ """
         self._name: str = str(name)
 
-        self._lo: LabBrick = lo
+        self.lo: LabBrick = lo
         self.int_freq: float = int_freq
 
         self._ports: dict[str, int] = {key: None for key in self._ports_keys}
@@ -54,8 +55,8 @@ class Mode(Parametrized):
             self.operations = operations
         else:
             self.operations = {  # set default "unselective" operations
-                "constant_pulse": ConstantPulse(ampx=1.0, length=1000),
-                "gaussian_pulse": GaussianPulse(ampx=1.0, sigma=15, chop=4),
+                "constant_pulse": ConstantPulse(),
+                "gaussian_pulse": GaussianPulse(sigma=100),
             }
 
         logger.info(f"Created {self}, call `.parameters` to get current state")
@@ -69,25 +70,11 @@ class Mode(Parametrized):
         """ """
         return self._name
 
-    @property  # lo parameters getter
-    def lo(self) -> dict[str, Any]:
-        """ """
-        try:
-            return self._lo.parameters
-        except AttributeError as e:
-            logger.exception(f"Expect {self} lo of {LabBrick}")
-            raise SystemExit("Failed to get local oscillator params, exiting...") from e
-
-    @lo.setter
-    def lo(self, new_lo: LabBrick) -> None:
-        """ """
-        self._lo = new_lo
-
     @property  # lo frequency getter
     def lo_freq(self) -> float:
         """ """
         try:
-            return self._lo.frequency
+            return self.lo.frequency
         except AttributeError as e:
             logger.exception(f"Expect {self} lo of {LabBrick}")
             raise SystemExit("Failed to get lo frequency, exiting...") from e
@@ -96,28 +83,10 @@ class Mode(Parametrized):
     def lo_freq(self, new_lo_freq: float) -> None:
         """ """
         try:
-            self._lo.frequency = new_lo_freq
+            self.lo.frequency = new_lo_freq
         except AttributeError as e:
             logger.exception(f"Expect {self} lo of {LabBrick}")
             raise SystemExit("Failed to set lo frequency, exiting...") from e
-
-    @property  # lo power getter
-    def lo_power(self) -> float:
-        """ """
-        try:
-            return self._lo.power
-        except AttributeError as e:
-            logger.exception(f"Expect {self} lo of {LabBrick}")
-            raise SystemExit("Failed to get lo power, exiting...") from e
-
-    @lo_power.setter
-    def lo_power(self, new_power: float) -> None:
-        """ """
-        try:
-            self._lo.power = new_power
-        except AttributeError as e:
-            logger.exception(f"Expect {self} lo of {LabBrick}")
-            raise SystemExit("Failed to set lo power, exiting...") from e
 
     @property  # ports getter
     def ports(self) -> dict[str, int]:
@@ -193,6 +162,14 @@ class Mode(Parametrized):
         """ """
         return self._ports["I"] is not None and self._ports["Q"] is not None
 
+    def play(self, key: str, ampx: tuple[float] = (1.0,), **kwargs) -> None:
+        """ """
+        if key not in self._operations:
+            logger.error(f"No operation named {key} defined for {self}")
+            raise SystemExit("Failed to play Mode operation, exiting...")
+
+        qua.play(key * amp(*ampx), self.name, **kwargs)  # TODO
+
 
 class ReadoutMode(Mode):
     """ """
@@ -209,5 +186,5 @@ class ReadoutMode(Mode):
         self.smearing: int = smearing
 
         self.operations = {
-            "readout_pulse": ConstantReadoutPulse(ampx=1.0, length=16),
+            "readout_pulse": ConstantPulse(integration_weights=dict()),
         }

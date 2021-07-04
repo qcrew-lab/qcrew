@@ -2,6 +2,8 @@
 
 from typing import Any, ClassVar
 
+import numpy as np
+
 from qcrew.control.instruments.instrument import Instrument
 import qcrew.control.instruments.signal_hound.sa_api as sa
 from qcrew.helpers import logger
@@ -32,8 +34,8 @@ class Sa124(Instrument):
     vid_proc_units: int = sa.SA_LOG_UNITS
     """ `vid_proc_units` specifies units for video processing. For “average power” measurements, `SA_POWER_UNITS` should be selected. For cleaning up an amplitude modulated signal, `SA_VOLT_UNITS` would be a good choice. To emulate a traditional spectrum analyzer, select `SA_LOG_UNITS`. To minimize processing power and bypass video bandwidth processing, select `SA_BYPASS`. """
 
-    does_image_reject: int = sa.SA_TRUE
-    """ `does_image_reject` determines whether software image reject will be performed. Generally, set reject to true for continuous signals, and false to catch short duration signals at a known frequency. """
+    rej_img: int = sa.SA_TRUE
+    """ `rej_img` determines whether software image reject will be performed. Generally, set reject to true for continuous signals, and false to catch short duration signals at a known frequency. """
 
     timebase: int = sa.SA_REF_EXTERNAL_IN
     """ `timebase` can be set to `SA_REF_EXTERNAL_IN` to use an external 10 MHz reference or `SA_REF_INTERNAL_OUT` to use an internal clock reference. """
@@ -69,7 +71,7 @@ class Sa124(Instrument):
         self.span: float = span
         self.rbw: float = rbw
         self.ref_power: float = ref_power
-        self._sweep_info: dict[str, Any] = None  # will be updated by _set_sweep()
+        self._freqs: np.ndarray = None  # will be updated by _set_sweep()
 
         self._initialize()
 
@@ -105,23 +107,17 @@ class Sa124(Instrument):
             center=self.center, span=self.span, rbw=self.rbw, ref_power=self.ref_power
         )
 
-    @property  # sweep length getter
-    def sweep_len(self) -> int:
+    @property  # sweep info getter
+    def sweep_info(self) -> dict[str, float]:
         """ """
-        return self._sweep_info["sweep_length"]
+        return sa.sa_query_sweep_info(self._handle)
 
-    def sweep(self, **sweep_params) -> tuple[list, list]:
+    def sweep(self, **sweep_params) -> tuple[np.ndarray, np.ndarray]:
         """ """
         if sweep_params:
             self._set_sweep(**sweep_params)
-
-        f_start = self._sweep_info["start_freq"]
-        bin_size = self._sweep_info["bin_size"]
-        sweep_len = self._sweep_info["sweep_length"]
-
-        freqs = [f_start + i * bin_size for i in range(sweep_len)]
         amps = sa.sa_get_sweep_64f(self._handle)["max"]
-        return freqs, amps
+        return self._freqs, amps  # self._freqs has been updated by _set_sweep()
 
     def _set_sweep(self, **sweep_params) -> None:
         """ """
@@ -135,16 +131,19 @@ class Sa124(Instrument):
 
         if "rbw" in sweep_params:
             self._set_rbw(sweep_params["rbw"])  # set instance attribute
-            sa.sa_config_sweep_coupling(  # set on device
-                self._handle, self.rbw, self.rbw, Sa124.does_image_reject
-            )
+            sa.sa_config_sweep_coupling(self._handle, self.rbw, self.rbw, self.rej_img)
 
         if "ref_power" in sweep_params:
             self._set_ref_power(sweep_params["ref_power"])  # set instance attribute
-            sa.sa_config_level(self._handle, self.ref_power)  # set on device
+            sa.sa_config_level(self._handle, self.ref_power)
 
         sa.sa_initiate(self._handle, sa.SA_SWEEPING, sa.SA_FALSE)  # ready to sweep
-        self._sweep_info = sa.sa_query_sweep_info(self._handle)  # get from device
+
+        sweep_info = self.sweep_info
+        f_start = sweep_info["start_freq"]
+        bin_size = sweep_info["bin_size"]
+        sweep_len = sweep_info["sweep_length"]
+        self._freqs = [f_start + i * bin_size for i in range(sweep_len)]
 
     def _set_center(self, center: float) -> None:
         """ """

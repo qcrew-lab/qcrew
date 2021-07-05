@@ -2,7 +2,7 @@
 
 from typing import Any, ClassVar
 
-import qm.qua as qua  # TODO
+from qm import qua
 
 from qcrew.control.instruments.vaunix.labbrick import LabBrick
 from qcrew.control.pulses.pulses import (
@@ -168,7 +168,7 @@ class Mode(Parametrized):
             logger.error(f"No operation named {key} defined for {self}")
             raise SystemExit("Failed to play Mode operation, exiting...")
 
-        qua.play(key * amp(*ampx), self.name, **kwargs)  # TODO
+        qua.play(key * qua.amp(*ampx), self.name, **kwargs)  # TODO
 
 
 class ReadoutMode(Mode):

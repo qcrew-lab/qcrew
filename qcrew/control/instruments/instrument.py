@@ -25,7 +25,7 @@ class Instrument(Parametrized):
         return self._id
 
     @abstractmethod
-    def _connect(self) -> None:
+    def connect(self) -> None:
         """ """
 
     @abstractmethod

@@ -17,13 +17,13 @@ class LabBrick(Instrument):
     def __init__(self, id: int, frequency: float = None, power: float = None) -> None:
         """ """
         super().__init__(id)
-        self._handle: int = None  # will be updated by self._connect()
-        self._connect()
+        self._handle: int = None  # will be updated by self.connect()
+        self.connect()
         self._initialize(frequency, power)
 
     # pylint: enable=redefined-builtin
 
-    def _connect(self) -> None:
+    def connect(self) -> None:
         """ """
         try:
             device_handle = vnx.connect_to_device(self.id)

@@ -64,8 +64,8 @@ class Sa124(Instrument):
         ref_power: float = Sa124.default_ref_power,
     ) -> None:
         super().__init__(id)
-        self._handle: int = None  # will be updated by _connect()
-        self._connect()
+        self._handle: int = None  # will be updated by connect()
+        self.connect()
 
         self.center: float = center
         self.span: float = span
@@ -77,7 +77,7 @@ class Sa124(Instrument):
 
     # pylint: enable=redefined-builtin
 
-    def _connect(self) -> None:
+    def connect(self) -> None:
         """ """
         logger.info(f"Connecting to {self}, please wait 5 seconds...")
 

@@ -9,7 +9,7 @@ from qcrew.control.instruments.quantum_machines.qm_config_builder import QMConfi
 from qcrew.control.instruments.signal_hound.sa124 import Sa124
 from qcrew.control.modes.mode import Mode
 from qcrew.helpers import logger
-from qm.qua import infinite_loop_, play, program  # TODO
+from qm.qua import infinite_loop_, program  # TODO
 from qm.QuantumMachine import QuantumMachine  # TODO
 
 
@@ -68,7 +68,7 @@ class MixerTuner:
             return contrast
 
         i_offset, q_offset = self._minimize(objective_fn)
-        mode.offsets = {"I": i_offset, "Q": q_offset}
+        mode.offsets = {"I": i_offset, "Q": q_offset}  # update mode offsets
 
     def _tune_sb(self, mode: Mode, job) -> None:  # TODO qm job typing hint
         """ """
@@ -88,7 +88,7 @@ class MixerTuner:
             return contrast
 
         g_offset, p_offset = self._minimize(objective_fn)
-        mode.offsets = {"G": g_offset, "P": p_offset}
+        mode.offsets = {"G": g_offset, "P": p_offset}  # update mode offsets
 
     def _check_tuning(self, center: float) -> tuple[bool, int, float]:
         """ """

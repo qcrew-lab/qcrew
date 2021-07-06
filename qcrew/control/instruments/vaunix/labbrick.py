@@ -11,6 +11,7 @@ class LabBrick(Instrument):
     """ """
 
     _parameters: ClassVar[set[str]] = {"frequency", "power"}
+    name: str = "LB"
 
     # pylint: disable=redefined-builtin, intentional shadowing of `id`
 
@@ -62,10 +63,10 @@ class LabBrick(Instrument):
         try:
             frequency = vnx.get_frequency(self._handle)
         except ConnectionError as e:
-            logger.exception(f"LB{self.id} failed to get frequency")
+            logger.exception(f"{self} failed to get frequency")
             raise SystemExit("LabBrick is disconnected, exiting...") from e
         else:
-            logger.success(f"LB{self.id} current {frequency:.7E = } Hz")
+            logger.success(f"{self} current {frequency:.7E = } Hz")
             return frequency
 
     @frequency.setter
@@ -74,9 +75,9 @@ class LabBrick(Instrument):
         try:
             frequency = vnx.set_frequency(self._handle, new_frequency)
         except (TypeError, ValueError):
-            logger.exception(f"LB{self.id} failed to set frequency")
+            logger.exception(f"{self} failed to set frequency")
         except ConnectionError as e:
-            logger.exception(f"LB{self.id} failed to set frequency")
+            logger.exception(f"{self} failed to set frequency")
             raise SystemExit("LabBrick is disconnected, exiting...") from e
         else:
             logger.success(f"{self} set {frequency:.7E = } Hz")
@@ -103,7 +104,7 @@ class LabBrick(Instrument):
         except (TypeError, ValueError):
             logger.exception(f"{self} failed to set power")
         except ConnectionError as e:
-            logger.exception(f"LB{self.id} failed to set power")
+            logger.exception(f"{self} failed to set power")
             raise SystemExit(f"{self} is disconnected, exiting...") from e
         else:
             logger.success(f"{self} set {power = } dBm")

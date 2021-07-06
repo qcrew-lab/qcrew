@@ -20,6 +20,8 @@ class Sa124(Instrument):
         "ref_power",  # reference power level in dBm
     }
 
+    name: str = "SA"
+
     # pylint: disable=line-too-long, long docstrings for top-level constants are OK
 
     detector: int = sa.SA_AVERAGE
@@ -58,10 +60,10 @@ class Sa124(Instrument):
     def __init__(
         self,
         id: int,
-        center: float = Sa124.default_center,
-        span: float = Sa124.default_span,
-        rbw: float = Sa124.default_rbw,
-        ref_power: float = Sa124.default_ref_power,
+        center: float = default_center,
+        span: float = default_span,
+        rbw: float = default_rbw,
+        ref_power: float = default_ref_power,
     ) -> None:
         super().__init__(id)
         self._handle: int = None  # will be updated by connect()

@@ -8,6 +8,8 @@ from qcrew.helpers.parametrizer import Parametrized
 class Instrument(Parametrized):
     """ """
 
+    name: str = "Instrument"
+
     # pylint: disable=redefined-builtin, intentional shadowing of `id`
 
     def __init__(self, id) -> None:
@@ -18,7 +20,7 @@ class Instrument(Parametrized):
 
     def __repr__(self) -> str:
         """ """
-        return f"{type(self).__name__} {self.id}"
+        return f"{self.name}{self.id}"
 
     @property  # id getter
     def id(self) -> Any:

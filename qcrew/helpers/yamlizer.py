@@ -18,13 +18,6 @@ def _sci_not_representer(dumper, value) -> yaml.ScalarNode:
     return dumper.represent_scalar(yaml_float_tag, value_in_sci_not)
 
 
-def _sequence_representer(dumper, value) -> yaml.SequenceNode:
-    """ """
-    # lists must be always represented in flow style, not block style
-    yaml_seq_tag = "tag:yaml.org,2002:seq"
-    return dumper.represent_sequence(yaml_seq_tag, value, flow_style=True)
-
-
 class YamlableMetaclass(type):
     """ """
 
@@ -43,8 +36,6 @@ class YamlableMetaclass(type):
 
         # customise dumper to represent float values in scientific notation
         cls.yaml_dumper.add_representer(float, _sci_not_representer)
-        # customise dumper to represent tuples and lists in flow style
-        cls.yaml_dumper.add_representer(list, _sequence_representer)
 
     def __repr__(cls) -> str:
         """ """
@@ -67,7 +58,7 @@ class Yamlable(metaclass=YamlableMetaclass):
             logger.exception("All arguments to Yamlable __init__() must be attributes")
             raise SystemExit("Failed to create yaml_map, exiting...") from e
         else:
-            logger.info(f"Created .yaml mapping for {type(self).__name__}")
+            logger.success(f"Created .yaml mapping for {type(self).__name__}")
             return yaml_map
 
     @classmethod
@@ -87,13 +78,13 @@ class Yamlable(metaclass=YamlableMetaclass):
         logger.info(f"Dumping {cls.__name__} to .yaml")
         return dumper.represent_mapping(data.yaml_tag, data.yaml_map)
 
-def load(path: Path) -> Any:
+def load(path: Path) -> dict[str, Any]:
     """ """
     with path.open(mode="r") as file:
         return yaml.safe_load(file)
 
 
-def save(yamlable: Yamlable, path: Path, mode: str = "a") -> None:
+def save(yaml_map: dict[str, Any], path: Path, mode: str = "w") -> None:
     """ """
     with path.open(mode=mode) as file:
-        yaml.safe_dump(yamlable, file, sort_keys=False)
+        yaml.safe_dump(yaml_map, file, sort_keys=False)

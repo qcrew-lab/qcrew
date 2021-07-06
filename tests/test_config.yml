@@ -1,0 +1,28 @@
+instruments:
+- !<TestLabBrick>
+  id: 111
+  frequency: 3.000000E+09
+- !<TestLabBrick>
+  id: 222
+  frequency: 7.000000E+09
+modes:
+  qubit:
+    type: TestMode
+    id: 111
+    parameters:
+      ports:
+        I: 1
+        Q: 2
+      int_freq: -3.000000E+07
+      lo_freq: 3.000000E+09
+  rr:
+    type: TestReadoutMode
+    id: 222
+    parameters:
+      ports:
+        I: 3
+        Q: 4
+        out: 1
+      int_freq: -7.000000E+07
+      lo_freq: 7.000000E+09
+      tof: 700

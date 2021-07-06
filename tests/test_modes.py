@@ -25,3 +25,8 @@ rr = ReadoutMode(
     time_of_flight = 180,
     smearing = 0,
 )
+
+print(qubit.__class__)
+print(type(qubit))
+print(type(qubit.__class__))
+print(type(TestLabBrick(4e9)))

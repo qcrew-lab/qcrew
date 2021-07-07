@@ -33,7 +33,7 @@ class LabBrick(Instrument):
             raise SystemExit("LabBrick connection error, exiting...") from e
 
         else:
-            logger.info(f"Connected to {self}, call .parameters to get current state")
+            logger.info(f"Connected to {self}")
             self._handle = device_handle
 
     def _initialize(self, frequency: float, power: float) -> None:
@@ -49,7 +49,7 @@ class LabBrick(Instrument):
     def rf(self) -> bool:
         """ """
         is_on = vnx.get_rf_on(self._handle)
-        return is_on
+        return bool(is_on)
 
     @rf.setter
     def rf(self, toggle: bool) -> None:
@@ -66,7 +66,6 @@ class LabBrick(Instrument):
             logger.exception(f"{self} failed to get frequency")
             raise SystemExit("LabBrick is disconnected, exiting...") from e
         else:
-            logger.success(f"{self} current {frequency:.7E = } Hz")
             return frequency
 
     @frequency.setter
@@ -80,7 +79,7 @@ class LabBrick(Instrument):
             logger.exception(f"{self} failed to set frequency")
             raise SystemExit("LabBrick is disconnected, exiting...") from e
         else:
-            logger.success(f"{self} set {frequency:.7E = } Hz")
+            logger.success(f"{self} set {frequency = :E} Hz")
             if not self.rf:
                 self.rf = True
 
@@ -93,7 +92,6 @@ class LabBrick(Instrument):
             logger.exception(f"{self} failed to get power")
             raise SystemExit(f"{self} is disconnected, exiting...") from e
         else:
-            logger.success(f"{self} current {power = } dBm")
             return power
 
     @power.setter

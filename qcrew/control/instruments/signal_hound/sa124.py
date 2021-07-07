@@ -15,7 +15,7 @@ class Sa124(Instrument):
     _parameters: ClassVar[set[str]] = {
         "center",  # frequency sweep center, in Hz
         "span",  # frequency sweep span, in Hz
-        "sweep_len",  # frequency sweep length
+        "sweep_length",  # frequency sweep length, decided by the device
         "rbw",  # resolution bandwidth, in Hz
         "ref_power",  # reference power level in dBm
     }
@@ -74,6 +74,7 @@ class Sa124(Instrument):
         self.rbw: float = rbw
         self.ref_power: float = ref_power
         self._freqs: np.ndarray = None  # will be updated by _set_sweep()
+        self.sweep_length: int = None  # will be updated by _set_sweep()
 
         self._initialize()
 
@@ -146,6 +147,7 @@ class Sa124(Instrument):
         bin_size = sweep_info["bin_size"]
         sweep_len = sweep_info["sweep_length"]
         self._freqs = [f_start + i * bin_size for i in range(sweep_len)]
+        self.sweep_length = len(self._freqs)
 
     def _set_center(self, center: float) -> None:
         """ """
@@ -197,6 +199,6 @@ class Sa124(Instrument):
 
     def disconnect(self) -> None:
         """ """
-        sa.sa_close_device(self._device_handle)
+        sa.sa_close_device(self._handle)
         del sa.ACTIVE_CONNECTIONS[self.id]
         logger.info(f"Disconnected {self}")

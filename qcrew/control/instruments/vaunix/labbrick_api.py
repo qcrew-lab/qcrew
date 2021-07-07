@@ -106,7 +106,7 @@ def _check_frequency_bounds(device_handle: int, frequency: float) -> None:
     min_ = get_min_frequency(device_handle)
     max_ = get_max_frequency(device_handle)
     if not min_ <= frequency <= max_:
-        raise ValueError(f"{frequency:.7E = } out of bounds [{min_:.2E}, {max_:.2E}]")
+        raise ValueError(f"{frequency = :E} out of bounds [{min_:.2E}, {max_:.2E}]")
 
 
 def get_max_power(device_handle: int) -> float:

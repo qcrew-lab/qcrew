@@ -20,7 +20,7 @@ class LabBrick(Instrument):
         super().__init__(id)
         self._handle: int = None  # will be updated by self.connect()
         self.connect()
-        self._initialize(frequency, power)
+        self._initialize(frequency=frequency, power=power)
 
     # pylint: enable=redefined-builtin
 
@@ -33,15 +33,15 @@ class LabBrick(Instrument):
             raise SystemExit("LabBrick connection error, exiting...") from e
 
         else:
-            logger.info(f"Connected to {self}")
             self._handle = device_handle
+            logger.info(f"Connected to {self}")
 
     def _initialize(self, frequency: float, power: float) -> None:
         """ """
         vnx.set_use_internal_ref(self._handle, False)  # use external 10MHz reference
 
         # if user specifies initial frequency and power, set them
-        # else, get current frequency and power from device and set those
+        # else, get current frequency and power from device, set them
         self.frequency = frequency if frequency is not None else self.frequency
         self.power = power if power is not None else self.power
 

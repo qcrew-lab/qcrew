@@ -1,7 +1,7 @@
 """ """
-from abc import abstractmethod
 from typing import Any
 
+from qcrew.helpers import logger
 from qcrew.helpers.parametrizer import Parametrized
 
 
@@ -26,14 +26,17 @@ class Instrument(Parametrized):
     def id(self) -> Any:
         return self._id
 
-    @abstractmethod
     def connect(self) -> None:
         """ """
+        logger.error("Abstract method must be implemented by subclass(es)")
+        raise NotImplementedError("Can't call `connect()` on Instrument instance")
 
-    @abstractmethod
-    def _initialize(self, *initial_parameters) -> None:
+    def _initialize(self) -> None:
         """ """
+        logger.error("Abstract method must be implemented by subclass(es)")
+        raise NotImplementedError("Can't call `_initialize()` on Instrument instance")
 
-    @abstractmethod
     def disconnect(self) -> None:
         """ """
+        logger.error("Abstract method must be implemented by subclass(es)")
+        raise NotImplementedError("Can't call `disconnect()` on Instrument instance")

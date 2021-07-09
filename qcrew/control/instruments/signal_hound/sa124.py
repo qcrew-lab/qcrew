@@ -1,5 +1,6 @@
 """ Sa124 class written to support the SA124B's frequency sweep mode. A frequency sweep displays amplitude on the vertical axis and frequency on the horizontal axis """
 
+import time
 from typing import Any, ClassVar
 
 import numpy as np
@@ -45,7 +46,7 @@ class Sa124(Instrument):
     default_center: float = 8e9
     """ Default value for the frequency sweep center, in Hz """
 
-    default_span: float = 2e9
+    default_span: float = 500e6
     """ Default value for the frequency sweep span, in Hz """
 
     default_rbw: float = 250e3
@@ -76,8 +77,6 @@ class Sa124(Instrument):
         self._freqs: np.ndarray = None  # will be updated by _set_sweep()
         self.sweep_length: int = None  # will be updated by _set_sweep()
 
-        self._initialize()
-
     # pylint: enable=redefined-builtin
 
     def connect(self) -> None:
@@ -92,6 +91,7 @@ class Sa124(Instrument):
         self._handle = sa.sa_open_device_by_serial(self.id)["handle"]
         sa.ACTIVE_CONNECTIONS[self.id] = self._handle
         logger.info(f"Connected to {self}")
+        self._initialize()
 
     def _initialize(self) -> None:
         """ """
@@ -118,10 +118,19 @@ class Sa124(Instrument):
     def sweep(self, **sweep_params) -> tuple[np.ndarray, np.ndarray]:
         """ """
         if sweep_params:
-            self._set_sweep(**sweep_params)
-            center, span, length = self.center, self.span, self.sweep_length
-            logger.info(f"Sweeping {length} points with {center = :E}, {span = :E}...")
+            return self._sweep_with_params(**sweep_params)
         amps = sa.sa_get_sweep_64f(self._handle)["max"]
+        return self._freqs, amps  # self._freqs has been updated by _set_sweep()
+
+    def _sweep_with_params(self, **sweep_params) -> tuple[np.ndarray, np.ndarray]:
+        """ """
+        self._set_sweep(**sweep_params)
+        length, center, span = self.sweep_length, self.center, self.span
+        logger.info(f"Sweeping {length} points with {center = }, {span = }...")
+        start_time = time.perf_counter()
+        amps = sa.sa_get_sweep_64f(self._handle)["max"]
+        elapsed_time = time.perf_counter() - start_time
+        logger.info(f"Sweep done in {elapsed_time:.5}s")
         return self._freqs, amps  # self._freqs has been updated by _set_sweep()
 
     def _set_sweep(self, **sweep_params) -> None:

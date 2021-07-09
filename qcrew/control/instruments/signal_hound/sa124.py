@@ -43,7 +43,7 @@ class Sa124(Instrument):
     timebase: int = sa.SA_REF_EXTERNAL_IN
     """ `timebase` can be set to `SA_REF_EXTERNAL_IN` to use an external 10 MHz reference or `SA_REF_INTERNAL_OUT` to use an internal clock reference. """
 
-    default_center: float = 8e9
+    default_center: float = 5e9
     """ Default value for the frequency sweep center, in Hz """
 
     default_span: float = 500e6
@@ -68,7 +68,6 @@ class Sa124(Instrument):
     ) -> None:
         super().__init__(id)
         self._handle: int = None  # will be updated by connect()
-        self.connect()
 
         self.center: float = center
         self.span: float = span
@@ -76,6 +75,8 @@ class Sa124(Instrument):
         self.ref_power: float = ref_power
         self._freqs: np.ndarray = None  # will be updated by _set_sweep()
         self.sweep_length: int = None  # will be updated by _set_sweep()
+
+        self.connect()
 
     # pylint: enable=redefined-builtin
 

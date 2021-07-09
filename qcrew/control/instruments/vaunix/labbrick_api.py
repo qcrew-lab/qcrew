@@ -14,6 +14,7 @@ VNX.fnLMS_SetTestMode(False)  # we are using actual hardware
 
 FREQ_SCALAR = 10.0  # frequency is encoded as an integer of 10Hz steps
 POW_SCALAR = 0.25  # power level is encoded as an integer of 0.25dB steps
+ACTIVE_CONNECTIONS = dict()  # serial numbers (key) and handles (value) of connected LBs
 
 # ------------------------------------- Methods ---------------------------------------
 

@@ -26,14 +26,19 @@ class LabBrick(Instrument):
 
     def connect(self) -> None:
         """ """
+        if self.id in vnx.ACTIVE_CONNECTIONS:
+            logger.warning(f"{self} is already connected")
+            self._handle = vnx.ACTIVE_CONNECTIONS[self.id]
+            return
+
         try:
             device_handle = vnx.connect_to_device(self.id)
         except ConnectionError as e:
             logger.exception(f"Failed to connect to {self}")
             raise SystemExit("LabBrick connection error, exiting...") from e
-
         else:
             self._handle = device_handle
+            vnx.ACTIVE_CONNECTIONS[self.id] = self._handle
             logger.info(f"Connected to {self}")
 
     def _initialize(self, frequency: float, power: float) -> None:
@@ -116,4 +121,5 @@ class LabBrick(Instrument):
             logger.exception(f"Failed to close {self}")
             raise SystemExit("LabBrick connection error, exiting...") from e
         else:
+            del vnx.ACTIVE_CONNECTIONS[self.id]
             logger.info(f"Disconnected {self}")

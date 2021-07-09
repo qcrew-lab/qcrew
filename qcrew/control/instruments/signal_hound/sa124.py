@@ -146,11 +146,11 @@ class Sa124(Instrument):
 
         if "rbw" in sweep_params:
             self._set_rbw(sweep_params["rbw"])  # set instance attribute
-            sa.sa_config_sweep_coupling(self._handle, self.rbw, self.rbw, self.rej_img)
+        sa.sa_config_sweep_coupling(self._handle, self.rbw, self.rbw, self.rej_img)
 
         if "ref_power" in sweep_params:
             self._set_ref_power(sweep_params["ref_power"])  # set instance attribute
-            sa.sa_config_level(self._handle, self.ref_power)
+        sa.sa_config_level(self._handle, self.ref_power)
 
         sa.sa_initiate(self._handle, sa.SA_SWEEPING, sa.SA_FALSE)  # ready to sweep
 

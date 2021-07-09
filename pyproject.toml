@@ -11,6 +11,8 @@ loguru = "^0.5.3"
 numpy = "^1.21.0"
 Pyro5 = "^5.12"
 qm = { path = "./qm.tgz", develop = false }
+matplotlib = "^3.4.2"
+scipy = { version = "^1.7.0", python = ">=3.9, <3.10" }
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"

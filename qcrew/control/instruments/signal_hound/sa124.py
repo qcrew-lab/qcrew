@@ -119,6 +119,8 @@ class Sa124(Instrument):
         """ """
         if sweep_params:
             self._set_sweep(**sweep_params)
+            center, span, length = self.center, self.span, self.sweep_length
+            logger.info(f"Sweeping {length} points with {center = :E}, {span = :E}...")
         amps = sa.sa_get_sweep_64f(self._handle)["max"]
         return self._freqs, amps  # self._freqs has been updated by _set_sweep()
 

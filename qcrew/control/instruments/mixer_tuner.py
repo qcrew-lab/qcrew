@@ -64,7 +64,7 @@ class MixerTuner:
             self._qm.set_output_dc_offset_by_element(mode_name, "Q", q_offset)
             _, amps = self._sa.sweep()
             contrast = amps[center_idx] - floor
-            logger.debug(f"{i_offset = }, {q_offset = }, {contrast = }")
+            logger.info(f"{i_offset = }, {q_offset = }, {contrast = }")
             return contrast
 
         i_offset, q_offset = self._minimize(objective_fn)
@@ -84,7 +84,7 @@ class MixerTuner:
             job.set_element_correction(mode.name, correction_matrix)
             _, amps = self._sa.sweep()
             contrast = amps[center_idx] - floor
-            logger.debug(f"{offsets = }, {contrast = }")
+            logger.info(f"{offsets = }, {contrast = }")
             return contrast
 
         g_offset, p_offset = self._minimize(objective_fn)
@@ -100,7 +100,7 @@ class MixerTuner:
         floor = (np.average(amps[:stop]) + np.average(amps[start:])) / 2
         contrast = amps[center_idx] - floor
         is_tuned = contrast < self.threshold
-        logger.debug(f"{floor = }dBm, {contrast = }dBm at {freqs[center_idx]:E}Hz")
+        logger.info(f"{floor = }dBm, {contrast = }dBm at {freqs[center_idx]:E}Hz")
         return is_tuned, center_idx, floor
 
     def _minimize(self, fn: Callable[[tuple[float]], float]) -> tuple[float]:

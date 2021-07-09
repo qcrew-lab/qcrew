@@ -1,5 +1,6 @@
 """ Sa124 class written to support the SA124B's frequency sweep mode. A frequency sweep displays amplitude on the vertical axis and frequency on the horizontal axis """
 
+import time
 from typing import Any, ClassVar
 
 import numpy as np
@@ -15,7 +16,7 @@ class Sa124(Instrument):
     _parameters: ClassVar[set[str]] = {
         "center",  # frequency sweep center, in Hz
         "span",  # frequency sweep span, in Hz
-        "sweep_len",  # frequency sweep length
+        "sweep_length",  # frequency sweep length, decided by the device
         "rbw",  # resolution bandwidth, in Hz
         "ref_power",  # reference power level in dBm
     }
@@ -42,10 +43,10 @@ class Sa124(Instrument):
     timebase: int = sa.SA_REF_EXTERNAL_IN
     """ `timebase` can be set to `SA_REF_EXTERNAL_IN` to use an external 10 MHz reference or `SA_REF_INTERNAL_OUT` to use an internal clock reference. """
 
-    default_center: float = 8e9
+    default_center: float = 5e9
     """ Default value for the frequency sweep center, in Hz """
 
-    default_span: float = 2e9
+    default_span: float = 500e6
     """ Default value for the frequency sweep span, in Hz """
 
     default_rbw: float = 250e3
@@ -67,21 +68,21 @@ class Sa124(Instrument):
     ) -> None:
         super().__init__(id)
         self._handle: int = None  # will be updated by connect()
-        self.connect()
 
         self.center: float = center
         self.span: float = span
         self.rbw: float = rbw
         self.ref_power: float = ref_power
         self._freqs: np.ndarray = None  # will be updated by _set_sweep()
+        self.sweep_length: int = None  # will be updated by _set_sweep()
 
-        self._initialize()
+        self.connect()
 
     # pylint: enable=redefined-builtin
 
     def connect(self) -> None:
         """ """
-        logger.info(f"Connecting to {self}, please wait 5 seconds...")
+        logger.info(f"Connecting to {self}, please wait ~7 seconds...")
 
         if self.id in sa.ACTIVE_CONNECTIONS:
             logger.warning(f"{self} is already connected")
@@ -90,7 +91,8 @@ class Sa124(Instrument):
 
         self._handle = sa.sa_open_device_by_serial(self.id)["handle"]
         sa.ACTIVE_CONNECTIONS[self.id] = self._handle
-        logger.info(f"Connected to {self}, call .parameters to get current state")
+        logger.info(f"Connected to {self}")
+        self._initialize()
 
     def _initialize(self) -> None:
         """ """
@@ -117,8 +119,19 @@ class Sa124(Instrument):
     def sweep(self, **sweep_params) -> tuple[np.ndarray, np.ndarray]:
         """ """
         if sweep_params:
-            self._set_sweep(**sweep_params)
+            return self._sweep_with_params(**sweep_params)
         amps = sa.sa_get_sweep_64f(self._handle)["max"]
+        return self._freqs, amps  # self._freqs has been updated by _set_sweep()
+
+    def _sweep_with_params(self, **sweep_params) -> tuple[np.ndarray, np.ndarray]:
+        """ """
+        self._set_sweep(**sweep_params)
+        length, center, span = self.sweep_length, self.center, self.span
+        logger.info(f"Sweeping {length} points with {center = }, {span = }...")
+        start_time = time.perf_counter()
+        amps = sa.sa_get_sweep_64f(self._handle)["max"]
+        elapsed_time = time.perf_counter() - start_time
+        logger.info(f"Sweep done in {elapsed_time:.5}s")
         return self._freqs, amps  # self._freqs has been updated by _set_sweep()
 
     def _set_sweep(self, **sweep_params) -> None:
@@ -133,11 +146,11 @@ class Sa124(Instrument):
 
         if "rbw" in sweep_params:
             self._set_rbw(sweep_params["rbw"])  # set instance attribute
-            sa.sa_config_sweep_coupling(self._handle, self.rbw, self.rbw, self.rej_img)
+        sa.sa_config_sweep_coupling(self._handle, self.rbw, self.rbw, self.rej_img)
 
         if "ref_power" in sweep_params:
             self._set_ref_power(sweep_params["ref_power"])  # set instance attribute
-            sa.sa_config_level(self._handle, self.ref_power)
+        sa.sa_config_level(self._handle, self.ref_power)
 
         sa.sa_initiate(self._handle, sa.SA_SWEEPING, sa.SA_FALSE)  # ready to sweep
 
@@ -146,6 +159,7 @@ class Sa124(Instrument):
         bin_size = sweep_info["bin_size"]
         sweep_len = sweep_info["sweep_length"]
         self._freqs = [f_start + i * bin_size for i in range(sweep_len)]
+        self.sweep_length = len(self._freqs)
 
     def _set_center(self, center: float) -> None:
         """ """
@@ -197,6 +211,6 @@ class Sa124(Instrument):
 
     def disconnect(self) -> None:
         """ """
-        sa.sa_close_device(self._device_handle)
+        sa.sa_close_device(self._handle)
         del sa.ACTIVE_CONNECTIONS[self.id]
         logger.info(f"Disconnected {self}")

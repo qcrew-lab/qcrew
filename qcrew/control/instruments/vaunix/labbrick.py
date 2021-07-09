@@ -10,7 +10,7 @@ from qcrew.control.instruments.instrument import Instrument
 class LabBrick(Instrument):
     """ """
 
-    _parameters: ClassVar[set[str]] = {"frequency", "power"}
+    _parameters: ClassVar[set[str]] = {"frequency", "power", "rf"}
     name: str = "LB"
 
     # pylint: disable=redefined-builtin, intentional shadowing of `id`
@@ -20,28 +20,33 @@ class LabBrick(Instrument):
         super().__init__(id)
         self._handle: int = None  # will be updated by self.connect()
         self.connect()
-        self._initialize(frequency, power)
+        self._initialize(frequency=frequency, power=power)
 
     # pylint: enable=redefined-builtin
 
     def connect(self) -> None:
         """ """
+        if self.id in vnx.ACTIVE_CONNECTIONS:
+            logger.warning(f"{self} is already connected")
+            self._handle = vnx.ACTIVE_CONNECTIONS[self.id]
+            return
+
         try:
             device_handle = vnx.connect_to_device(self.id)
         except ConnectionError as e:
             logger.exception(f"Failed to connect to {self}")
             raise SystemExit("LabBrick connection error, exiting...") from e
-
         else:
-            logger.info(f"Connected to {self}, call .parameters to get current state")
             self._handle = device_handle
+            vnx.ACTIVE_CONNECTIONS[self.id] = self._handle
+            logger.info(f"Connected to {self}")
 
     def _initialize(self, frequency: float, power: float) -> None:
         """ """
         vnx.set_use_internal_ref(self._handle, False)  # use external 10MHz reference
 
         # if user specifies initial frequency and power, set them
-        # else, get current frequency and power from device and set those
+        # else, get current frequency and power from device, set them
         self.frequency = frequency if frequency is not None else self.frequency
         self.power = power if power is not None else self.power
 
@@ -49,7 +54,7 @@ class LabBrick(Instrument):
     def rf(self) -> bool:
         """ """
         is_on = vnx.get_rf_on(self._handle)
-        return is_on
+        return bool(is_on)
 
     @rf.setter
     def rf(self, toggle: bool) -> None:
@@ -66,7 +71,6 @@ class LabBrick(Instrument):
             logger.exception(f"{self} failed to get frequency")
             raise SystemExit("LabBrick is disconnected, exiting...") from e
         else:
-            logger.success(f"{self} current {frequency:.7E = } Hz")
             return frequency
 
     @frequency.setter
@@ -80,7 +84,7 @@ class LabBrick(Instrument):
             logger.exception(f"{self} failed to set frequency")
             raise SystemExit("LabBrick is disconnected, exiting...") from e
         else:
-            logger.success(f"{self} set {frequency:.7E = } Hz")
+            logger.success(f"{self} set {frequency = :E} Hz")
             if not self.rf:
                 self.rf = True
 
@@ -93,7 +97,6 @@ class LabBrick(Instrument):
             logger.exception(f"{self} failed to get power")
             raise SystemExit(f"{self} is disconnected, exiting...") from e
         else:
-            logger.success(f"{self} current {power = } dBm")
             return power
 
     @power.setter
@@ -118,4 +121,5 @@ class LabBrick(Instrument):
             logger.exception(f"Failed to close {self}")
             raise SystemExit("LabBrick connection error, exiting...") from e
         else:
+            del vnx.ACTIVE_CONNECTIONS[self.id]
             logger.info(f"Disconnected {self}")

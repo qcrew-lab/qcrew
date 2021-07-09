@@ -38,8 +38,13 @@ class Pulse(Parametrized):
     def __call__(self, **parameters: Real) -> None:
         """ """
         for name, value in parameters.items():
-            if hasattr(self, name):
+            is_attribute = hasattr(self, name)
+            if is_attribute and value is not None:
                 setattr(self, name, value)
+            elif not is_attribute:
+                cls_name = type(self).__name__
+                logger.warning(f"Parameter '{name}' must be an attribute of {cls_name}")
+        logger.success(f"Set {self}")
 
     @property  # waveform amplitude samples getter
     def samples(self) -> tuple[np.ndarray]:
@@ -87,6 +92,10 @@ class ConstantPulse(Pulse):
         self.ampx: float = ampx
         super().__init__(length=length, integration_weights=integration_weights)
 
+    def __call__(self, length: int, ampx: float = None) -> None:
+        """ """
+        super().__call__(length=length, ampx=ampx)
+
     @property
     def samples(self) -> tuple[np.ndarray]:
         return np.full(self.length, (BASE_AMP * self.ampx)), np.zeros(self.length)
@@ -118,9 +127,11 @@ class GaussianPulse(Pulse):
         length = int(sigma * chop)
         super().__init__(length=length, integration_weights=integration_weights)
 
-    def __call__(self, sigma: float, chop: int, ampx: float, drag: float) -> None:
+    def __call__(
+        self, *, sigma: float, chop: int = None, ampx: float = None, drag: float = None
+    ) -> None:
         """ """
-        length = int(sigma * chop)
+        length = int(sigma * chop) if chop is not None else int(sigma * self.chop)
         super().__call__(sigma=sigma, chop=chop, ampx=ampx, drag=drag, length=length)
 
     @property

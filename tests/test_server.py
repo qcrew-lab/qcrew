@@ -15,7 +15,7 @@ from tests.test_labbrick import TestLabBrick
 class TestServer:
     """ """
 
-    configpath: Path = Path("C:/Users/athar/qcrew/tests/test_config.yml")
+    configpath: Path = Path.cwd() / "test_config.yml"
     port_num: int = 9090
     servername: str = "testserver"
 

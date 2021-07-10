@@ -8,8 +8,6 @@ from qcrew.helpers.parametrizer import Parametrized
 class Instrument(Parametrized):
     """ """
 
-    name: str = "Instrument"
-
     # pylint: disable=redefined-builtin, intentional shadowing of `id`
 
     def __init__(self, id) -> None:

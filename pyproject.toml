@@ -10,7 +10,7 @@ PyYAML = "^5.4.1"
 loguru = "^0.5.3"
 numpy = "^1.21.0"
 Pyro5 = "^5.12"
-qm = { path = "./qm.tgz", develop = false }
+qm = { url = "https://qm-pypi-repository.s3.amazonaws.com/qm-0.90.1764.tar.gz" }
 matplotlib = "^3.4.2"
 scipy = { version = "^1.7.0", python = ">=3.9, <3.10" }
 

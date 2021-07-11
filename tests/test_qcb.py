@@ -36,15 +36,16 @@ tmt.tune(qubit, rr)
 config = qcb.config
 
 # change operations
-rr.readout_pulse.length = 24
-qubit.constant_pulse(0.5, 500)
-config = qcb.config
-qubit.gaussian_pulse(0.5, 20, 3)
+rr.readout_pulse(length=24)
+rr.gaussian_pulse(sigma=4)
+qubit.constant_pulse(length=16, ampx=1.0)
+qubit.gaussian_pulse(sigma=4, chop=4, ampx=1.2)
 config = qcb.config
 
 qubit.operations = {
-    "saturation_pulse": ConstantPulse(0.5, 1200)
+    "saturation_pulse": ConstantPulse(length=28)
 }
 config = qcb.config
 
-rr.readout_pulse(0.25, 100)
+qubit.remove_operation("saturation_pulse")
+config = qcb.config

@@ -27,9 +27,9 @@ class Pulse(Parametrized):
         self._integration_weights: dict[str, dict[str, np.ndarray]] = None
 
         if integration_weights is not None:
-            self._integration_weights = integration_weights
+            self.integration_weights = integration_weights
+            self._integration_weights_samples = self.integration_weights_samples
             self.is_readout_pulse = True
-            self._parameters.add("integration_weights")
 
     def __repr__(self) -> str:
         """ """
@@ -52,26 +52,30 @@ class Pulse(Parametrized):
         logger.error("Abstract method must be implemented by subclass(es)")
         raise NotImplementedError("Can't call `samples` on Pulse instance")
 
-    @property  # integration weights getter
-    def integration_weights(self) -> dict[str, dict[str, np.ndarray]]:
+    # NOTE TODO this is hard coded to return constant integration weights !!!
+    @property  # integration weights samples getter
+    def integration_weights_samples(self) -> dict[str, dict[str, np.ndarray]]:
         """ """
-        if self._integration_weights is None:
-            logger.error(f"Integration weights not defined for {self}")
-            raise TypeError("Integration weights undefined")
-        else:  # NOTE this is hard coded to return constant integration weights
+        if self.integration_weights is not None:
             iw_length = int(self.length / CLOCK_CYCLE)
-            iw_ampx = 1 / BASE_AMP
-            samples = self._integration_weights(ampx=iw_ampx, length=iw_length).samples
-            return {
-                "iw1": {
-                    "cosine": samples[0],
-                    "sine": samples[1],
-                },
-                "iw2": {
-                    "cosine": samples[1],
-                    "sine": samples[0],
-                },
-            }
+            if not iw_length == self.integration_weights.length:
+                logger.info("Updating ReadoutPulse integration weights...")
+                self.integration_weights(ampx=1 / BASE_AMP, length=iw_length)
+                samples = self.integration_weights.samples
+                return {
+                    "iwI": {
+                        "cosine": samples[0],
+                        "sine": samples[1],
+                    },
+                    "iwQ": {
+                        "cosine": samples[1],
+                        "sine": samples[0],
+                    },
+                }
+            else:
+                return self._integration_weights_samples
+        else:
+            logger.warning(f"No integration weights defined for {self}")
 
     @property  # pulse type_ getter for building QM config
     def type_(self) -> str:

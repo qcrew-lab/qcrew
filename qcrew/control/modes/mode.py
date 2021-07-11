@@ -183,10 +183,25 @@ class ReadoutMode(Mode):
     _offsets_keys: ClassVar[tuple[str]] = (*Mode._offsets_keys, "out")
 
     def __init__(
-        self, time_of_flight: int = 180, smearing: int = 0, **parameters
+        self,
+        name: str,
+        lo: LabBrick,
+        int_freq: float,
+        ports: dict[str, int],
+        offsets: dict[str, float] = None,
+        operations: dict[str, Pulse] = None,
+        time_of_flight: int = 180,
+        smearing: int = 0,
     ) -> None:
         """ """
-        super().__init__(**parameters)
+        super().__init__(
+            name=name,
+            lo=lo,
+            int_freq=int_freq,
+            ports=ports,
+            offsets=offsets,
+            operations=operations,
+        )
 
         self.time_of_flight: int = time_of_flight
         self.smearing: int = smearing

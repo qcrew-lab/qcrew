@@ -24,10 +24,11 @@ class Pulse(Parametrized):
         self._length: int = length
         self.has_mix_waveforms: bool = has_mix_waveforms
         self.is_readout_pulse: bool = False
-        self.integration_weights = integration_weights
+        self.integration_weights = None
+        self._integration_weights_samples = None
 
-        if self.integration_weights is not None:
-            self._integration_weights_samples = self.integration_weights_samples
+        if integration_weights is not None:
+            self.integration_weights = integration_weights
             self.is_readout_pulse = True
 
     def __repr__(self) -> str:
@@ -61,10 +62,13 @@ class Pulse(Parametrized):
     def integration_weights_samples(self) -> dict[str, dict[str, np.ndarray]]:
         """ """
         if self.integration_weights is not None:
-            iw_length = int(self._length / CLOCK_CYCLE)
-            if not iw_length == self.integration_weights.length:
+            old_iw_len = self.integration_weights.length
+            new_iw_len = int(self._length / CLOCK_CYCLE)
+            has_iw_samples = self._integration_weights_samples is not None
+            has_updated = old_iw_len != new_iw_len and not has_iw_samples
+            if has_updated:
                 logger.info("Updating ReadoutPulse integration weights...")
-                self.integration_weights(ampx=1 / BASE_AMP, length=iw_length)
+                self.integration_weights(ampx=1 / BASE_AMP, length=new_iw_len)
                 samples = self.integration_weights.samples
                 return {
                     "iwI": {

@@ -12,8 +12,8 @@ logger.remove()  # remove default handlers
 
 # customise logging levels
 logger.level("INFO", color="<white><bold>")
-logger.level("SUCCESS", color="<green>")
-logger.level("WARNING", color="<magenta>")
+logger.level("SUCCESS", color="<green><bold>")
+logger.level("WARNING", color="<magenta><bold>")
 logger.level("ERROR", color="<red><bold>")
 
 

@@ -18,12 +18,11 @@ class Mode(Parametrized):
     """ """
 
     _parameters: ClassVar[set[str]] = {
-        "name",  # a string to identify the Mode in the QM config file
         "lo_freq",  # local oscillator frequency driving the Mode
         "int_freq",  # intermediate frequency driving the Mode
         "ports",  # OPX ports connected to this Mode
         "offsets",  # offsets used to tune the Mode's IQ mixer
-        "operations",  # {name: str, pulse: Pulse} Pulses that can be played to the Mode
+        "opspec",  # specification of operations that can be played to the Mode
     }
     _ports_keys: ClassVar[tuple[str]] = ("I", "Q")
     _offsets_keys: ClassVar[tuple[str]] = ("I", "Q", "G", "P")
@@ -38,9 +37,9 @@ class Mode(Parametrized):
         operations: dict[str, Pulse] = None,
     ) -> None:
         """ """
-        self._name: str = str(name)
+        self._name: str = str(name)  # name is gettable only
 
-        self.lo: LabBrick = lo
+        self.lo: LabBrick = lo  # type check done by `lo_freq` property
         self.int_freq: float = int_freq
 
         self._ports: dict[str, int] = {key: None for key in self._ports_keys}
@@ -51,15 +50,15 @@ class Mode(Parametrized):
             self.offsets = offsets
 
         self._operations: dict[str, Pulse] = dict()
-        if operations is not None:
+        if operations is not None:  # if user specifies operations, set them
             self.operations = operations
         else:
-            self.operations = {  # set default "unselective" operations
+            self.operations = {  # else set default "unselective" operations
                 "constant_pulse": ConstantPulse(),
                 "gaussian_pulse": GaussianPulse(sigma=100),
             }
 
-        logger.info(f"Created {self}, call `.parameters` to get current state")
+        logger.info(f"Created {self}")
 
     def __repr__(self) -> str:
         """ """
@@ -91,7 +90,7 @@ class Mode(Parametrized):
     @property  # ports getter
     def ports(self) -> dict[str, int]:
         """ """
-        return {key: port for key, port in self._ports.items() if port is not None}
+        return self._ports.copy()
 
     @ports.setter
     def ports(self, new_ports: dict[str, int]) -> None:
@@ -128,10 +127,15 @@ class Mode(Parametrized):
             logger.exception(f"Setter expects {dict[str, float]} with {valid_keys = }")
             raise SystemExit(f"Failed to set {self} offsets, exiting...") from e
 
+    @property  # opspec getter
+    def opspec(self) -> dict[str, Any]:
+        """ """
+        return {name: pulse.parameters for name, pulse in self._operations.items()}
+
     @property  # operations getter
     def operations(self) -> dict[str, Any]:
         """ """
-        return {name: pulse.parameters for name, pulse in self._operations.items()}
+        return self._operations.copy()
 
     @operations.setter
     def operations(self, new_operations: dict[str, Pulse]) -> None:
@@ -178,13 +182,15 @@ class ReadoutMode(Mode):
     _ports_keys: ClassVar[tuple[str]] = (*Mode._ports_keys, "out")
     _offsets_keys: ClassVar[tuple[str]] = (*Mode._offsets_keys, "out")
 
-    def __init__(self, time_of_flight: int, smearing: int = 0, **parameters) -> None:
+    def __init__(
+        self, time_of_flight: int = 180, smearing: int = 0, **parameters
+    ) -> None:
         """ """
         super().__init__(**parameters)
 
         self.time_of_flight: int = time_of_flight
         self.smearing: int = smearing
 
-        self.operations = {
-            "readout_pulse": ConstantPulse(integration_weights=dict()),
+        self.operations = {  # NOTE integration weight is hard-coded for now
+            "readout_pulse": ConstantPulse(integration_weights=ConstantPulse()),
         }

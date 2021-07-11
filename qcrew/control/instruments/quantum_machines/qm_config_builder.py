@@ -89,7 +89,7 @@ class QMConfig(InfinitelyNestableDict):
         else:
             self["elements"][mode.name]["mixInputs"]["lo_frequency"] = lo_freq
             self["mixers"][self.get_mixer_name(mode.name)][0]["lo_frequency"] = lo_freq
-            old_value = None if old_value is None else old_value["frequency"]
+            old_value = None if old_value is None else old_value
             logger.success(f"Set {mode} lo freq from {old_value} to {lo_freq}")
 
     def set_int_freq(self, mode: Mode, old_value: float = None) -> None:
@@ -389,11 +389,11 @@ class QMConfig(InfinitelyNestableDict):
 
     def set_integration_weights(self, pulse: Pulse, pulse_name: str) -> None:
         """ """
-        iw_dict = pulse.integration_weights
-        for iw_key, iw in iw_dict:
+        iw_dict = pulse.integration_weights_samples  # NOTE expect config dict
+        for iw_key, iw_config in iw_dict.items():
             iw_name = self.get_iw_name(pulse_name, iw_key)
             self["pulses"][pulse_name]["integration_weights"][iw_key] = iw_name
-            self["integration_weights"][iw_name] = iw
+            self["integration_weights"][iw_name] = iw_config
         logger.success(f"Set integration weights for {pulse_name}")
 
 
@@ -421,7 +421,7 @@ class QMConfigBuilder:
             self._modes.add(mode)
             self._state_map[mode.name] = None
 
-        if len(self._modes) != len(modes):
+        if len(self._state_map) != len(modes):
             logger.error(f"Mode names must be unique, found duplicate name in {modes}")
             raise SystemExit("Failed to initialize QMConfigBuilder, exiting...")
 

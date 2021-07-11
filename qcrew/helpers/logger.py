@@ -5,7 +5,7 @@ import sys
 
 from loguru import logger
 
-LOG_FOLDER_NAME = "logs"
+LOG_FOLDER_NAME = "logs"  # TODO make cwd() ALWAYS relative to workspace folder
 LOG_FOLDER_PATH = Path.cwd() / LOG_FOLDER_NAME  # relative to project directory
 
 logger.remove()  # remove default handlers

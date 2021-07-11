@@ -33,7 +33,12 @@ class Parametrized(Yamlable):
     @parameters.setter
     def parameters(self, new_parameters: dict[str, Any]) -> None:
         """ """
-        # TODO error handling and logging
-        for param, value in new_parameters.items():
-            if param in self._parameters:
-                setattr(self, param, value)
+        try:
+            for param, value in new_parameters.items():
+                if param in self._parameters:
+                    setattr(self, param, value)
+                else:
+                    logger.warning(f"Unrecognized parameter '{param}'")
+        except TypeError as e:
+            logger.exception(f"Setter expects {dict}, got {new_parameters}")
+            raise SystemExit("Failed to set parameters, exiting...") from e

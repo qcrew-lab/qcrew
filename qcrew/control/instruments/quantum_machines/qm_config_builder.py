@@ -47,7 +47,7 @@ class QMConfig(InfinitelyNestableDict):
         "int_freq": "set_int_freq",
         "ports": "set_ports",
         "offsets": "set_offsets",
-        "operations": "set_operations",
+        "opspec": "set_operations",
         "time_of_flight": "set_time_of_flight",
         "smearing": "set_smearing",
     }
@@ -68,18 +68,23 @@ class QMConfig(InfinitelyNestableDict):
         """ """
         mixer_config_keys = {"intermediate_frequency", "lo_frequency", "correction"}
         for mode in modes:
-            if mode.has_mix_inputs:
-                mixer_name = self.get_mixer_name(mode.name)
-                self["mixers"][mixer_name] = [{key: None for key in mixer_config_keys}]
-                self["elements"][mode.name]["mixInputs"]["mixer"] = mixer_name
-                logger.success(f"Set '{mixer_name}' for {mode}")
+            try:
+                if mode.has_mix_inputs:
+                    mixer_name = self.get_mixer_name(mode.name)
+                    mixer_config_schema = {key: None for key in mixer_config_keys}
+                    self["mixers"][mixer_name] = [mixer_config_schema]
+                    self["elements"][mode.name]["mixInputs"]["mixer"] = mixer_name
+                    logger.success(f"Set '{mixer_name}' for {mode}")
+            except AttributeError as e:
+                logger.exception(f"Failed to determine if {mode} has mix inputs")
+                raise SystemExit("Failed to set mixers in QM config, exiting...") from e
 
     def set_lo_freq(self, mode: Mode, old_value: dict[str, Any] = None) -> None:
         """ """
         try:
             lo_freq = int(mode.lo_freq)
-        except KeyError as e:
-            logger.exception(f"Failed to get {mode} LO frequency")
+        except AttributeError as e:
+            logger.exception(f"Failed to get {mode} lo frequency")
             raise SystemExit("Failed to set lo freq in QM config, exiting...") from e
         else:
             self["elements"][mode.name]["mixInputs"]["lo_frequency"] = lo_freq
@@ -111,8 +116,13 @@ class QMConfig(InfinitelyNestableDict):
         old_ports = old_ports if old_ports is not None else dict()
         diff_ports = dict(set(new_ports.items()) - set(old_ports.items()))
         for key, port_num in diff_ports.items():
-            self.set_controller_port(mode, key, port_num)
-            self.set_element_port(mode, key, port_num)
+            try:
+                self.set_controller_port(mode, key, port_num)
+            except TypeError:
+                logger.exception(f"Expect port number of {int}, got {port_num}")
+                raise
+            else:
+                self.set_element_port(mode, key, port_num)
 
     def set_controller_port(self, mode: Mode, key: str, port_num: int) -> None:
         """ """
@@ -228,7 +238,7 @@ class QMConfig(InfinitelyNestableDict):
 
     def set_operations(self, mode: Mode, old_ops: dict[str, Any] = None) -> None:
         """ """
-        ops = mode.operations
+        ops = mode.opspec
 
         ops_config = self["elements"][mode.name]["operations"]
         for op_name, op_parameters in ops.items():
@@ -283,7 +293,7 @@ class QMConfig(InfinitelyNestableDict):
         if new_op != old_op:  # pulse parameters other than length have changed
             self.set_waveforms(pulse, pulse_name)
 
-        if pulse.type_ == "measurement":
+        if pulse.type_ == "measurement":  # TODO set only on update
             self.set_integration_weights(pulse, pulse_name)
 
     def add_pulse(self, pulse: Pulse, pulse_name: str) -> None:

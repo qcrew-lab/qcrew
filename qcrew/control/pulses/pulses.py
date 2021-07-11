@@ -18,22 +18,21 @@ class Pulse(Parametrized):
         self,
         length: int,
         has_mix_waveforms: bool = True,
-        integration_weights: dict[str, dict[str, np.ndarray]] = None,
+        integration_weights = None,
     ) -> None:
         """ """
         self._length: int = length
         self.has_mix_waveforms: bool = has_mix_waveforms
         self.is_readout_pulse: bool = False
-        self._integration_weights: dict[str, dict[str, np.ndarray]] = None
+        self.integration_weights = integration_weights
 
-        if integration_weights is not None:
-            self.integration_weights = integration_weights
+        if self.integration_weights is not None:
             self._integration_weights_samples = self.integration_weights_samples
             self.is_readout_pulse = True
 
     def __repr__(self) -> str:
         """ """
-        return f"{type(self).__name__}{self.parameters}"
+        return f"{type(self).__name__}{self.parameters}[{self.type_}]"
 
     def __call__(self, **parameters: Real) -> None:
         """ """
@@ -97,7 +96,7 @@ class ConstantPulse(Pulse):
         self,
         ampx: float = 1.0,
         length: int = 1000,
-        integration_weights: dict[str, Pulse] = None,
+        integration_weights = None,
     ) -> None:
         """ """
         self.ampx: float = ampx

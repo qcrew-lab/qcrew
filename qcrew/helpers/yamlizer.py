@@ -38,9 +38,6 @@ class YamlableMetaclass(type):
         return f"<class '{cls.__name__}'>"
 
 
-YamlableType = TypeVar("Yamlable", bound="Yamlable")  # for type hints
-
-
 class Yamlable(metaclass=YamlableMetaclass):
     """ """
 
@@ -58,9 +55,9 @@ class Yamlable(metaclass=YamlableMetaclass):
             return yaml_map
 
     @classmethod
-    def from_yaml(cls: Type[YamlableType], loader, node) -> YamlableType:
+    def from_yaml(cls, loader, node):
         """ """
-        parameters = loader.construct_mapping(node)
+        parameters = loader.construct_mapping(node, deep=True)
         logger.info(f"Loading {cls.__name__} from .yaml")
         try:
             return cls(**parameters)
@@ -74,13 +71,14 @@ class Yamlable(metaclass=YamlableMetaclass):
         logger.info(f"Dumping {cls.__name__} to .yaml")
         return dumper.represent_mapping(data.yaml_tag, data.yaml_map)
 
-def load(path: Path) -> dict[str, Any]:
+
+def load(path: Path):
     """ """
     with path.open(mode="r") as file:
         return yaml.safe_load(file)
 
 
-def save(yaml_map: dict[str, Any], path: Path, mode: str = "w") -> None:
+def save(yaml_map, path: Path, mode: str = "w") -> None:
     """ """
     with path.open(mode=mode) as file:
         yaml.safe_dump(yaml_map, file, sort_keys=False)

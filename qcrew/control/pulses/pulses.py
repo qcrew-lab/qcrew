@@ -49,27 +49,29 @@ class Pulse(Parametrized):
     @property  # waveform amplitude samples getter
     def samples(self) -> tuple[np.ndarray]:
         """ """
-        raise NotImplementedError  # subclasses must implements
+        logger.error("Abstract method must be implemented by subclass(es)")
+        raise NotImplementedError("Can't call `samples` on Pulse instance")
 
-    @property  # integration weights getter (NOTE: hard coded, for now)
+    @property  # integration weights getter
     def integration_weights(self) -> dict[str, dict[str, np.ndarray]]:
         """ """
         if self._integration_weights is None:
-            logger.warning(f"Integration weights not defined for {self}")
-        elif not self._integration_weights:  # empty dict, return default
+            logger.error(f"Integration weights not defined for {self}")
+            raise TypeError("Integration weights undefined")
+        else:  # NOTE this is hard coded to return constant integration weights
             iw_length = int(self.length / CLOCK_CYCLE)
+            iw_ampx = 1 / BASE_AMP
+            samples = self._integration_weights(ampx=iw_ampx, length=iw_length).samples
             return {
                 "iw1": {
-                    "cosine": np.ones(iw_length),
-                    "sine": np.zeros(iw_length),
+                    "cosine": samples[0],
+                    "sine": samples[1],
                 },
                 "iw2": {
-                    "cosine": np.zeros(iw_length),
-                    "sine": np.ones(iw_length),
+                    "cosine": samples[1],
+                    "sine": samples[0],
                 },
             }
-        else:
-            return self._integration_weights
 
     @property  # pulse type_ getter for building QM config
     def type_(self) -> str:
@@ -117,7 +119,6 @@ class GaussianPulse(Pulse):
         chop: int = 6,
         ampx: float = 1.0,
         drag: float = 0.0,
-        integration_weights: dict[str, Pulse] = None,
     ) -> None:
         """ """
         self.sigma: float = sigma
@@ -125,7 +126,7 @@ class GaussianPulse(Pulse):
         self.ampx: float = ampx
         self.drag: float = drag
         length = int(sigma * chop)
-        super().__init__(length=length, integration_weights=integration_weights)
+        super().__init__(length=length, integration_weights=None)
 
     def __call__(
         self, *, sigma: float, chop: int = None, ampx: float = None, drag: float = None

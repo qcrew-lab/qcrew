@@ -18,16 +18,16 @@ qcb = QMConfigBuilder(qubit, rr)
 config = qcb.config
 
 # change lo freq
-qubit.lo_freq = 5.5e9
-rr.lo_freq = 8.5e9
+qubit.lo_freq = 5.0e9
+rr.lo_freq = 8.0e9
 config = qcb.config
 
 # change int freq
-qubit.int_freq = -55e6
+qubit.int_freq = -50e6
 config = qcb.config
 
 # change ports
-qubit.ports = {"I": 3, "Q": 4}
+qubit.ports = {"I": 1, "Q": 2}
 config = qcb.config
 
 # change offsets
@@ -36,18 +36,10 @@ tmt.tune(qubit, rr)
 config = qcb.config
 
 # change operations
-rr.readout_pulse(length=24)
-rr.gaussian_pulse(sigma=4)
-qubit.constant_pulse(length=16, ampx=1.0)
-qubit.gaussian_pulse(sigma=4, chop=4, ampx=1.2)
-config = qcb.config
-
-qubit.operations = {
-    "saturation_pulse": ConstantPulse(length=28)
-}
-config = qcb.config
-
-qubit.remove_operation("saturation_pulse")
+rr.readout_pulse(length=28)
+rr.gaussian_pulse(sigma=6)
+qubit.constant_pulse(length=20, ampx=1.0)
+qubit.gaussian_pulse(sigma=4, chop=4, ampx=1.5)
 config = qcb.config
 
 # save modes to config

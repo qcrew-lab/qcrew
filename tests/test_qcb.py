@@ -1,66 +1,42 @@
 import pprint
-import random
+import pathlib
 
 from qcrew.control.modes.mode import Mode, ReadoutMode
 from qcrew.control.instruments.quantum_machines.qm_config_builder import QMConfigBuilder
 from qcrew.control.pulses.pulses import ConstantPulse
+from tests.test_labbrick import TestLabBrick
+from tests.test_mixer_tuner import TestMixerTuner
+import qcrew.helpers.yamlizer as yml
+from qcrew.control.modes.qubit import Qubit
+from qcrew.control.modes.readout_resonator import ReadoutResonator
 
-class TestLabBrick:
-    def __init__(self, frequency):
-        self.frequency = frequency
-
-    @property
-    def parameters(self):
-        return {"frequency": self.frequency}
-
-class TestMixerTuner:
-    def tune(self, mode):
-        mode.offsets = {
-            "I": random.uniform(-0.1, 0.1),
-            "Q": random.uniform(-0.1, 0.1),
-            "G": random.uniform(-0.25, 0.25),
-            "P": random.uniform(-0.25, 0.25),
-        }
-
-qubit = Mode(
-    name = "qubit",
-    lo = TestLabBrick(frequency=5e9),
-    int_freq = -50e6,
-    ports = {"I": 1, "Q": 2}
-)
-
-rr = ReadoutMode(
-    name = "rr",
-    lo = TestLabBrick(frequency=8e9),
-    int_freq = -75e6,
-    ports = {"I": 3, "Q": 4, "out": 1},
-    time_of_flight = 180,
-    smearing = 0,
-)
-
-
-tmt = TestMixerTuner()
-tmt.tune(qubit)
-
-pprint.pp(qubit.parameters)
-pprint.pp(rr.parameters)
-
-qcb = QMConfigBuilder(qubit, rr, cavity)
+# get modes from yml config
+CONFIGPATH = pathlib.Path.cwd() / "tests/test_config.yml"
+modes = yml.load(CONFIGPATH)
+qubit, rr = modes[0], modes[1]
+qcb = QMConfigBuilder(qubit, rr)
 config = qcb.config
 
-#make changes here
-qmm.open_qm(qcb.config)
-
+# change lo freq
 qubit.lo_freq = 5.5e9
+rr.lo_freq = 8.5e9
 config = qcb.config
+
+# change int freq
 qubit.int_freq = -55e6
 config = qcb.config
+
+# change ports
 qubit.ports = {"I": 3, "Q": 4}
 config = qcb.config
-tmt.tune(qubit)
+
+# change offsets
+tmt = TestMixerTuner()
+tmt.tune(qubit, rr)
 config = qcb.config
 
-
+# change operations
+rr.readout_pulse.length = 24
 qubit.constant_pulse(0.5, 500)
 config = qcb.config
 qubit.gaussian_pulse(0.5, 20, 3)

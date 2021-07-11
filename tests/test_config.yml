@@ -1,4 +1,4 @@
-QUBIT: !<Qubit>
+- !<Qubit>
   name: QUBIT
   lo: !<TestLabBrick>
     id: 111
@@ -7,12 +7,12 @@ QUBIT: !<Qubit>
   ports:
     I: 1
     Q: 2
-RR: !<ReadoutResonator>
+- !<ReadoutResonator>
   name: RR
   lo: !<TestLabBrick>
     id: 222
-    frequency: 8.0e+9
-  int_freq: -50.0e+6
+    frequency: 5.0e+9
+  int_freq: -30.0e+6
   ports:
     I: 3
     Q: 4

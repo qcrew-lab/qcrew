@@ -21,7 +21,7 @@ class Pulse(Parametrized):
         integration_weights: dict[str, dict[str, np.ndarray]] = None,
     ) -> None:
         """ """
-        self.length: int = length
+        self._length: int = length
         self.has_mix_waveforms: bool = has_mix_waveforms
         self.is_readout_pulse: bool = False
         self._integration_weights: dict[str, dict[str, np.ndarray]] = None
@@ -46,6 +46,11 @@ class Pulse(Parametrized):
                 logger.warning(f"Parameter '{name}' must be an attribute of {cls_name}")
         logger.success(f"Set {self}")
 
+    @property  # pulse length getter
+    def length(self) -> int:
+        """ """
+        return self._length
+
     @property  # waveform amplitude samples getter
     def samples(self) -> tuple[np.ndarray]:
         """ """
@@ -57,7 +62,7 @@ class Pulse(Parametrized):
     def integration_weights_samples(self) -> dict[str, dict[str, np.ndarray]]:
         """ """
         if self.integration_weights is not None:
-            iw_length = int(self.length / CLOCK_CYCLE)
+            iw_length = int(self._length / CLOCK_CYCLE)
             if not iw_length == self.integration_weights.length:
                 logger.info("Updating ReadoutPulse integration weights...")
                 self.integration_weights(ampx=1 / BASE_AMP, length=iw_length)
@@ -100,11 +105,11 @@ class ConstantPulse(Pulse):
 
     def __call__(self, length: int, ampx: float = None) -> None:
         """ """
-        super().__call__(length=length, ampx=ampx)
+        super().__call__(_length=length, ampx=ampx)
 
     @property
     def samples(self) -> tuple[np.ndarray]:
-        return np.full(self.length, (BASE_AMP * self.ampx)), np.zeros(self.length)
+        return np.full(self._length, (BASE_AMP * self.ampx)), np.zeros(self._length)
 
 
 class GaussianPulse(Pulse):
@@ -137,13 +142,13 @@ class GaussianPulse(Pulse):
     ) -> None:
         """ """
         length = int(sigma * chop) if chop is not None else int(sigma * self.chop)
-        super().__call__(sigma=sigma, chop=chop, ampx=ampx, drag=drag, length=length)
+        super().__call__(sigma=sigma, chop=chop, ampx=ampx, drag=drag, _length=length)
 
     @property
     def samples(self) -> tuple[np.ndarray]:
         """ """
         start, stop = -self.chop / 2 * self.sigma, self.chop / 2 * self.sigma
-        ts = np.linspace(start, stop, self.length)
+        ts = np.linspace(start, stop, self._length)
         i_wave = BASE_AMP * self.ampx * np.exp(-(ts ** 2) / (2.0 * self.sigma ** 2))
         q_wave = self.drag * (np.exp(0.5) / self.sigma) * i_wave
         return i_wave, q_wave

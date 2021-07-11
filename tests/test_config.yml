@@ -2,18 +2,54 @@
   name: QUBIT
   lo: !<TestLabBrick>
     id: 111
-    frequency: 5.0e+9
-  int_freq: -30.0e+6
-  ports:
-    I: 1
-    Q: 2
-- !<ReadoutResonator>
-  name: RR
-  lo: !<TestLabBrick>
-    id: 222
-    frequency: 5.0e+9
-  int_freq: -30.0e+6
+    frequency: 5.500000E+09
+  int_freq: -5.500000E+07
   ports:
     I: 3
     Q: 4
-    out: 1
+  offsets:
+    I: -0.09604372485447168
+    Q: 0.063793531321058
+    G: 0.057493114427112135
+    P: 0.14486583045862916
+  operations:
+    constant_pulse: !<ConstantPulse>
+      ampx: 1.0
+      length: 16
+      integration_weights: null
+    gaussian_pulse: !<GaussianPulse>
+      sigma: 4
+      chop: 4
+      ampx: 1.2
+      drag: 0.0
+- !<ReadoutResonator>
+  time_of_flight: 180
+  smearing: 0
+  parameters:
+    opspec:
+      constant_pulse:
+        ampx: 1.0
+        length: 1000
+      gaussian_pulse:
+        ampx: 1.0
+        drag: 0.0
+        length: 24
+        sigma: 4
+        chop: 6
+      readout_pulse:
+        ampx: 1.0
+        length: 24
+    int_freq: -3.000000E+07
+    time_of_flight: 180
+    offsets:
+      I: 0.04311607857660374
+      Q: 0.04456617994399692
+      G: 0.07024929641934285
+      P: -0.03220496716574378
+      out: 0.0
+    lo_freq: 8.500000E+09
+    ports:
+      I: 3
+      Q: 4
+      out: 1
+    smearing: 0

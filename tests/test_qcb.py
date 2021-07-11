@@ -49,3 +49,6 @@ config = qcb.config
 
 qubit.remove_operation("saturation_pulse")
 config = qcb.config
+
+# save modes to config
+yml.save(modes, CONFIGPATH)

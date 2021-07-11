@@ -103,7 +103,7 @@ class Mode(Parametrized):
                     logger.success(f"Set {self} '{key}' {port = }")
                 else:
                     logger.warning(f"Invalid key '{key}', {valid_keys = }")
-        except TypeError as e:
+        except (AttributeError, TypeError) as e:
             logger.exception(f"Setter expects {dict[str, int]} with {valid_keys = }")
             raise SystemExit(f"Failed to set {self} ports, exiting...") from e
 

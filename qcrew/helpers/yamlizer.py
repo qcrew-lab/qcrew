@@ -24,16 +24,12 @@ class YamlableMetaclass(type):
     def __init__(cls, name, bases, kwds) -> None:
         """ """
         super(YamlableMetaclass, cls).__init__(name, bases, kwds)
-
         cls.yaml_tag = name  # set a consistent format for subclass yaml tags
-
         # register safe loader and safe dumper
         cls.yaml_loader, cls.yaml_dumper = yaml.SafeLoader, yaml.SafeDumper
-
         # custom constructor and representer for Yamlable objects
         cls.yaml_loader.add_constructor(cls.yaml_tag, cls.from_yaml)
         cls.yaml_dumper.add_representer(cls, cls.to_yaml)
-
         # customise dumper to represent float values in scientific notation
         cls.yaml_dumper.add_representer(float, _sci_not_representer)
 

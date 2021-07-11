@@ -19,7 +19,7 @@ class Instrument(Parametrized):
 
     def __repr__(self) -> str:
         """ """
-        return f"{self.name}{self.id}"
+        return f"{self.name}-{self.id}"
 
     @property  # id getter
     def id(self) -> Any:

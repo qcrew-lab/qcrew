@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "qcrew"
-version = "0.1.0"
+version = "1.0.0"
 description = ""
 authors = ["Atharv Joshi <atharvjoshi@ymail.com>"]
 
@@ -10,9 +10,11 @@ PyYAML = "^5.4.1"
 loguru = "^0.5.3"
 numpy = "^1.21.0"
 Pyro5 = "^5.12"
-qm = { url = "https://qm-pypi-repository.s3.amazonaws.com/qm-0.90.1764.tar.gz" }
+qm = { url = "https://qm-pypi-repository.s3.amazonaws.com/qm-0.90.1736.tar.gz" }
 matplotlib = "^3.4.2"
 scipy = { version = "^1.7.0", python = ">=3.9, <3.10" }
+ipython = "^7.25.0"
+h5py = "^3.3.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"

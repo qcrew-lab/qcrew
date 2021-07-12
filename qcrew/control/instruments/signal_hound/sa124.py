@@ -80,13 +80,12 @@ class Sa124(Instrument):
 
     def connect(self) -> None:
         """ """
-        logger.info(f"Connecting to {self}, please wait ~7 seconds...")
-
         if self.id in sa.ACTIVE_CONNECTIONS:
             logger.warning(f"{self} is already connected")
             self._handle = sa.ACTIVE_CONNECTIONS[self.id]
             return
 
+        logger.info(f"Connecting to {self}, please wait ~7 seconds...")
         self._handle = sa.sa_open_device_by_serial(self.id)["handle"]
         sa.ACTIVE_CONNECTIONS[self.id] = self._handle
         logger.info(f"Connected to {self}")

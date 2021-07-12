@@ -39,8 +39,8 @@ class Mode(Parametrized):
         """ """
         self._name: str = str(name)  # name is gettable only
 
-        self.lo: LabBrick = lo  # type check done by `lo_freq` property
-        self.int_freq: float = int_freq
+        self._lo: LabBrick = lo  # type check done by `lo_freq` property
+        self._int_freq: float = int_freq
 
         self._ports: dict[str, int] = {key: None for key in self._ports_keys}
         self.ports = ports
@@ -73,7 +73,7 @@ class Mode(Parametrized):
     def lo_freq(self) -> float:
         """ """
         try:
-            return self.lo.frequency
+            return self._lo.frequency
         except AttributeError as e:
             logger.exception(f"Expect {self} lo of {LabBrick}")
             raise SystemExit("Failed to get lo frequency, exiting...") from e
@@ -82,10 +82,21 @@ class Mode(Parametrized):
     def lo_freq(self, new_lo_freq: float) -> None:
         """ """
         try:
-            self.lo.frequency = new_lo_freq
+            self._lo.frequency = new_lo_freq
         except AttributeError as e:
             logger.exception(f"Expect {self} lo of {LabBrick}")
             raise SystemExit("Failed to set lo frequency, exiting...") from e
+
+    @property  # int_freq getter
+    def int_freq(self) -> float:
+        """ """
+        return self._int_freq
+
+    @int_freq.setter
+    def int_freq(self, new_int_freq: float) -> None:
+        """ """
+        self._int_freq = new_int_freq
+        logger.success(f"Set {self} intermediate frequency to {new_int_freq}Hz")
 
     @property  # ports getter
     def ports(self) -> dict[str, int]:
@@ -206,6 +217,7 @@ class ReadoutMode(Mode):
         self.time_of_flight: int = time_of_flight
         self.smearing: int = smearing
 
-        self.operations = {  # NOTE integration weight is hard-coded for now
-            "readout_pulse": ConstantPulse(integration_weights=ConstantPulse()),
-        }
+        if "readout_pulse" not in self._operations:
+            self.operations = {  # NOTE integration weight is hard-coded for now
+                "readout_pulse": ConstantPulse(integration_weights=ConstantPulse()),
+            }

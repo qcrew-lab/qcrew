@@ -25,7 +25,6 @@ class Pulse(Parametrized):
         self.has_mix_waveforms: bool = has_mix_waveforms
         self.is_readout_pulse: bool = False
         self.integration_weights = None
-        self._integration_weights_samples = None
 
         if integration_weights is not None:
             self.integration_weights = integration_weights
@@ -41,6 +40,10 @@ class Pulse(Parametrized):
             is_attribute = hasattr(self, name)
             if is_attribute and value is not None:
                 setattr(self, name, value)
+                if name == "_length" and self.is_readout_pulse:  # set constant iw len
+                    new_iw_len = int(self._length / CLOCK_CYCLE)
+                    logger.info(f"Setting integration weights length = {new_iw_len}...")
+                    self.integration_weights(ampx=1 / BASE_AMP, length=new_iw_len)
             elif not is_attribute:
                 cls_name = type(self).__name__
                 logger.warning(f"Parameter '{name}' must be an attribute of {cls_name}")
@@ -62,26 +65,17 @@ class Pulse(Parametrized):
     def integration_weights_samples(self) -> dict[str, dict[str, np.ndarray]]:
         """ """
         if self.integration_weights is not None:
-            old_iw_len = self.integration_weights.length
-            new_iw_len = int(self._length / CLOCK_CYCLE)
-            has_iw_samples = self._integration_weights_samples is not None
-            has_updated = old_iw_len != new_iw_len and not has_iw_samples
-            if has_updated:
-                logger.info("Updating ReadoutPulse integration weights...")
-                self.integration_weights(ampx=1 / BASE_AMP, length=new_iw_len)
-                samples = self.integration_weights.samples
-                return {
-                    "iwI": {
-                        "cosine": samples[0],
-                        "sine": samples[1],
-                    },
-                    "iwQ": {
-                        "cosine": samples[1],
-                        "sine": samples[0],
-                    },
-                }
-            else:
-                return self._integration_weights_samples
+            samples = self.integration_weights.samples
+            return {
+                "iwI": {
+                    "cosine": samples[0],
+                    "sine": samples[1],
+                },
+                "iwQ": {
+                    "cosine": samples[1],
+                    "sine": samples[0],
+                },
+            }
         else:
             logger.warning(f"No integration weights defined for {self}")
 

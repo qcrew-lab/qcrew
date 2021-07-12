@@ -1,7 +1,7 @@
 - !<Qubit>
   name: QUBIT
-  lo: !<TestLabBrick>
-    id: 111
+  lo: !<LabBrick>
+    id: 25331
     frequency: 5.000000E+09
   int_freq: -5.000000E+07
   ports:
@@ -24,8 +24,8 @@
       drag: 0.0
 - !<ReadoutResonator>
   name: RR
-  lo: !<TestLabBrick>
-    id: 222
+  lo: !<LabBrick>
+    id: 25335
     frequency: 8.000000E+09
   int_freq: -5.000000E+07
   ports:
@@ -57,3 +57,5 @@
         integration_weights: null
   time_of_flight: 180
   smearing: 0
+- !<Sa124>
+  id: 19184645

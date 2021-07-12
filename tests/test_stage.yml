@@ -2,16 +2,17 @@
   name: QUBIT
   lo: !<LabBrick>
     id: 25331
-    frequency: 5.000000E+09
+    frequency: 5.010000E+09
+    power: 13.0
   int_freq: -5.000000E+07
   ports:
     I: 1
     Q: 2
   offsets:
-    I: 0.08484303942302329
-    Q: -0.08719589066777388
-    G: 0.24827612686652295
-    P: 0.03966299141961016
+    I: 0.0069958885549567616
+    Q: -0.006654385034926237
+    G: -0.1877040624851362
+    P: 0.09362514408421704
   operations:
     constant_pulse: !<ConstantPulse>
       ampx: 1.0
@@ -27,16 +28,17 @@
   lo: !<LabBrick>
     id: 25335
     frequency: 8.000000E+09
+    power: 13.0
   int_freq: -5.000000E+07
   ports:
-    I: 3
-    Q: 4
+    I: 4
+    Q: 3
     out: 1
   offsets:
-    I: -0.0877468360916439
-    Q: 0.031068087950846646
-    G: 0.16338959333205622
-    P: -0.23203250545586895
+    I: -0.018960010539740325
+    Q: 0.0016848570201545951
+    G: 0.166064453125
+    P: -0.14304199218750002
     out: 0.0
   operations:
     constant_pulse: !<ConstantPulse>
@@ -50,12 +52,16 @@
       drag: 0.0
     readout_pulse: !<ConstantPulse>
       ampx: 1.0
-      length: 28
+      length: 1000
       integration_weights: !<ConstantPulse>
-        ampx: 5.0
-        length: 7
+        ampx: 1.0
+        length: 1000
         integration_weights: null
   time_of_flight: 180
   smearing: 0
 - !<Sa124>
   id: 19184645
+  center: 8.000000E+09
+  span: 1.000000E+08
+  rbw: 2.500000E+05
+  ref_power: 0.0

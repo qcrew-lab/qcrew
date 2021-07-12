@@ -22,7 +22,7 @@ class Mode(Parametrized):
         "int_freq",  # intermediate frequency driving the Mode
         "ports",  # OPX ports connected to this Mode
         "offsets",  # offsets used to tune the Mode's IQ mixer
-        "opspec",  # specification of operations that can be played to the Mode
+        "operations",  # dict[str, Pulse] of operations that can be played to the Mode
     }
     _ports_keys: ClassVar[tuple[str]] = ("I", "Q")
     _offsets_keys: ClassVar[tuple[str]] = ("I", "Q", "G", "P")
@@ -69,6 +69,11 @@ class Mode(Parametrized):
         """ """
         return self._name
 
+    @property  # lo instrument object getter
+    def lo(self) -> LabBrick:
+        """ """
+        return self._lo
+
     @property  # lo frequency getter
     def lo_freq(self) -> float:
         """ """
@@ -96,7 +101,7 @@ class Mode(Parametrized):
     def int_freq(self, new_int_freq: float) -> None:
         """ """
         self._int_freq = new_int_freq
-        logger.success(f"Set {self} intermediate frequency to {new_int_freq}Hz")
+        logger.success(f"Set {self} intermediate frequency to {new_int_freq:E}Hz")
 
     @property  # ports getter
     def ports(self) -> dict[str, int]:
@@ -137,11 +142,6 @@ class Mode(Parametrized):
         except TypeError as e:
             logger.exception(f"Setter expects {dict[str, float]} with {valid_keys = }")
             raise SystemExit(f"Failed to set {self} offsets, exiting...") from e
-
-    @property  # opspec getter
-    def opspec(self) -> dict[str, Any]:
-        """ """
-        return {name: pulse.parameters for name, pulse in self._operations.items()}
 
     @property  # operations getter
     def operations(self) -> dict[str, Any]:

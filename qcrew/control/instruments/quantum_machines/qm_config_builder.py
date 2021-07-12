@@ -47,7 +47,7 @@ class QMConfig(InfinitelyNestableDict):
         "int_freq": "set_int_freq",
         "ports": "set_ports",
         "offsets": "set_offsets",
-        "opspec": "set_operations",
+        "operations": "set_operations",
         "time_of_flight": "set_time_of_flight",
         "smearing": "set_smearing",
     }
@@ -238,7 +238,7 @@ class QMConfig(InfinitelyNestableDict):
 
     def set_operations(self, mode: Mode, old_ops: dict[str, Any] = None) -> None:
         """ """
-        ops = mode.opspec
+        ops = {name: pulse.parameters for name, pulse in mode.operations.items()}
 
         ops_config = self["elements"][mode.name]["operations"]
         for op_name, op_parameters in ops.items():

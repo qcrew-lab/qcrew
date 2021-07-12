@@ -4,6 +4,7 @@ import inspect
 from pathlib import Path
 from typing import Any, Type, TypeVar
 
+import numpy
 import yaml
 
 from qcrew.helpers import logger
@@ -32,6 +33,7 @@ class YamlableMetaclass(type):
         cls.yaml_dumper.add_representer(cls, cls.to_yaml)
         # customise dumper to represent float values in scientific notation
         cls.yaml_dumper.add_representer(float, _sci_not_representer)
+        cls.yaml_dumper.add_multi_representer(numpy.floating, _sci_not_representer)
 
     def __repr__(cls) -> str:
         """ """
@@ -61,15 +63,22 @@ class Yamlable(metaclass=YamlableMetaclass):
         logger.info(f"Loading {cls.__name__} from .yaml")
         try:
             return cls(**parameters)
-        except TypeError as e:
+        except TypeError as te:
             logger.error(f"{cls.__name__} 'yaml_map' is incompatible with __init__()")
-            raise SystemExit(f"Failed to load {cls.__name__}, exiting...") from e
+            raise SystemExit(f"Failed to load {cls.__name__}, exiting...") from te
+        except yaml.YAMLError as ye:
+            logger.exception("Yaml error encountered while loading from config")
+            raise SystemExit(f"Failed to load {cls.__name__}, exiting...") from ye
 
     @classmethod
     def to_yaml(cls, dumper, data) -> yaml.MappingNode:
         """ """
         logger.info(f"Dumping {cls.__name__} to .yaml")
-        return dumper.represent_mapping(data.yaml_tag, data.yaml_map)
+        try:
+            return dumper.represent_mapping(data.yaml_tag, data.yaml_map)
+        except yaml.YAMLError as ye:
+            logger.exception("Yaml error encountered while saving to config")
+            raise SystemExit(f"Failed to save {cls.__name__}, exiting...") from ye
 
 
 def load(path: Path):

@@ -20,7 +20,7 @@ class MixerTuner:
     """ """
 
     simplex: np.ndarray = np.array([[0.0, 0.0], [0.0, 0.1], [0.1, 0.0]])
-    threshold: float = 1.0  # in dBm
+    threshold: float = 2.0  # in dBm
     maxiter: int = 100
     span: float = 2e6
     rbw: float = 50e3
@@ -58,7 +58,7 @@ class MixerTuner:
             is_tuned, center_idx, floor = self._check_tuning(center=center)
             if is_tuned:
                 logger.success(f"{key} already tuned to within {self.threshold}dBm!")
-                return
+                continue
             logger.info(f"Minimizing {mode} {key} leakage...")
             if key == "LO":
                 i_offset, q_offset = self._tune_lo(mode, center_idx, floor)
@@ -128,6 +128,9 @@ class MixerTuner:
         if result.success:
             time_, contrast = time.perf_counter() - start_time, fn(result.x)
             logger.success(f"Minimized in {time_:.5}s with final {contrast = :.5}")
+            if contrast > self.threshold:
+                diff = contrast - self.threshold
+                logger.warning(f"Final contrast exceeds threshold by {diff}dBm")
             return result.x
         else:
             logger.warning(f"Minimization unsuccessful, details: {result.message}")

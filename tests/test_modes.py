@@ -7,18 +7,19 @@ import qcrew.helpers.yamlizer as yml
 from tests.test_labbrick import TestLabBrick
 from qcrew.control.modes.mode import Mode, ReadoutMode
 
-CONFIGPATH = pathlib.Path.cwd() / "tests/test_config.yml"
+"""CONFIGPATH = pathlib.Path.cwd() / "tests/test_config.yml"
 modes = yml.load(CONFIGPATH)
 qubit, rr = modes[0], modes[1]
+"""
 
-"""qubit = Qubit(
+qubit = Qubit(
     name = "QUBIT",
     lo = TestLabBrick(id=111, frequency=5e9),
     int_freq = -50e6,
     ports = {"I": 1, "Q": 2}
 )
 
-rr = ReadoutResonator(
+"""rr = ReadoutResonator(
     name = "RR",
     lo = TestLabBrick(id=222, frequency=8e9),
     int_freq = -75e6,
@@ -26,5 +27,3 @@ rr = ReadoutResonator(
 )
 """
 pprint.pp(qubit.parameters)
-print()
-pprint.pp(rr.parameters)

@@ -1,9 +1,8 @@
 - !<Qubit>
   name: QUBIT
-  lo: !<LabBrick>
+  lo: !<TestLabBrick>
     id: 25331
     frequency: 5.010000E+09
-    power: 13.0
   int_freq: -5.000000E+07
   ports:
     I: 1
@@ -25,11 +24,10 @@
       drag: 0.0
 - !<ReadoutResonator>
   name: RR
-  lo: !<LabBrick>
+  lo: !<TestLabBrick>
     id: 25335
     frequency: 8.000000E+09
-    power: 13.0
-  int_freq: -5.000000E+07
+  int_freq: -5.230000E+07
   ports:
     I: 4
     Q: 3
@@ -52,16 +50,10 @@
       drag: 0.0
     readout_pulse: !<ConstantPulse>
       ampx: 1.0
-      length: 1000
+      length: 28
       integration_weights: !<ConstantPulse>
         ampx: 5.0
-        length: 250
+        length: 7
         integration_weights: null
   time_of_flight: 180
   smearing: 0
-- !<Sa124>
-  id: 19184645
-  center: 8.000000E+09
-  span: 1.000000E+08
-  rbw: 2.500000E+05
-  ref_power: 0.0

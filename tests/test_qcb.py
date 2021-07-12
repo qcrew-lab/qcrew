@@ -3,7 +3,7 @@ import pathlib
 
 from qcrew.control.modes.mode import Mode, ReadoutMode
 from qcrew.control.instruments.quantum_machines.qm_config_builder import QMConfigBuilder
-from qcrew.control.pulses.pulses import ConstantPulse
+from qcrew.control.pulses.pulses import Pulse, ConstantPulse, GaussianPulse
 from tests.test_labbrick import TestLabBrick
 from tests.test_mixer_tuner import TestMixerTuner
 import qcrew.helpers.yamlizer as yml
@@ -28,12 +28,11 @@ config = qcb.config
 
 # change ports
 qubit.ports = {"I": 1, "Q": 2}
-config = qcb.config
 
 # change offsets
-tmt = TestMixerTuner()
-tmt.tune(qubit, rr)
-config = qcb.config
+#tmt = TestMixerTuner()
+#tmt.tune(qubit, rr)
+#config = qcb.config
 
 # change operations
 rr.readout_pulse(length=28)

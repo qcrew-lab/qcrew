@@ -18,7 +18,9 @@ from qcrew.helpers.parametrizer import Parametrized
 from qm.QuantumMachine import QuantumMachine
 from qm.QuantumMachinesManager import QuantumMachinesManager
 
-CONFIGPATH = Path("C:/Users/athar/qcrew/tests/test_stage.yml")
+# TODO make configpath absolute
+CONFIGPATH = Path("C:/Users/qcrew/qcrew-dev/tests/test_stage.yml")
+
 
 @pyro.expose
 class Stage:
@@ -45,8 +47,8 @@ class Stage:
 
     def _load(self) -> None:
         """ """
-        logger.info("Loading remote objects from config...")
-        raw_config = yml.load(self.configpath)  # TODO error handling
+        logger.info(f"Loading remote objects from {self._configpath.name}...")
+        raw_config = yml.load(self._configpath)  # TODO error handling
         try:
             for remote_object in raw_config:
                 name = remote_object.name
@@ -107,8 +109,9 @@ class Stage:
     def _save(self) -> None:
         """ """
         logger.info("Saving remote objects to config...")
-        raw_config = list(self._config.items())
-        yml.save(raw_config, self.configpath)
+        raw_config = list(self._config.values())
+        yml.save(raw_config, self._configpath)
+
 
 class Stagehand:
     """ """
@@ -118,7 +121,7 @@ class Stagehand:
         self.stage = pyro.Proxy(Stage.get_uri())
         logger.success("Established link to stage")
         self._objspec = self.stage.services
-        logger.success(f"Found {len(self._objspec)} objects named {set(self._objspec)}")
+        logger.success(f"Located remote objects: {set(self._objspec)}")
 
     def link(self, *names: str) -> dict[str, pyro.Proxy]:
         """ """
@@ -140,6 +143,7 @@ class Stagehand:
         qm_config = self.stage.qm_config
         return qmm.open_qm(qm_config)
 
+
 if __name__ == "__main__":
     remote_classes = {  # to be exposed for remote calls
         Parametrized,
@@ -152,11 +156,10 @@ if __name__ == "__main__":
         Pulse,
         ConstantPulse,
         GaussianPulse,
-        qcb.QMConfigBuilder,
     }
     for remote_class in remote_classes:
         pyro.expose(remote_class)
-    logger.info(f"Exposed qcrew classes: {(cls_.__name__ for cls_ in remote_classes)}")
+    logger.info(f"Exposed qcrew classes: {[cls_.__name__ for cls_ in remote_classes]}")
 
     logger.info("Initializing daemon and stage...")
     daemon_ = pyro.Daemon(port=Stage.port_num)

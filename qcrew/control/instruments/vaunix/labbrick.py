@@ -14,9 +14,16 @@ class LabBrick(Instrument):
 
     # pylint: disable=redefined-builtin, intentional shadowing of `id`
 
-    def __init__(self, id: int, frequency: float = None, power: float = None) -> None:
+    def __init__(
+        self,
+        id: int,
+        *,
+        name: str = "LB",
+        frequency: float = None,
+        power: float = None,
+    ) -> None:
         """ """
-        super().__init__(id, name="LB")
+        super().__init__(id, name=name)
         self._handle: int = None  # will be updated by self.connect()
         self.connect()
         self._initialize(frequency=frequency, power=power)

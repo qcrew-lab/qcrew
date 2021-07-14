@@ -26,7 +26,7 @@ class MixerTuner:
     rbw: float = 50e3
     ref_power: float = 0.0
 
-    def __init__(self, sa: Sa124, qm: QuantumMachine, *modes: Mode) -> None:
+    def __init__(self, *modes: Mode, sa: Sa124, qm: QuantumMachine) -> None:
         """ """
         self._sa: Sa124 = sa
         self._sa.span = self.span

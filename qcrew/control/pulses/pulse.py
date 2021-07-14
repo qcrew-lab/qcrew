@@ -12,17 +12,18 @@ from qcrew.control.instruments.quantum_machines import BASE_AMP, CLOCK_CYCLE
 class Pulse(Parametrized):
     """ """
 
-    _parameters: ClassVar[set[str]] = {"length"}
+    _parameters: ClassVar[set[str]] = {"length", "ampx"}
 
     def __init__(
         self,
+        *,  # enforce keyword-only arguments
         length: int,
-        has_mix_waveforms: bool = True,
-        integration_weights = None,
+        ampx: float = 1.0,
+        integration_weights=None,
     ) -> None:
         """ """
         self._length: int = length
-        self.has_mix_waveforms: bool = has_mix_waveforms
+        self.ampx: float = ampx
         self.is_readout_pulse: bool = False
         self.integration_weights = None
 
@@ -30,9 +31,11 @@ class Pulse(Parametrized):
             self.integration_weights = integration_weights
             self.is_readout_pulse = True
 
+        self.has_mix_waveforms: bool = True  # qcrew's default use case
+
     def __repr__(self) -> str:
         """ """
-        return f"{type(self).__name__}{self.parameters}[{self.type_}]"
+        return f"{type(self).__name__}[{self.type_}]{self.parameters}"
 
     def __call__(self, **parameters: Real) -> None:
         """ """
@@ -83,69 +86,3 @@ class Pulse(Parametrized):
     def type_(self) -> str:
         """ """
         return "measurement" if self.is_readout_pulse else "control"
-
-
-class ConstantPulse(Pulse):
-    """ """
-
-    _parameters: ClassVar[set[str]] = Pulse._parameters | {"ampx"}
-
-    def __init__(
-        self,
-        ampx: float = 1.0,
-        length: int = 1000,
-        integration_weights = None,
-    ) -> None:
-        """ """
-        self.ampx: float = ampx
-        super().__init__(length=length, integration_weights=integration_weights)
-
-    def __call__(self, length: int, ampx: float = None) -> None:
-        """ """
-        super().__call__(_length=length, ampx=ampx)
-
-    @property
-    def samples(self) -> tuple[np.ndarray]:
-        return np.full(self._length, (BASE_AMP * self.ampx)), np.zeros(self._length)
-
-
-class GaussianPulse(Pulse):
-    """ """
-
-    _parameters: ClassVar[set[str]] = Pulse._parameters | {
-        "sigma",
-        "chop",
-        "ampx",
-        "drag",
-    }
-
-    def __init__(
-        self,
-        sigma: float,
-        chop: int = 6,
-        ampx: float = 1.0,
-        drag: float = 0.0,
-    ) -> None:
-        """ """
-        self.sigma: float = sigma
-        self.chop: int = chop
-        self.ampx: float = ampx
-        self.drag: float = drag
-        length = int(sigma * chop)
-        super().__init__(length=length, integration_weights=None)
-
-    def __call__(
-        self, *, sigma: float, chop: int = None, ampx: float = None, drag: float = None
-    ) -> None:
-        """ """
-        length = int(sigma * chop) if chop is not None else int(sigma * self.chop)
-        super().__call__(sigma=sigma, chop=chop, ampx=ampx, drag=drag, _length=length)
-
-    @property
-    def samples(self) -> tuple[np.ndarray]:
-        """ """
-        start, stop = -self.chop / 2 * self.sigma, self.chop / 2 * self.sigma
-        ts = np.linspace(start, stop, self._length)
-        i_wave = BASE_AMP * self.ampx * np.exp(-(ts ** 2) / (2.0 * self.sigma ** 2))
-        q_wave = self.drag * (np.exp(0.5) / self.sigma) * i_wave
-        return i_wave, q_wave

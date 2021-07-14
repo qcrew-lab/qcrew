@@ -5,7 +5,8 @@ from typing import Any, Union
 
 import numpy as np
 from qcrew.control.modes.mode import Mode
-from qcrew.control.pulses.pulses import Pulse, ConstantPulse
+from qcrew.control.pulses.pulse import Pulse
+from qcrew.control.pulses.constant_pulse import ConstantPulse
 from qcrew.helpers import logger
 
 from qcrew.control.instruments.quantum_machines import (
@@ -46,7 +47,7 @@ class QMConfig(InfinitelyNestableDict):
         "lo_freq": "set_lo_freq",
         "int_freq": "set_int_freq",
         "ports": "set_ports",
-        "offsets": "set_offsets",
+        "mixer_offsets": "set_mixer_offsets",
         "operations": "set_operations",
         "time_of_flight": "set_time_of_flight",
         "smearing": "set_smearing",
@@ -85,6 +86,9 @@ class QMConfig(InfinitelyNestableDict):
             lo_freq = int(mode.lo_freq)
         except AttributeError as e:
             logger.exception(f"Failed to get {mode} lo frequency")
+            raise SystemExit("Failed to set lo freq in QM config, exiting...") from e
+        except (TypeError, ValueError) as e:
+            logger.exception(f"Invalid {mode} lo_freq value, expect ({int},{float})")
             raise SystemExit("Failed to set lo freq in QM config, exiting...") from e
         else:
             self["elements"][mode.name]["mixInputs"]["lo_frequency"] = lo_freq
@@ -127,23 +131,28 @@ class QMConfig(InfinitelyNestableDict):
     def set_controller_port(self, mode: Mode, key: str, port_num: int) -> None:
         """ """
         controllers_config = self["controllers"][CONTROLLER_NAME]
-        offset = mode.offsets[key]
+        offset = mode.mixer_offsets[key]
+
         if key in ("I", "Q"):
             if not AO_MIN <= port_num <= AO_MAX:
                 logger.error(f"AO port value {port_num} out of bounds")
                 raise ValueError(f"Out of bounds [{AO_MIN}, {AO_MAX}]")
+
             controllers_config["analog_outputs"][port_num]["offset"] = offset
             logger.success(f"Set {mode} AO port {port_num} with {offset = }")
+
         elif key == "out":
             if not AI_MIN <= port_num <= AI_MAX:
                 logger.error(f"AI port value {port_num} out of bounds")
                 raise ValueError(f"Out of bounds [{AI_MIN}, {AI_MAX}]")
+
             controllers_config["analog_inputs"][port_num]["offset"] = offset
             logger.success(f"Set {mode} AI port {port_num} with {offset = }")
 
     def set_element_port(self, mode: Mode, key: str, port_num: int) -> None:
         """ """
         mode_config = self["elements"][mode.name]
+
         if key in ("I", "Q") and mode.has_mix_inputs:
             mode_config["mixInputs"][key] = (CONTROLLER_NAME, port_num)
         elif key == "out":
@@ -152,14 +161,15 @@ class QMConfig(InfinitelyNestableDict):
         elif key == "I" and not mode.has_mix_inputs:
             mode_config["singleInput"]["port"] = (CONTROLLER_NAME, port_num)
 
-    def set_offsets(self, mode: Mode, old_offsets: dict[str, float] = None) -> None:
+    def set_mixer_offsets(self, mode: Mode, old_ofs: dict[str, float] = None) -> None:
         """ """
         mixer_name = self.get_mixer_name(mode.name)
-        offsets = mode.offsets
-        if old_offsets is None:  # on first pass, set_controller_port() sets DC offsets
+        offsets = mode.mixer_offsets
+
+        if old_ofs is None:  # on first pass, set_controller_port() sets DC offsets
             self.set_mixer_correction_matrix(mixer_name, (offsets["G"], offsets["P"]))
         else:
-            diff_offsets = dict(set(offsets.items()) - set(old_offsets.items()))
+            diff_offsets = dict(set(offsets.items()) - set(old_ofs.items()))
             if any((key in diff_offsets.keys() for key in ("G", "P"))):
                 g_offset, p_offset = diff_offsets.pop("G"), diff_offsets.pop("P")
                 self.set_mixer_correction_matrix(mixer_name, (g_offset, p_offset))
@@ -204,6 +214,7 @@ class QMConfig(InfinitelyNestableDict):
 
         controller_config = self["controllers"][CONTROLLER_NAME]
         ports = mode.ports
+
         if key == "out":
             controller_config["analog_inputs"][ports[key]]["offset"] = offset
             logger.success(f"Set {mode} AI DC {offset = }")
@@ -222,6 +233,7 @@ class QMConfig(InfinitelyNestableDict):
             if tof % CLOCK_CYCLE != 0:
                 tof = CLOCK_CYCLE * round(tof / CLOCK_CYCLE)
                 logger.warning(f"Rounded tof to nearest multiple of {CLOCK_CYCLE}")
+
             self["elements"][mode.name]["time_of_flight"] = tof
             logger.success(f"Set {mode} time of flight from {old_value} to {tof}")
 
@@ -239,11 +251,12 @@ class QMConfig(InfinitelyNestableDict):
     def set_operations(self, mode: Mode, old_ops: dict[str, Any] = None) -> None:
         """ """
         ops = {name: pulse.parameters for name, pulse in mode.operations.items()}
-
         ops_config = self["elements"][mode.name]["operations"]
+
         for op_name, op_parameters in ops.items():
             pulse = getattr(mode, op_name)
             pulse_name = self.get_pulse_name(mode.name, op_name)
+
             if old_ops is None or op_name not in old_ops:  # new op added
                 ops_config[op_name] = pulse_name
                 logger.info(f"Adding '{pulse_name}' to QM config...")
@@ -269,39 +282,33 @@ class QMConfig(InfinitelyNestableDict):
         """ """
         return pulse_name + ".waveform." + key
 
-    def set_pulse(
-        self,
-        pulse: Pulse,
-        pulse_name: str,
-        new_op: dict[str, Any],
-        old_op: dict[str, Any],
-    ) -> None:
+    def set_pulse(self, pulse: Pulse, p_name: str, new_op: dict, old_op: dict) -> None:
         """ """
-        pulse_config = self["pulses"][pulse_name]
+        pulse_config = self["pulses"][p_name]  # p_name means pulse name
 
         if pulse.type_ != pulse_config["operation"]:
-            logger.error(f"Forbidden to change {pulse_name} pulse type")
+            logger.error(f"Forbidden to change {p_name} pulse type")
             raise ValueError(f"Forbidden: {pulse.type_} -> {pulse_config['operation']}")
         elif "single" in pulse_config["waveforms"] and pulse.has_mix_waveforms:
-            logger.error(f"Forbidden to change {pulse_name} waveform keyset")
+            logger.error(f"Forbidden to change {p_name} waveform keyset")
             raise ValueError("Forbidden: {'I', 'Q'} <-> {'single'}")
 
         new_length, old_length = new_op.pop("length"), old_op.pop("length")
         if new_length != old_length:  # pulse length has changed
-            self.set_pulse_length(pulse_name, new_length, old_length)
+            self.set_pulse_length(p_name, new_length, old_length)
 
         if new_op != old_op:  # pulse parameters other than length have changed
-            self.set_waveforms(pulse, pulse_name)
+            self.set_waveforms(pulse, p_name)
 
         if pulse.type_ == "measurement":  # TODO set only on update
-            self.set_integration_weights(pulse, pulse_name)
+            self.set_integration_weights(pulse, p_name)
 
     def add_pulse(self, pulse: Pulse, pulse_name: str) -> None:
         """ """
         pulse_config = self["pulses"][pulse_name]
         pulse_config["operation"] = pulse.type_
-
         wf_config = pulse_config["waveforms"]
+
         if pulse.has_mix_waveforms:
             wf_config["I"] = self.get_wf_name(pulse_name, "I")
             wf_config["Q"] = self.get_wf_name(pulse_name, "Q")
@@ -334,6 +341,7 @@ class QMConfig(InfinitelyNestableDict):
             if length % CLOCK_CYCLE != 0 or length < l_min:
                 logger.error(f"Length must be int multiple of {CLOCK_CYCLE} >= {l_min}")
                 raise ValueError(f"Invalid {pulse_name} length")
+
             self["pulses"][pulse_name]["length"] = length
             logger.success(f"Set '{pulse_name}' length from {old_len} to {length}")
 
@@ -354,33 +362,26 @@ class QMConfig(InfinitelyNestableDict):
             wave = pulse_samples[0] if wf_type == "constant" else pulse_samples
             self.set_waveform(pulse_name, "single", wf_type, samples_key, wave)
 
-    def set_waveform(
-        self,
-        pulse_name: str,
-        wf_key: str,
-        wf_type: str,
-        samples_key: str,
-        wave: tuple[Union[np.ndarray, float]],
-    ) -> None:
+    def set_waveform(self, p_name: str, key: str, type_: str, s_key: str, wave) -> None:
         """ """
-        wf_name = self.get_wf_name(pulse_name, wf_key)
+        wf_name = self.get_wf_name(p_name, key)  # p_name is pulse name
         wf_config = self["waveforms"][wf_name]
-        wf_config["type"] = wf_type
+        wf_config["type"] = type_
 
-        if wf_type == "constant":
+        if type_ == "constant":
             if not V_MIN < wave < V_MAX:
                 logger.error(f"{wf_name} sample {wave} out of bounds")
                 raise ValueError(f"Out of bounds ({V_MIN}, {V_MAX})")
             else:
-                wf_config[samples_key] = wave
+                wf_config[s_key] = wave  # s_key == "sample" or "samples"
                 logger.success(f"Set {wf_name} sample = {wave}")
-        elif wf_type == "arbitrary":
+        elif type_ == "arbitrary":
             min_, max_ = min(wave), max(wave)
             if min_ <= V_MIN or max_ >= V_MAX:
                 logger.error(f"One of {wf_name} samples ({min_}, {max_}) out of bounds")
                 raise ValueError(f"Out of bounds ({V_MIN}, {V_MAX})")
             else:
-                wf_config[samples_key] = wave
+                wf_config[key] = wave
                 logger.success(f"Set {len(wave)} samples for {wf_name}")
 
     def get_iw_name(self, pulse_name: str, iw_key: str) -> str:
@@ -406,7 +407,7 @@ class QMConfigBuilder:
         self._state_map: dict[str, Union[None, dict[str, Any]]] = dict()
         self._check_modes(*modes)
         self._config: QMConfig = QMConfig()
-        logger.info(f"Call `.config` to build QM config for {self._modes}")
+        logger.info(f"Initialized QMConfigBuilder for {self._modes}")
 
     def __repr__(self) -> str:
         """ """
@@ -432,7 +433,7 @@ class QMConfigBuilder:
             logger.info("Initializing QM config...")
             self._config.set_version()
             self._config.set_controllers()
-            self._config.set_mixers(*self._modes)  # unpacking set -> tuple
+            self._config.set_mixers(*self._modes)  # unpack set -> tuple
         self._build_config()
         logger.info("Done building QM config!")
         return self._config
@@ -449,6 +450,4 @@ class QMConfigBuilder:
                 if curr_value != prev_value and parameter in QMConfig.setters:
                     logger.info(f"Updating {mode} {parameter}...")
                     getattr(self._config, QMConfig.setters[parameter])(mode, prev_value)
-                elif not parameter in QMConfig.setters:
-                    logger.warning(f"Unrecognized parameter '{parameter}'")
             self._state_map[mode.name] = curr_state  # update prev state for next build

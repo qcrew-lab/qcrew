@@ -2,12 +2,24 @@
 
 import inspect
 from pathlib import Path
-from typing import Any, Type, TypeVar
+from typing import Any
 
 import numpy
 import yaml
 
 from qcrew.helpers import logger
+
+
+def load(path: Path):
+    """ """  # TODO error handling
+    with path.open(mode="r") as file:
+        return yaml.safe_load(file)
+
+
+def save(yaml_map, path: Path, mode: str = "w") -> None:
+    """ """  # TODO error handling
+    with path.open(mode=mode) as file:
+        yaml.safe_dump(yaml_map, file, sort_keys=False)
 
 
 def _sci_not_representer(dumper, value) -> yaml.ScalarNode:
@@ -46,48 +58,53 @@ class Yamlable(metaclass=YamlableMetaclass):
     @property
     def yaml_map(self) -> dict[str, Any]:
         """ """
-        init_args_dict = inspect.signature(self.__init__).parameters
-        try:
-            yaml_map = {arg: getattr(self, arg) for arg in init_args_dict}
-        except AttributeError as e:
-            logger.exception("All arguments to Yamlable __init__() must be attributes")
-            raise SystemExit("Failed to create yaml_map, exiting...") from e
-        else:
-            logger.success(f"Created .yaml mapping for {type(self).__name__}")
-            return yaml_map
+        yaml_map_keys = self._get_yaml_map_keys()
+        yaml_map = dict()
+        for key in yaml_map_keys:
+            try:
+                value = getattr(self, key)
+            except AttributeError as e:
+                logger.exception(f"{key} must be an attribute of {self}")
+                raise SystemExit("Failed to create yaml map, exiting...") from e
+            else:
+                if value is not None:
+                    yaml_map[key] = value
+        logger.success(f"Created yaml map for {type(self)}")
+        return yaml_map
+
+    def _get_yaml_map_keys(self) -> set[str]:
+        """ """
+        ancestors = inspect.getmro(type(self))  # mro means method resolution order
+        all_yaml_map_keys = list()  # of all ancestors
+        for ancestor in ancestors:
+            init_params = inspect.signature(ancestor.__init__).parameters.values()
+            yaml_map_keys = list()  # of this ancestor
+            found_kwargs = False
+            for param in init_params:
+                is_self = param.name == "self"
+                is_yaml_map_key = not (is_self or param.kind == param.VAR_POSITIONAL)
+                if param.kind == param.VAR_KEYWORD:
+                    found_kwargs = True
+                elif is_yaml_map_key:
+                    yaml_map_keys.append(param.name)
+            all_yaml_map_keys = [*yaml_map_keys, *all_yaml_map_keys]  # preserve order
+            if not found_kwargs:
+                break
+        return all_yaml_map_keys
 
     @classmethod
     def from_yaml(cls, loader, node):
         """ """
         parameters = loader.construct_mapping(node, deep=True)
-        logger.info(f"Loading {cls.__name__} from .yaml")
+        logger.info(f"Loading {cls.__name__} from yaml...")
         try:
             return cls(**parameters)
         except TypeError as te:
-            logger.error(f"{cls.__name__} 'yaml_map' is incompatible with __init__()")
+            logger.error(f"{cls.__name__} yaml map is incompatible with its __init__()")
             raise SystemExit(f"Failed to load {cls.__name__}, exiting...") from te
-        except yaml.YAMLError as ye:
-            logger.exception("Yaml error encountered while loading from config")
-            raise SystemExit(f"Failed to load {cls.__name__}, exiting...") from ye
 
     @classmethod
     def to_yaml(cls, dumper, data) -> yaml.MappingNode:
         """ """
-        logger.info(f"Dumping {cls.__name__} to .yaml")
-        try:
-            return dumper.represent_mapping(data.yaml_tag, data.yaml_map)
-        except yaml.YAMLError as ye:
-            logger.exception("Yaml error encountered while saving to config")
-            raise SystemExit(f"Failed to save {cls.__name__}, exiting...") from ye
-
-
-def load(path: Path):
-    """ """
-    with path.open(mode="r") as file:
-        return yaml.safe_load(file)
-
-
-def save(yaml_map, path: Path, mode: str = "w") -> None:
-    """ """
-    with path.open(mode=mode) as file:
-        yaml.safe_dump(yaml_map, file, sort_keys=False)
+        logger.info(f"Dumping {cls.__name__} to yaml...")
+        return dumper.represent_mapping(data.yaml_tag, data.yaml_map)

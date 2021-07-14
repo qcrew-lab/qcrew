@@ -5,11 +5,9 @@ from typing import Any, ClassVar
 from qm import qua
 
 from qcrew.control.instruments.vaunix.labbrick import LabBrick
-from qcrew.control.pulses.pulses import (
-    ConstantPulse,
-    GaussianPulse,
-    Pulse,
-)
+from qcrew.control.pulses.constant_pulse import ConstantPulse
+from qcrew.control.pulses.gaussian_pulse import GaussianPulse
+from qcrew.control.pulses.pulse import Pulse
 from qcrew.helpers import logger
 from qcrew.helpers.parametrizer import Parametrized
 
@@ -21,7 +19,7 @@ class Mode(Parametrized):
         "lo_freq",  # local oscillator frequency driving the Mode
         "int_freq",  # intermediate frequency driving the Mode
         "ports",  # OPX ports connected to this Mode
-        "offsets",  # offsets used to tune the Mode's IQ mixer
+        "mixer_offsets",  # offsets used to tune the Mode's IQ mixer
         "operations",  # dict[str, Pulse] of operations that can be played to the Mode
     }
     _ports_keys: ClassVar[tuple[str]] = ("I", "Q")
@@ -29,11 +27,12 @@ class Mode(Parametrized):
 
     def __init__(
         self,
+        *,  # enforce keyword-only arguments
         name: str,
         lo: LabBrick,
         int_freq: float,
         ports: dict[str, int],
-        offsets: dict[str, float] = None,
+        mixer_offsets: dict[str, float] = None,
         operations: dict[str, Pulse] = None,
     ) -> None:
         """ """
@@ -45,16 +44,16 @@ class Mode(Parametrized):
         self._ports: dict[str, int] = {key: None for key in self._ports_keys}
         self.ports = ports
 
-        self._offsets: dict[str, float] = {key: 0.0 for key in self._offsets_keys}
-        if offsets is not None:
-            self.offsets = offsets
+        self._mixer_offsets: dict[str, float] = {key: 0.0 for key in self._offsets_keys}
+        if mixer_offsets is not None:
+            self.mixer_offsets = mixer_offsets
 
         self._operations: dict[str, Pulse] = dict()
         if operations is not None:  # if user specifies operations, set them
             self.operations = operations
         else:
             self.operations = {  # else set default "unselective" operations
-                "constant_pulse": ConstantPulse(),
+                "constant_pulse": ConstantPulse(length=1000),
                 "gaussian_pulse": GaussianPulse(sigma=100),
             }
 
@@ -123,25 +122,25 @@ class Mode(Parametrized):
             logger.exception(f"Setter expects {dict[str, int]} with {valid_keys = }")
             raise SystemExit(f"Failed to set {self} ports, exiting...") from e
 
-    @property  # offsets getter
-    def offsets(self) -> dict[str, float]:
+    @property  # mixer_offsets getter
+    def mixer_offsets(self) -> dict[str, float]:
         """ """
-        return self._offsets.copy()
+        return self._mixer_offsets.copy()
 
-    @offsets.setter
-    def offsets(self, new_offsets: dict[str, float]) -> None:
+    @mixer_offsets.setter
+    def mixer_offsets(self, new_offsets: dict[str, float]) -> None:
         """ """
         valid_keys = self._offsets_keys
         try:
             for key, offset in new_offsets.items():
                 if key in valid_keys:
-                    self._offsets[key] = offset
+                    self._mixer_offsets[key] = offset
                     logger.success(f"Set {self} '{key}' {offset = }")
                 else:
                     logger.warning(f"Invalid key '{key}', {valid_keys = }")
         except TypeError as e:
             logger.exception(f"Setter expects {dict[str, float]} with {valid_keys = }")
-            raise SystemExit(f"Failed to set {self} offsets, exiting...") from e
+            raise SystemExit(f"Failed to set {self} mixer offsets, exiting...") from e
 
     @property  # operations getter
     def operations(self) -> dict[str, Any]:
@@ -178,46 +177,9 @@ class Mode(Parametrized):
         return self._ports["I"] is not None and self._ports["Q"] is not None
 
     def play(self, key: str, ampx: tuple[float] = (1.0,), **kwargs) -> None:
-        """ """
+        """ """  # TODO
         if key not in self._operations:
             logger.error(f"No operation named {key} defined for {self}")
             raise SystemExit("Failed to play Mode operation, exiting...")
 
         qua.play(key * qua.amp(*ampx), self.name, **kwargs)  # TODO
-
-
-class ReadoutMode(Mode):
-    """ """
-
-    _parameters: ClassVar[set[str]] = Mode._parameters | {"time_of_flight", "smearing"}
-    _ports_keys: ClassVar[tuple[str]] = (*Mode._ports_keys, "out")
-    _offsets_keys: ClassVar[tuple[str]] = (*Mode._offsets_keys, "out")
-
-    def __init__(
-        self,
-        name: str,
-        lo: LabBrick,
-        int_freq: float,
-        ports: dict[str, int],
-        offsets: dict[str, float] = None,
-        operations: dict[str, Pulse] = None,
-        time_of_flight: int = 180,
-        smearing: int = 0,
-    ) -> None:
-        """ """
-        super().__init__(
-            name=name,
-            lo=lo,
-            int_freq=int_freq,
-            ports=ports,
-            offsets=offsets,
-            operations=operations,
-        )
-
-        self.time_of_flight: int = time_of_flight
-        self.smearing: int = smearing
-
-        if "readout_pulse" not in self._operations:
-            self.operations = {  # NOTE integration weight is hard-coded for now
-                "readout_pulse": ConstantPulse(integration_weights=ConstantPulse()),
-            }

@@ -17,21 +17,21 @@ logger.level("WARNING", color="<magenta>")
 logger.level("ERROR", color="<red>")
 
 
-log_record_fmt = (  # customise log record format
+log_record_format = (  # customise log record format
     "<cyan>[{time:YY-MM-DD HH:mm:ss}]</> " "<lvl>{level: <7} [{module}] - {message}</>"
 )
 
 # register log sinks with loguru logger
 logger.add(  # save up to "TRACE" level logs in a log file for debugging
     LOG_FOLDER_PATH / "session.log",
-    format=log_record_fmt,
+    format=log_record_format,
     rotation="24 hours",  # current log file closed and new one started every 24 hours
     retention="1 week",  # log files created more than a week ago will be removed
     level="TRACE",
     backtrace=False,  # no need to save exception trace beyond catching point
 )
 logger.add(  # send logged messages to users
-    sys.stderr, format=log_record_fmt, level="INFO", backtrace=False, diagnose=False
+    sys.stderr, format=log_record_format, level="INFO", backtrace=False, diagnose=True
 )
 
 logger.info("Logger activated")  # log first message

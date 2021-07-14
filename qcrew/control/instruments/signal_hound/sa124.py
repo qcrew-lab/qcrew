@@ -1,7 +1,7 @@
 """ Sa124 class written to support the SA124B's frequency sweep mode. A frequency sweep displays amplitude on the vertical axis and frequency on the horizontal axis """
 
 import time
-from typing import Any, ClassVar
+from typing import ClassVar
 
 import numpy as np
 
@@ -59,12 +59,14 @@ class Sa124(Instrument):
     def __init__(
         self,
         id: int,
+        *,
+        name: str = "SA",
         center: float = default_center,
         span: float = default_span,
         rbw: float = default_rbw,
         ref_power: float = default_ref_power,
     ) -> None:
-        super().__init__(id, name="SA")
+        super().__init__(id, name=name)
         self._handle: int = None  # will be updated by connect()
 
         self.center: float = center
@@ -85,7 +87,7 @@ class Sa124(Instrument):
             self._handle = sa.ACTIVE_CONNECTIONS[self.id]
             return
 
-        logger.info(f"Connecting to {self}, please wait ~7 seconds...")
+        logger.info(f"Connecting to {self}, please wait 7 seconds...")
         self._handle = sa.sa_open_device_by_serial(self.id)["handle"]
         sa.ACTIVE_CONNECTIONS[self.id] = self._handle
         logger.info(f"Connected to {self}")
@@ -113,14 +115,14 @@ class Sa124(Instrument):
         """ """
         return sa.sa_query_sweep_info(self._handle)
 
-    def sweep(self, **sweep_params) -> tuple[np.ndarray, np.ndarray]:
+    def sweep(self, **sweep_params) -> tuple[list[float], list[float]]:
         """ """
         if sweep_params:
             return self._sweep_with_params(**sweep_params)
         amps = sa.sa_get_sweep_64f(self._handle)["max"]
-        return self._freqs, amps  # self._freqs has been updated by _set_sweep()
+        return self._freqs, amps.tolist()  # self._freqs already updated by _set_sweep()
 
-    def _sweep_with_params(self, **sweep_params) -> tuple[np.ndarray, np.ndarray]:
+    def _sweep_with_params(self, **sweep_params) -> tuple[list[float], list[float]]:
         """ """
         self._set_sweep(**sweep_params)
         length, center, span = self.sweep_length, self.center, self.span
@@ -129,7 +131,7 @@ class Sa124(Instrument):
         amps = sa.sa_get_sweep_64f(self._handle)["max"]
         elapsed_time = time.perf_counter() - start_time
         logger.info(f"Sweep done in {elapsed_time:.5}s")
-        return self._freqs, amps  # self._freqs has been updated by _set_sweep()
+        return self._freqs, amps.tolist()  # self._freqs already updated by _set_sweep()
 
     def _set_sweep(self, **sweep_params) -> None:
         """ """
@@ -181,8 +183,7 @@ class Sa124(Instrument):
     def _set_rbw(self, rbw: float) -> None:
         """ """
         start = self.center - (self.span / 2)
-        # is_valid_rbw conditions are obtained from the SA124 API manual
-        is_valid_rbw = False
+        is_valid_rbw = False  # conditions are obtained from the SA124 API manual
         if (rbw == 6e6 and start >= 2e8 and self.span >= 2e8) or rbw == 250e3:
             is_valid_rbw = True
         elif 0.1 <= rbw <= 1e5:

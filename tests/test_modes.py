@@ -1,4 +1,5 @@
 """ Test script for initializing Modes"""
+
 import pprint
 import pathlib
 from qcrew.control.modes.qubit import Qubit
@@ -7,10 +8,9 @@ import qcrew.helpers.yamlizer as yml
 from tests.test_labbrick import TestLabBrick
 from qcrew.control.modes.mode import Mode
 
-CONFIGPATH = pathlib.Path.cwd() / "configs/modes.yml"
+CONFIGPATH = pathlib.Path.cwd() / "configs/coax_a/modes.yml"
 modes = yml.load(CONFIGPATH)
 qubit, rr = modes[0], modes[1]
-
 
 """qubit = Qubit(
     name = "QUBIT",

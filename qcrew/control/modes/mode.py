@@ -2,17 +2,17 @@
 
 from typing import Any, ClassVar
 
-from qm import qua
-
 from qcrew.control.instruments.vaunix.labbrick import LabBrick
 from qcrew.control.pulses.constant_pulse import ConstantPulse
 from qcrew.control.pulses.gaussian_pulse import GaussianPulse
 from qcrew.control.pulses.pulse import Pulse
 from qcrew.helpers import logger
 from qcrew.helpers.parametrizer import Parametrized
+from qcrew.helpers.yamlizer import Yamlable
+from qm import qua
 
 
-class Mode(Parametrized):
+class Mode(Parametrized, Yamlable):
     """ """
 
     _parameters: ClassVar[set[str]] = {
@@ -38,7 +38,7 @@ class Mode(Parametrized):
         """ """
         self._name: str = str(name)  # name is gettable only
 
-        self._lo: LabBrick = lo  # type check done by `lo_freq` property
+        self.lo: LabBrick = lo  # type check done by `lo_freq` property
         self._int_freq: float = int_freq
 
         self._ports: dict[str, int] = {key: None for key in self._ports_keys}
@@ -63,21 +63,23 @@ class Mode(Parametrized):
         """ """
         return f"{type(self).__name__} '{self.name}'"
 
+    def __setattr__(self, name: str, value: Any) -> None:
+        """ """
+        if hasattr(self, "_operations") and name in self._operations:
+            logger.error(f"Use `.operations` to set pulses to {self}")
+            raise AttributeError(f"Can't set {name} directly")
+        return super().__setattr__(name, value)
+
     @property  # name getter
     def name(self) -> str:
         """ """
         return self._name
 
-    @property  # lo instrument object getter
-    def lo(self) -> LabBrick:
-        """ """
-        return self._lo
-
     @property  # lo frequency getter
     def lo_freq(self) -> float:
         """ """
         try:
-            return self._lo.frequency
+            return self.lo.frequency
         except AttributeError as e:
             logger.exception(f"Expect {self} lo of {LabBrick}")
             raise SystemExit("Failed to get lo frequency, exiting...") from e
@@ -86,7 +88,7 @@ class Mode(Parametrized):
     def lo_freq(self, new_lo_freq: float) -> None:
         """ """
         try:
-            self._lo.frequency = new_lo_freq
+            self.lo.frequency = new_lo_freq
         except AttributeError as e:
             logger.exception(f"Expect {self} lo of {LabBrick}")
             raise SystemExit("Failed to set lo frequency, exiting...") from e
@@ -153,8 +155,10 @@ class Mode(Parametrized):
         try:
             for name, pulse in new_operations.items():
                 if isinstance(pulse, Pulse):
-                    self._operations[name] = pulse
+                    if name in self._operations:  # needed for __setattr__ override
+                        del self._operations[name]
                     setattr(self, name, pulse)  # for easy access
+                    self._operations[name] = pulse
                     logger.success(f"Set {self} operation '{name}'")
                 else:
                     logger.warning(f"Invalid value '{pulse}', must be {Pulse}")

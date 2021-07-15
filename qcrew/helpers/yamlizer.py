@@ -11,15 +11,32 @@ from qcrew.helpers import logger
 
 
 def load(path: Path):
-    """ """  # TODO error handling
-    with path.open(mode="r") as file:
-        return yaml.safe_load(file)
+    """ """
+    try:
+        with open(path, mode="r") as file:
+            return yaml.safe_load(file)
+    except AttributeError:
+        logger.error("Bad key found in yaml map")
+        raise
+    except IOError:
+        logger.error(f"Unable to find / open a file at {path}")
+        raise
+    except yaml.YAMLError:
+        logger.error(f"Unrecognized yaml tag found in {path.name}")
+        raise
 
 
-def save(yaml_map, path: Path, mode: str = "w") -> None:
-    """ """  # TODO error handling
-    with path.open(mode=mode) as file:
-        yaml.safe_dump(yaml_map, file, sort_keys=False)
+def save(yaml_map, path: Path) -> None:
+    """ """
+    try:
+        with open(path, mode="w") as file:
+            yaml.safe_dump(yaml_map, file, sort_keys=False)
+    except IOError:
+        logger.error(f"Unable to find / open a file at {path}")
+        raise
+    except yaml.YAMLError:
+        logger.error("Unrecognized value found in yaml map")
+        raise
 
 
 def _sci_not_representer(dumper, value) -> yaml.ScalarNode:

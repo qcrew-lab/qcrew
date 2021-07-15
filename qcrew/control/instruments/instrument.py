@@ -1,16 +1,18 @@
 """ """
+
 from typing import Any
 
 from qcrew.helpers import logger
 from qcrew.helpers.parametrizer import Parametrized
+from qcrew.helpers.yamlizer import Yamlable
 
 
-class Instrument(Parametrized):
+class Instrument(Parametrized, Yamlable):
     """ """
 
     # pylint: disable=redefined-builtin, intentional shadowing of `id`
 
-    def __init__(self, id, name:str) -> None:
+    def __init__(self, id, name: str) -> None:
         """ """
         self._id: Any = id
         self._name: str = str(name)

@@ -28,10 +28,11 @@ logger.add(  # save up to "TRACE" level logs in a log file for debugging
     rotation="24 hours",  # current log file closed and new one started every 24 hours
     retention="1 week",  # log files created more than a week ago will be removed
     level="TRACE",
-    backtrace=False,  # no need to save exception trace beyond catching point
+    backtrace=True,
+    diagnose=True,
 )
 logger.add(  # send logged messages to users
-    sys.stderr, format=log_record_format, level="INFO", backtrace=False, diagnose=True
+    sys.stdout, format=log_record_format, level="INFO", backtrace=False, diagnose=False
 )
 
 logger.info("Logger activated")  # log first message

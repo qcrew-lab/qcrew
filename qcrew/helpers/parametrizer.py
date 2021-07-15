@@ -3,10 +3,9 @@
 from typing import Any, ClassVar
 
 from qcrew.helpers import logger
-from qcrew.helpers.yamlizer import Yamlable
 
 
-class Parametrized(Yamlable):
+class Parametrized:
     """ """
 
     # class variable defining the default parameter set for Parametrized objects
@@ -45,16 +44,3 @@ class Parametrized(Yamlable):
                 else:
                     param_dict[param] = param_value
         return param_dict
-
-    @parameters.setter
-    def parameters(self, new_parameters: dict[str, Any]) -> None:
-        """ """
-        try:
-            for param, value in new_parameters.items():
-                if param in self._parameters:
-                    setattr(self, param, value)
-                else:
-                    logger.warning(f"Unrecognized parameter '{param}'")
-        except TypeError as e:
-            logger.exception(f"Setter expects {dict}, got {new_parameters}")
-            raise SystemExit("Failed to set parameters, exiting...") from e

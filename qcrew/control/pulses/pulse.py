@@ -4,12 +4,13 @@ from numbers import Real
 from typing import ClassVar
 
 import numpy as np
+from qcrew.control.instruments.quantum_machines import BASE_AMP, CLOCK_CYCLE
 from qcrew.helpers import logger
 from qcrew.helpers.parametrizer import Parametrized
-from qcrew.control.instruments.quantum_machines import BASE_AMP, CLOCK_CYCLE
+from qcrew.helpers.yamlizer import Yamlable
 
 
-class Pulse(Parametrized):
+class Pulse(Parametrized, Yamlable):
     """ """
 
     _parameters: ClassVar[set[str]] = {"length", "ampx"}

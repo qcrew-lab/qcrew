@@ -381,7 +381,7 @@ class QMConfig(InfinitelyNestableDict):
                 logger.error(f"One of {wf_name} samples ({min_}, {max_}) out of bounds")
                 raise ValueError(f"Out of bounds ({V_MIN}, {V_MAX})")
             else:
-                wf_config[key] = wave
+                wf_config[s_key] = wave
                 logger.success(f"Set {len(wave)} samples for {wf_name}")
 
     def get_iw_name(self, pulse_name: str, iw_key: str) -> str:

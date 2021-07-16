@@ -29,7 +29,7 @@ def load(path: Path):
 def save(yaml_map, path: Path) -> None:
     """ """
     try:
-        with open(path, mode="w") as file:
+        with open(path, mode="w+") as file:
             yaml.safe_dump(yaml_map, file, sort_keys=False)
     except IOError:
         logger.error(f"Unable to find / open a file at {path}")

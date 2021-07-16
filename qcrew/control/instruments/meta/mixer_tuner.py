@@ -6,9 +6,9 @@ from typing import Callable
 
 import numpy as np
 import scipy.optimize
-from qcrew.control.instruments.quantum_machines.qm_config_builder import QMConfig
+import qcrew.control.instruments.qm as qciqm
 from qcrew.control.instruments.signal_hound.sa124 import Sa124
-from qcrew.control.modes.mode import Mode
+import qcrew.control.modes as qcm
 from qcrew.helpers import logger
 from qm import _Program
 from qm.QmJob import QmJob
@@ -26,15 +26,12 @@ class MixerTuner:
     rbw: float = 50e3
     ref_power: float = 0.0
 
-    def __init__(self, *modes: Mode, sa: Sa124, qm: QuantumMachine) -> None:
+    def __init__(self, *modes: qcm.Mode, sa: Sa124, qm: QuantumMachine) -> None:
         """ """
         self._sa: Sa124 = sa
-        self._sa.span = self.span
-        self._sa.rbw = self.rbw
-        self._sa.ref_power = self.ref_power
         self._qm: QuantumMachine = qm
-        self._modes: tuple[Mode] = modes
-        logger.info(f"Call `.tune()` to tune mixers of {self._modes}")
+        self._modes: tuple[qcm.Mode] = modes
+        logger.info(f"Initialized MixerTuner with {self._modes}")
 
     def tune(self) -> None:
         """ """
@@ -43,15 +40,13 @@ class MixerTuner:
                 mode.lo_freq = mode.lo_freq  # play carrier freq to mode
                 job = self._qm.execute(self._get_qua_program(mode))  # play int freq
                 self._tune_mode(mode, job)
-        except AttributeError as e:
+        except AttributeError:
             logger.error("MixerTuner is initialized with unrecognized arguments")
-            raise SystemExit("Failed to initiate mixer tuning, exiting...") from e
+            raise
         else:
-            self._sa.rbw = Sa124.default_rbw  # restore sa and qm states
-            self._sa.ref_power = Sa124.default_ref_power
             job.halt()
 
-    def _tune_mode(self, mode: Mode, job: QmJob) -> None:
+    def _tune_mode(self, mode: qcm.Mode, job: QmJob) -> None:
         """ """
         for key in ("LO", "SB"):
             center = mode.lo_freq if key == "LO" else mode.lo_freq - mode.int_freq
@@ -63,13 +58,13 @@ class MixerTuner:
             if key == "LO":
                 i_offset, q_offset = self._tune_lo(mode, center_idx, floor)
                 if i_offset is not None and q_offset is not None:
-                    mode.offsets = {"I": i_offset, "Q": q_offset}
+                    mode.mixer_offsets = {"I": i_offset, "Q": q_offset}
             elif key == "SB":
                 g_offset, p_offset = self._tune_sb(mode, job, center_idx, floor)
                 if g_offset is not None and p_offset is not None:
-                    mode.offsets = {"G": g_offset, "P": p_offset}
+                    mode.mixer_offsets = {"G": g_offset, "P": p_offset}
 
-    def _tune_lo(self, mode: Mode, center_idx: int, floor: float) -> tuple[float]:
+    def _tune_lo(self, mode: qcm.Mode, center_idx: int, floor: float) -> tuple[float]:
         """ """
 
         def objective_fn(offsets: tuple[float]) -> float:
@@ -82,11 +77,13 @@ class MixerTuner:
         result = self._minimize(objective_fn)
         return result if result is not None else (None, None)
 
-    def _tune_sb(self, mode: Mode, job: QmJob, center_idx: int, floor: float) -> None:
+    def _tune_sb(
+        self, mode: qcm.Mode, job: QmJob, center_idx: int, floor: float
+    ) -> None:
         """ """
 
         def objective_fn(offsets: tuple[float]) -> float:
-            correction_matrix = QMConfig.get_mixer_correction_matrix(*offsets)
+            correction_matrix = qciqm.QMConfig.get_mixer_correction_matrix(*offsets)
             job.set_element_correction(mode.name, correction_matrix)
             contrast = self._get_contrast(center_idx, floor)
             return contrast
@@ -96,18 +93,19 @@ class MixerTuner:
 
     def _check_tuning(self, center: float) -> tuple[bool, int, float]:
         """ """
-        freqs, amps = self._sa.sweep(center=center)
+        span, rbw, ref_pow = self.span, self.rbw, self.ref_power
+        fs, amps = self._sa.sweep(center=center, span=span, rbw=rbw, ref_power=ref_pow)
         sweep_info = self._sa.sweep_info
         center_idx = math.ceil(sweep_info["sweep_length"] / 2 + 1)
         stop, start = int(center_idx / 2), int(center_idx + (center_idx / 2))
         floor = (np.average(amps[:stop]) + np.average(amps[start:])) / 2
         contrast = amps[center_idx] - floor
         is_tuned = contrast < self.threshold
-        real_center = freqs[center_idx]
-        logger.info(f"Tuning check at {real_center:E}: {contrast = :.5}dBm")
+        real_center = fs[center_idx]
+        logger.debug(f"Tuning check at {real_center:E}: {contrast = :.5}dBm")
         return is_tuned, center_idx, floor
 
-    def _get_qua_program(self, mode: Mode) -> _Program:
+    def _get_qua_program(self, mode: qcm.Mode) -> _Program:
         """ """
         with program() as mixer_tuning:
             with infinite_loop_():
@@ -133,4 +131,4 @@ class MixerTuner:
                 logger.warning(f"Final contrast exceeds threshold by {diff}dBm")
             return result.x
         else:
-            logger.warning(f"Minimization unsuccessful, details: {result.message}")
+            logger.error(f"Minimization unsuccessful, details: {result.message}")

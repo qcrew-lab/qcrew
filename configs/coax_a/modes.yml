@@ -1,15 +1,15 @@
 - !<Qubit>
-  name: qubit
-  lo: 25331
-  int_freq: -5.000000E+07
+  name: QUBIT
+  lo: LB_QUBIT
+  int_freq: -1.000000E+08
   ports:
     I: 1
     Q: 2
   mixer_offsets:
-    I: 0.0069958885549567616
-    Q: -0.006654385034926237
-    G: -0.1877040624851362
-    P: 0.09362514408421704
+    I: 0.0032896532648010197
+    Q: -0.006378329504514115
+    G: -0.16863422393798827
+    P: 0.10583176612854006
   operations:
     constant_pulse: !<ConstantPulse>
       length: 20
@@ -20,18 +20,18 @@
       ampx: 1.5
       drag: 0.0
 - !<Readout>
-  name: rr
-  lo: 25335
-  int_freq: -5.000000E+07
+  name: RR
+  lo: LB_RR
+  int_freq: -1.000000E+07
   ports:
     I: 4
     Q: 3
     out: 1
   mixer_offsets:
-    I: -0.018960010539740325
-    Q: 0.0016848570201545951
-    G: 0.166064453125
-    P: -0.14304199218750002
+    I: -0.02861595079302788
+    Q: 0.0031809721142053646
+    G: 0.15357230007648467
+    P: -0.052300423383712775
     out: 0.0
   operations:
     constant_pulse: !<ConstantPulse>

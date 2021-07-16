@@ -4,8 +4,7 @@ from typing import ClassVar
 
 import numpy as np
 
-from qcrew.control.instruments.quantum_machines import BASE_AMP
-from qcrew.control.pulses.pulse import Pulse
+from qcrew.control.pulses.pulse import BASE_PULSE_AMP, Pulse
 
 
 class GaussianPulse(Pulse):
@@ -43,6 +42,7 @@ class GaussianPulse(Pulse):
         """ """
         start, stop = -self.chop / 2 * self.sigma, self.chop / 2 * self.sigma
         ts = np.linspace(start, stop, self._length)
-        i_wave = BASE_AMP * self.ampx * np.exp(-(ts ** 2) / (2.0 * self.sigma ** 2))
+        exponential = np.exp(-(ts ** 2) / (2.0 * self.sigma ** 2))
+        i_wave = BASE_PULSE_AMP * self.ampx * exponential
         q_wave = self.drag * (np.exp(0.5) / self.sigma) * i_wave
         return i_wave, q_wave

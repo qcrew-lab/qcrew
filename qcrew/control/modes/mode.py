@@ -2,10 +2,8 @@
 
 from typing import Any, ClassVar
 
-from qcrew.control.instruments.vaunix.labbrick import LabBrick
-from qcrew.control.pulses.constant_pulse import ConstantPulse
-from qcrew.control.pulses.gaussian_pulse import GaussianPulse
-from qcrew.control.pulses.pulse import Pulse
+import qcrew.control.instruments as qci
+import qcrew.control.pulses as qcp
 from qcrew.helpers import logger
 from qcrew.helpers.parametrizer import Parametrized
 from qcrew.helpers.yamlizer import Yamlable
@@ -29,16 +27,16 @@ class Mode(Parametrized, Yamlable):
         self,
         *,  # enforce keyword-only arguments
         name: str,
-        lo: LabBrick,
+        lo: qci.LabBrick,
         int_freq: float,
         ports: dict[str, int],
         mixer_offsets: dict[str, float] = None,
-        operations: dict[str, Pulse] = None,
+        operations: dict[str, qcp.Pulse] = None,
     ) -> None:
         """ """
         self._name: str = str(name)  # name is gettable only
 
-        self.lo: LabBrick = lo  # type check done by `lo_freq` property
+        self.lo: qci.LabBrick = lo  # type check done by `lo_freq` property
         self._int_freq: float = int_freq
 
         self._ports: dict[str, int] = {key: None for key in self._ports_keys}
@@ -48,13 +46,13 @@ class Mode(Parametrized, Yamlable):
         if mixer_offsets is not None:
             self.mixer_offsets = mixer_offsets
 
-        self._operations: dict[str, Pulse] = dict()
+        self._operations: dict[str, qcp.Pulse] = dict()
         if operations is not None:  # if user specifies operations, set them
             self.operations = operations
         else:
             self.operations = {  # else set default "unselective" operations
-                "constant_pulse": ConstantPulse(length=1000),
-                "gaussian_pulse": GaussianPulse(sigma=100),
+                "constant_pulse": qcp.ConstantPulse(length=1000),
+                "gaussian_pulse": qcp.GaussianPulse(sigma=100),
             }
 
         logger.info(f"Created {self}")
@@ -80,18 +78,18 @@ class Mode(Parametrized, Yamlable):
         """ """
         try:
             return self.lo.frequency
-        except AttributeError as e:
-            logger.exception(f"Expect {self} lo of {LabBrick}")
-            raise SystemExit("Failed to get lo frequency, exiting...") from e
+        except AttributeError:
+            logger.error(f"Failed to get lo freq, expect {self} lo of {qci.LabBrick}")
+            raise
 
     @lo_freq.setter
     def lo_freq(self, new_lo_freq: float) -> None:
         """ """
         try:
             self.lo.frequency = new_lo_freq
-        except AttributeError as e:
-            logger.exception(f"Expect {self} lo of {LabBrick}")
-            raise SystemExit("Failed to set lo frequency, exiting...") from e
+        except AttributeError:
+            logger.error(f"Failed to set lo freq, expect {self} lo of {qci.LabBrick}")
+            raise
 
     @property  # int_freq getter
     def int_freq(self) -> float:
@@ -119,10 +117,10 @@ class Mode(Parametrized, Yamlable):
                     self._ports[key] = port
                     logger.success(f"Set {self} '{key}' {port = }")
                 else:
-                    logger.warning(f"Invalid key '{key}', {valid_keys = }")
-        except (AttributeError, TypeError) as e:
-            logger.exception(f"Setter expects {dict[str, int]} with {valid_keys = }")
-            raise SystemExit(f"Failed to set {self} ports, exiting...") from e
+                    logger.warning(f"Ignored invalid key '{key}', {valid_keys = }")
+        except (AttributeError, TypeError):
+            logger.error(f"Setter expects {dict[str, int]} with {valid_keys = }")
+            raise
 
     @property  # mixer_offsets getter
     def mixer_offsets(self) -> dict[str, float]:
@@ -139,10 +137,10 @@ class Mode(Parametrized, Yamlable):
                     self._mixer_offsets[key] = offset
                     logger.success(f"Set {self} '{key}' {offset = }")
                 else:
-                    logger.warning(f"Invalid key '{key}', {valid_keys = }")
-        except TypeError as e:
-            logger.exception(f"Setter expects {dict[str, float]} with {valid_keys = }")
-            raise SystemExit(f"Failed to set {self} mixer offsets, exiting...") from e
+                    logger.warning(f"Ignored invalid key '{key}', {valid_keys = }")
+        except TypeError:
+            logger.error(f"Setter expects {dict[str, float]} with {valid_keys = }")
+            raise
 
     @property  # operations getter
     def operations(self) -> dict[str, Any]:
@@ -150,21 +148,21 @@ class Mode(Parametrized, Yamlable):
         return self._operations.copy()
 
     @operations.setter
-    def operations(self, new_operations: dict[str, Pulse]) -> None:
+    def operations(self, new_operations: dict[str, qcp.Pulse]) -> None:
         """ """
         try:
             for name, pulse in new_operations.items():
-                if isinstance(pulse, Pulse):
+                if isinstance(pulse, qcp.Pulse):
                     if name in self._operations:  # needed for __setattr__ override
                         del self._operations[name]
                     setattr(self, name, pulse)  # for easy access
                     self._operations[name] = pulse
                     logger.success(f"Set {self} operation '{name}'")
                 else:
-                    logger.warning(f"Invalid value '{pulse}', must be {Pulse}")
-        except TypeError as e:
-            logger.exception(f"Setter expects {dict[str, Pulse]}")
-            raise SystemExit(f"Failed to set {self} operations, exiting...") from e
+                    logger.warning(f"Invalid value '{pulse}', must be {qcp.Pulse}")
+        except TypeError:
+            logger.error(f"Setter expects {dict[str, qcp.Pulse]}")
+            raise
 
     def remove_operation(self, name: str) -> None:
         """ """
@@ -184,6 +182,6 @@ class Mode(Parametrized, Yamlable):
         """ """  # TODO
         if key not in self._operations:
             logger.error(f"No operation named {key} defined for {self}")
-            raise SystemExit("Failed to play Mode operation, exiting...")
+            raise RuntimeError("Failed to play Mode operation")
 
         qua.play(key * qua.amp(*ampx), self.name, **kwargs)  # TODO

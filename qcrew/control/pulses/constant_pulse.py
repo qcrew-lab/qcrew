@@ -2,8 +2,7 @@
 
 import numpy as np
 
-from qcrew.control.instruments.quantum_machines import BASE_AMP
-from qcrew.control.pulses.pulse import Pulse
+from qcrew.control.pulses.pulse import BASE_PULSE_AMP, Pulse
 
 
 class ConstantPulse(Pulse):
@@ -15,4 +14,6 @@ class ConstantPulse(Pulse):
 
     @property
     def samples(self) -> tuple[np.ndarray]:
-        return np.full(self._length, (BASE_AMP * self.ampx)), np.zeros(self._length)
+        i_wave = np.full(self._length, (BASE_PULSE_AMP * self.ampx))
+        q_wave = np.zeros(self._length)
+        return i_wave, q_wave

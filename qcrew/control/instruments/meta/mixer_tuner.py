@@ -6,9 +6,9 @@ from typing import Callable
 
 import numpy as np
 import scipy.optimize
-from qcrew.control.instruments.quantum_machines.qm_config_builder import QMConfig
+import qcrew.control.instruments.qm as qciqm
 from qcrew.control.instruments.signal_hound.sa124 import Sa124
-from qcrew.control.modes.mode import Mode
+import qcrew.control.modes as qcm
 from qcrew.helpers import logger
 from qm import _Program
 from qm.QmJob import QmJob
@@ -26,11 +26,11 @@ class MixerTuner:
     rbw: float = 50e3
     ref_power: float = 0.0
 
-    def __init__(self, *modes: Mode, sa: Sa124, qm: QuantumMachine) -> None:
+    def __init__(self, *modes: qcm.Mode, sa: Sa124, qm: QuantumMachine) -> None:
         """ """
         self._sa: Sa124 = sa
         self._qm: QuantumMachine = qm
-        self._modes: tuple[Mode] = modes
+        self._modes: tuple[qcm.Mode] = modes
         logger.info(f"Call `.tune()` to tune mixers of {self._modes}")
 
     def tune(self) -> None:
@@ -46,7 +46,7 @@ class MixerTuner:
         else:
             job.halt()
 
-    def _tune_mode(self, mode: Mode, job: QmJob) -> None:
+    def _tune_mode(self, mode: qcm.Mode, job: QmJob) -> None:
         """ """
         for key in ("LO", "SB"):
             center = mode.lo_freq if key == "LO" else mode.lo_freq - mode.int_freq
@@ -64,7 +64,7 @@ class MixerTuner:
                 if g_offset is not None and p_offset is not None:
                     mode.mixer_offsets = {"G": g_offset, "P": p_offset}
 
-    def _tune_lo(self, mode: Mode, center_idx: int, floor: float) -> tuple[float]:
+    def _tune_lo(self, mode: qcm.Mode, center_idx: int, floor: float) -> tuple[float]:
         """ """
 
         def objective_fn(offsets: tuple[float]) -> float:
@@ -77,11 +77,13 @@ class MixerTuner:
         result = self._minimize(objective_fn)
         return result if result is not None else (None, None)
 
-    def _tune_sb(self, mode: Mode, job: QmJob, center_idx: int, floor: float) -> None:
+    def _tune_sb(
+        self, mode: qcm.Mode, job: QmJob, center_idx: int, floor: float
+    ) -> None:
         """ """
 
         def objective_fn(offsets: tuple[float]) -> float:
-            correction_matrix = QMConfig.get_mixer_correction_matrix(*offsets)
+            correction_matrix = qciqm.QMConfig.get_mixer_correction_matrix(*offsets)
             job.set_element_correction(mode.name, correction_matrix)
             contrast = self._get_contrast(center_idx, floor)
             return contrast
@@ -103,7 +105,7 @@ class MixerTuner:
         logger.info(f"Tuning check at {real_center:E}: {contrast = :.5}dBm")
         return is_tuned, center_idx, floor
 
-    def _get_qua_program(self, mode: Mode) -> _Program:
+    def _get_qua_program(self, mode: qcm.Mode) -> _Program:
         """ """
         with program() as mixer_tuning:
             with infinite_loop_():

@@ -1,12 +1,11 @@
 """ """
 
 from pathlib import Path
-from qcrew.control.modes.mode import Mode
-from qcrew.control.instruments.quantum_machines.qm_config_builder import QMConfigBuilder
 
 import Pyro5.api as pyro
+import qcrew.control.instruments.qm as qciqm
+import qcrew.control.modes as qcm
 import qcrew.helpers.yamlizer as yml
-from qcrew.control.instruments.instrument import Instrument
 from qcrew.helpers import logger
 from qm.QuantumMachine import QuantumMachine
 from qm.QuantumMachinesManager import QuantumMachinesManager
@@ -55,11 +54,11 @@ class LocalStage(Stage):
         super()._setup()
 
         # NOTE for now, only support staging modes locally
-        self.modes = [v for v in self._config if isinstance(v, Mode)]
+        self.modes = [v for v in self._config if isinstance(v, qcm.Mode)]
         logger.success(f"Found {len(self.modes)} modes")
 
         self._qmm = QuantumMachinesManager()
-        self._qcb = QMConfigBuilder(*self.modes)
+        self._qcb = qciqm.QMConfigBuilder(*self.modes)
 
     @property  # qm getter
     def QM(self) -> QuantumMachine:
@@ -88,7 +87,7 @@ class RemoteStage(Stage):
         super()._setup()
 
         # NOTE for now, only support serving instruments remotely
-        self.instruments = [v for v in self._config if isinstance(v, Instrument)]
+        self.instruments = [v for v in self._config if isinstance(v, qci.Instrument)]
         logger.success(f"Found {len(self.instruments)} instruments")
         self._serve_instruments()
 

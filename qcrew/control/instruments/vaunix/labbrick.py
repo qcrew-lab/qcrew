@@ -3,8 +3,8 @@
 from typing import ClassVar
 
 import qcrew.control.instruments.vaunix.labbrick_api as vnx
-from qcrew.helpers import logger
 from qcrew.control.instruments.instrument import Instrument
+from qcrew.helpers import logger
 
 
 class LabBrick(Instrument):

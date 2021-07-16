@@ -3,9 +3,7 @@
 from pathlib import Path
 
 import Pyro5.api as pyro
-from qcrew.control.instruments.instrument import Instrument
-from qcrew.control.instruments.signal_hound.sa124 import Sa124
-from qcrew.control.instruments.vaunix.labbrick import LabBrick
+import qcrew.control.instruments as qci
 from qcrew.control.stage.stage import RemoteStage
 from qcrew.helpers import logger
 from qcrew.helpers.parametrizer import Parametrized
@@ -20,7 +18,7 @@ REMOTE_CONFIGPATH = Path("C:/Users/qcrew/qcrew-dev/configs/coax_a/instruments.ym
 
 
 if __name__ == "__main__":
-    remote_classes = {Parametrized, Instrument, LabBrick, Sa124}
+    remote_classes = {Parametrized, qci.Instrument, qci.LabBrick, qci.Sa124}
     for remote_class in remote_classes:
         pyro.expose(remote_class)
     logger.info(f"Exposed qcrew classes: {[cls_.__name__ for cls_ in remote_classes]}")

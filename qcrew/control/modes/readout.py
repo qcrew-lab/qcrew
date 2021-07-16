@@ -1,10 +1,9 @@
 """ """
 
-from qcrew.control.pulses.pulse import Pulse
-from qcrew.control.pulses.constant_pulse import ConstantPulse
-from qcrew.control.instruments.vaunix.labbrick import LabBrick
 from typing import ClassVar
+
 from qcrew.control.modes.mode import Mode
+from qcrew.control.pulses import ConstantPulse
 
 
 class Readout(Mode):

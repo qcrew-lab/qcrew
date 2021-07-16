@@ -4,11 +4,12 @@ from numbers import Real
 from typing import ClassVar
 
 import numpy as np
-from qcrew.control.instruments.quantum_machines import BASE_AMP, CLOCK_CYCLE
 from qcrew.helpers import logger
 from qcrew.helpers.parametrizer import Parametrized
 from qcrew.helpers.yamlizer import Yamlable
 
+BASE_PULSE_AMP = 0.2  # in V
+CLOCK_CYCLE = 4  # in ns
 
 class Pulse(Parametrized, Yamlable):
     """ """
@@ -18,7 +19,7 @@ class Pulse(Parametrized, Yamlable):
     def __init__(
         self,
         *,  # enforce keyword-only arguments
-        length: int,
+        length: int = 400,
         ampx: float = 1.0,
         integration_weights=None,
     ) -> None:
@@ -47,7 +48,7 @@ class Pulse(Parametrized, Yamlable):
                 if name == "_length" and self.is_readout_pulse:  # set constant iw len
                     new_iw_len = int(self._length / CLOCK_CYCLE)
                     logger.info(f"Setting integration weights length = {new_iw_len}...")
-                    self.integration_weights(ampx=1 / BASE_AMP, length=new_iw_len)
+                    self.integration_weights(ampx=1 / BASE_PULSE_AMP, length=new_iw_len)
             elif not is_attribute:
                 cls_name = type(self).__name__
                 logger.warning(f"Parameter '{name}' must be an attribute of {cls_name}")

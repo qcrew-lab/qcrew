@@ -7,10 +7,9 @@ from qcrew.control.stage.stage import LocalStage, RemoteStage
 from qcrew.control.stage.stage_setup import LOCAL_CONFIGPATH
 from qcrew.helpers import logger
 
-# pylint: disable=unused-import, these classes need to be imported for yamlizing to work
+# pylint: disable=unused-import, these imports are needed for yamlizing to work
 
-from qcrew.control.modes.qubit import Qubit
-from qcrew.control.modes.readout import Readout
+import qcrew.control.modes
 
 # pylint: enable=unused-import
 

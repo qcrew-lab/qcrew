@@ -2,10 +2,8 @@
 
 from typing import Any, ClassVar
 
-from qcrew.control.instruments.vaunix.labbrick import LabBrick
-from qcrew.control.pulses.constant_pulse import ConstantPulse
-from qcrew.control.pulses.gaussian_pulse import GaussianPulse
-from qcrew.control.pulses.pulse import Pulse
+import qcrew.control.instruments as qci
+import qcrew.control.pulses as qcp
 from qcrew.helpers import logger
 from qcrew.helpers.parametrizer import Parametrized
 from qcrew.helpers.yamlizer import Yamlable
@@ -29,16 +27,16 @@ class Mode(Parametrized, Yamlable):
         self,
         *,  # enforce keyword-only arguments
         name: str,
-        lo: LabBrick,
+        lo: qci.LabBrick,
         int_freq: float,
         ports: dict[str, int],
         mixer_offsets: dict[str, float] = None,
-        operations: dict[str, Pulse] = None,
+        operations: dict[str, qcp.Pulse] = None,
     ) -> None:
         """ """
         self._name: str = str(name)  # name is gettable only
 
-        self.lo: LabBrick = lo  # type check done by `lo_freq` property
+        self.lo: qci.LabBrick = lo  # type check done by `lo_freq` property
         self._int_freq: float = int_freq
 
         self._ports: dict[str, int] = {key: None for key in self._ports_keys}
@@ -48,13 +46,13 @@ class Mode(Parametrized, Yamlable):
         if mixer_offsets is not None:
             self.mixer_offsets = mixer_offsets
 
-        self._operations: dict[str, Pulse] = dict()
+        self._operations: dict[str, qcp.Pulse] = dict()
         if operations is not None:  # if user specifies operations, set them
             self.operations = operations
         else:
             self.operations = {  # else set default "unselective" operations
-                "constant_pulse": ConstantPulse(length=1000),
-                "gaussian_pulse": GaussianPulse(sigma=100),
+                "constant_pulse": qcp.ConstantPulse(length=1000),
+                "gaussian_pulse": qcp.GaussianPulse(sigma=100),
             }
 
         logger.info(f"Created {self}")
@@ -81,7 +79,7 @@ class Mode(Parametrized, Yamlable):
         try:
             return self.lo.frequency
         except AttributeError as e:
-            logger.exception(f"Expect {self} lo of {LabBrick}")
+            logger.exception(f"Expect {self} lo of {qci.LabBrick}")
             raise SystemExit("Failed to get lo frequency, exiting...") from e
 
     @lo_freq.setter
@@ -90,7 +88,7 @@ class Mode(Parametrized, Yamlable):
         try:
             self.lo.frequency = new_lo_freq
         except AttributeError as e:
-            logger.exception(f"Expect {self} lo of {LabBrick}")
+            logger.exception(f"Expect {self} lo of {qci.LabBrick}")
             raise SystemExit("Failed to set lo frequency, exiting...") from e
 
     @property  # int_freq getter
@@ -150,20 +148,20 @@ class Mode(Parametrized, Yamlable):
         return self._operations.copy()
 
     @operations.setter
-    def operations(self, new_operations: dict[str, Pulse]) -> None:
+    def operations(self, new_operations: dict[str, qcp.Pulse]) -> None:
         """ """
         try:
             for name, pulse in new_operations.items():
-                if isinstance(pulse, Pulse):
+                if isinstance(pulse, qcp.Pulse):
                     if name in self._operations:  # needed for __setattr__ override
                         del self._operations[name]
                     setattr(self, name, pulse)  # for easy access
                     self._operations[name] = pulse
                     logger.success(f"Set {self} operation '{name}'")
                 else:
-                    logger.warning(f"Invalid value '{pulse}', must be {Pulse}")
+                    logger.warning(f"Invalid value '{pulse}', must be {qcp.Pulse}")
         except TypeError as e:
-            logger.exception(f"Setter expects {dict[str, Pulse]}")
+            logger.exception(f"Setter expects {dict[str, qcp.Pulse]}")
             raise SystemExit(f"Failed to set {self} operations, exiting...") from e
 
     def remove_operation(self, name: str) -> None:

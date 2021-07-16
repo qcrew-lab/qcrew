@@ -1,6 +1,6 @@
 - !<Qubit>
-  name: qubit
-  lo: 25331
+  name: QUBIT
+  lo: LB_QUBIT
   int_freq: -5.000000E+07
   ports:
     I: 1
@@ -20,8 +20,8 @@
       ampx: 1.5
       drag: 0.0
 - !<Readout>
-  name: rr
-  lo: 25335
+  name: RR
+  lo: LB_RR
   int_freq: -5.000000E+07
   ports:
     I: 4

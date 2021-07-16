@@ -1,16 +1,16 @@
 - !<LabBrick>
   id: 25331
-  name: lb_qubit
+  name: LB_QUBIT
   frequency: 5.0E+9
   power: 13.0
 - !<LabBrick>
   id: 25335
-  name: lb_rr
+  name: LB_RR
   frequency: 5.0E+9
   power: 13.0
 - !<Sa124>
   id: 19184645
-  name: sa
+  name: SA
   center: 5.0E+9
   span: 1.0E+8
   rbw: 2.5E+5

@@ -1,32 +1,37 @@
-""" """
+""" freq sweep v5 """
 
 import matplotlib.pyplot as plt
-from qm import qua
-from qcrew.control.modes.mode import Mode
+from qcrew.control.instruments.signal_hound.sa124 import Sa124
 from qcrew.control.stage.stagehand import Stagehand
+from qm import qua
 
 
-def get_qua_program(mode: Mode):
+def get_qua_program():
     with qua.program() as play_constant_pulse:
         with qua.infinite_loop_():
             mode.play("constant_pulse")
     return play_constant_pulse
 
 
-if __name__ == " __main__":
+def get_sweep():
+    freqs, amps = sa.sweep(**sweep_parameters)  # get, plot, show sweep
+    plt.plot(freqs, amps)
+
+
+if __name__ == "__main__":
 
     with Stagehand() as stage:
         qubit, rr, sa = stage.QUBIT, stage.RR, stage.SA
 
-        qubit.lo_freq = 5e9
-        qubit.int_freq = -50e6
+        mode = qubit  # select the mode whose spectrum you want to sweep
 
-        rr.lo_freq = 8e9
-        rr.int_freq = -100e6
+        job = stage.QM.execute(get_qua_program())  # play IF to mode
 
-        qm = stage.QM
-        job = qm.execute(get_qua_program(qubit))
-
-        freqs, amps = sa.sweep(center=qubit.lo_freq, span=250e6)
-        plt.plot(freqs, amps)
-        plt.show()
+        sweep_parameters = {  # set sweep parameters
+            "center": mode.lo_freq,
+            "span": 250e6,
+            "rbw": Sa124.default_rbw,
+            "ref_power": Sa124.default_ref_power,
+        }
+        get_sweep()
+        job.halt()

@@ -20,7 +20,6 @@ REMOTE_CONFIGPATH = Path("C:/Users/qcrew/qcrew-dev/configs/coax_a/instruments.ym
 
 
 if __name__ == "__main__":
-
     remote_classes = {Parametrized, Instrument, LabBrick, Sa124}
     for remote_class in remote_classes:
         pyro.expose(remote_class)

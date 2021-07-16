@@ -166,7 +166,7 @@ class Sa124(Instrument):
             logger.error(f"Center out of bounds [{sa.MIN_CENTER, sa.MAX_CENTER}]")
             raise ValueError("Value out of bounds")
         self.center = center
-        logger.success(f"Set frequency sweep center to {self.center:E} Hz")
+        logger.debug(f"Set frequency sweep center to {self.center:E} Hz")
 
     def _set_span(self, span: float) -> None:
         """ """
@@ -178,7 +178,7 @@ class Sa124(Instrument):
             raise ValueError("Value out of bounds")
         else:
             self.span = span
-            logger.success(f"Set frequency sweep span to {self.span:E} Hz")
+            logger.debug(f"Set frequency sweep span to {self.span:E} Hz")
 
     def _set_rbw(self, rbw: float) -> None:
         """ """
@@ -196,7 +196,7 @@ class Sa124(Instrument):
             self.rbw = Sa124.default_rbw
         else:
             self.rbw = rbw
-            logger.success(f"Set frequency sweep rbw to {self.rbw:E} Hz")
+            logger.debug(f"Set frequency sweep rbw to {self.rbw:E} Hz")
 
     def _set_ref_power(self, ref_power: float) -> None:
         """ """
@@ -205,7 +205,7 @@ class Sa124(Instrument):
             self.ref_power = sa.MAX_REF_POWER
         else:
             self.ref_power = ref_power
-            logger.success(f"Set ref power to {self.ref_power} dBm")
+            logger.debug(f"Set ref power to {self.ref_power} dBm")
 
     def disconnect(self) -> None:
         """ """

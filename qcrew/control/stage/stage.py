@@ -3,6 +3,7 @@
 from pathlib import Path
 
 import Pyro5.api as pyro
+import qcrew.control.instruments as qci
 import qcrew.control.instruments.qm as qciqm
 import qcrew.control.modes as qcm
 import qcrew.helpers.yamlizer as yml
@@ -22,7 +23,7 @@ class Stage:
     def _setup(self) -> None:
         """ """
         filename = self._configpath.name
-        logger.info(f"Loading objects from {filename}...")
+        logger.debug(f"Loading objects from {filename}...")
         self._config = yml.load(self._configpath)
 
         try:
@@ -55,7 +56,7 @@ class LocalStage(Stage):
 
         # NOTE for now, only support staging modes locally
         self.modes = [v for v in self._config if isinstance(v, qcm.Mode)]
-        logger.success(f"Found {len(self.modes)} modes")
+        logger.debug(f"Found {len(self.modes)} modes")
 
         self._qmm = QuantumMachinesManager()
         self._qcb = qciqm.QMConfigBuilder(*self.modes)
@@ -88,7 +89,7 @@ class RemoteStage(Stage):
 
         # NOTE for now, only support serving instruments remotely
         self.instruments = [v for v in self._config if isinstance(v, qci.Instrument)]
-        logger.success(f"Found {len(self.instruments)} instruments")
+        logger.debug(f"Found {len(self.instruments)} instruments")
         self._serve_instruments()
 
     def _serve_instruments(self) -> None:
@@ -96,7 +97,7 @@ class RemoteStage(Stage):
         for instrument in self.instruments:
             uri = self._daemon.register(instrument, objectId=instrument.name)
             self._services[instrument.name] = str(uri)
-            logger.success(f"Registered {instrument = } at {uri}")
+            logger.success(f"Served {instrument} at {uri}")
 
     @classmethod
     def get_uri(cls) -> str:
@@ -112,9 +113,9 @@ class RemoteStage(Stage):
         """ """
         super().teardown()
 
-        logger.info("Disconnecting instruments...")
+        logger.debug("Disconnecting instruments...")
         for instrument in self.instruments:
             instrument.disconnect()
 
-        logger.info("Shutting down daemon...")
+        logger.debug("Shutting down daemon...")
         self._daemon.shutdown()

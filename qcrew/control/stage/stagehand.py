@@ -41,7 +41,7 @@ class Stagehand:
 
             for name, uri in remote_stage.services.items():
                 instrument_proxy = pyro.Proxy(uri)
-                logger.success(f"Connected to remote instrument with {name = }")
+                logger.debug(f"Connected to remote instrument with {name = }")
                 self.proxies[name] = instrument_proxy
                 setattr(self.stage, name, instrument_proxy)
                 logger.success(f"Set stage attribute '{name}'")
@@ -50,7 +50,7 @@ class Stagehand:
                 lo_name = mode.lo
                 if lo_name in self.proxies:
                     mode.lo = self.proxies[lo_name]
-                    logger.success(f"Connected {lo_name} as {mode.name} lo")
+                    logger.debug(f"Connected {lo_name} as {mode.name} lo")
 
     def __exit__(self, exc_type, exc_value, exc_traceback) -> None:
         """ """

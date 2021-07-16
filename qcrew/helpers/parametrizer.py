@@ -18,10 +18,10 @@ class Parametrized:
         for param in self._parameters:
             try:
                 param_value = getattr(self, param)
-            except AttributeError as e:
+            except AttributeError:
                 cls_ = type(self).__name__  # get subclass name
-                logger.exception(f"Parameter '{param}' must be an attribute of {cls_}")
-                raise SystemExit("Failed to get parameters, exiting...") from e
+                logger.error(f"Parameter '{param}' must be an attribute of {cls_}")
+                raise
             else:  # get params recursively if Parametrized objects found in param_value
                 if isinstance(param_value, Parametrized):
                     param_dict[param] = param_value.parameters

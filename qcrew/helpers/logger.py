@@ -19,15 +19,17 @@ log_record_format = (  # customise log record format
 )
 
 # register log sinks with loguru logger
-logger.add(  # save up to "TRACE" level logs in a log file for debugging
+logger.add(
     LOG_FOLDER_PATH / "session.log",
     format=log_record_format,
     rotation="24 hours",  # current log file closed and new one started every 24 hours
     retention="1 week",  # log files created more than a week ago will be removed
-    level="TRACE",
+    level="DEBUG",  # save up to "DEBUG" level logs in a log file for debugging
     backtrace=True,
     diagnose=True,
 )
 logger.add(  # send logged messages to users
     sys.stdout, format=log_record_format, level="INFO", backtrace=False, diagnose=False
 )
+
+logger.debug("Logger activated")

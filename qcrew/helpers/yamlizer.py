@@ -80,13 +80,13 @@ class Yamlable(metaclass=YamlableMetaclass):
         for key in yaml_map_keys:
             try:
                 value = getattr(self, key)
-            except AttributeError as e:
-                logger.exception(f"{key} must be an attribute of {self}")
-                raise SystemExit("Failed to create yaml map, exiting...") from e
+            except AttributeError:
+                logger.error(f"Parameter '{key}'' must be an attribute of {self}")
+                raise
             else:
                 if value is not None:
                     yaml_map[key] = value
-        logger.success(f"Created yaml map for {type(self)}")
+        logger.debug(f"Created yaml map for {type(self)}")
         return yaml_map
 
     def _get_yaml_map_keys(self) -> set[str]:
@@ -113,7 +113,7 @@ class Yamlable(metaclass=YamlableMetaclass):
     def from_yaml(cls, loader, node):
         """ """
         parameters = loader.construct_mapping(node, deep=True)
-        logger.info(f"Loading {cls.__name__} from yaml...")
+        logger.debug(f"Loading {cls.__name__} from yaml...")
         try:
             return cls(**parameters)
         except TypeError as te:
@@ -123,5 +123,5 @@ class Yamlable(metaclass=YamlableMetaclass):
     @classmethod
     def to_yaml(cls, dumper, data) -> yaml.MappingNode:
         """ """
-        logger.info(f"Dumping {cls.__name__} to yaml...")
+        logger.debug(f"Dumping {cls.__name__} to yaml...")
         return dumper.represent_mapping(data.yaml_tag, data.yaml_map)

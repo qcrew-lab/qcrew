@@ -47,7 +47,7 @@ class Pulse(Parametrized, Yamlable):
                 setattr(self, name, value)
                 if name == "_length" and self.is_readout_pulse:  # set constant iw len
                     new_iw_len = int(self._length / CLOCK_CYCLE)
-                    logger.info(f"Setting integration weights length = {new_iw_len}...")
+                    logger.debug(f"Setting integration weights len = {new_iw_len}...")
                     self.integration_weights(ampx=1 / BASE_PULSE_AMP, length=new_iw_len)
             elif not is_attribute:
                 cls_name = type(self).__name__

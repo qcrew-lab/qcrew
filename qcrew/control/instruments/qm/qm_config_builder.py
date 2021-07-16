@@ -66,39 +66,39 @@ class QMConfig(InfinitelyNestableDict):
                     mixer_config_schema = {key: None for key in mixer_config_keys}
                     self["mixers"][mixer_name] = [mixer_config_schema]
                     self["elements"][mode.name]["mixInputs"]["mixer"] = mixer_name
-                    logger.success(f"Set '{mixer_name}' for {mode}")
-            except AttributeError as e:
-                logger.exception(f"Failed to determine if {mode} has mix inputs")
-                raise SystemExit("Failed to set mixers in QM config, exiting...") from e
+                    logger.debug(f"Set '{mixer_name}' for {mode}")
+            except AttributeError:
+                logger.error(f"Failed to set mixer, cant tell if {mode} has mix inputs")
+                raise
 
     def set_lo_freq(self, mode: qcm.Mode, old_value: dict[str, Any] = None) -> None:
         """ """
         try:
             lo_freq = int(mode.lo_freq)
-        except AttributeError as e:
-            logger.exception(f"Failed to get {mode} lo frequency")
-            raise SystemExit("Failed to set lo freq in QM config, exiting...") from e
-        except (TypeError, ValueError) as e:
-            logger.exception(f"Invalid {mode} lo_freq value, expect ({int},{float})")
-            raise SystemExit("Failed to set lo freq in QM config, exiting...") from e
+        except AttributeError:
+            logger.error(f"Failed to get {mode} lo freq and set it in QM config")
+            raise
+        except (TypeError, ValueError):
+            logger.error(f"Invalid {mode} lo freq value, expect ({int},{float})")
+            raise
         else:
             self["elements"][mode.name]["mixInputs"]["lo_frequency"] = lo_freq
             self["mixers"][self.get_mixer_name(mode.name)][0]["lo_frequency"] = lo_freq
             old_value = None if old_value is None else old_value
-            logger.success(f"Set {mode} lo freq from {old_value} to {lo_freq}")
+            logger.debug(f"Set {mode} lo freq from {old_value} to {lo_freq}")
 
     def set_int_freq(self, mode: qcm.Mode, old_value: float = None) -> None:
         """ """
         try:
             int_freq = int(mode.int_freq)
-        except (TypeError, ValueError) as e:
-            logger.exception(f"Invalid {mode} int_freq value, expect ({int},{float})")
-            raise SystemExit("Failed to set int freq in QM config, exiting...") from e
+        except (TypeError, ValueError):
+            logger.error(f"Invalid {mode} int freq value, expect ({int},{float})")
+            raise
         else:
             self["elements"][mode.name]["intermediate_frequency"] = int_freq
             mixer_name = self.get_mixer_name(mode.name)
             self["mixers"][mixer_name][0]["intermediate_frequency"] = int_freq
-            logger.success(f"Set {mode} int freq from {old_value} to {int_freq}")
+            logger.debug(f"Set {mode} int freq from {old_value} to {int_freq}")
 
     def set_ports(self, mode: qcm.Mode, old_ports: dict[str, int] = None) -> None:
         """ """
@@ -114,7 +114,7 @@ class QMConfig(InfinitelyNestableDict):
             try:
                 self.set_controller_port(mode, key, port_num)
             except TypeError:
-                logger.exception(f"Expect port number of {int}, got {port_num}")
+                logger.error(f"Expect port number of {int}, got {port_num}")
                 raise
             else:
                 self.set_element_port(mode, key, port_num)
@@ -130,7 +130,7 @@ class QMConfig(InfinitelyNestableDict):
                 raise ValueError(f"Out of bounds [{AO_MIN}, {AO_MAX}]")
 
             controllers_config["analog_outputs"][port_num]["offset"] = offset
-            logger.success(f"Set {mode} AO port {port_num} with {offset = }")
+            logger.debug(f"Set {mode} AO port {port_num} with {offset = }")
 
         elif key == "out":
             if not AI_MIN <= port_num <= AI_MAX:
@@ -138,7 +138,7 @@ class QMConfig(InfinitelyNestableDict):
                 raise ValueError(f"Out of bounds [{AI_MIN}, {AI_MAX}]")
 
             controllers_config["analog_inputs"][port_num]["offset"] = offset
-            logger.success(f"Set {mode} AI port {port_num} with {offset = }")
+            logger.debug(f"Set {mode} AI port {port_num} with {offset = }")
 
     def set_element_port(self, mode: qcm.Mode, key: str, port_num: int) -> None:
         """ """
@@ -176,9 +176,9 @@ class QMConfig(InfinitelyNestableDict):
             cos = np.cos(p)
             sin = np.sin(p)
             coeff = 1 / ((1 - g ** 2) * (2 * cos ** 2 - 1))
-        except TypeError as e:
-            logger.exception(f"Invalid offset value(s), expect {float}")
-            raise SystemExit("Failed to set offsets in QM config, exiting...") from e
+        except TypeError:
+            logger.error(f"Invalid offset value(s), expect {float}")
+            raise
         else:
             array = ((1 - g) * cos, (1 + g) * sin, (1 - g) * sin, (1 + g) * cos)
             return tuple(float(coeff * x) for x in array)
@@ -193,7 +193,7 @@ class QMConfig(InfinitelyNestableDict):
                 raise ValueError(f"Out of bounds ({MCM_MIN}, {MCM_MAX})")
 
         self["mixers"][mixer][0]["correction"] = correction_matrix
-        logger.success(f"Set '{mixer}' correction matrix to {correction_matrix}")
+        logger.debug(f"Set '{mixer}' correction matrix to {correction_matrix}")
 
     def set_dc_offset(self, mode: qcm.Mode, key: str, offset: float) -> None:
         """ """
@@ -201,45 +201,45 @@ class QMConfig(InfinitelyNestableDict):
             if not V_MIN < offset < V_MAX:
                 logger.error(f"DC {offset = } out of bounds")
                 raise ValueError(f"Out of bounds ({V_MIN}, {V_MAX})")
-        except TypeError as e:
-            logger.exception(f"Invalid offset value(s), expect {float}")
-            raise SystemExit("Failed to set offsets in QM config, exiting...") from e
+        except TypeError:
+            logger.error(f"Invalid offset value(s), expect {float}")
+            raise
 
         controller_config = self["controllers"][CONTROLLER_NAME]
         ports = mode.ports
 
         if key == "out":
             controller_config["analog_inputs"][ports[key]]["offset"] = offset
-            logger.success(f"Set {mode} AI DC {offset = }")
+            logger.debug(f"Set {mode} AI DC {offset = }")
         elif key in ("I", "Q"):
             controller_config["analog_outputs"][ports[key]]["offset"] = offset
-            logger.success(f"Set {mode} AO DC '{key}' {offset = }")
+            logger.debug(f"Set {mode} AO DC '{key}' {offset = }")
 
     def set_time_of_flight(self, mode: qcm.Mode, old_value: int = None) -> None:
         """ """
         try:
             tof = int(mode.time_of_flight)
-        except (TypeError, ValueError) as e:
-            logger.exception(f"Invalid {mode} time of flight value, expect {int}")
-            raise SystemExit("Failed to set tof in QM config, exiting...") from e
+        except (TypeError, ValueError):
+            logger.error(f"Invalid {mode} time of flight value, expect {int}")
+            raise
         else:
             if tof % CLOCK_CYCLE != 0:
                 tof = CLOCK_CYCLE * round(tof / CLOCK_CYCLE)
-                logger.warning(f"Rounded tof to nearest multiple of {CLOCK_CYCLE}")
+                logger.warning(f"Rounded {mode} tof to multiple of {CLOCK_CYCLE}")
 
             self["elements"][mode.name]["time_of_flight"] = tof
-            logger.success(f"Set {mode} time of flight from {old_value} to {tof}")
+            logger.debug(f"Set {mode} time of flight from {old_value} to {tof}")
 
     def set_smearing(self, mode: qcm.Mode, old_value: int = None) -> None:
         """ """
         try:
             smearing = int(mode.smearing)
-        except (TypeError, ValueError) as e:
-            logger.exception(f"Invalid {mode} smearing value, expect {int}")
-            raise SystemExit("Failed to set smearing in QM config, exiting...") from e
+        except (TypeError, ValueError):
+            logger.error(f"Invalid {mode} smearing value, expect {int}")
+            raise
         else:
             self["elements"][mode.name]["smearing"] = smearing
-            logger.success(f"Set {mode} smearing from {old_value} to {smearing}")
+            logger.debug(f"Set {mode} smearing from {old_value} to {smearing}")
 
     def set_operations(self, mode: qcm.Mode, old_ops: dict[str, Any] = None) -> None:
         """ """
@@ -252,7 +252,7 @@ class QMConfig(InfinitelyNestableDict):
 
             if old_ops is None or op_name not in old_ops:  # new op added
                 ops_config[op_name] = pulse_name
-                logger.info(f"Adding '{pulse_name}' to QM config...")
+                logger.debug(f"Adding '{pulse_name}' to QM config...")
                 self.add_pulse(pulse, pulse_name)  # getattr gets Pulse
                 old_op_parameters = {key: None for key in op_parameters}  # to check eq
                 self.set_pulse(pulse, pulse_name, op_parameters, old_op_parameters)
@@ -264,7 +264,7 @@ class QMConfig(InfinitelyNestableDict):
         if old_ops is not None:
             for old_op_name in old_ops.keys():  # delete any old_ops that remain
                 del ops_config[old_op_name]
-                logger.info(f"Deleting {mode} operation '{old_op_name}'...")
+                logger.debug(f"Deleting {mode} operation '{old_op_name}'...")
                 self.delete_pulse(self.get_pulse_name(mode.name, old_op_name))
 
     def get_pulse_name(self, mode_name: str, op_name: str) -> str:
@@ -328,9 +328,9 @@ class QMConfig(InfinitelyNestableDict):
         """ """
         try:
             length = int(new_len)
-        except (TypeError, ValueError) as e:
-            logger.exception(f"Invalid {pulse_name} length, must be {int}")
-            raise SystemExit("Failed to set pulse len in QM config, exiting...") from e
+        except (TypeError, ValueError):
+            logger.error(f"Invalid {pulse_name} length, must be {int}")
+            raise
         else:
             l_min = MIN_PULSE_LEN
             if length % CLOCK_CYCLE != 0 or length < l_min:
@@ -338,7 +338,7 @@ class QMConfig(InfinitelyNestableDict):
                 raise ValueError(f"Invalid {pulse_name} length")
 
             self["pulses"][pulse_name]["length"] = length
-            logger.success(f"Set '{pulse_name}' length from {old_len} to {length}")
+            logger.debug(f"Set '{pulse_name}' length from {old_len} to {length}")
 
     def set_waveforms(self, pulse: qcp.Pulse, pulse_name: str) -> None:
         """ """
@@ -376,7 +376,7 @@ class QMConfig(InfinitelyNestableDict):
                 raise ValueError(f"Out of bounds ({V_MIN}, {V_MAX})")
             else:
                 wf_config[samples_key] = wave  # samples_key == "sample" or "samples"
-                logger.success(f"Set {wf_name} sample = {wave}")
+                logger.debug(f"Set {wf_name} sample = {wave}")
         elif type_ == "arbitrary":
             min_, max_ = min(wave), max(wave)
             if min_ <= V_MIN or max_ >= V_MAX:
@@ -384,7 +384,7 @@ class QMConfig(InfinitelyNestableDict):
                 raise ValueError(f"Out of bounds ({V_MIN}, {V_MAX})")
             else:
                 wf_config[samples_key] = wave
-                logger.success(f"Set {len(wave)} samples for {wf_name}")
+                logger.debug(f"Set {len(wave)} samples for {wf_name}")
 
     def get_iw_name(self, pulse_name: str, iw_key: str) -> str:
         """ """
@@ -397,7 +397,7 @@ class QMConfig(InfinitelyNestableDict):
             iw_name = self.get_iw_name(pulse_name, iw_key)
             self["pulses"][pulse_name]["integration_weights"][iw_key] = iw_name
             self["integration_weights"][iw_name] = iw_config
-        logger.success(f"Set integration weights for {pulse_name}")
+        logger.debug(f"Set integration weights for {pulse_name}")
 
 
 class QMConfigBuilder:
@@ -420,36 +420,36 @@ class QMConfigBuilder:
         for mode in modes:
             if not isinstance(mode, qcm.Mode):
                 logger.error(f"All QMConfigBuilder init *args must be of {qcm.Mode}")
-                raise SystemExit("Failed to initialize QMConfigBuilder, exiting...")
+                raise TypeError(f"{mode} is not of {qcm.Mode}")
             self._modes.add(mode)
             self._state_map[mode.name] = None
 
         if len(self._state_map) != len(modes):
             logger.error(f"Mode names must be unique, found duplicate name in {modes}")
-            raise SystemExit("Failed to initialize QMConfigBuilder, exiting...")
+            raise RuntimeError("Failed to initialize QMConfigBuilder, exiting...")
 
     @property  # qm config getter
     def config(self) -> dict[str, Any]:
         """ """
         if not self._config:  # build QMConfig for the first time
-            logger.info("Initializing QM config...")
+            logger.debug("Initializing QM config...")
             self._config.set_version()
             self._config.set_controllers()
             self._config.set_mixers(*self._modes)  # unpack set -> tuple
         self._build_config()
-        logger.info("Done building QM config!")
+        logger.info(f"Done building QM config for {self._modes}")
         return self._config
 
     def _build_config(self) -> None:
         """ """
         for mode in self._modes:
-            logger.info(f"Building QMConfig for {mode}...")
+            logger.debug(f"Building QMConfig for {mode}...")
             curr_state = mode.parameters  # curr means current
             prev_state = self._state_map[mode.name]  # prev means previous
             for parameter in curr_state:  # build config only if parameter value changed
                 curr_value = curr_state[parameter]
                 prev_value = None if prev_state is None else prev_state[parameter]
                 if curr_value != prev_value and parameter in QMConfig.setters:
-                    logger.info(f"Updating {mode} {parameter}...")
+                    logger.debug(f"Updating {mode} {parameter}...")
                     getattr(self._config, QMConfig.setters[parameter])(mode, prev_value)
             self._state_map[mode.name] = curr_state  # update prev state for next build

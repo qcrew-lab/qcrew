@@ -31,7 +31,7 @@ class MixerTuner:
         self._sa: Sa124 = sa
         self._qm: QuantumMachine = qm
         self._modes: tuple[qcm.Mode] = modes
-        logger.info(f"Call `.tune()` to tune mixers of {self._modes}")
+        logger.info(f"Initialized MixerTuner with {self._modes}")
 
     def tune(self) -> None:
         """ """
@@ -40,9 +40,9 @@ class MixerTuner:
                 mode.lo_freq = mode.lo_freq  # play carrier freq to mode
                 job = self._qm.execute(self._get_qua_program(mode))  # play int freq
                 self._tune_mode(mode, job)
-        except AttributeError as e:
+        except AttributeError:
             logger.error("MixerTuner is initialized with unrecognized arguments")
-            raise SystemExit("Failed to initiate mixer tuning, exiting...") from e
+            raise
         else:
             job.halt()
 
@@ -102,7 +102,7 @@ class MixerTuner:
         contrast = amps[center_idx] - floor
         is_tuned = contrast < self.threshold
         real_center = fs[center_idx]
-        logger.info(f"Tuning check at {real_center:E}: {contrast = :.5}dBm")
+        logger.debug(f"Tuning check at {real_center:E}: {contrast = :.5}dBm")
         return is_tuned, center_idx, floor
 
     def _get_qua_program(self, mode: qcm.Mode) -> _Program:
@@ -131,4 +131,4 @@ class MixerTuner:
                 logger.warning(f"Final contrast exceeds threshold by {diff}dBm")
             return result.x
         else:
-            logger.warning(f"Minimization unsuccessful, details: {result.message}")
+            logger.error(f"Minimization unsuccessful, details: {result.message}")

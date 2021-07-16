@@ -11,11 +11,13 @@ from qcrew.helpers import logger
 from qcrew.helpers.parametrizer import Parametrized
 
 
-LOCAL_CONFIGPATH = Path("C:/Users/qcrew/qcrew-dev/configs/modes.yml")
+LOCAL_CONFIGPATH = Path("C:/Users/qcrew/qcrew-dev/configs/coax_a/modes.yml")
 """ Path to the yml config containing modes to be instantiated locally """
 
-REMOTE_CONFIGPATH = Path("C:/Users/qcrew/qcrew-dev/configs/instruments.yml")
+
+REMOTE_CONFIGPATH = Path("C:/Users/qcrew/qcrew-dev/configs/coax_a/instruments.yml")
 """ Path to the yml config containing instruments to be served remotely """
+
 
 if __name__ == "__main__":
 

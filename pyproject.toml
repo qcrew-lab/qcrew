@@ -15,6 +15,7 @@ matplotlib = "^3.4.2"
 scipy = { version = "^1.7.0", python = ">=3.9, <3.10" }
 ipython = "^7.25.0"
 h5py = "^3.3.0"
+ipykernel = "^6.0.2"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"

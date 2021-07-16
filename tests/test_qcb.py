@@ -1,14 +1,18 @@
 import pprint
 import pathlib
 
-from qcrew.control.modes.mode import Mode, ReadoutMode
+from qm.QuantumMachinesManager import QuantumMachinesManager
+
+from qcrew.control.modes.mode import Mode
 from qcrew.control.instruments.quantum_machines.qm_config_builder import QMConfigBuilder
-from qcrew.control.pulses.pulses import Pulse, ConstantPulse, GaussianPulse
+from qcrew.control.pulses.pulse import Pulse
+from qcrew.control.pulses.constant_pulse import ConstantPulse
+from qcrew.control.pulses.gaussian_pulse import GaussianPulse
 from tests.test_labbrick import TestLabBrick
 from tests.test_mixer_tuner import TestMixerTuner
 import qcrew.helpers.yamlizer as yml
 from qcrew.control.modes.qubit import Qubit
-from qcrew.control.modes.readout_resonator import ReadoutResonator
+from qcrew.control.modes.readout import Readout
 
 # get modes from yml config
 CONFIGPATH = pathlib.Path.cwd() / "tests/test_config.yml"
@@ -17,7 +21,10 @@ qubit, rr = modes[0], modes[1]
 qcb = QMConfigBuilder(qubit, rr)
 config = qcb.config
 
-# change lo freq
+qmm = QuantumMachinesManager()
+qm = qmm.open_qm(config)
+
+"""# change lo freq
 qubit.lo_freq = 5.0e9
 rr.lo_freq = 8.0e9
 config = qcb.config
@@ -43,3 +50,4 @@ config = qcb.config
 
 # save modes to config
 yml.save(modes, CONFIGPATH)
+"""

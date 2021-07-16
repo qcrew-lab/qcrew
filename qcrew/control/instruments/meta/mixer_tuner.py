@@ -29,9 +29,6 @@ class MixerTuner:
     def __init__(self, *modes: Mode, sa: Sa124, qm: QuantumMachine) -> None:
         """ """
         self._sa: Sa124 = sa
-        self._sa.span = self.span
-        self._sa.rbw = self.rbw
-        self._sa.ref_power = self.ref_power
         self._qm: QuantumMachine = qm
         self._modes: tuple[Mode] = modes
         logger.info(f"Call `.tune()` to tune mixers of {self._modes}")
@@ -47,8 +44,6 @@ class MixerTuner:
             logger.error("MixerTuner is initialized with unrecognized arguments")
             raise SystemExit("Failed to initiate mixer tuning, exiting...") from e
         else:
-            self._sa.rbw = Sa124.default_rbw  # restore sa and qm states
-            self._sa.ref_power = Sa124.default_ref_power
             job.halt()
 
     def _tune_mode(self, mode: Mode, job: QmJob) -> None:
@@ -63,11 +58,11 @@ class MixerTuner:
             if key == "LO":
                 i_offset, q_offset = self._tune_lo(mode, center_idx, floor)
                 if i_offset is not None and q_offset is not None:
-                    mode.offsets = {"I": i_offset, "Q": q_offset}
+                    mode.mixer_offsets = {"I": i_offset, "Q": q_offset}
             elif key == "SB":
                 g_offset, p_offset = self._tune_sb(mode, job, center_idx, floor)
                 if g_offset is not None and p_offset is not None:
-                    mode.offsets = {"G": g_offset, "P": p_offset}
+                    mode.mixer_offsets = {"G": g_offset, "P": p_offset}
 
     def _tune_lo(self, mode: Mode, center_idx: int, floor: float) -> tuple[float]:
         """ """
@@ -96,14 +91,15 @@ class MixerTuner:
 
     def _check_tuning(self, center: float) -> tuple[bool, int, float]:
         """ """
-        freqs, amps = self._sa.sweep(center=center)
+        span, rbw, ref_pow = self.span, self.rbw, self.ref_power
+        fs, amps = self._sa.sweep(center=center, span=span, rbw=rbw, ref_power=ref_pow)
         sweep_info = self._sa.sweep_info
         center_idx = math.ceil(sweep_info["sweep_length"] / 2 + 1)
         stop, start = int(center_idx / 2), int(center_idx + (center_idx / 2))
         floor = (np.average(amps[:stop]) + np.average(amps[start:])) / 2
         contrast = amps[center_idx] - floor
         is_tuned = contrast < self.threshold
-        real_center = freqs[center_idx]
+        real_center = fs[center_idx]
         logger.info(f"Tuning check at {real_center:E}: {contrast = :.5}dBm")
         return is_tuned, center_idx, floor
 

@@ -1,8 +1,8 @@
 """ freq sweep v5 """
 
 import matplotlib.pyplot as plt
-from qcrew.control.instruments.signal_hound.sa124 import Sa124
-from qcrew.control.stage.stagehand import Stagehand
+from qcrew.control import Stagehand
+from qcrew.control.instruments import Sa124
 from qm import qua
 
 
@@ -23,7 +23,7 @@ if __name__ == "__main__":
     with Stagehand() as stage:
         qubit, rr, sa = stage.QUBIT, stage.RR, stage.SA
 
-        mode = qubit  # select the mode whose spectrum you want to sweep
+        mode = rr  # select the mode whose spectrum you want to sweep
 
         job = stage.QM.execute(get_qua_program())  # play IF to mode
 

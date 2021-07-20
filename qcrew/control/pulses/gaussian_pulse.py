@@ -35,13 +35,13 @@ class GaussianPulse(Pulse):
     ) -> None:
         """ """
         length = int(sigma * chop) if chop is not None else int(sigma * self.chop)
-        super().__call__(sigma=sigma, chop=chop, ampx=ampx, drag=drag, _length=length)
+        super().__call__(sigma=sigma, chop=chop, ampx=ampx, drag=drag, length=length)
 
     @property
     def samples(self) -> tuple[np.ndarray]:
         """ """
         start, stop = -self.chop / 2 * self.sigma, self.chop / 2 * self.sigma
-        ts = np.linspace(start, stop, self._length)
+        ts = np.linspace(start, stop, self.length)
         exponential = np.exp(-(ts ** 2) / (2.0 * self.sigma ** 2))
         i_wave = BASE_PULSE_AMP * self.ampx * exponential
         q_wave = self.drag * (np.exp(0.5) / self.sigma) * i_wave

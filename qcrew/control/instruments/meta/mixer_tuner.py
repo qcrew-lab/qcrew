@@ -6,10 +6,12 @@ from typing import Callable
 
 import numpy as np
 import scipy.optimize
+
 import qcrew.control.instruments.qm as qciqm
 from qcrew.control.instruments.signal_hound.sa124 import Sa124
 import qcrew.control.modes as qcm
 from qcrew.helpers import logger
+
 from qm import _Program
 from qm.QmJob import QmJob
 from qm.qua import infinite_loop_, program

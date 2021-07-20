@@ -48,12 +48,12 @@ def _sci_not_representer(dumper, value) -> yaml.ScalarNode:
     return dumper.represent_scalar(yaml_float_tag, value_in_sci_not)
 
 
-class YamlableMetaclass(type):
+class YamlizableMetaclass(type):
     """ """
 
     def __init__(cls, name, bases, kwds) -> None:
         """ """
-        super(YamlableMetaclass, cls).__init__(name, bases, kwds)
+        super(YamlizableMetaclass, cls).__init__(name, bases, kwds)
         cls.yaml_tag = name  # set a consistent format for subclass yaml tags
         # register safe loader and safe dumper
         cls.yaml_loader, cls.yaml_dumper = yaml.SafeLoader, yaml.SafeDumper
@@ -69,7 +69,7 @@ class YamlableMetaclass(type):
         return f"<class '{cls.__name__}'>"
 
 
-class Yamlable(metaclass=YamlableMetaclass):
+class Yamlizable(metaclass=YamlizableMetaclass):
     """ """
 
     @property
@@ -116,9 +116,9 @@ class Yamlable(metaclass=YamlableMetaclass):
         logger.debug(f"Loading {cls.__name__} from yaml...")
         try:
             return cls(**parameters)
-        except TypeError as te:
+        except TypeError:
             logger.error(f"{cls.__name__} yaml map is incompatible with its __init__()")
-            raise SystemExit(f"Failed to load {cls.__name__}, exiting...") from te
+            raise
 
     @classmethod
     def to_yaml(cls, dumper, data) -> yaml.MappingNode:

@@ -1,6 +1,6 @@
 import qcrew.helpers.yamlizer as yml
 
-class TestLabBrick(yml.Yamlable):
+class TestLabBrick(yml.Yamlizable):
 
     _parameters = {"frequency"}
 

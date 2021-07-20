@@ -4,10 +4,10 @@ from typing import Any
 
 from qcrew.helpers import logger
 from qcrew.helpers.parametrizer import Parametrized
-from qcrew.helpers.yamlizer import Yamlable
+from qcrew.helpers.yamlizer import Yamlizable
 
 
-class Instrument(Parametrized, Yamlable):
+class Instrument(Parametrized, Yamlizable):
     """ """
 
     # pylint: disable=redefined-builtin, intentional shadowing of `id`

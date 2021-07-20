@@ -1,6 +1,6 @@
 import qcrew.helpers.yamlizer as yml
 
-class TestMode(yml.Yamlable):
+class TestMode(yml.Yamlizable):
 
     _parameters = {"lo_freq", "int_freq", "ports"}
 

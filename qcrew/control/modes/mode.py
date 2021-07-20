@@ -6,11 +6,12 @@ import qcrew.control.instruments as qci
 import qcrew.control.pulses as qcp
 from qcrew.helpers import logger
 from qcrew.helpers.parametrizer import Parametrized
-from qcrew.helpers.yamlizer import Yamlable
+from qcrew.helpers.yamlizer import Yamlizable
+
 from qm import qua
 
 
-class Mode(Parametrized, Yamlable):
+class Mode(Parametrized, Yamlizable):
     """ """
 
     _parameters: ClassVar[set[str]] = {
@@ -21,7 +22,7 @@ class Mode(Parametrized, Yamlable):
         "operations",  # dict[str, Pulse] of operations that can be played to the Mode
     }
     _ports_keys: ClassVar[tuple[str]] = ("I", "Q")
-    _offsets_keys: ClassVar[tuple[str]] = ("I", "Q", "G", "P")
+    _mixer_offsets_keys: ClassVar[tuple[str]] = ("I", "Q", "G", "P")
 
     def __init__(
         self,
@@ -37,23 +38,24 @@ class Mode(Parametrized, Yamlable):
         self._name: str = str(name)  # name is gettable only
 
         self.lo: qci.LabBrick = lo  # type check done by `lo_freq` property
-        self._int_freq: float = int_freq
+        self.int_freq: float = int_freq
 
         self._ports: dict[str, int] = {key: None for key in self._ports_keys}
         self.ports = ports
 
-        self._mixer_offsets: dict[str, float] = {key: 0.0 for key in self._offsets_keys}
+        self._mixer_offsets: dict[str, float] = dict()
         if mixer_offsets is not None:
             self.mixer_offsets = mixer_offsets
+        else:
+            self._mixer_offsets = {key: 0.0 for key in self._mixer_offsets_keys}
 
         self._operations: dict[str, qcp.Pulse] = dict()
-        if operations is not None:  # if user specifies operations, set them
+        if operations is not None:
             self.operations = operations
-        else:
-            self.operations = {  # else set default "unselective" operations
-                "constant_pulse": qcp.ConstantPulse(length=1000),
-                "gaussian_pulse": qcp.GaussianPulse(sigma=100),
-            }
+        else:  # set default "unselective" operations
+            cst_pulse = qcp.ConstantPulse(length=1000)
+            gau_pulse = qcp.GaussianPulse(sigma=100)
+            self.operations = {"constant_pulse": cst_pulse, "gaussian_pulse": gau_pulse}
 
         logger.info(f"Created {self}")
 
@@ -91,17 +93,6 @@ class Mode(Parametrized, Yamlable):
             logger.error(f"Failed to set lo freq, expect {self} lo of {qci.LabBrick}")
             raise
 
-    @property  # int_freq getter
-    def int_freq(self) -> float:
-        """ """
-        return self._int_freq
-
-    @int_freq.setter
-    def int_freq(self, new_int_freq: float) -> None:
-        """ """
-        self._int_freq = new_int_freq
-        logger.success(f"Set {self} intermediate frequency to {new_int_freq:E}Hz")
-
     @property  # ports getter
     def ports(self) -> dict[str, int]:
         """ """
@@ -130,7 +121,7 @@ class Mode(Parametrized, Yamlable):
     @mixer_offsets.setter
     def mixer_offsets(self, new_offsets: dict[str, float]) -> None:
         """ """
-        valid_keys = self._offsets_keys
+        valid_keys = self._mixer_offsets_keys
         try:
             for key, offset in new_offsets.items():
                 if key in valid_keys:
@@ -178,10 +169,21 @@ class Mode(Parametrized, Yamlable):
         """ """
         return self._ports["I"] is not None and self._ports["Q"] is not None
 
-    def play(self, key: str, ampx: tuple[float] = (1.0,), **kwargs) -> None:
-        """ """  # TODO
+    def play(self, key: str, ampx = 1.0, **kwargs) -> None:
+        """ """
         if key not in self._operations:
             logger.error(f"No operation named {key} defined for {self}")
-            raise RuntimeError("Failed to play Mode operation")
+            raise RuntimeError(f"Failed to play Mode operation named '{key}'")
 
-        qua.play(key * qua.amp(*ampx), self.name, **kwargs)  # TODO
+        try:
+            ampx = float(ampx)
+        except TypeError:
+            try:
+                ampx = (float(a) for a in ampx)
+            except TypeError:
+                logger.error("Expect `ampx` to be float or a sequence of upto 4 floats")
+                raise
+            else:
+                qua.play(key * qua.amp(*ampx), self.name, **kwargs)
+        else:
+            qua.play(key * qua.amp(ampx), self.name, **kwargs)

@@ -1,8 +1,8 @@
 [tool.poetry]
 name = "qcrew"
-version = "1.0.0"
-description = ""
-authors = ["Atharv Joshi <atharvjoshi@ymail.com>"]
+version = "0.1.0"
+description = "The codebase for running circuit QED experiments in QCREW's lab"
+authors = ["QCREW <hello.qcrew@gmail.com>"]
 
 [tool.poetry.dependencies]
 python = "^3.9"

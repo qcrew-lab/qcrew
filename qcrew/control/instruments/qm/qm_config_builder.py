@@ -392,7 +392,7 @@ class QMConfig(InfinitelyNestableDict):
 
     def set_integration_weights(self, pulse: qcp.Pulse, pulse_name: str) -> None:
         """ """
-        iw_dict = pulse.integration_weights_samples  # NOTE expect config dict
+        iw_dict = pulse.integration_weights.samples  # NOTE expect config dict
         for iw_key, iw_config in iw_dict.items():
             iw_name = self.get_iw_name(pulse_name, iw_key)
             self["pulses"][pulse_name]["integration_weights"][iw_key] = iw_name

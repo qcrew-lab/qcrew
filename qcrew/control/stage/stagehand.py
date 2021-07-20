@@ -23,11 +23,11 @@ class Stagehand:
         self._configpath = configpath
         self.stage: LocalStage = LocalStage(configpath=self._configpath)
         self.proxies = dict()  # update by _stage_remote_objects()
+        self._stage_local_objects()
+        self._stage_remote_objects()
 
     def __enter__(self) -> LocalStage:
         """ """
-        self._stage_local_objects()
-        self._stage_remote_objects()
         return self.stage
 
     def _stage_local_objects(self) -> None:

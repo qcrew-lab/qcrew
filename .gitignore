@@ -4,3 +4,4 @@ logs/
 .ipynb_checkpoints
 */.ipynb_checkpoints/*
 .pytest_cache/
+.egg-info/

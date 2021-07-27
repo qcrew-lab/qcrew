@@ -7,19 +7,19 @@ also defines how the information is retrieved from result handles.
 # --------------------------------- Imports ------------------------------------
 from qcrew.measure import *
 from qcrew.measure.Experiment import *
+from qcrew.control import Stagehand
 
-stage_module_path = resolve_name(".stage", "qcrew.experiments.coax_test.imports")
-if stage_module_path not in sys.modules:
-    import qcrew.experiments.coax_test.imports.stage as stg
-else:
-    reload(stg)
 # ---------------------------------- Class -------------------------------------
 
 
 class PowerRabi(Experiment):
-    def __init__(self, qubit_op, readout_op, fit_fn=None, **other_params):
+    def __init__(
+        self, qubit_mode, rr_mode, qubit_op, readout_op, fit_fn=None, **other_params
+    ):
 
         # Get attributes
+        self.qubit_mode = qubit_mode
+        self.rr_mode = rr_mode
         self.qubit_op = qubit_op
         self.readout_op = readout_op
         self.fit_fn = fit_fn
@@ -31,24 +31,11 @@ class PowerRabi(Experiment):
         """
         Defines pulse sequence to be played inside the experiment loop
         """
-        """
-        self.qubit.play(self.qubit_op, self.x)
-        align(self.qubit.name, self.rr.name)
-        self.rr.measure(self.readout_op)  # This should account for intW
-        wait(int(self.wait_time // 4), self.qubit.name)
-        self.QUA_stream_results()
-        """
-        play(self.qubit_op * amp(self.x), "qubit")
-        align("qubit", "rr")
-        measure(
-            self.readout_op * amp(0.2),
-            "rr",
-            None,
-            demod.full("integW1", self.I),
-            demod.full("integW2", self.Q),
-        )
-        wait(int(self.wait_time // 4), "qubit")
 
+        self.qubit_mode.play(self.qubit_op, ampx=self.x)
+        align(self.qubit.name, self.rr.name)
+        self.rr_mode.measure((self.I, self.Q))
+        wait(int(self.wait_time // 4), self.qubit.name)
         macros.stream_results(self.var_list)
 
 
@@ -59,9 +46,11 @@ if __name__ == "__main__":
 
     #############        SETTING EXPERIMENT      ################
 
-    qubit = stg.qubit  # TODO I'm assuming smth like this to get mode objects
-    rr = stg.rr
+    qubit, rr = stage.QUBIT, stage.RR
+
     exp_params = {
+        "qubit_mode": qubit,
+        "rr_mode": rr,
         "reps": 200000,  # number of sweep repetitions
         "wait_time": 32000,  # delay between reps in ns, an integer multiple of 4 >= 16
         "x_sweep": (-2, 2 + 0.2 / 2, 0.2),  # x sweep is set by start, stop, and step

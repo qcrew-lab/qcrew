@@ -5,9 +5,11 @@ This class serves as a QUA script generator with user-defined parameters. It
 also defines how the information is retrieved from result handles.
 """
 # --------------------------------- Imports ------------------------------------
-from qcrew.measure import *
-from qcrew.measure.Experiment import *
+from qm import qua
+
+from qcrew.measure.Experiment import Experiment
 from qcrew.control import Stagehand
+import qua_macros as macros
 
 # ---------------------------------- Class -------------------------------------
 
@@ -33,9 +35,9 @@ class PowerRabi(Experiment):
         """
 
         self.qubit_mode.play(self.qubit_op, ampx=self.x)
-        align(self.qubit.name, self.rr.name)
+        qua.align(self.qubit.name, self.rr.name)
         self.rr_mode.measure((self.I, self.Q))
-        wait(int(self.wait_time // 4), self.qubit.name)
+        qua.wait(int(self.wait_time // 4), self.qubit.name)
         macros.stream_results(self.var_list)
 
 
@@ -45,32 +47,32 @@ class PowerRabi(Experiment):
 if __name__ == "__main__":
 
     #############        SETTING EXPERIMENT      ################
+    with Stagehand() as stage:
 
-    qubit, rr = stage.QUBIT, stage.RR
+        qubit, rr = stage.QUBIT, stage.RR
 
-    exp_params = {
-        "qubit_mode": qubit,
-        "rr_mode": rr,
-        "reps": 200000,  # number of sweep repetitions
-        "wait_time": 32000,  # delay between reps in ns, an integer multiple of 4 >= 16
-        "x_sweep": (-2, 2 + 0.2 / 2, 0.2),  # x sweep is set by start, stop, and step
-        # "y_sweep": [True, False],  # x sweep is set by start, stop, and step
-        "qubit_op": "pi",  # Operations to be used in the exp.
-        "readout_op": "readout",
-        "fit_fn": "sine",  # name eof the fit function
-    }
+        exp_params = {
+            "qubit_mode": qubit,
+            "rr_mode": rr,
+            "reps": 200000,  # number of sweep repetitions
+            "wait_time": 32000,  # delay between reps in ns, an integer multiple of 4 >= 16
+            "x_sweep": (
+                -2,
+                2 + 0.2 / 2,
+                0.2,
+            ),  # x sweep is set by start, stop, and step
+            # "y_sweep": [True, False],  # x sweep is set by start, stop, and step
+            "qubit_op": "pi",  # Operations to be used in the exp.
+            "readout_op": "readout",
+            "fit_fn": "sine",  # name eof the fit function
+        }
 
-    SAMPLE_NAME = "coax_a"
-    EXP_NAME = "power_rabi"
-    PROJECT_FOLDER_NAME = "coax_test"
-    DATAPATH = Path.cwd() / "data"
+        experiment = PowerRabi(**exp_params)
+        power_rabi = experiment.QUA_sequence()
 
-    experiment = PowerRabi(**exp_params)
-    power_rabi = experiment.QUA_sequence()
+        ###################        RUN MEASUREMENT        ############################
 
-    ###################        RUN MEASUREMENT        ############################
-
-    job = stg.qm.execute(power_rabi)
+        job = stage.QM.execute(power_rabi)
     """
     ####################        INVOKE HELPERS        ###########################
     # fetch helper and plot hepler

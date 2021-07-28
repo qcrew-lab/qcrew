@@ -1,6 +1,9 @@
-from qcrew.measure import *  # Opens QM
-from abc import abstractmethod
+# general packages
 import numpy as np
+import qua_macros as macros
+
+# qua modules
+from qm import qua
 
 
 class Experiment:
@@ -76,7 +79,7 @@ class Experiment:
         # Check if the sweep configurations are sane
         self._check_sweeps(["x", "y"])
 
-        with program() as qua_sequence:
+        with qua.program() as qua_sequence:
 
             # Initial variable and stream declarations
             self.var_list = macros.declare_variables(self.var_list)
@@ -91,7 +94,7 @@ class Experiment:
 
             # Define stream processing
             buffer_len = np.prod(self.buffering)
-            with stream_processing():
+            with qua.stream_processing():
                 macros.process_streams(self.var_list, buffer_len=buffer_len)
                 macros.process_Z_values(
                     self.var_list["I"].stream,

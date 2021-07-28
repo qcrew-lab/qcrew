@@ -18,7 +18,7 @@ class Readout(Mode):
         "smearing",
     }
     _ports_keys: ClassVar[tuple[str]] = (*Mode._ports_keys, "out")
-    _offsets_keys: ClassVar[tuple[str]] = (*Mode._offsets_keys, "out")
+    _mixer_offsets_keys: ClassVar[tuple[str]] = (*Mode._mixer_offsets_keys, "out")
 
     _demod_method_map: ClassVar[dict[str, Callable]] = {
         "sliced": qua.demod.sliced,

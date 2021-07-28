@@ -1,0 +1,13 @@
+Metadata-Version: 2.1
+Name: qcrew
+Version: 0.1.0
+Summary: The codebase for running circuit QED experiments in QCREW's lab
+Home-page: UNKNOWN
+Author: QCREW
+Author-email: hello.qcrew@gmail.com
+License: UNKNOWN
+Platform: UNKNOWN
+Requires-Python: >=3.9,<4.0
+
+UNKNOWN
+

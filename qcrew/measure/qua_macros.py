@@ -142,7 +142,7 @@ def stream_results(var_list):
     for key, value in var_list.items():
         if value.stream is None:
             continue
-        save(value.var, value.stream)
+        qua.save(value.var, value.stream)
 
 
 def process_streams(var_list, buffer_len=1):

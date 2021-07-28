@@ -1,6 +1,7 @@
 # general packages
 import numpy as np
 import qua_macros as macros
+import abc
 
 # qua modules
 from qm import qua
@@ -33,8 +34,8 @@ class Experiment:
             "n": macros.ExpVariable(var_type=int, sweep=self.sweep_config["n"]),
             "x": macros.ExpVariable(average=False, save_all=False),
             "y": macros.ExpVariable(average=False, save_all=False),
-            "I": macros.ExpVariable(tag="I", var_type=fixed, buffer=True),
-            "Q": macros.ExpVariable(tag="Q", var_type=fixed, buffer=True),
+            "I": macros.ExpVariable(tag="I", var_type=qua.fixed, buffer=True),
+            "Q": macros.ExpVariable(tag="Q", var_type=qua.fixed, buffer=True),
         }
 
         # Extra memory tags for saving server-side stream operation results
@@ -63,7 +64,7 @@ class Experiment:
 
         return
 
-    @abstractmethod
+    @abc.abstractmethod
     def QUA_play_pulse_sequence(self):
         """
         Macro that defines the QUA pulse sequence inside the experiment loop. It is

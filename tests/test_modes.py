@@ -1,4 +1,4 @@
-""" Test loading dummy modes from yml config """
+""" Test round-trip loading and saving of dummy modes from/to yml config """
 
 import pathlib
 import pprint
@@ -12,7 +12,10 @@ CONFIGPATH = pathlib.Path.cwd() / "tests/test_modes.yml"
 
 modes = yml.load(CONFIGPATH)
 logger.success(f"Loaded {len(modes)} test modes from {CONFIGPATH}")
-logger.info("Printing mode parameters...")
 for mode in modes:
+    logger.info(f"Printing {mode} parameters...")
     pprint.pp(mode.parameters)
     print()
+
+logger.info(f"Saving test modes to {CONFIGPATH}")
+yml.save(modes, CONFIGPATH)

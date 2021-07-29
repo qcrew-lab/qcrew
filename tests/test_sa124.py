@@ -21,6 +21,14 @@ class TestSa124(Parametrized, Yamlizable):
     def __repr__(self) -> str:
         return f"TestSa124-{self._id}"
 
+    @property
+    def id(self):
+        return self._id
+
+    @property
+    def name(self):
+        return self._name
+
     def connect(self):
         logger.info(f"Connected to {self}")
 

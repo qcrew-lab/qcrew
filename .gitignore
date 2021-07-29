@@ -1,3 +1,4 @@
+config/
 pyproject.toml
 poetry.lock
 .vscode/

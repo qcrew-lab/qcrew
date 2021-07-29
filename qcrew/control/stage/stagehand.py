@@ -5,8 +5,8 @@ from pathlib import Path
 import Pyro5.api as pyro
 
 from qcrew.control.stage.stage import LocalStage, RemoteStage
-from qcrew.control.stage.stage_setup import LOCAL_CONFIGPATH
 from qcrew.helpers import logger
+import qcrew.helpers.yamlizer as yml
 
 # pylint: disable=unused-import, these imports are needed for yamlizing to work
 
@@ -14,11 +14,13 @@ import qcrew.control.modes
 
 # pylint: enable=unused-import
 
+_CONFIGPATH = Path(__file__).resolve().parents[3] / "config/stagepaths.yml"
+_LOCAL_CONFIGPATH = Path(yml.load(_CONFIGPATH)["local"])
 
 class Stagehand:
     """ """
 
-    def __init__(self, configpath: Path = LOCAL_CONFIGPATH) -> None:
+    def __init__(self, configpath: Path = _LOCAL_CONFIGPATH) -> None:
         """ """
         self._configpath = configpath
         self.stage: LocalStage = LocalStage(configpath=self._configpath)

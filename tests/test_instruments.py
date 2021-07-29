@@ -4,8 +4,8 @@ import pathlib
 import pprint
 
 import qcrew.helpers.yamlizer as yml
-from tests.test_labbrick import TestLabBrick
-from tests.test_sa124 import TestSa124
+from test_labbrick import TestLabBrick
+from test_sa124 import TestSa124
 from qcrew.helpers import logger
 
 CONFIGPATH = pathlib.Path.cwd() / "tests/test_instruments.yml"

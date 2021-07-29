@@ -169,21 +169,17 @@ class Mode(Parametrized, Yamlizable):
         """ """
         return self._ports["I"] is not None and self._ports["Q"] is not None
 
-    def play(self, key: str, ampx = 1.0, **kwargs) -> None:
+    def play(self, key: str, ampx=1.0, **kwargs) -> None:
         """ """
         if key not in self._operations:
             logger.error(f"No operation named {key} defined for {self}")
             raise RuntimeError(f"Failed to play Mode operation named '{key}'")
 
         try:
-            ampx = float(ampx)
-        except TypeError:
-            try:
-                ampx = (float(a) for a in ampx)
-            except TypeError:
-                logger.error("Expect `ampx` to be float or a sequence of upto 4 floats")
-                raise
-            else:
-                qua.play(key * qua.amp(*ampx), self.name, **kwargs)
-        else:
             qua.play(key * qua.amp(ampx), self.name, **kwargs)
+        except Exception:  # QM forced me to catch base class Exception...
+            try:
+                qua.play(key * qua.amp(*ampx), self.name, **kwargs)
+            except Exception:  # QM forced me to catch base class Exception...
+                logger.error("Invalid ampx, expect 1 value or sequence of 4 values")
+                raise

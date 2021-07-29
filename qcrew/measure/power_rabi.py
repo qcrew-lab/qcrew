@@ -5,6 +5,7 @@ This class serves as a QUA script generator with user-defined parameters. It
 also defines how the information is retrieved from result handles.
 """
 # --------------------------------- Imports ------------------------------------
+from qcrew.measure.professor import Professor
 from qm import qua
 
 from qcrew.measure.Experiment import Experiment
@@ -45,33 +46,29 @@ class PowerRabi(Experiment):
 
 if __name__ == "__main__":
 
-    #############        SETTING EXPERIMENT      ################
-    with Stagehand() as stage:
+    parameters = {
+        "modes": ("QUBIT", "RR"),
+        #"qubit_mode": qubit,
+        #"rr_mode": rr,
+        "reps": 200000,  # number of sweep repetitions
+        "wait_time": 32000,  # delay between reps in ns, an integer multiple of 4 >= 16
+        "x_sweep": (-1.9, 1.9 + 0.2 / 2, 0.2),  # x sweep is set by start, stop & step
+        # "y_sweep": [True, False],  # x sweep is set by start, stop, and step
+        "qubit_op": "gaussian_pulse",  # Operations to be used in the exp.
+        #"readout_op": "readout",
+        "fit_fn": "sine",  # name eof the fit function
+    }
 
-        qubit, rr = stage.QUBIT, stage.RR
+    experiment = PowerRabi(**para)
 
-        exp_params = {
-            "qubit_mode": qubit,
-            "rr_mode": rr,
-            "reps": 200000,  # number of sweep repetitions
-            "wait_time": 32000,  # delay between reps in ns, an integer multiple of 4 >= 16
-            "x_sweep": (
-                -1.9,
-                1.9 + 0.2 / 2,
-                0.2,
-            ),  # x sweep is set by start, stop, and step
-            # "y_sweep": [True, False],  # x sweep is set by start, stop, and step
-            "qubit_op": "gaussian_pulse",  # Operations to be used in the exp.
-            "readout_op": "readout",
-            "fit_fn": "sine",  # name eof the fit function
-        }
+        prof = Professor
 
-        experiment = PowerRabi(**exp_params)
         power_rabi = experiment.QUA_sequence()
 
         ###################        RUN MEASUREMENT        ############################
 
         job = stage.QM.execute(power_rabi)
+
     """
     ####################        INVOKE HELPERS        ###########################
     # fetch helper and plot hepler

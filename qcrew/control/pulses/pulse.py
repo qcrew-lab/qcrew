@@ -26,16 +26,15 @@ class Pulse(Parametrized, Yamlizable):
         integration_weights=None,
     ) -> None:
         """ """
+        self.length: int = length
+        self.ampx: float = ampx
+
         self.is_readout_pulse: bool = False
         self.integration_weights = None
-
         if integration_weights is not None:
             self.integration_weights = integration_weights
             self.is_readout_pulse = True
-
-        self.length: int = None  # length and ampx will be set by __call__()
-        self.ampx: float = None
-        self(length=length, ampx=ampx)
+            self._update_integration_weights("length")
 
         self.has_mix_waveforms: bool = True  # qcrew's default use case
 

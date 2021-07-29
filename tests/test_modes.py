@@ -4,7 +4,7 @@ import pathlib
 import pprint
 
 import qcrew.helpers.yamlizer as yml
-from tests.test_labbrick import TestLabBrick
+from test_labbrick import TestLabBrick
 from qcrew.control.modes import Qubit, Readout
 from qcrew.helpers import logger
 

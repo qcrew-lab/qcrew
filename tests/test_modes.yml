@@ -1,0 +1,25 @@
+- !<Qubit>
+  name: QUBIT
+  lo: !<TestLabBrick>
+    id: 25331
+    name: TLB_QUBIT
+    frequency: 5.0E+9
+    power: 13
+  int_freq: -5.000000E+07
+  ports:
+    I: 1
+    Q: 2
+- !<Readout>
+  name: RR
+  lo: !<TestLabBrick>
+    id: 25335
+    name: TLB_RR
+    frequency: 8.0E+9
+    power: 15
+  int_freq: -5.000000E+07
+  ports:
+    I: 4
+    Q: 3
+    out: 1
+  time_of_flight: 180
+  smearing: 0

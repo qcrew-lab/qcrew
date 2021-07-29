@@ -1,12 +1,13 @@
-""" Test stage and stagehand with actual instruments """
+""" Test loading dummy instruments from yml config """
 
-import pprint
 import pathlib
-import matplotlib.pyplot as plt
-import qcrew.helpers.yamlizer as yml
-from qcrew.control.instruments.vaunix.labbrick import LabBrick
-from qcrew.control.instruments.signal_hound.sa124 import Sa124
 
-CONFIGPATH = pathlib.Path.cwd() / "configs/coax_a/instruments.yml"
+import qcrew.helpers.yamlizer as yml
+from tests.test_labbrick import TestLabBrick
+from tests.test_sa124 import TestSa124
+from qcrew.helpers import logger
+
+CONFIGPATH = pathlib.Path.cwd() / "tests/test_instruments.yml"
+
 instruments = yml.load(CONFIGPATH)
-lb_qubit, lb_rr, sa = (*instruments,)
+logger.success(f"Loaded {len(instruments)} test instruments from {CONFIGPATH}")

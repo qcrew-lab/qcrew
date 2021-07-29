@@ -1,12 +1,27 @@
-""" Test stage and stagehand with actual instruments """
+""" Test round-trip loading and saving of dummy instruments from/to yml config """
 
-import pprint
 import pathlib
-import matplotlib.pyplot as plt
-import qcrew.helpers.yamlizer as yml
-from qcrew.control.instruments.vaunix.labbrick import LabBrick
-from qcrew.control.instruments.signal_hound.sa124 import Sa124
+import pprint
 
-CONFIGPATH = pathlib.Path.cwd() / "configs/coax_a/instruments.yml"
+import qcrew.helpers.yamlizer as yml
+from tests.test_labbrick import TestLabBrick
+from tests.test_sa124 import TestSa124
+from qcrew.helpers import logger
+
+CONFIGPATH = pathlib.Path.cwd() / "tests/test_instruments.yml"
+
 instruments = yml.load(CONFIGPATH)
-lb_qubit, lb_rr, sa = (*instruments,)
+
+try:
+    num_instruments = len(instruments)
+except TypeError:
+    logger.error(f"No objects found in {CONFIGPATH.name}, please check the config file")
+else:
+    logger.success(f"Loaded {num_instruments} test instruments from {CONFIGPATH}")
+    for instrument in instruments:
+        logger.info(f"Printing {instrument} parameters...")
+        pprint.pp(instrument.parameters)
+        print()
+
+    logger.info(f"Saving test instruments to {CONFIGPATH}")
+    yml.save(instruments, CONFIGPATH)

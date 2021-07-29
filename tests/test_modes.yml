@@ -1,15 +1,19 @@
 - !<Qubit>
   name: QUBIT
-  lo: LB_QUBIT
-  int_freq: -1.000000E+08
+  lo: !<TestLabBrick>
+    id: 25331
+    name: TLB_QUBIT
+    frequency: 5.000000E+09
+    power: 13
+  int_freq: -5.000000E+07
   ports:
     I: 1
     Q: 2
   mixer_offsets:
-    I: 0.00436572798062116
-    Q: -0.0059232642408460386
-    G: -0.17340511726215485
-    P: 0.10656575898174203
+    I: 0.0
+    Q: 0.0
+    G: 0.0
+    P: 0.0
   operations:
     constant_pulse: !<ConstantPulse>
       length: 1000
@@ -31,17 +35,21 @@
     pi: 0.0
 - !<Readout>
   name: RR
-  lo: LB_RR
-  int_freq: -1.000000E+07
+  lo: !<TestLabBrick>
+    id: 25335
+    name: TLB_RR
+    frequency: 8.000000E+09
+    power: 15
+  int_freq: -5.000000E+07
   ports:
     I: 4
     Q: 3
     out: 1
   mixer_offsets:
-    I: -0.02863638913258911
-    Q: 0.002603589789941911
-    G: 0.2712895035743713
-    P: -0.11136218905448916
+    I: 0.0
+    Q: 0.0
+    G: 0.0
+    P: 0.0
     out: 0.0
   operations:
     constant_pulse: !<ConstantPulse>

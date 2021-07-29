@@ -35,14 +35,13 @@ class PowerRabi(Experiment):
         """
 
         self.qubit_mode.play(self.qubit_op, ampx=self.x)
-        qua.align(self.qubit.name, self.rr.name)
+        qua.align(self.qubit_mode.name, self.rr_mode.name)
         self.rr_mode.measure((self.I, self.Q))
-        qua.wait(int(self.wait_time // 4), self.qubit.name)
+        qua.wait(int(self.wait_time // 4), self.qubit_mode.name)
         macros.stream_results(self.var_list)
 
 
 # -------------------------------- Execution -----------------------------------
-
 
 if __name__ == "__main__":
 
@@ -57,12 +56,12 @@ if __name__ == "__main__":
             "reps": 200000,  # number of sweep repetitions
             "wait_time": 32000,  # delay between reps in ns, an integer multiple of 4 >= 16
             "x_sweep": (
-                -2,
-                2 + 0.2 / 2,
+                -1.9,
+                1.9 + 0.2 / 2,
                 0.2,
             ),  # x sweep is set by start, stop, and step
             # "y_sweep": [True, False],  # x sweep is set by start, stop, and step
-            "qubit_op": "pi",  # Operations to be used in the exp.
+            "qubit_op": "gaussian_pulse",  # Operations to be used in the exp.
             "readout_op": "readout",
             "fit_fn": "sine",  # name eof the fit function
         }

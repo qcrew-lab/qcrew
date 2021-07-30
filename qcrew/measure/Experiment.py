@@ -1,4 +1,7 @@
 # general packages
+from qcrew.helpers.parametrizer import Parametrized
+from qcrew.helpers import logger
+from typing import ClassVar
 import numpy as np
 import qua_macros as macros
 import abc
@@ -7,10 +10,16 @@ import abc
 from qm import qua
 
 
-class Experiment:
+class Experiment(Parametrized):
     """
     Abstract class for experiments using QUA sequences.
     """
+
+    # logger.info(f"Created {self}")
+    _parameters: ClassVar[set[str]] = {
+        "reps",  # number of times the experiment is repeated
+        "wait_time",  # wait time in nanoseconds between repetitions
+    }
 
     def __init__(
         self,
@@ -26,9 +35,9 @@ class Experiment:
 
         # Sweep configurations
         self.sweep_config = {"n": (0, self.reps, 1), "x": x_sweep, "y": y_sweep}
-        self.buffering = tuple()  # defined in _check_sweeps
+        self.buffering = tuple()  # defined in _configure_sweeps
 
-        # ExpVariable definitions. This list is updated in _check_sweeps and after
+        # ExpVariable definitions. This list is updated in _configure_sweeps and after
         # stream and variable declaration.
         self.var_list = {
             "n": macros.ExpVariable(var_type=int, sweep=self.sweep_config["n"]),
@@ -43,7 +52,9 @@ class Experiment:
         self.Z_SQ_RAW_AVG_tag = "Z_SQ_RAW_AVG"
         self.Z_AVG_tag = "Z_AVG"
 
-    def _check_sweeps(self, sweep_variables_keys):
+        logger.info(f"Created {type(self).__name__}")
+
+    def _configure_sweeps(self, sweep_variables_keys):
         """
         Check if each x and y sweeps are correctly configured. If so, update buffering, variable type, and tag of x and y in var_list accordingly.
         """
@@ -53,6 +64,15 @@ class Experiment:
             # Set its sweep according to user-defined configurations
             if self.sweep_config[key]:
                 self.var_list[key].configure_sweep(self.sweep_config[key])
+
+                # Log the type of sweep configured
+                if self.var_list[key].sweep_type == "for_":
+                    logger.info(f"Configured linear sweep on variable {key}")
+                if self.var_list[key].sweep_type == "for_each_":
+                    logger.info(
+                        f"Configured sweep with arbitrary values on variable {key}"
+                    )
+
                 # Update buffering
                 buffering.append(self.var_list[key].buffer_len)
                 # Flag for buffering in stream processing
@@ -62,6 +82,8 @@ class Experiment:
 
         self.buffering = tuple(buffering)
 
+        if len(self.buffering) == 0:
+            logger.warning("No sweep is configured")
         return
 
     @abc.abstractmethod
@@ -77,8 +99,7 @@ class Experiment:
         Method that returns the QUA sequence to be executed in the quantum machine.
         """
 
-        # Check if the sweep configurations are sane
-        self._check_sweeps(["x", "y"])
+        self._configure_sweeps(["x", "y"])
 
         with qua.program() as qua_sequence:
 
@@ -102,4 +123,5 @@ class Experiment:
                     self.var_list["Q"].stream,
                     buffer_len=buffer_len,
                 )
+
         return qua_sequence

@@ -7,6 +7,8 @@ also defines how the information is retrieved from result handles.
 # --------------------------------- Imports ------------------------------------
 from qm import qua
 
+from qcrew.helpers.parametrizer import Parametrized
+from typing import ClassVar
 from qcrew.measure.Experiment import Experiment
 from qcrew.control import Stagehand
 import qua_macros as macros
@@ -15,55 +17,66 @@ import qua_macros as macros
 
 
 class PowerRabi(Experiment):
+
+    _parameters: ClassVar[set[str]] = Experiment._parameters | {
+        "mode_names",  # names of the modes used in the experiment
+        "qubit_op",  # operation used for exciting the qubit
+        "fit_fn",  # Fit function
+    }
+
     def __init__(self, modes, qubit_op, fit_fn="sine", **other_params):
 
-        # Get attributes
-        self.modes = modes
+        self.mode_names = modes  # mode names for saving metadata
+        self.modes = None  # is updated with mode objects by the professor
         self.qubit_op = qubit_op
         self.fit_fn = fit_fn
 
-        # Passes remaining parameters to parent
-        super().__init__(**other_params)
+        super().__init__(**other_params)  # Passes other parameters to parent
 
     def QUA_play_pulse_sequence(self):
         """
         Defines pulse sequence to be played inside the experiment loop
         """
-        qubit, rr = self.modes
+        qubit, rr = self.modes  # get the modes
 
-        qubit.play(self.qubit_op, ampx=self.x)
-        qua.align(qubit.name, rr.name)
-        rr.measure((self.I, self.Q))
-        qua.wait(int(self.wait_time // 4), qubit.name)
-        macros.stream_results(self.var_list)
+        qubit.play(self.qubit_op, ampx=self.x)  # play qubit pulse
+        qua.align(qubit.name, rr.name)  # wait qubit pulse to end
+        rr.measure((self.I, self.Q))  # measure qubit state
+        qua.wait(int(self.wait_time // 4), qubit.name)  # wait system reset
+
+        macros.stream_results(self.var_list)  # stream variables (I, Q, x, etc)
 
 
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
 
-    #############        SETTING EXPERIMENT      ################
+    parameters = {
+        "modes": ("QUBIT", "RR"),
+        "reps": 200000,
+        "wait_time": 32000,
+        "x_sweep": (-1.9, 1.9 + 0.2 / 2, 0.2),
+        # "y_sweep": [True, False],
+        "qubit_op": "gaussian_pulse",
+    }
+
+    experiment = PowerRabi(**parameters)
+
+    # The following will be done by the professor
     with Stagehand() as stage:
 
-        exp_params = {
-            "modes": [stage.QUBIT, stage.RR],
-            "reps": 200000,
-            "wait_time": 32000,
-            "x_sweep": (
-                -1.9,
-                1.9 + 0.2 / 2,
-                0.2,
-            ),
-            # "y_sweep": [True, False],
-            "qubit_op": "gaussian_pulse",
-        }
+        mode_tuple = tuple()
+        for mode_name in experiment.mode_names:
+            mode_tuple += (getattr(stage, mode_name),)
 
-        experiment = PowerRabi(**exp_params)
+        experiment.modes = mode_tuple
+
         power_rabi = experiment.QUA_sequence()
 
         ###################        RUN MEASUREMENT        ############################
 
         job = stage.QM.execute(power_rabi)
+
     """
     ####################        INVOKE HELPERS        ###########################
     # fetch helper and plot hepler

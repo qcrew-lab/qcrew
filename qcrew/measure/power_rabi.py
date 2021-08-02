@@ -2,13 +2,14 @@
 A python class describing a power rabi measurement using QM.
 This class serves as a QUA script generator with user-defined parameters.
 """
-# --------------------------------- Imports ------------------------------------
-from qcrew.control import professor as prof
-from qm import qua
 
 from typing import ClassVar
+
+from qcrew.control import professor as prof
+import qcrew.measure.qua_macros as macros
 from qcrew.measure.experiment import Experiment
-import qua_macros as macros
+from qm import qua
+
 
 # ---------------------------------- Class -------------------------------------
 
@@ -42,6 +43,7 @@ class PowerRabi(Experiment):
         qua.wait(int(self.wait_time // 4), qubit.name)  # wait system reset
 
         macros.stream_results(self.var_list)  # stream variables (I, Q, x, etc)
+
 
 # -------------------------------- Execution -----------------------------------
 

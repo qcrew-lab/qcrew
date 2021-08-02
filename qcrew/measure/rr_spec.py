@@ -2,14 +2,14 @@
 A python class describing a power rabi measurement using QM.
 This class serves as a QUA script generator with user-defined parameters.
 """
-# --------------------------------- Imports ------------------------------------
+from typing import ClassVar
+
+from qcrew.control import professor as prof
+import qcrew.measure.qua_macros as macros
+from qcrew.measure.experiment import Experiment
+
 from qm import qua
 
-from qcrew.helpers.parametrizer import Parametrized
-from typing import ClassVar
-from qcrew.measure.Experiment import Experiment
-from qcrew.control import Stagehand
-import qua_macros as macros
 
 # ---------------------------------- Class -------------------------------------
 
@@ -24,7 +24,7 @@ class ResonatorSpectroscopy(Experiment):
     def __init__(self, modes, fit_fn="lorentzian", **other_params):
 
         self.mode_names = modes  # mode names for saving metadata
-        self.modes = None  # is updated with mode objects by the professor
+        self.modes = modes  # is updated with mode objects by the professor
         self.fit_fn = fit_fn
 
         super().__init__(**other_params)  # Passes other parameters to parent
@@ -47,25 +47,11 @@ class ResonatorSpectroscopy(Experiment):
 if __name__ == "__main__":
 
     parameters = {
-        "modes": ("RR",),
+        "modes": ["RR"],
         "reps": 20000,
         "wait_time": 10000,
         "x_sweep": (int(-50e6), int(50e6 + 0.2e6 / 2), int(0.2e6)),
     }
 
     experiment = ResonatorSpectroscopy(**parameters)
-
-    # The following will be done by the professor
-    with Stagehand() as stage:
-
-        mode_tuple = tuple()
-        for mode_name in experiment.mode_names:
-            mode_tuple += (getattr(stage, mode_name),)
-
-        experiment.modes = mode_tuple
-
-        power_rabi = experiment.QUA_sequence()
-
-        #################   RUN MEASUREMENT   ##################
-
-        job = stage.QM.execute(power_rabi)
+    prof.run(experiment)

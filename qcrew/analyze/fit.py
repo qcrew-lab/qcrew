@@ -8,7 +8,7 @@ import numpy as np
 import lmfit
 from lmfit import minimize, Parameters
 
-from .fit_funcs import*
+from qcrew.analyze.fit_funcs import *
 
 FIT_FUNCS = {}
 

@@ -19,7 +19,7 @@ class PowerRabi(Experiment):
     _parameters: ClassVar[set[str]] = Experiment._parameters | {
         "mode_names",  # names of the modes used in the experiment
         "qubit_op",  # operation used for exciting the qubit
-        "fit_fn",  # Fit function
+        "fit_fn",  # fit function
     }
 
     def __init__(self, modes, qubit_op, fit_fn="sine", **other_params):
@@ -54,7 +54,6 @@ if __name__ == "__main__":
         "reps": 200000,
         "wait_time": 32000,
         "x_sweep": (-1.9, 1.9 + 0.2 / 2, 0.2),
-        # "y_sweep": [True, False],
         "qubit_op": "gaussian_pulse",
     }
 

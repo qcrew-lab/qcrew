@@ -1,5 +1,5 @@
 """
-A python class describing a power rabi measurement using QM.
+A python class describing a T2 measurement using QM.
 This class serves as a QUA script generator with user-defined parameters.
 """
 # --------------------------------- Imports ------------------------------------
@@ -19,15 +19,19 @@ class T2(Experiment):
     _parameters: ClassVar[set[str]] = Experiment._parameters | {
         "mode_names",  # names of the modes used in the experiment
         "qubit_op",  # operation used for exciting the qubit
-        "fit_fn",  # Fit function
+        "fit_fn",  # fit function
+        "detuning",  # qubit pulse detuning
     }
 
-    def __init__(self, modes, qubit_op, fit_fn="exp_decay_sine", **other_params):
+    def __init__(
+        self, modes, qubit_op, detuning=0, fit_fn="exp_decay_sine", **other_params
+    ):
 
         self.mode_names = modes  # mode names for saving metadata
         self.modes = None  # is updated with mode objects by the professor
         self.qubit_op = qubit_op  # half pi pulse
         self.fit_fn = fit_fn
+        self.detuning = detuning  # frequency detuning of qubit operation
 
         super().__init__(**other_params)  # Passes other parameters to parent
 
@@ -37,6 +41,7 @@ class T2(Experiment):
         """
         qubit, rr = self.modes  # get the modes
 
+        qua.update_frequency(qubit.name, qubit.int_freq + self.detuning)  # detune
         qubit.play(self.qubit_op)  # play half pi qubit pulse
         qua.wait(int(self.x // 4), qubit.name)  # wait for partial qubit decay
         qubit.play(self.qubit_op)  # play half pi qubit pulse
@@ -57,6 +62,7 @@ if __name__ == "__main__":
         "wait_time": 32000,
         "x_sweep": (int(16), int(1000 + 40 / 2), int(40)),
         "qubit_op": "gaussian_pulse",
+        "detuning": int(300e6),
     }
 
     experiment = T2(**parameters)

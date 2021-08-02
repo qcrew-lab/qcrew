@@ -1,5 +1,5 @@
 """
-A python class describing a power rabi measurement using QM.
+A python class describing a T1 measurement using QM.
 This class serves as a QUA script generator with user-defined parameters.
 """
 # --------------------------------- Imports ------------------------------------
@@ -19,7 +19,7 @@ class T1(Experiment):
     _parameters: ClassVar[set[str]] = Experiment._parameters | {
         "mode_names",  # names of the modes used in the experiment
         "qubit_op",  # operation used for exciting the qubit
-        "fit_fn",  # Fit function
+        "fit_fn",  # fit function
     }
 
     def __init__(self, modes, qubit_op, fit_fn="exp_decay", **other_params):

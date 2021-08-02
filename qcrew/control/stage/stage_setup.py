@@ -9,7 +9,7 @@ from qcrew.helpers import logger
 from qcrew.helpers.parametrizer import Parametrized
 import qcrew.helpers.yamlizer as yml
 
-_CONFIGPATH = Path("C:/Users/qcrew/qcrew/qcrew/config/stagepaths.yml")
+_CONFIGPATH = Path("C:/Users/qcrew/qcrew/qcrew/config/stage.yml")
 _REMOTE_CONFIGPATH = Path(yml.load(_CONFIGPATH)["remote"])
 
 if __name__ == "__main__":

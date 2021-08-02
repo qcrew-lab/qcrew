@@ -16,6 +16,8 @@ from qm import qua
 
 class PowerRabi(Experiment):
 
+    name: str = "power rabi"
+
     _parameters: ClassVar[set[str]] = Experiment._parameters | {
         "mode_names",  # names of the modes used in the experiment
         "qubit_op",  # operation used for exciting the qubit

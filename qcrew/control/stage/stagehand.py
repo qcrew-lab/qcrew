@@ -14,7 +14,7 @@ import qcrew.control.modes
 
 # pylint: enable=unused-import
 
-_CONFIGPATH = Path(__file__).resolve().parents[3] / "config/stagepaths.yml"
+_CONFIGPATH = Path(__file__).resolve().parents[3] / "config/stage.yml"
 _LOCAL_CONFIGPATH = Path(yml.load(_CONFIGPATH)["local"])
 
 class Stagehand:

@@ -1,4 +1,4 @@
-""" The professor is qcrew's experiment run manager. Professor provides the `run_experiment` method, which when called by the user, executes the experiment, enters its fetch-analyze-plot-save loop, and closes the loop by calling the experiment's `update()` method. """
+""" The professor is qcrew's experiment run manager. Professor provides the `run()` method, which when called by the user, executes the experiment, enters its fetch-analyze-plot-save loop, and closes the loop by calling the experiment's `update()` method. """
 
 import time
 
@@ -9,6 +9,9 @@ from qcrew.control import Stagehand
 from qcrew.control.instruments.qm import QMResultFetcher
 from qcrew.helpers import logger
 from qcrew.measure.experiment import Experiment
+from qcrew.analyze.plotter import Plotter
+from qcrew.helpers.datasaver import initialise_database, DataSaver
+
 
 def run(experiment: Experiment) -> None:
     """ """
@@ -37,15 +40,8 @@ def run(experiment: Experiment) -> None:
 
         fetcher = QMResultFetcher(handle=qm_job.result_handles)
         stderr = (None, None, None)  # to hold running (stderr, mean, variance * (n-1))
-        plotter = Plotter(experiment)
-        db = initialise_database(
-            exp_name=EXP_NAME,
-            sample_name=SAMPLE_NAME,
-            project_name=PROJECT_FOLDER_NAME,
-            path=DATAPATH,
-            timesubdir=False,
-            timefilename=True,
-        )
+        plotter = Plotter(experiment.plotspec)
+        db = initialise_database(experiment, stage)
 
         ##################        LIVE POST-PROCESSING LOOP        ####################
 
@@ -54,6 +50,8 @@ def run(experiment: Experiment) -> None:
             ##############        SAVE MEASUREMENT RUN METADATA       ##################
 
             datasaver.add_metadata(experiment.parameters)
+            for mode in stage.modes:
+                datasaver.add_metadata(mode.parameters)
 
             while fetcher.is_fetching:
 
@@ -67,7 +65,7 @@ def run(experiment: Experiment) -> None:
                 ################            LIVE SAVE RESULTS         ##################
 
                 datasaver.update_multiple_results(
-                    partial_results, save=["I", "Q"], group="data"
+                    partial_results, save=experiment.live_save_tags, group="data"
                 )
 
                 #######            CALCULATE RUNNING MEAN STANDARD ERROR         #######
@@ -89,7 +87,7 @@ def run(experiment: Experiment) -> None:
 
             final_save_dict = {"Z_AVG": zs, "x": xs}
             datasaver.add_multiple_results(
-                final_save_dict, save=["Z_AVG", "x"], group="data"
+                final_save_dict, save=experiment.final_save_tags, group="data"
             )
 
         ##########################          fin           #############################

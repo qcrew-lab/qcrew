@@ -1,5 +1,5 @@
 """
-A python class describing a power rabi measurement using QM.
+A python class describing a readout resonator spectroscopy using QM.
 This class serves as a QUA script generator with user-defined parameters.
 """
 # --------------------------------- Imports ------------------------------------
@@ -14,11 +14,11 @@ import qua_macros as macros
 # ---------------------------------- Class -------------------------------------
 
 
-class ResonatorSpectroscopy(Experiment):
+class RRSpectroscopy(Experiment):
 
     _parameters: ClassVar[set[str]] = Experiment._parameters | {
         "mode_names",  # names of the modes used in the experiment
-        "fit_fn",  # Fit function
+        "fit_fn",  # fit function
     }
 
     def __init__(self, modes, fit_fn="lorentzian", **other_params):
@@ -53,7 +53,7 @@ if __name__ == "__main__":
         "x_sweep": (int(-50e6), int(50e6 + 0.2e6 / 2), int(0.2e6)),
     }
 
-    experiment = ResonatorSpectroscopy(**parameters)
+    experiment = RRSpectroscopy(**parameters)
 
     # The following will be done by the professor
     with Stagehand() as stage:

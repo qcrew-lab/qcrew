@@ -3,12 +3,11 @@ A python class describing a power rabi measurement using QM.
 This class serves as a QUA script generator with user-defined parameters.
 """
 # --------------------------------- Imports ------------------------------------
-import qcrew.measure.professor as prof
+from qcrew.control import professor as prof
 from qm import qua
 
-from qcrew.helpers.parametrizer import Parametrized
 from typing import ClassVar
-from qcrew.measure.Experiment import Experiment
+from qcrew.measure.experiment import Experiment
 import qua_macros as macros
 
 # ---------------------------------- Class -------------------------------------
@@ -25,7 +24,7 @@ class PowerRabi(Experiment):
     def __init__(self, modes, qubit_op, fit_fn="sine", **other_params):
 
         self.mode_names = modes  # mode names for saving metadata
-        self.modes = None  # is updated with mode objects by the professor
+        self.modes = modes  # is updated with mode objects by the professor
         self.qubit_op = qubit_op
         self.fit_fn = fit_fn
 
@@ -50,7 +49,7 @@ if __name__ == "__main__":
 
     parameters = {
         "modes": ["QUBIT", "RR"],
-        "reps": 200000,
+        "reps": 40000,
         "wait_time": 32000,
         "x_sweep": (-1.9, 1.9 + 0.2 / 2, 0.2),
         # "y_sweep": [True, False],

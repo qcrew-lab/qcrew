@@ -10,29 +10,6 @@ from qcrew.control.instruments.qm import QMResultFetcher
 from qcrew.helpers import logger
 from qcrew.measure.experiment import Experiment
 
-import matplotlib.pyplot as plt
-from IPython import display
-def live_plot(x, y, n, err, fit_fn=None):
-    plt.cla()
-    plt.errorbar(
-        x,
-        y,
-        yerr=err,
-        ls="none",
-        lw=1,
-        ecolor="black",
-        marker="o",
-        ms=4,
-        mfc="black",
-        mec="black",
-        capsize=3,
-        fillstyle="none",
-    )
-    plt.title(f": {n} reps")
-    display.display(plt.gcf())  # plot latest batch
-    display.clear_output(wait=True)  # clear plot when new plot is available
-
-
 def run(experiment: Experiment) -> None:
     """ """
 
@@ -60,22 +37,7 @@ def run(experiment: Experiment) -> None:
 
         fetcher = QMResultFetcher(handle=qm_job.result_handles)
         stderr = (None, None, None)  # to hold running (stderr, mean, variance * (n-1))
-
-        while fetcher.is_fetching:
-            partial_results = fetcher.fetch()
-            num_results = fetcher.count
-            if not partial_results:  # empty dict means no new results available
-                continue
-            zs_raw = np.sqrt(partial_results["Z_SQ_RAW"])
-            zs_raw_avg = np.sqrt(partial_results["Z_SQ_RAW_AVG"])
-            stderr = stats.get_std_err(zs_raw, zs_raw_avg, num_results, *stderr)
-            zs = np.sqrt(partial_results["Z_AVG"])  # latest batch of average signal
-            xs = partial_results["x"]
-            live_plot(xs, zs, num_results, fit_fn=experiment.fit_fn, err=stderr[0])
-            time.sleep(1)  # prevent over-fetching, over-saving, ultra-fast plotting
-
-
-"""        plotter = Plotter(experiment)
+        plotter = Plotter(experiment)
         db = initialise_database(
             exp_name=EXP_NAME,
             sample_name=SAMPLE_NAME,
@@ -133,4 +95,3 @@ def run(experiment: Experiment) -> None:
         ##########################          fin           #############################
 
         print(qm_job.execution_report())
-"""

@@ -50,7 +50,7 @@ class PowerRabi(Experiment):
 if __name__ == "__main__":
 
     parameters = {
-        "modes": ("QUBIT", "RR"),
+        "modes": ["QUBIT", "RR"],
         "reps": 200000,
         "wait_time": 32000,
         "x_sweep": (-1.9, 1.9 + 0.2 / 2, 0.2),
@@ -59,18 +59,4 @@ if __name__ == "__main__":
     }
 
     experiment = PowerRabi(**parameters)
-
-    # The following will be done by the professor
-    with Stagehand() as stage:
-
-        mode_tuple = tuple()
-        for mode_name in experiment.mode_names:
-            mode_tuple += (getattr(stage, mode_name),)
-
-        experiment.modes = mode_tuple
-
-        power_rabi = experiment.QUA_sequence()
-
-        #################   RUN MEASUREMENT   ##################
-
-        job = stage.QM.execute(power_rabi)
+    prof.run(experiment)

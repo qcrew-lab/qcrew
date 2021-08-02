@@ -15,7 +15,9 @@ import qcrew.control.modes
 # pylint: enable=unused-import
 
 _CONFIGPATH = Path(__file__).resolve().parents[3] / "config/stage.yml"
-_LOCAL_CONFIGPATH = Path(yml.load(_CONFIGPATH)["local"])
+_STAGE_CONFIG = yml.load(_CONFIGPATH)
+_LOCAL_CONFIGPATH = Path(_STAGE_CONFIG["local"])
+
 
 class Stagehand:
     """ """
@@ -23,7 +25,13 @@ class Stagehand:
     def __init__(self, configpath: Path = _LOCAL_CONFIGPATH) -> None:
         """ """
         self._configpath = configpath
-        self.stage: LocalStage = LocalStage(configpath=self._configpath)
+        self.stage: LocalStage = LocalStage(
+            configpath=self._configpath,
+            datapath=Path(_STAGE_CONFIG["data"]),
+            sample_name=_STAGE_CONFIG["sample"],
+            project_name=_STAGE_CONFIG["project"],
+        )
+
         self.proxies = dict()  # update by _stage_remote_objects()
         self._stage_local_objects()
         self._stage_remote_objects()

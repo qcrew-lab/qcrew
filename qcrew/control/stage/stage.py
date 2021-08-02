@@ -46,9 +46,14 @@ class Stage:
 class LocalStage(Stage):
     """ """
 
-    def __init__(self, configpath: Path) -> None:
+    def __init__(
+        self, configpath: Path, datapath: Path, sample_name: str, project_name: str
+    ) -> None:
         """ """
         super().__init__(configpath=configpath)
+        self.datapath = datapath
+        self.sample_name = sample_name
+        self.project_name = project_name
         self.modes = None  # updated by _setup()
         self._setup()
 

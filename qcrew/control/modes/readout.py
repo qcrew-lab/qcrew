@@ -49,6 +49,7 @@ class Readout(Mode):
     def measure(
         self,
         targets: tuple,
+        ampx=1.0,
         stream: str = None,
         demod_type: str = "full",
         demod_args: tuple = None,
@@ -60,7 +61,6 @@ class Readout(Mode):
         if demod_type == "full":
             output_i, output_q = (iw_key_i, var_i), (iw_key_q, var_q)
             demod_i, demod_q = qua.demod.full(*output_i), qua.demod.full(*output_q)
-            qua.measure("readout_pulse", self.name, stream, demod_i, demod_q)
         else:
             try:
                 demod_method = self._demod_method_map[demod_type]
@@ -71,4 +71,13 @@ class Readout(Mode):
                 output_i = (iw_key_i, var_i, *demod_args)
                 output_q = (iw_key_q, var_q, *demod_args)
                 demod_i, demod_q = demod_method(*output_i), demod_method(*output_q)
-                qua.measure("readout_pulse", self.name, stream, demod_i, demod_q)
+
+        key = "readout_pulse"
+        try:
+            qua.measure(key * qua.amp(ampx), self.name, stream, demod_i, demod_q)
+        except Exception:  # QM forced me to catch base class Exception...
+            try:
+                qua.measure(key * qua.amp(*ampx), self.name, stream, demod_i, demod_q)
+            except Exception:  # QM forced me to catch base class Exception...
+                logger.error("Invalid ampx, expect 1 value or sequence of 4 values")
+                raise

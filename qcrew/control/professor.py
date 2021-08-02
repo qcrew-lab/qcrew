@@ -5,12 +5,12 @@ import time
 import numpy as np
 
 from qcrew.analyze import stats
+from qcrew.analyze.plotter import Plotter
 from qcrew.control import Stagehand
 from qcrew.control.instruments.qm import QMResultFetcher
 from qcrew.helpers import logger
+from qcrew.helpers.datasaver import DataSaver, initialise_database
 from qcrew.measure.experiment import Experiment
-from qcrew.analyze.plotter import Plotter
-from qcrew.helpers.datasaver import initialise_database, DataSaver
 
 
 def run(experiment: Experiment) -> None:
@@ -87,7 +87,7 @@ def run(experiment: Experiment) -> None:
 
             final_save_dict = {"Z_AVG": zs, "x": xs}
             datasaver.add_multiple_results(
-                final_save_dict, save=experiment.final_save_tags, group="data"
+                final_save_dict, save=["Z_AVG", "x"], group="data"
             )
 
         ##########################          fin           #############################

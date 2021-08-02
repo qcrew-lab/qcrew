@@ -44,7 +44,6 @@ class PowerRabi(Experiment):
 
         macros.stream_results(self.var_list)  # stream variables (I, Q, x, etc)
 
-
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":

@@ -88,16 +88,26 @@ class Experiment(Parametrized):
         return tags
 
     def setup_plot(
-        self, xlabel="", ylabel="", zlabel="", legend=[], title="", plot_type="1D"
+        self,
+        xlabel=None,
+        ylabel=None,
+        zlabel="Signal (a.u.)",
+        legend=[],
+        title=None,
+        plot_type="1D",
     ):
         """
-        Updates self.plot_setup dictionary with the parameters to be used by the plotter.
+        Updates self.plot_setup dictionary with the parameters to be used by the
+        plotter.
 
-        xlabel, ylabel, zlabel and title are empty strings by default. The x and y labels are set up independently if the corresponding sweep exists.
+        The x and y labels are set up independently if the corresponding sweep exists.
 
-        plot_type is "1D" by default and it identifies how the plotter should arrange the data. If x,y sweeps are configured, one x sweep trace is plotted for every value of y. If the user wants to plot a colormesh instead, pass plot_type = '2D'.
+        plot_type identifies how the plotter should arrange the data. If "1D" and x,y
+        sweeps are configured, one x sweep trace is plotted for every value of y. If
+        the user wants to plot a colormesh instead, pass plot_type = '2D'.
 
-        legend is a list of labels for each trace. If plot_type = "1D" and a y sweep is configured, each label will correspond to a value of y.
+        legend is a list of labels for each trace. If plot_type = "1D" and a y sweep is
+        configured, each label will correspond to a value of y.
 
         """
 

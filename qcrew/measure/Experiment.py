@@ -93,8 +93,9 @@ class Experiment(Parametrized):
         ylabel=None,
         zlabel="Signal (a.u.)",
         legend=[],
-        title=None,
+        title=self.name,
         plot_type="1D",
+        err=True,
     ):
         """
         Updates self.plot_setup dictionary with the parameters to be used by the
@@ -109,6 +110,8 @@ class Experiment(Parametrized):
         legend is a list of labels for each trace. If plot_type = "1D" and a y sweep is
         configured, each label will correspond to a value of y.
 
+        err toggles errorbar plotting.
+
         """
 
         self.plot_setup = {
@@ -118,6 +121,7 @@ class Experiment(Parametrized):
             "legend": legend,
             "title": title,
             "plot_type": plot_type,
+            "err": err,
         }
 
         return

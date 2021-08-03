@@ -9,7 +9,7 @@ if __name__ == "__main__":
         qubit, rr, sa = stage.QUBIT, stage.RR, stage.SA
 
         # set new carrier and intermediate frequencies to the modes
-        qubit.lo_freq = 5.0175e9
+        qubit.lo_freq = 5.01685e9
         qubit.int_freq = -50e6
         rr.lo_freq = 8.60385e9
         rr.int_freq = -50e6

@@ -192,60 +192,60 @@ def QUA_loop(qua_function, sweep_variables):
 
     # Repetition loop
     n = sweep_variables[0]
-    x = sweep_variables[1]
-    y = sweep_variables[2]
+    v1 = sweep_variables[1]
+    v2 = sweep_variables[2]
 
     n_start, n_stop, n_step = n.sweep
     # Unpack start, stop, step if sweep_type is 'for_'
-    if x.sweep_type == "for_":
-        x_start, x_stop, x_step = x.sweep
-    if y.sweep_type == "for_":
-        y_start, y_stop, y_step = y.sweep
+    if v1.sweep_type == "for_":
+        v1_start, v1_stop, v1_step = v1.sweep
+    if v2.sweep_type == "for_":
+        v2_start, v2_stop, v2_step = v2.sweep
 
     with qua.for_(n.var, n_start, n.var < n_stop, n.var + n_step):
 
-        # If neither x nor y sweeps are configured, simply play function
-        if x.sweep is None and y.sweep is None:
+        # If neither v1 nor v2 sweeps are configured, simply play function
+        if v1.sweep is None and v2.sweep is None:
             qua_function()
 
-        # If only x sweep is configured
-        elif y.sweep is None:
-            if x.sweep_type == "for_":
-                x_start, x_stop, x_step = x.sweep
-                with qua.for_(x.var, x_start, x.var < x_stop, x.var + x_step):
+        # If only v1 sweep is configured
+        elif v2.sweep is None:
+            if v1.sweep_type == "for_":
+                v1_start, v1_stop, v1_step = v1.sweep
+                with qua.for_(v1.var, v1_start, v1.var < v1_stop, v1.var + v1_step):
                     qua_function()
-            if x.sweep_type == "for_each_":
-                with qua.for_each_(x.var, x.sweep):
-                    qua_function()
-
-        # If only y sweep is configured
-        elif x.sweep is None:
-            if y.sweep_type == "for_":
-                y_start, y_stop, y_step = y.sweep
-                with qua.for_(y.var, y_start, y.var < y_stop, y.var + y_step):
-                    qua_function()
-            if y.sweep_type == "for_each_":
-                with qua.for_each_(y.var, y.sweep):
+            if v1.sweep_type == "for_each_":
+                with qua.for_each_(v1.var, v1.sweep):
                     qua_function()
 
-        # If both x and y sweeps are configured, branch according to the sweep types
-
-        elif x.sweep_type == "for_" and y.sweep_type == "for_":
-            with qua.for_(x.var, x_start, x.var < x_stop, x.var + x_step):
-                with qua.for_(y.var, y_start, y.var < y_stop, y.var + y_step):
+        # If only v2 sweep is configured
+        elif v1.sweep is None:
+            if v2.sweep_type == "for_":
+                v2_start, v2_stop, v2_step = v2.sweep
+                with qua.for_(v2.var, v2_start, v2.var < v2_stop, v2.var + v2_step):
+                    qua_function()
+            if v2.sweep_type == "for_each_":
+                with qua.for_each_(v2.var, v2.sweep):
                     qua_function()
 
-        elif x.sweep_type == "for_" and y.sweep_type == "for_each_":
-            with qua.for_(x.var, x_start, x.var < x_stop, x.var + x_step):
-                with qua.for_each_(y.var, y.sweep):
+        # If both v1 and v2 sweeps are configured, branch according to the sweep types
+
+        elif v1.sweep_type == "for_" and v2.sweep_type == "for_":
+            with qua.for_(v1.var, v1_start, v1.var < v1_stop, v1.var + v1_step):
+                with qua.for_(v2.var, v2_start, v2.var < v2_stop, v2.var + v2_step):
                     qua_function()
 
-        elif x.sweep_type == "for_" and y.sweep_type == "for_each_":
-            with qua.for_each_(x.var, x.sweep):
-                with qua.for_(y.var, y_start, y.var < y_stop, y.var + y_step):
+        elif v1.sweep_type == "for_" and v2.sweep_type == "for_each_":
+            with qua.for_(v1.var, v1_start, v1.var < v1_stop, v1.var + v1_step):
+                with qua.for_each_(v2.var, v2.sweep):
                     qua_function()
 
-        elif x.sweep_type == "for_" and y.sweep_type == "for_each_":
-            with qua.for_each_(x.var, x.sweep):
-                with qua.for_each_(y.var, y.sweep):
+        elif v1.sweep_type == "for_" and v2.sweep_type == "for_each_":
+            with qua.for_each_(v1.var, v1.sweep):
+                with qua.for_(v2.var, v2_start, v2.var < v2_stop, v2.var + v2_step):
+                    qua_function()
+
+        elif v1.sweep_type == "for_" and v2.sweep_type == "for_each_":
+            with qua.for_each_(v1.var, v1.sweep):
+                with qua.for_each_(v2.var, v2.sweep):
                     qua_function()

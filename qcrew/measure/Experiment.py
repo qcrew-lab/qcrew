@@ -93,7 +93,7 @@ class Experiment(Parametrized):
         ylabel=None,
         zlabel="Signal (a.u.)",
         legend=[],
-        title=self.name,
+        title=None,
         plot_type="1D",
         err=True,
     ):

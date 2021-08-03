@@ -2,29 +2,26 @@
 A python class describing a readout resonator spectroscopy using QM.
 This class serves as a QUA script generator with user-defined parameters.
 """
-# --------------------------------- Imports ------------------------------------
-from qm import qua
 
-from qcrew.helpers.parametrizer import Parametrized
 from typing import ClassVar
-from qcrew.measure.Experiment import Experiment
-from qcrew.control import Stagehand
-import qua_macros as macros
+
+from qcrew.control import professor as prof
+from qcrew.measure.experiment import Experiment
+from qm import qua
 
 # ---------------------------------- Class -------------------------------------
 
 
 class RRSpectroscopy(Experiment):
 
+    name = "qubit_spec"
+
     _parameters: ClassVar[set[str]] = Experiment._parameters | {
-        "mode_names",  # names of the modes used in the experiment
         "fit_fn",  # fit function
     }
 
-    def __init__(self, modes, fit_fn="lorentzian", **other_params):
+    def __init__(self, fit_fn="lorentzian", **other_params):
 
-        self.mode_names = modes  # mode names for saving metadata
-        self.modes = None  # is updated with mode objects by the professor
         self.fit_fn = fit_fn
 
         super().__init__(**other_params)  # Passes other parameters to parent
@@ -39,7 +36,7 @@ class RRSpectroscopy(Experiment):
         rr.measure((self.I, self.Q))  # measure transmitted signal
         qua.wait(int(self.wait_time // 4), rr.name)  # wait system reset
 
-        macros.stream_results(self.var_list)  # stream variables (I, Q, x, etc)
+        self.QUA_stream_results()  # stream variables (I, Q, x, etc)
 
 
 # -------------------------------- Execution -----------------------------------
@@ -55,18 +52,4 @@ if __name__ == "__main__":
     }
 
     experiment = RRSpectroscopy(**parameters)
-
-    # The following will be done by the professor
-    with Stagehand() as stage:
-
-        mode_tuple = tuple()
-        for mode_name in experiment.mode_names:
-            mode_tuple += (getattr(stage, mode_name),)
-
-        experiment.modes = mode_tuple
-
-        power_rabi = experiment.QUA_sequence()
-
-        #################   RUN MEASUREMENT   ##################
-
-        job = stage.QM.execute(power_rabi)
+    prof.run(experiment)

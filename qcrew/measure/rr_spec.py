@@ -47,7 +47,7 @@ if __name__ == "__main__":
         "modes": ["RR"],
         "reps": 20000,
         "wait_time": 10000,
-        "x_sweep": (int(-50e6), int(50e6 + 0.2e6 / 2), int(0.2e6)),
+        "x_sweep": (int(-60e6), int(-40e6 + 0.10e6 / 2), int(0.10e6)),
     }
 
     experiment = RRSpectroscopy(**parameters)

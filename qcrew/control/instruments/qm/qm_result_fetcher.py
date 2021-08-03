@@ -34,6 +34,7 @@ class QMResultFetcher:
                     self._result_spec["multiple"][tag] = self._fetch_batch
                 else:
                     self._result_spec["multiple"][tag] = self._fetch_multiple
+                result.wait_for_values(2)  # so that std err can be calculated
 
     def fetch(self) -> dict[str, list]:
         """ """

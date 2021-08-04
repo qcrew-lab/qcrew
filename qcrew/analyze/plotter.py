@@ -88,7 +88,7 @@ class Plotter:
             )
             self.plot_line(x, fit_y, self.ax, label="fit", color="r")
 
-        self.ax.set_title(self.title + f": {n} repetition")
+        self.ax.set_title(self.title + f": {n} repetition{'s' if n > 1 else ''}")
         self.ax.set_xlabel(self.xlabel)
         self.ax.set_ylabel(self.ylabel)
         self.ax.legend()

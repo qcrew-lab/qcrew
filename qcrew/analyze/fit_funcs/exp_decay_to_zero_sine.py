@@ -1,6 +1,6 @@
 import numpy as np
 
-import qcrew.codebase.analysis.fit_funcs.sine as sine
+import qcrew.analyze.fit_funcs.sine as sine
 
 
 def func(xs, amp=-1, tau=1e5, f0=5e-5, phi=np.pi/4, ofs=0.8, tP=1e6):

@@ -8,20 +8,19 @@ import numpy as np
 import lmfit
 from lmfit import minimize, Parameters
 
-from qcrew.analyze.fit_funcs import *
+from qcrew.analyze import fit_funcs
 
 FIT_FUNCS = {}
-
-# for name in os.listdir(os.path.dirname(fit_funcs.__file__)):
-#     if name == "__init__.py" or not name.endswith(".py"):
-#         continue
-#     name = name[:-3]
-#     mod = importlib.import_module("qcrew.codebase.analysis.fit_funcs." + name)
-#     reload(mod)
-#     func = getattr(mod, "func")
-#     guess = getattr(mod, "guess")
-#     FIT_FUNCS[name] = func, guess
-# del name, mod, func, guess
+for name in os.listdir(os.path.dirname(fit_funcs.__file__)):
+    if name == "__init__.py" or not name.endswith(".py"):
+        continue
+    name = name[:-3]
+    mod = importlib.import_module("qcrew.analyze.fit_funcs." + name)
+    reload(mod)
+    func = getattr(mod, "func")
+    guess = getattr(mod, "guess")
+    FIT_FUNCS[name] = func, guess
+del name, mod, func, guess
 
 
 def eval_fit(fit_func, params, xs, ys=None):

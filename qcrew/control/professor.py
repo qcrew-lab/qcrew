@@ -59,48 +59,20 @@ def run(experiment: Experiment) -> None:
 
         qua_program = experiment.QUA_sequence()
         qm_job = stage.QM.execute(qua_program)
+
+        #########################        INVOKE HELPERS        #########################
+
         fetcher = QMResultFetcher(handle=qm_job.result_handles)
         stderr = (None, None, None)  # to hold running (stderr, mean, variance * (n-1))
+
+        plotter = Plotter(experiment.name, experiment.plot_setup["xlabel"])
+
         db = initialise_database(
             exp_name=experiment.name,
             sample_name=stage.sample_name,
             project_name=stage.project_name,
             path=stage.datapath,
         )
-
-        with DataSaver(db) as datasaver:
-            datasaver.add_metadata(experiment.parameters)
-            for mode in experiment.modes:
-                datasaver.add_metadata(mode.parameters)
-
-            while fetcher.is_fetching:
-                partial_results = fetcher.fetch()
-                num_results = fetcher.count
-                if not partial_results:  # empty dict means no new results available
-                    continue
-                datasaver.update_multiple_results(
-                    partial_results, save=["I", "Q"], group="data"
-                )
-                zs_raw = np.sqrt(partial_results["Z_SQ_RAW"])
-                zs_raw_avg = np.sqrt(partial_results["Z_SQ_RAW_AVG"])
-                stderr = stats.get_std_err(zs_raw, zs_raw_avg, num_results, *stderr)
-                zs = np.sqrt(partial_results["Z_AVG"])  # latest batch of average signal
-                xs = partial_results["x"]
-                temp_live_plot(
-                    xs, zs, num_results, fit_fn=experiment.fit_fn, err=stderr[0]
-                )
-                time.sleep(1)  # prevent over-fetching, over-saving, ultra-fast plotting
-
-            final_save_dict = {"Z_AVG": zs, "x": xs}
-            datasaver.add_multiple_results(
-                final_save_dict, save=["Z_AVG", "x"], group="data"
-            )
-
-"""        #########################        INVOKE HELPERS        #########################
-
-        fetcher = QMResultFetcher(handle=qm_job.result_handles)
-        stderr = (None, None, None)  # to hold running (stderr, mean, variance * (n-1))
-        plotter = Plotter(experiment.plotspec)
 
         ##################        LIVE POST-PROCESSING LOOP        ####################
 
@@ -124,19 +96,23 @@ def run(experiment: Experiment) -> None:
                 ################            LIVE SAVE RESULTS         ##################
 
                 datasaver.update_multiple_results(
-                    partial_results, save=experiment.live_save_tags, group="data"
+                    partial_results, save=experiment.live_saving_tags, group="data"
                 )
 
                 #######            CALCULATE RUNNING MEAN STANDARD ERROR         #######
 
-                zs_raw = np.sqrt(partial_results["Z_SQ_RAW"])
-                zs_raw_avg = np.sqrt(partial_results["Z_SQ_RAW_AVG"])
+                Z_SQ_RAW_tag, Z_SQ_RAW_AVG_tag = experiment.sd_estimation_tags
+
+                zs_raw = np.sqrt(partial_results[Z_SQ_RAW_tag])
+                zs_raw_avg = np.sqrt(partial_results[Z_SQ_RAW_AVG_tag])
                 stderr = stats.get_std_err(zs_raw, zs_raw_avg, num_results, *stderr)
 
                 #############            LIVE PLOT AVAILABLE RESULTS         ###########
 
-                zs = np.sqrt(partial_results["Z_AVG"])  # latest batch of average signal
-                xs = partial_results["x"]
+                Z_AVG_tag, x_tag = experiment.results_tags
+
+                zs = np.sqrt(partial_results[Z_AVG_tag])  # latest batch of avg signal
+                xs = partial_results[x_tag]
                 plotter.live_plot(
                     xs, zs, num_results, fit_fn=experiment.fit_fn, err=stderr[0]
                 )
@@ -144,12 +120,9 @@ def run(experiment: Experiment) -> None:
 
             ##################         SAVE REMAINING DATA         #####################
 
-            final_save_dict = {"Z_AVG": zs, "x": xs}
-            datasaver.add_multiple_results(
-                final_save_dict, save=["Z_AVG", "x"], group="data"
-            )
+            final_save_dict = {Z_AVG_tag: zs, x_tag: xs}
+            datasaver.add_multiple_results(final_save_dict, group="data")
 
         ##########################          fin           #############################
 
         print(qm_job.execution_report())
-"""

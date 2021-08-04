@@ -63,7 +63,7 @@ class Qubit(Mode):
         except (ValueError, TypeError):
             logger.error(f"Expect sequence (transition index, omega), got {new_omega}")
         else:
-            self._omegas[index] = omega
+            self._omegas.insert(index, omega)
             logger.success(f"Set transition {index = } with {omega = }")
 
     @property  # rotation ampx dict getter

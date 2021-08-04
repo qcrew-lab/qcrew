@@ -14,7 +14,9 @@ from qcrew.measure.experiment import Experiment
 
 import matplotlib.pyplot as plt
 from IPython import display
-def live_plot(x, y, n, err, fit_fn=None):
+
+
+def temp_live_plot(x, y, n, err, fit_fn=None):
     plt.cla()
     plt.errorbar(
         x,
@@ -59,27 +61,46 @@ def run(experiment: Experiment) -> None:
         qm_job = stage.QM.execute(qua_program)
         fetcher = QMResultFetcher(handle=qm_job.result_handles)
         stderr = (None, None, None)  # to hold running (stderr, mean, variance * (n-1))
+        db = initialise_database(
+            exp_name=experiment.name,
+            sample_name=stage.sample_name,
+            project_name=stage.project_name,
+            path=stage.datapath,
+        )
 
-        while fetcher.is_fetching:
-            partial_results = fetcher.fetch()
-            num_results = fetcher.count
-            if not partial_results:  # empty dict means no new results available
-                continue
-            zs_raw = np.sqrt(partial_results["Z_SQ_RAW"])
-            zs_raw_avg = np.sqrt(partial_results["Z_SQ_RAW_AVG"])
-            stderr = stats.get_std_err(zs_raw, zs_raw_avg, num_results, *stderr)
-            zs = np.sqrt(partial_results["Z_AVG"])  # latest batch of average signal
-            xs = partial_results["x"]
-            live_plot(xs, zs, num_results, fit_fn=experiment.fit_fn, err=stderr[0])
-            time.sleep(1)  # prevent over-fetching, over-saving, ultra-fast plotting
+        with DataSaver(db) as datasaver:
+            datasaver.add_metadata(experiment.parameters)
+            for mode in experiment.modes:
+                datasaver.add_metadata(mode.parameters)
 
+            while fetcher.is_fetching:
+                partial_results = fetcher.fetch()
+                num_results = fetcher.count
+                if not partial_results:  # empty dict means no new results available
+                    continue
+                datasaver.update_multiple_results(
+                    partial_results, save=["I", "Q"], group="data"
+                )
+                zs_raw = np.sqrt(partial_results["Z_SQ_RAW"])
+                zs_raw_avg = np.sqrt(partial_results["Z_SQ_RAW_AVG"])
+                stderr = stats.get_std_err(zs_raw, zs_raw_avg, num_results, *stderr)
+                zs = np.sqrt(partial_results["Z_AVG"])  # latest batch of average signal
+                xs = partial_results["x"]
+                temp_live_plot(
+                    xs, zs, num_results, fit_fn=experiment.fit_fn, err=stderr[0]
+                )
+                time.sleep(1)  # prevent over-fetching, over-saving, ultra-fast plotting
+
+            final_save_dict = {"Z_AVG": zs, "x": xs}
+            datasaver.add_multiple_results(
+                final_save_dict, save=["Z_AVG", "x"], group="data"
+            )
 
 """        #########################        INVOKE HELPERS        #########################
 
         fetcher = QMResultFetcher(handle=qm_job.result_handles)
         stderr = (None, None, None)  # to hold running (stderr, mean, variance * (n-1))
         plotter = Plotter(experiment.plotspec)
-        db = initialise_database(experiment, stage)
 
         ##################        LIVE POST-PROCESSING LOOP        ####################
 

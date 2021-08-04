@@ -1,9 +1,9 @@
 # general packages
 from qcrew.helpers.parametrizer import Parametrized
 from qcrew.helpers import logger
+import qcrew.measure.qua_macros as macros
 from typing import ClassVar
 import numpy as np
-import qua_macros as macros
 import abc
 
 # qua modules

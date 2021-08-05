@@ -609,6 +609,7 @@ class DataHandle:
                     shape_list[0]= 1
                     new_shape = tuple(shape_list)
                     data = data.reshape(new_shape)
+                    new_data_shape = data.shape
 
                 # 2d raw data
                 # the first index is the repetition number
@@ -669,6 +670,7 @@ class DataHandle:
                 newdata_shape_list[0] = 1
                 newdata_shape_2d = tuple(newdata_shape_list)
                 data = data.reshape(newdata_shape_2d)
+                new_data_shape = data.shape
 
                 # create new max shape, in first dimension, it is unlimited
                 newdata_shape_list[0] = None

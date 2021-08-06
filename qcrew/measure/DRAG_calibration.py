@@ -25,6 +25,10 @@ class DRAGCalibration(Experiment):
             ("pi", "X", "pi2", "Y", "XpY9"),  # XpY9
         ]
 
+        # Num of times QUA_stream_results method is executed in the pulse sequence. Is
+        # used in buffering.
+        self.reshape = len(self.gate_list)
+
         super().__init__(**other_params)  # Passes other parameters to parent
 
     def QUA_play_pulse_sequence(self):
@@ -40,10 +44,10 @@ class DRAGCalibration(Experiment):
             qua.align(qubit.name, rr.name)
 
             # First gate
-            qubit.rotate(self, angle=gate1_rot, axis=gate1_axis)
-    
+            qubit.rotate(angle=gate1_rot, axis=gate1_axis)
+
             # Second pulse
-            qubit.rotate(self, angle=gate2_rot, axis=gate2_axis)
+            qubit.rotate(angle=gate2_rot, axis=gate2_axis)
 
             rr.measure((self.I, self.Q))  # measure transmitted signal
             qua.wait(int(self.wait_time // 4), rr.name)  # wait system reset
@@ -59,8 +63,7 @@ if __name__ == "__main__":
         "modes": ["QUBIT", "RR"],
         "reps": 20000,
         "wait_time": 10000,
-        "x_sweep": (int(-50e6), int(50e6 + 0.2e6 / 2), int(0.2e6)),
-        "y_sweep": (0.1, 1.5 + 0.05 / 2, 0.05),
+        "x_sweep": (-0.2, 0.2, 0.02),
     }
 
     experiment = DRAGCalibration(**parameters)

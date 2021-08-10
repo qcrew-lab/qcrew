@@ -1,6 +1,6 @@
 """ """
 
-from typing import Any, ClassVar
+from typing import Any, ClassVar, Type
 
 import qcrew.control.instruments as qci
 import qcrew.control.pulses as qcp
@@ -169,17 +169,28 @@ class Mode(Parametrized, Yamlizable):
         """ """
         return self._ports["I"] is not None and self._ports["Q"] is not None
 
-    def play(self, key: str, ampx=1.0, **kwargs) -> None:
+    def play(self, key: str, ampx=1.0, phase=0.0, **kwargs) -> None:
         """ """
         if key not in self._operations:
             logger.error(f"No operation named {key} defined for {self}")
             raise RuntimeError(f"Failed to play Mode operation named '{key}'")
 
         try:
-            qua.play(key * qua.amp(ampx), self.name, **kwargs)
-        except Exception:  # QM forced me to catch base class Exception...
+            num_ampxs = len(ampx)
+            if num_ampxs != 4:
+                logger.error("Ampx must be a sequence of 4 values")
+                raise ValueError(f"Invalid ampx value count, expect 4, got {num_ampxs}")
+        except TypeError:
             try:
-                qua.play(key * qua.amp(*ampx), self.name, **kwargs)
-            except Exception:  # QM forced me to catch base class Exception...
-                logger.error("Invalid ampx, expect 1 value or sequence of 4 values")
+                ampx = float(ampx)
+                num_ampxs = 1
+            except (TypeError, ValueError):
+                logger.error(f"Invalid ampx, expect {int, float}, got {type(ampx)}")
                 raise
+
+        qua.frame_rotation_2pi(phase, self.name)
+        if num_ampxs == 1:
+            qua.play(key * qua.amp(ampx), self.name, **kwargs)
+        else:
+            qua.play(key * qua.amp(*ampx), self.name, **kwargs)
+        qua.frame_rotation_2pi(-phase, self.name)

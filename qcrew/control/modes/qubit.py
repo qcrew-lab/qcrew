@@ -95,25 +95,11 @@ class Qubit(Mode):
             logger.error(f"Unrecognized rotation {angle = }, {valid_keys = }")
             raise
         else:
-            self._rotate(ampx, axis)
-
-    def _rotate(self, ampx: float, axis: str) -> None:
-        """ """
-        if axis == "X":
-            self._rotate_x(ampx)
-        elif axis == "Y":
-            self._rotate_y(ampx)
-        else:
-            valid_keys = self._rotation_axis_keys
-            logger.error(f"Unrecognized {axis = }, {valid_keys = }")
-            raise ValueError("Invalid rotation axis")
-
-    def _rotate_x(self, ampx: float) -> None:
-        """ """
-        self.play("rotation_pulse", ampx=ampx)
-
-    def _rotate_y(self, ampx: float) -> None:
-        """ """
-        qua.frame_rotation_2pi(0.25, self.name)
-        self.play("rotation_pulse", ampx=ampx)
-        qua.frame_rotation_2pi(-0.25, self.name)
+            if axis == "X":
+                self.play("rotation_pulse", ampx=ampx)
+            elif axis == "Y":
+                self.play("rotation_pulse", ampx=ampx, phase=0.25)
+            else:
+                valid_keys = self._rotation_axis_keys
+                logger.error(f"Unrecognized {axis = }, {valid_keys = }")
+                raise ValueError("Invalid rotation axis")

@@ -181,12 +181,7 @@ class Mode(Parametrized, Yamlizable):
                 logger.error("Ampx must be a sequence of 4 values")
                 raise ValueError(f"Invalid ampx value count, expect 4, got {num_ampxs}")
         except TypeError:
-            try:
-                ampx = float(ampx)
-                num_ampxs = 1
-            except (TypeError, ValueError):
-                logger.error(f"Invalid ampx, expect {int, float}, got {type(ampx)}")
-                raise
+            num_ampxs = 1
 
         qua.frame_rotation_2pi(phase, self.name)
         if num_ampxs == 1:

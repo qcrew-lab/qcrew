@@ -1,5 +1,5 @@
 """
-A python class describing a readout resonator spectroscopy using QM.
+A python class describing a DRAG pulse calibration using QM.
 This class serves as a QUA script generator with user-defined parameters.
 """
 
@@ -58,7 +58,7 @@ class DRAGCalibration(Experiment):
             # The DRAG correction is scaled by self.x
             qubit.play(gate2_rot, ampx=(1.0, 0.0, 0.0, self.x), phase=gate2_axis)
 
-            qua.align(qubit.name, rr.name)  # align gates to measurement pule
+            qua.align(qubit.name, rr.name)  # align gates to measurement pulse
 
             rr.measure((self.I, self.Q))  # measure transmitted signal
             qua.wait(int(self.wait_time // 4), rr.name)  # wait system reset

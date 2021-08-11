@@ -19,12 +19,14 @@ class DRAGCalibration(Experiment):
     _parameters: ClassVar[set[str]] = Experiment._parameters | {
         "qubit_pi_op",  # Qubit pi operation
         "qubit_pi2_op",  # Qubit pi/2 operation
+        "fit_fn",  # fit function
     }
 
-    def __init__(self, qubit_pi_op, qubit_pi2_op, **other_params):
+    def __init__(self, qubit_pi_op, qubit_pi2_op, fit_fn="linear", **other_params):
 
         self.qubit_pi_op = qubit_pi_op
         self.qubit_pi2_op = qubit_pi2_op
+        self.fit_fn = fit_fn
 
         self.gate_list = [
             (self.qubit_pi_op, 0.25, self.qubit_pi2_op, 0.00, "YpX9"),  # YpX9
@@ -56,10 +58,12 @@ class DRAGCalibration(Experiment):
             # The DRAG correction is scaled by self.x
             qubit.play(gate2_rot, ampx=(1.0, 0.0, 0.0, self.x), phase=gate2_axis)
 
-            qua.align(qubit.name, rr.name)
+            qua.align(qubit.name, rr.name)  # align gates to measurement pule
 
             rr.measure((self.I, self.Q))  # measure transmitted signal
             qua.wait(int(self.wait_time // 4), rr.name)  # wait system reset
+
+            qua.align(qubit.name, rr.name)  # align to the next gate pair
 
             self.QUA_stream_results()  # stream variables (I, Q, x, etc)
 
@@ -71,7 +75,7 @@ if __name__ == "__main__":
     parameters = {
         "modes": ["QUBIT", "RR"],
         "reps": 20000,
-        "wait_time": 10000,
+        "wait_time": 30000,
         "x_sweep": (-0.2, 0.2, 0.02),
         "qubit_pi_op": "pi",
         "qubit_pi2_op": "pi2",

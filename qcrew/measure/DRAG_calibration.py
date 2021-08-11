@@ -16,13 +16,19 @@ class DRAGCalibration(Experiment):
 
     name = "DRAG_calibration"
 
-    _parameters: ClassVar[set[str]] = Experiment._parameters | {}
+    _parameters: ClassVar[set[str]] = Experiment._parameters | {
+        "qubit_pi_op",  # Qubit pi operation
+        "qubit_pi2_op",  # Qubit pi/2 operation
+    }
 
-    def __init__(self, **other_params):
+    def __init__(self, qubit_pi_op, qubit_pi2_op, **other_params):
+
+        self.qubit_pi_op = qubit_pi_op
+        self.qubit_pi2_op = qubit_pi2_op
 
         self.gate_list = [
-            ("pi", "Y", "pi2", "X", "YpX9"),  # YpX9
-            ("pi", "X", "pi2", "Y", "XpY9"),  # XpY9
+            (self.qubit_pi_op, 0.25, self.qubit_pi2_op, 0.00, "YpX9"),  # YpX9
+            (self.qubit_pi_op, 0.00, self.qubit_pi2_op, 0.25, "XpY9"),  # XpY9
         ]
 
         # Num of times QUA_stream_results method is executed in the pulse sequence. Is
@@ -41,13 +47,16 @@ class DRAGCalibration(Experiment):
             gate1_rot, gate1_axis, gate2_rot, gate2_axis, _ = gate_pair
 
             qua.reset_frame(qubit.name)
+
+            # Play the first gate
+            # The DRAG correction is scaled by self.x
+            qubit.play(gate1_rot, ampx=(1.0, 0.0, 0.0, self.x), phase=gate1_axis)
+
+            # Play the second gate
+            # The DRAG correction is scaled by self.x
+            qubit.play(gate2_rot, ampx=(1.0, 0.0, 0.0, self.x), phase=gate2_axis)
+
             qua.align(qubit.name, rr.name)
-
-            # First gate
-            qubit.rotate(angle=gate1_rot, axis=gate1_axis)
-
-            # Second pulse
-            qubit.rotate(angle=gate2_rot, axis=gate2_axis)
 
             rr.measure((self.I, self.Q))  # measure transmitted signal
             qua.wait(int(self.wait_time // 4), rr.name)  # wait system reset
@@ -64,6 +73,8 @@ if __name__ == "__main__":
         "reps": 20000,
         "wait_time": 10000,
         "x_sweep": (-0.2, 0.2, 0.02),
+        "qubit_pi_op": "pi",
+        "qubit_pi2_op": "pi2",
     }
 
     experiment = DRAGCalibration(**parameters)

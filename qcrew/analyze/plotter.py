@@ -75,7 +75,7 @@ class Plotter:
                 x_data = independent_data[0]
                 z_data = dependent_data[0]
                 label = self.plot_setup["trace_labels"][0]
-                self.plot_1D(x_data, z_data, n, fit_fn, label=label, err=err)
+                self.plot_1D(x_data, z_data, fit_fn, label=label, err=err)
 
             # Plot a trace for each value in independent_data[1]
             if len(independent_data) == 2:
@@ -93,7 +93,7 @@ class Plotter:
 
                     # Get z data corresponding to this trace
                     z_trace_data = z_data[:, indx]
-                    self.plot_1D(x_data, z_trace_data, n, fit_fn, label=label, err=err)
+                    self.plot_1D(x_data, z_trace_data, fit_fn, label=label, err=err)
 
         if self.plot_setup["plot_type"] == "2D":
             if len(independent_data) != 2:
@@ -102,7 +102,17 @@ class Plotter:
 
             self.plot_2D(x_data, y_data, z_data)
 
-    def plot_1D(self, x, z, n, fit_fn, label=None, err=None):
+        # Sets plot parameters
+        self.ax.set_title(
+            self.plot_setup["title"] + f": {n} repetition{'s' if n > 1 else ''}"
+        )
+        self.ax.set_xlabel(self.plot_setup["xlabel"])
+        self.ax.set_ylabel(self.plot_setup["zlabel"])
+        self.ax.legend()
+
+        self.hdisplay.update(self.fig)
+
+    def plot_1D(self, x, z, fit_fn, label=None, err=None):
 
         # plot the data
         label = label or "data"
@@ -125,13 +135,6 @@ class Plotter:
                 transform=self.ax.transAxes,
             )
             self.plot_line(x, fit_z, self.ax, label="fit", color="r")
-
-        self.ax.set_title(self.title + f": {n} repetition{'s' if n > 1 else ''}")
-        self.ax.set_xlabel(self.plot_setup["xlabel"])
-        self.ax.set_ylabel(self.plot_setup["zlabel"])
-        self.ax.legend()
-
-        self.hdisplay.update(self.fig)
 
     def plot_errorbar(self, x, z, axis, yerr, label: str):
         axis.errorbar(

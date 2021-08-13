@@ -33,9 +33,9 @@ class DRAGCalibration(Experiment):
             (self.qubit_pi_op, 0.00, self.qubit_pi2_op, 0.25, "XpY9"),  # XpY9
         ]
 
-        # Num of times QUA_stream_results method is executed in the pulse sequence. Is
-        # used in buffering.
-        self.reshape = len(self.gate_list)
+        # Assign one sweep value for each time QUA_stream_results method is executed in
+        # the pulse sequence. Is used for plotting with correct labels.
+        self.internal_sweep = [x[4] for x in self.gate_list]  # select gate names
 
         super().__init__(**other_params)  # Passes other parameters to parent
 

@@ -65,7 +65,7 @@ def run(experiment: Experiment) -> None:
         fetcher = QMResultFetcher(handle=qm_job.result_handles)
         stderr = (None, None, None)  # to hold running (stderr, mean, variance * (n-1))
 
-        plotter = Plotter(experiment.name, experiment.plot_setup["xlabel"])
+        plotter = Plotter(experiment.plot_setup)
 
         db = initialise_database(
             exp_name=experiment.name,
@@ -107,13 +107,7 @@ def run(experiment: Experiment) -> None:
 
                 #############            LIVE PLOT AVAILABLE RESULTS         ###########
 
-                Z_AVG_tag, x_tag = experiment.results_tags
-
-                zs = np.sqrt(partial_results[Z_AVG_tag])  # latest batch of avg signal
-                xs = partial_results[x_tag]
-                plotter.live_plot(
-                    xs, zs, num_results, fit_fn=experiment.fit_fn, err=stderr[0]
-                )
+                experiment.plot_results(plotter, partial_results, num_results, stderr)
                 time.sleep(1)  # prevent over-fetching, over-saving, ultra-fast plotting
 
             ##################         SAVE REMAINING DATA         #####################

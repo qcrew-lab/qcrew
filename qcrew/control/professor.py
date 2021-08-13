@@ -101,11 +101,9 @@ def run(experiment: Experiment) -> None:
 
                 #######            CALCULATE RUNNING MEAN STANDARD ERROR         #######
 
-                Z_SQ_RAW_tag, Z_SQ_RAW_AVG_tag = experiment.sd_estimation_tags
-
-                zs_raw = np.sqrt(partial_results[Z_SQ_RAW_tag])
-                zs_raw_avg = np.sqrt(partial_results[Z_SQ_RAW_AVG_tag])
-                stderr = stats.get_std_err(zs_raw, zs_raw_avg, num_results, *stderr)
+                stderr = experiment.estimate_sd(
+                    stats, partial_results, num_results, stderr
+                )
 
                 #############            LIVE PLOT AVAILABLE RESULTS         ###########
 

@@ -119,6 +119,9 @@ class Experiment(Parametrized):
 
         """
 
+        if not title:
+            title = self.name
+
         self.plot_setup = {
             "xlabel": xlabel,
             "ylabel": ylabel,
@@ -249,7 +252,11 @@ class Experiment(Parametrized):
 
         independent_data = []
         for tag in indep_tags:
+            reshaped_data = partial_results[tag].reshape(self.buffering)
             independent_data.append(reshaped_data)
+
+        # Retrieve and reshape standard error estimation
+        error_data = stderr[0].reshape(self.buffering)
 
         # if an internal sweep is defined in the child experiment class, add its value
         # as independent variable data
@@ -263,5 +270,5 @@ class Experiment(Parametrized):
             dependent_data,
             num_results,
             fit_fn=self.fit_fn,
-            err=stderr[0],
+            err=error_data,
         )

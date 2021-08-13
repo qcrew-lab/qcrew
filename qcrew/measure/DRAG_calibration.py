@@ -76,7 +76,7 @@ if __name__ == "__main__":
         "modes": ["QUBIT", "RR"],
         "reps": 20000,
         "wait_time": 30000,
-        "x_sweep": (-0.2, 0.2, 0.02),
+        "x_sweep": (-0.2, 0.2 + 0.02 / 2, 0.02),
         "qubit_pi_op": "pi",
         "qubit_pi2_op": "pi2",
     }

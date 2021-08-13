@@ -255,15 +255,21 @@ class Experiment(Parametrized):
             reshaped_data = partial_results[tag].reshape(self.buffering)
             independent_data.append(reshaped_data)
 
-        # Retrieve and reshape standard error estimation
-        error_data = stderr[0].reshape(self.buffering)
-
         # if an internal sweep is defined in the child experiment class, add its value
-        # as independent variable data
+        # as independent variable data. The values are repeated so the dimensions match
+        # the other independent data shapes.
         try:
-            independent_data.append(self.internal_sweep)
+            internal_sweep = self.internal_sweep
+            # Repeat the values
+            for indx in range(len(self.buffering) - 1):
+                internal_sweep = [internal_sweep] * self.buffering[indx]
+
+            independent_data.append(internal_sweep)
         except AttributeError:
             pass
+
+        # Retrieve and reshape standard error estimation
+        error_data = stderr[0].reshape(self.buffering)
 
         plotter.live_plot(
             independent_data,

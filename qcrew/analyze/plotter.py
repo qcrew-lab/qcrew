@@ -5,6 +5,17 @@ from qcrew.helpers import logger
 from IPython import display
 from qcrew.analyze import fit
 
+COLOR_LIST = (
+    "#0000FF",
+    "#FF3300",
+    "#33FF00",
+    "#FF9933",
+    "#663399",
+    "#009966",
+    "#66CCCC",
+    "#000000",
+)
+
 
 class Plotter:
     """Single axis x-y plotter. Supports line, scatter, and errorbar plot. Provides a rudimentary live plotting routine."""
@@ -82,7 +93,7 @@ class Plotter:
                 x_data = independent_data[0]
                 y_data = independent_data[1]
                 z_data = dependent_data[0]
-                for indx, trace_y in enumerate(y_data):
+                for indx, trace_y in enumerate(y_data[0]):
 
                     # Pass user-defined label to the plot if provided, else pass
                     # y_value as a string
@@ -93,12 +104,14 @@ class Plotter:
 
                     # Get z data corresponding to this trace
                     z_trace_data = z_data[:, indx]
-                    x_trace_data = x_data[:, indx]
-                    trace_err = err[:, indx]
-
+                    color = COLOR_LIST[indx]
                     self.plot_1D(
-                        x_trace_data, z_trace_data, fit_fn, label=label, err=trace_err
+                        x_data, z_trace_data, fit_fn, label=label, err=err, color=color
                     )
+
+            # Set plot parameters
+            self.ax.set_ylabel(self.plot_setup["zlabel"])
+            self.ax.legend()
 
         if self.plot_setup["plot_type"] == "2D":
             if len(independent_data) != 2:
@@ -107,24 +120,29 @@ class Plotter:
 
             self.plot_2D(x_data, y_data, z_data)
 
-        # Sets plot parameters
+        # Set plot parameters
         self.ax.set_title(
             self.plot_setup["title"] + f": {n} repetition{'s' if n > 1 else ''}"
         )
         self.ax.set_xlabel(self.plot_setup["xlabel"])
-        self.ax.set_ylabel(self.plot_setup["zlabel"])
-        self.ax.legend()
-
         self.hdisplay.update(self.fig)
 
-    def plot_1D(self, x, z, fit_fn, label=None, err=None):
+    def plot_2D(self, x, y, z):
+
+        im = self.ax.pcolormesh(x, y, z)
+        cbar = self.fig.colorbar(im)
+        # Set plot parameters
+        self.ax.set_ylabel(self.plot_setup["ylabel"])
+        cbar.set_label(self.plot_setup["zlabel"])
+
+    def plot_1D(self, x, z, fit_fn, label=None, err=None, color="b"):
 
         # plot the data
         label = label or "data"
         if err is not None and self.plot_setup["plot_err"]:
-            self.plot_errorbar(x, z, self.ax, err, label)
+            self.plot_errorbar(x, z, self.ax, err, label, color=color)
         else:
-            self.plot_scatter(x, z, self.ax, label)
+            self.plot_scatter(x, z, self.ax, label, color=color)
 
         if fit_fn:
             # plot the fit curve
@@ -139,17 +157,18 @@ class Plotter:
                 verticalalignment="top",
                 transform=self.ax.transAxes,
             )
-            self.plot_line(x, fit_z, self.ax, label="fit", color="r")
+            self.plot_line(x, fit_z, self.ax, label="fit", color=color)
 
-    def plot_errorbar(self, x, z, axis, yerr, label: str):
+    def plot_errorbar(self, x, z, axis, zerr, label, color="b"):
         axis.errorbar(
             x,
             z,
-            yerr=yerr,
+            yerr=zerr,
             label=label,
             ls="none",
             lw=1,
-            ecolor="b",
+            ecolor=color,
+            color=color,
             marker="o",
             ms=4,
             mfc="b",
@@ -158,8 +177,8 @@ class Plotter:
             fillstyle="none",
         )
 
-    def plot_scatter(self, x, z, axis, label):
-        axis.scatter(x, z, s=4, color="b", marker="o", label=label)
+    def plot_scatter(self, x, z, axis, label, color="b"):
+        axis.scatter(x, z, s=4, color=color, marker="o", label=label)
 
     def plot_line(self, x, z, axis, label, color="b"):
         axis.plot(x, z, color=color, lw=2, label=label)

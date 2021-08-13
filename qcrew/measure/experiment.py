@@ -79,20 +79,24 @@ class Experiment(Parametrized):
     @property
     def results_tags(self):
         # return the tags for independent variables x, y (if applicable) and dependent
-        # variable z for live plotting and data saving.
-        tags = [self.Z_AVG_tag]
+        # variables z for live plotting and data saving.
+
+        indep_tags = []
         for var in ["x", "y"]:
             if self.variables[var].tag:
-                tags.append(self.variables[var].tag)
+                indep_tags.append(self.variables[var].tag)
 
-        return tags
+        # TODO: implement more than 1 dependent variable (multiple readout)
+        dep_tags = [self.Z_AVG_tag]
+
+        return indep_tags, dep_tags
 
     def setup_plot(
         self,
         xlabel=None,
         ylabel=None,
         zlabel="Signal (a.u.)",
-        legend=[],
+        trace_labels=[],
         title=None,
         plot_type="1D",
         err=True,
@@ -107,10 +111,11 @@ class Experiment(Parametrized):
         sweeps are configured, one x sweep trace is plotted for every value of y. If
         the user wants to plot a colormesh instead, pass plot_type = '2D'.
 
-        legend is a list of labels for each trace. If plot_type = "1D" and a y sweep is
+        trace_labels is a list of labels for each trace. If plot_type = "1D" and a y
+        sweep is
         configured, each label will correspond to a value of y.
 
-        err toggles errorbar plotting.
+        plot_err toggles errorbar plotting.
 
         """
 
@@ -118,10 +123,10 @@ class Experiment(Parametrized):
             "xlabel": xlabel,
             "ylabel": ylabel,
             "zlabel": zlabel,
-            "legend": legend,
+            "trace_labels": trace_labels,
             "title": title,
             "plot_type": plot_type,
-            "err": err,
+            "plot_err": err,
         }
 
         return
@@ -152,10 +157,10 @@ class Experiment(Parametrized):
                 # Define key as memory tag
                 self.variables[key].tag = key
 
-        # if reshape attribute is defined in the child experiment class, add it to the
-        # buffering
+        # if an internal sweep is defined in the child experiment class, add its length
+        # to the buffering
         try:
-            buffering.append(self.reshape)
+            buffering.append(len(self.internal_sweep))
         except AttributeError:
             pass
 
@@ -212,3 +217,51 @@ class Experiment(Parametrized):
         self.QUA_play_pulse_sequence.
         """
         macros.stream_results(self.variables)
+
+    def estimate_sd(self, statistician, partial_results, num_results, stderr):
+        """
+        Method to call the statistician and estimate running mean standard error.
+        stderr holds the running values of (stderr, mean, variance * (n-1))
+        """
+
+        # TODO do this for multiple dependent variables
+
+        zs_raw = np.sqrt(partial_results[self.Z_SQ_RAW_tag])
+        zs_raw_avg = np.sqrt(partial_results[self.Z_SQ_RAW_AVG_tag])
+        stderr = statistician.get_std_err(zs_raw, zs_raw_avg, num_results, *stderr)
+
+        return stderr
+
+    def plot_results(self, plotter, partial_results, num_results, stderr):
+        """
+        Reorganizes the data shape and send it to the plotter.
+        """
+
+        indep_tags, dep_tags = self.results_tags
+
+        dependent_data = []
+        for tag in dep_tags:
+            # Take the square root of dependent variables. This step is required for
+            # dependent values calculated as I^2 + Q^2 in stream processing.
+            # Reshape the fetched data with buffer lengths
+            reshaped_data = np.sqrt(partial_results[tag]).reshape(self.buffering)
+            dependent_data.append(reshaped_data)
+
+        independent_data = []
+        for tag in indep_tags:
+            independent_data.append(reshaped_data)
+
+        # if an internal sweep is defined in the child experiment class, add its value
+        # as independent variable data
+        try:
+            independent_data.append(self.internal_sweep)
+        except AttributeError:
+            pass
+
+        plotter.live_plot(
+            independent_data,
+            dependent_data,
+            num_results,
+            fit_fn=self.fit_fn,
+            err=stderr[0],
+        )

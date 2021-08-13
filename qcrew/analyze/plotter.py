@@ -93,7 +93,12 @@ class Plotter:
 
                     # Get z data corresponding to this trace
                     z_trace_data = z_data[:, indx]
-                    self.plot_1D(x_data, z_trace_data, fit_fn, label=label, err=err)
+                    x_trace_data = x_data[:, indx]
+                    trace_err = err[:, indx]
+
+                    self.plot_1D(
+                        x_trace_data, z_trace_data, fit_fn, label=label, err=trace_err
+                    )
 
         if self.plot_setup["plot_type"] == "2D":
             if len(independent_data) != 2:

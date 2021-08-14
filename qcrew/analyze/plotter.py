@@ -85,7 +85,10 @@ class Plotter:
             if len(independent_data) == 1:
                 x_data = independent_data[0]
                 z_data = dependent_data[0]
-                label = self.plot_setup["trace_labels"][0]
+                try:
+                    label = self.plot_setup["trace_labels"][0]
+                except IndexError:
+                    label = None
                 self.plot_1D(x_data, z_data, fit_fn, label=label, err=err)
 
             # Plot a trace for each value in independent_data[1]
@@ -104,9 +107,17 @@ class Plotter:
 
                     # Get z data corresponding to this trace
                     z_trace_data = z_data[:, indx]
+                    x_trace_data = x_data[:, indx]
+                    err_trace_data = err[:, indx]
+
                     color = COLOR_LIST[indx]
                     self.plot_1D(
-                        x_data, z_trace_data, fit_fn, label=label, err=err, color=color
+                        x_trace_data,
+                        z_trace_data,
+                        fit_fn,
+                        label=label,
+                        err=err_trace_data,
+                        color=color,
                     )
 
             # Set plot parameters
@@ -171,8 +182,8 @@ class Plotter:
             color=color,
             marker="o",
             ms=4,
-            mfc="b",
-            mec="b",
+            mfc=color,
+            mec=color,
             capsize=3,
             fillstyle="none",
         )

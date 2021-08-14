@@ -48,12 +48,18 @@ class T1(Experiment):
 if __name__ == "__main__":
 
     parameters = {
-        "modes": ("QUBIT", "RR"),
+        "modes": ["QUBIT", "RR"],
         "reps": 20000,
         "wait_time": 32000,
         "x_sweep": (int(16), int(1000 + 40 / 2), int(40)),
         "qubit_op": "gaussian_pulse",
     }
 
+    plot_parameters = {
+        "xlabel": "Relaxation time (clock cycles)",
+    }
+
     experiment = T1(**parameters)
+    experiment.setup_plot(**plot_parameters)
+
     prof.run(experiment)

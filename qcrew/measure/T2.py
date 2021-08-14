@@ -60,5 +60,11 @@ if __name__ == "__main__":
         "detuning": int(300e6),
     }
 
+    plot_parameters = {
+        "xlabel": "Relaxation time (clock cycles)",
+    }
+
     experiment = T2(**parameters)
+    experiment.setup_plot(**plot_parameters)
+
     prof.run(experiment)

@@ -19,27 +19,23 @@ class ALLXY(Experiment):
     _parameters: ClassVar[set[str]] = Experiment._parameters | {
         "qubit_pi_op",  # Qubit pi operation
         "qubit_pi2_op",  # Qubit pi/2 operation
-        "qubit_idle",  # Qubit idle operation
         "fit_fn",  # fit function
     }
 
-    def __init__(
-        self, qubit_pi_op, qubit_pi2_op, qubit_idle, fit_fn=None, **other_params
-    ):
+    def __init__(self, qubit_pi_op, qubit_pi2_op, fit_fn=None, **other_params):
 
         self.qubit_pi_op = qubit_pi_op
         self.qubit_pi2_op = qubit_pi2_op
-        self.qubit_idle = qubit_idle
         self.fit_fn = fit_fn
 
         self.gate_list = [
-            (self.qubit_idle, 0.00, self.qubit_idle, 0.00, "IdId"),
+            ("idle", 0.00, "idle", 0.00, "IdId"),
             (self.qubit_pi_op, 0.00, self.qubit_pi_op, 0.00, "XpXp"),
             (self.qubit_pi_op, 0.25, self.qubit_pi_op, 0.25, "YpYp"),
             (self.qubit_pi_op, 0.00, self.qubit_pi_op, 0.25, "XpYp"),
             (self.qubit_pi_op, 0.25, self.qubit_pi_op, 0.00, "YpXp"),
-            (self.qubit_pi2_op, 0.00, self.qubit_idle, 0.00, "X9Id"),
-            (self.qubit_pi2_op, 0.25, self.qubit_idle, 0.00, "Y9Id"),
+            (self.qubit_pi2_op, 0.00, "idle", 0.00, "X9Id"),
+            (self.qubit_pi2_op, 0.25, "idle", 0.00, "Y9Id"),
             (self.qubit_pi2_op, 0.00, self.qubit_pi2_op, 0.25, "X9Y9"),
             (self.qubit_pi2_op, 0.25, self.qubit_pi2_op, 0.00, "Y9X9"),
             (self.qubit_pi2_op, 0.00, self.qubit_pi_op, 0.25, "X9Yp"),
@@ -50,8 +46,8 @@ class ALLXY(Experiment):
             (self.qubit_pi_op, 0.00, self.qubit_pi2_op, 0.00, "XpX9"),
             (self.qubit_pi2_op, 0.25, self.qubit_pi_op, 0.25, "Y9Yp"),
             (self.qubit_pi_op, 0.25, self.qubit_pi2_op, 0.25, "YpY9"),
-            (self.qubit_pi_op, 0.00, self.qubit_idle, 0.00, "XpId"),
-            (self.qubit_pi_op, 0.25, self.qubit_idle, 0.00, "YpId"),
+            (self.qubit_pi_op, 0.00, "idle", 0.00, "XpId"),
+            (self.qubit_pi_op, 0.25, "idle", 0.00, "YpId"),
             (self.qubit_pi2_op, 0.00, self.qubit_pi2_op, 0.00, "X9X9"),
             (self.qubit_pi2_op, 0.25, self.qubit_pi2_op, 0.25, "Y9Y9"),
         ]
@@ -74,10 +70,12 @@ class ALLXY(Experiment):
             qua.reset_frame(qubit.name)
 
             # Play the first gate
-            qubit.play(gate1_rot, phase=gate1_axis)
+            if gate1_rot != "idle":
+                qubit.play(gate1_rot, phase=gate1_axis)
 
             # Play the second gate
-            qubit.play(gate2_rot, phase=gate2_axis)
+            if gate2_rot != "idle":
+                qubit.play(gate2_rot, phase=gate2_axis)
 
             qua.align(qubit.name, rr.name)  # align gates to measurement pulse
 
@@ -95,11 +93,10 @@ if __name__ == "__main__":
 
     parameters = {
         "modes": ["QUBIT", "RR"],
-        "reps": 20000,
+        "reps": 2000000,
         "wait_time": 30000,
         "qubit_pi_op": "pi",
         "qubit_pi2_op": "pi2",
-        "qubit_idle": "idle",
     }
 
     experiment = ALLXY(**parameters)

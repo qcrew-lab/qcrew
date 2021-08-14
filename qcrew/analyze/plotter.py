@@ -129,6 +129,10 @@ class Plotter:
                 logger.error(f"2D sweeps require 2 independent variables")
                 return
 
+            x_data = independent_data[0]
+            y_data = independent_data[1]
+            z_data = dependent_data[0]
+
             self.plot_2D(x_data, y_data, z_data)
 
         # Set plot parameters
@@ -140,11 +144,11 @@ class Plotter:
 
     def plot_2D(self, x, y, z):
 
-        im = self.ax.pcolormesh(x, y, z)
-        cbar = self.fig.colorbar(im)
+        im = self.ax.pcolormesh(x, y, z, shading="auto")
+        # cbar = self.fig.colorbar(im)
         # Set plot parameters
         self.ax.set_ylabel(self.plot_setup["ylabel"])
-        cbar.set_label(self.plot_setup["zlabel"])
+        # cbar.set_label(self.plot_setup["zlabel"])
 
     def plot_1D(self, x, z, fit_fn, label=None, err=None, color="b"):
 

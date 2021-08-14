@@ -74,12 +74,19 @@ if __name__ == "__main__":
 
     parameters = {
         "modes": ["QUBIT", "RR"],
-        "reps": 20000,
+        "reps": 2000000,
         "wait_time": 30000,
-        "x_sweep": (-0.2, 0.2 + 0.02 / 2, 0.02),
+        "x_sweep": (-0.10, 0.02 + 0.01 / 2, 0.01),
         "qubit_pi_op": "pi",
         "qubit_pi2_op": "pi2",
     }
 
+    plot_parameters = {
+        "ylabel": "Signal (a.u.)"
+        "xlabel": "DRAG pulse amplitude scaling",
+    }
+
     experiment = DRAGCalibration(**parameters)
+    experiment.setup_plot(**plot_parameters)
+
     prof.run(experiment)

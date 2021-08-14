@@ -99,5 +99,11 @@ if __name__ == "__main__":
         "qubit_pi2_op": "pi2",
     }
 
+    plot_parameters = {
+        "xlabel": "Gate sequence",
+    }
+
     experiment = ALLXY(**parameters)
+    experiment.setup_plot(**plot_parameters)
+
     prof.run(experiment)

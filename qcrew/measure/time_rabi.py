@@ -54,5 +54,11 @@ if __name__ == "__main__":
         "qubit_op": "gaussian_pulse",
     }
 
+    plot_parameters = {
+        "xlabel": "Pulse duration (clock cycles)",
+    }
+
     experiment = TimeRabi(**parameters)
+    experiment.setup_plot(**plot_parameters)
+
     prof.run(experiment)

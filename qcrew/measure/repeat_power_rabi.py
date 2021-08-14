@@ -58,5 +58,11 @@ if __name__ == "__main__":
         "pulse_number": 3,
     }
 
+    plot_parameters = {
+        "xlabel": "Qubit pulse amplitude scaling",
+    }
+
     experiment = RepPowerRabi(**parameters)
+    experiment.setup_plot(**plot_parameters)
+
     prof.run(experiment)

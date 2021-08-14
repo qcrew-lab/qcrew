@@ -55,5 +55,11 @@ if __name__ == "__main__":
         "qubit_op": "gaussian_pulse",
     }
 
+    plot_parameters = {
+        "xlabel": "Qubit pulse frequency (Hz)",
+    }
+
     experiment = QubitSpectroscopy(**parameters)
+    experiment.setup_plot(**plot_parameters)
+
     prof.run(experiment)

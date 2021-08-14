@@ -12,7 +12,7 @@ from qm import qua
 # ---------------------------------- Class -------------------------------------
 
 
-class RRSpectroscopy(Experiment):
+class RRAmpSpectroscopy(Experiment):
 
     name = "rr_amp_sweep_spec"
 
@@ -51,9 +51,11 @@ if __name__ == "__main__":
         "y_sweep": (0.1, 1.5 + 0.05 / 2, 0.05),
     }
     plot_parameters = {
+        "xlabel": "Resonator pulse frequency (Hz)",
+        "ylabel": "Resonator pulse amplitude scaling",
         "plot_type": "2D",
     }
 
-    experiment = RRSpectroscopy(**parameters)
+    experiment = RRAmpSpectroscopy(**parameters)
     experiment.setup_plot(**plot_parameters)
     prof.run(experiment)

@@ -50,5 +50,11 @@ if __name__ == "__main__":
         "x_sweep": (int(-60e6), int(-40e6 + 0.10e6 / 2), int(0.5e6)),
     }
 
+    plot_parameters = {
+        "xlabel": "Resonator pulse frequency (Hz)",
+    }
+
     experiment = RRSpectroscopy(**parameters)
+    experiment.setup_plot(**plot_parameters)
+
     prof.run(experiment)

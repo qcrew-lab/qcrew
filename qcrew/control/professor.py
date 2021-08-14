@@ -107,13 +107,14 @@ def run(experiment: Experiment) -> None:
 
                 #############            LIVE PLOT AVAILABLE RESULTS         ###########
 
-                experiment.plot_results(plotter, partial_results, num_results, stderr)
+                final_save_dict = experiment.plot_results(
+                    plotter, partial_results, num_results, stderr
+                )
                 time.sleep(1)  # prevent over-fetching, over-saving, ultra-fast plotting
 
             ##################         SAVE REMAINING DATA         #####################
 
-            final_save_dict = {Z_AVG_tag: zs, x_tag: xs}
-            datasaver.add_multiple_results(final_save_dict, group="data")
+            # datasaver.add_multiple_results(final_save_dict, group="data")
 
         ##########################          fin           #############################
 

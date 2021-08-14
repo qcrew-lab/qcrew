@@ -58,11 +58,16 @@ class Experiment(Parametrized):
         self.Z_SQ_RAW_AVG_tag = "Z_SQ_RAW_AVG"
         self.Z_AVG_tag = "Z_AVG"
 
-        # return the tags of the data to be used in the standard deviation estimation
+        # tags of the data to be used in the standard deviation estimation
         self.sd_estimation_tags = [self.Z_SQ_RAW_tag, self.Z_SQ_RAW_AVG_tag]
 
-        # return the tags of the data to be used in live saving
+        # tags of the data to be used in live saving
         self.live_saving_tags = [self.variables["I"].tag, self.variables["Q"].tag]
+
+        # tags of the data to be used in the final save
+        self.final_saving_tags = [self.Z_AVG_tag] + [
+            self.variables[v].tag for v in ["x", "y"] if self.variables[v].tag
+        ]
 
         # parameters to be used by the plotter. Updated in self.setup_plot method.
         self.plot_setup = dict()
@@ -265,7 +270,9 @@ class Experiment(Parametrized):
                 internal_sweep = [internal_sweep] * self.buffering[indx]
 
             independent_data.append(internal_sweep)
+            internal_sweep_dict = {"internal sweep": internal_sweep}
         except AttributeError:
+            internal_sweep_dict = {}
             pass
 
         # Retrieve and reshape standard error estimation
@@ -278,3 +285,11 @@ class Experiment(Parametrized):
             fit_fn=self.fit_fn,
             err=error_data,
         )
+
+        # build data dictionary for final save
+        dep_data_dict = {dep_tags[i]: dependent_data[i] for i in range(len(dep_tags))}
+        indep_data_dict = {
+            indep_tags[i]: independent_data[i] for i in range(len(indep_tags))
+        }
+
+        return dep_data_dict | indep_data_dict | internal_sweep_dict

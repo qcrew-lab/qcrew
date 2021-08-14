@@ -12,9 +12,9 @@ from qm import qua
 # ---------------------------------- Class -------------------------------------
 
 
-class CavitySpectroscopy(Experiment):
+class CavityT1(Experiment):
 
-    name = "cavity_spec"
+    name = "cavity_T1"
 
     _parameters: ClassVar[set[str]] = Experiment._parameters | {
         "cav_op",  # operation for displacing the cavity
@@ -22,7 +22,7 @@ class CavitySpectroscopy(Experiment):
         "fit_fn",  # fit function
     }
 
-    def __init__(self, cav_op, qubit_op, fit_fn="lorentzian", **other_params):
+    def __init__(self, cav_op, qubit_op, fit_fn="exp_decay", **other_params):
 
         self.cav_op = cav_op
         self.qubit_op = qubit_op
@@ -36,8 +36,8 @@ class CavitySpectroscopy(Experiment):
         """
         qubit, cav, rr = self.modes  # get the modes
 
-        qua.update_frequency(cav.name, self.x)  # update resonator pulse frequency
         cav.play(self.cav_op)  # play displacement to cavity
+        qua.wait(self.x, cav.name)  # wait relaxation
         qua.align(cav.name, qubit.name)  # align all modes
         qubit.play(self.qubit_op)  # play qubit pulse
         qua.align(qubit.name, rr.name)  # align all modes
@@ -55,16 +55,16 @@ if __name__ == "__main__":
         "modes": ["QUBIT", "CAV", "RR"],
         "reps": 50000,
         "wait_time": 600000,
-        "x_sweep": (int(-50.3e6), int(-49.7e6 + 0.02e6 / 2), int(0.02e6)),
+        "x_sweep": (int(16), int(100000 + 2000 / 2), int(2000)),
         "qubit_op": "pi",
         "cav_op": "constant_pulse",
     }
 
     plot_parameters = {
-        "xlabel": "Cavity pulse frequency (Hz)",
+        "xlabel": "Cavity relaxation time (clock cycles)",
     }
 
-    experiment = CavitySpectroscopy(**parameters)
+    experiment = CavityT1(**parameters)
     experiment.setup_plot(**plot_parameters)
 
     prof.run(experiment)

@@ -242,7 +242,7 @@ class Experiment(Parametrized):
 
     def plot_results(self, plotter, partial_results, num_results, stderr):
         """
-        Reorganizes the data shape and send it to the plotter.
+        Retrieves, reorganizes the data and sends it to the plotter.
         """
 
         indep_tags, dep_tags = self.results_tags

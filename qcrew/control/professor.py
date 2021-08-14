@@ -114,7 +114,9 @@ def run(experiment: Experiment) -> None:
 
             ##################         SAVE REMAINING DATA         #####################
 
-            # datasaver.add_multiple_results(final_save_dict, group="data")
+            datasaver.add_multiple_results(
+                final_save_dict, save=final_save_dict.keys(), group="data"
+            )
 
         ##########################          fin           #############################
 

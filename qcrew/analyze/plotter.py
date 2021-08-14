@@ -46,7 +46,7 @@ class Plotter:
 
         self.fig = plt.figure()
         self.ax = self.fig.add_subplot(1, 1, 1)
-        self.hdisplay = display.display("", display_id=True)
+        self.hdisplay = display.display(self.fig, display_id=True)
 
     def fit(self, xs, ys, fit_fn) -> tuple:
 

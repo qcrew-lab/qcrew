@@ -15,28 +15,6 @@ from qcrew.measure.experiment import Experiment
 import matplotlib.pyplot as plt
 from IPython import display
 
-
-def temp_live_plot(x, y, n, err, fit_fn=None):
-    plt.cla()
-    plt.errorbar(
-        x,
-        y,
-        yerr=err,
-        ls="none",
-        lw=1,
-        ecolor="black",
-        marker="o",
-        ms=4,
-        mfc="black",
-        mec="black",
-        capsize=3,
-        fillstyle="none",
-    )
-    plt.title(f"{n} reps")
-    display.display(plt.gcf())  # plot latest batch
-    display.clear_output(wait=True)  # clear plot when new plot is available
-
-
 def run(experiment: Experiment) -> None:
     """ """
 

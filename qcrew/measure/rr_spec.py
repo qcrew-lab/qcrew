@@ -45,11 +45,11 @@ if __name__ == "__main__":
 
     x_start = -200e6
     x_stop = 200e6
-    x_step = 0.5e6
+    x_step = 5e6
 
     parameters = {
         "modes": ["RR"],
-        "reps": 20000,
+        "reps": 200,
         "wait_time": 10000,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
     }

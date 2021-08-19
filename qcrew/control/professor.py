@@ -1,7 +1,6 @@
 """ The professor is qcrew's experiment run manager. Professor provides the `run()` method, which when called by the user, executes the experiment, enters its fetch-analyze-plot-save loop, and closes the loop by calling the experiment's `update()` method. """
 
 import time
-
 import numpy as np
 
 from qcrew.analyze import stats
@@ -14,6 +13,7 @@ from qcrew.measure.experiment import Experiment
 
 import matplotlib.pyplot as plt
 from IPython import display
+
 
 def run(experiment: Experiment) -> None:
     """ """

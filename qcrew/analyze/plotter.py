@@ -8,7 +8,7 @@ from qcrew.analyze import fit
 COLOR_LIST = (
     "#0000FF",
     "#FF3300",
-    "#33FF00",
+    "#2cde00",
     "#FF9933",
     "#663399",
     "#009966",

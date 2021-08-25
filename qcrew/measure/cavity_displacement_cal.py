@@ -52,10 +52,10 @@ if __name__ == "__main__":
 
     parameters = {
         "modes": ["QUBIT", "CAV", "RR"],
-        "reps": 50000,
+        "reps": 400000,
         "wait_time": 600000,
-        "x_sweep": (-0.3, 0.3 + 0.01 / 2, 0.01),
-        "qubit_op": "pi",
+        "x_sweep": (-0.7, 0.7 + 0.04 / 2, 0.04),
+        "qubit_op": "select_pi",
         "cav_op": "constant_pulse",
     }
 

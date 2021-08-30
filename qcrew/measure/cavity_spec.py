@@ -39,7 +39,7 @@ class CavitySpectroscopy(Experiment):
         qua.update_frequency(cav.name, self.x)  # update resonator pulse frequency
         cav.play(self.cav_op)  # play displacement to cavity
         qua.align(cav.name, qubit.name)  # align all modes
-        qubit.rotate(self.qubit_op)  # play qubit pulse
+        qubit.play(self.qubit_op)  # play qubit pulse
         qua.align(qubit.name, rr.name)  # align all modes
         rr.measure((self.I, self.Q))  # measure transmitted signal
         qua.wait(int(self.wait_time // 4), cav.name)  # wait system reset
@@ -53,12 +53,18 @@ if __name__ == "__main__":
 
     parameters = {
         "modes": ["QUBIT", "CAV", "RR"],
-        "reps": 20000,
-        "wait_time": 1000000,
-        "x_sweep": (int(-200e6), int(200e6 + 0.2e6 / 2), int(0.2e6)),
+        "reps": 50000,
+        "wait_time": 600000,
+        "x_sweep": (int(-50.3e6), int(-49.7e6 + 0.02e6 / 2), int(0.02e6)),
         "qubit_op": "pi",
         "cav_op": "constant_pulse",
     }
 
+    plot_parameters = {
+        "xlabel": "Cavity pulse frequency (Hz)",
+    }
+
     experiment = CavitySpectroscopy(**parameters)
+    experiment.setup_plot(**plot_parameters)
+
     prof.run(experiment)

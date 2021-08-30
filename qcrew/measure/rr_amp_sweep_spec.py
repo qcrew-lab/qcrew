@@ -12,9 +12,9 @@ from qm import qua
 # ---------------------------------- Class -------------------------------------
 
 
-class RRSpectroscopy(Experiment):
+class RRAmpSpectroscopy(Experiment):
 
-    name = "qubit_spec"
+    name = "rr_amp_sweep_spec"
 
     _parameters: ClassVar[set[str]] = Experiment._parameters | {
         "fit_fn",  # fit function
@@ -33,7 +33,7 @@ class RRSpectroscopy(Experiment):
         (rr,) = self.modes  # get the modes
 
         qua.update_frequency(rr.name, self.x)  # update resonator pulse frequency
-        rr.measure((self.I, self.Q))  # measure transmitted signal
+        rr.measure((self.I, self.Q), ampx=self.y)  # measure transmitted signal
         qua.wait(int(self.wait_time // 4), rr.name)  # wait system reset
 
         self.QUA_stream_results()  # stream variables (I, Q, x, etc)
@@ -44,12 +44,18 @@ class RRSpectroscopy(Experiment):
 if __name__ == "__main__":
 
     parameters = {
-        "modes": ("RR",),
+        "modes": ["RR"],
         "reps": 20000,
         "wait_time": 10000,
-        "x_sweep": (int(-50e6), int(50e6 + 0.2e6 / 2), int(0.2e6)),
+        "x_sweep": (int(-70e6), int(-40e6 + 0.05e6 / 2), int(0.05e6)),
         "y_sweep": (0.1, 1.5 + 0.05 / 2, 0.05),
     }
+    plot_parameters = {
+        "xlabel": "Resonator pulse frequency (Hz)",
+        "ylabel": "Resonator pulse amplitude scaling",
+        "plot_type": "2D",
+    }
 
-    experiment = RRSpectroscopy(**parameters)
+    experiment = RRAmpSpectroscopy(**parameters)
+    experiment.setup_plot(**plot_parameters)
     prof.run(experiment)

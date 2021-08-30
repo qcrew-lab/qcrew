@@ -38,7 +38,7 @@ class T2(Experiment):
 
         qua.update_frequency(qubit.name, qubit.int_freq + self.detuning)  # detune
         qubit.play(self.qubit_op)  # play half pi qubit pulse
-        qua.wait(int(self.x // 4), qubit.name)  # wait for partial qubit decay
+        qua.wait(self.x, qubit.name)  # wait for partial qubit decay
         qubit.play(self.qubit_op)  # play half pi qubit pulse
         qua.align(qubit.name, rr.name)  # wait last qubit pulse to end
         rr.measure((self.I, self.Q))  # measure qubit state
@@ -52,7 +52,7 @@ class T2(Experiment):
 if __name__ == "__main__":
 
     parameters = {
-        "modes": ("QUBIT", "RR"),
+        "modes": ["QUBIT", "RR"],
         "reps": 20000,
         "wait_time": 32000,
         "x_sweep": (int(16), int(1000 + 40 / 2), int(40)),
@@ -60,5 +60,11 @@ if __name__ == "__main__":
         "detuning": int(300e6),
     }
 
+    plot_parameters = {
+        "xlabel": "Relaxation time (clock cycles)",
+    }
+
     experiment = T2(**parameters)
+    experiment.setup_plot(**plot_parameters)
+
     prof.run(experiment)

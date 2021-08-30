@@ -47,12 +47,18 @@ class TimeRabi(Experiment):
 if __name__ == "__main__":
 
     parameters = {
-        "modes": ("QUBIT", "RR"),
+        "modes": ["QUBIT", "RR"],
         "reps": 200000,
         "wait_time": 32000,
         "x_sweep": (int(500), int(1000 + 20 / 2), int(20)),
         "qubit_op": "gaussian_pulse",
     }
 
+    plot_parameters = {
+        "xlabel": "Pulse duration (clock cycles)",
+    }
+
     experiment = TimeRabi(**parameters)
+    experiment.setup_plot(**plot_parameters)
+
     prof.run(experiment)

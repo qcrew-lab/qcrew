@@ -58,11 +58,16 @@ class Experiment(Parametrized):
         self.Z_SQ_RAW_AVG_tag = "Z_SQ_RAW_AVG"
         self.Z_AVG_tag = "Z_AVG"
 
-        # return the tags of the data to be used in the standard deviation estimation
+        # tags of the data to be used in the standard deviation estimation
         self.sd_estimation_tags = [self.Z_SQ_RAW_tag, self.Z_SQ_RAW_AVG_tag]
 
-        # return the tags of the data to be used in live saving
+        # tags of the data to be used in live saving
         self.live_saving_tags = [self.variables["I"].tag, self.variables["Q"].tag]
+
+        # tags of the data to be used in the final save
+        self.final_saving_tags = [self.Z_AVG_tag] + [
+            self.variables[v].tag for v in ["x", "y"] if self.variables[v].tag
+        ]
 
         # parameters to be used by the plotter. Updated in self.setup_plot method.
         self.plot_setup = dict()
@@ -79,20 +84,24 @@ class Experiment(Parametrized):
     @property
     def results_tags(self):
         # return the tags for independent variables x, y (if applicable) and dependent
-        # variable z for live plotting and data saving.
-        tags = [self.Z_AVG_tag]
+        # variables z for live plotting and data saving.
+
+        indep_tags = []
         for var in ["x", "y"]:
             if self.variables[var].tag:
-                tags.append(self.variables[var].tag)
+                indep_tags.append(self.variables[var].tag)
 
-        return tags
+        # TODO: implement more than 1 dependent variable (multiple readout)
+        dep_tags = [self.Z_AVG_tag]
+
+        return indep_tags, dep_tags
 
     def setup_plot(
         self,
         xlabel=None,
         ylabel=None,
         zlabel="Signal (a.u.)",
-        legend=[],
+        trace_labels=[],
         title=None,
         plot_type="1D",
         err=True,
@@ -107,21 +116,25 @@ class Experiment(Parametrized):
         sweeps are configured, one x sweep trace is plotted for every value of y. If
         the user wants to plot a colormesh instead, pass plot_type = '2D'.
 
-        legend is a list of labels for each trace. If plot_type = "1D" and a y sweep is
+        trace_labels is a list of labels for each trace. If plot_type = "1D" and a y
+        sweep is
         configured, each label will correspond to a value of y.
 
-        err toggles errorbar plotting.
+        plot_err toggles errorbar plotting.
 
         """
+
+        if not title:
+            title = self.name
 
         self.plot_setup = {
             "xlabel": xlabel,
             "ylabel": ylabel,
             "zlabel": zlabel,
-            "legend": legend,
+            "trace_labels": trace_labels,
             "title": title,
             "plot_type": plot_type,
-            "err": err,
+            "plot_err": err,
         }
 
         return
@@ -151,6 +164,13 @@ class Experiment(Parametrized):
                 self.variables[key].buffer = True
                 # Define key as memory tag
                 self.variables[key].tag = key
+
+        # if an internal sweep is defined in the child experiment class, add its length
+        # to the buffering
+        try:
+            buffering.append(len(self.internal_sweep))
+        except AttributeError:
+            pass
 
         self.buffering = tuple(buffering)
 
@@ -184,7 +204,7 @@ class Experiment(Parametrized):
             for key, value in self.variables.items():
                 setattr(self, key, value.var)
             # Plays pulse sequence in a loop. Variable order defines loop nesting order
-            sweep_variables = [self.variables[key] for key in ["n", "y", "x"]]
+            sweep_variables = [self.variables[key] for key in ["n", "x", "y"]]
             macros.QUA_loop(self.QUA_play_pulse_sequence, sweep_variables)
 
             # Define stream processing
@@ -205,3 +225,71 @@ class Experiment(Parametrized):
         self.QUA_play_pulse_sequence.
         """
         macros.stream_results(self.variables)
+
+    def estimate_sd(self, statistician, partial_results, num_results, stderr):
+        """
+        Method to call the statistician and estimate running mean standard error.
+        stderr holds the running values of (stderr, mean, variance * (n-1))
+        """
+
+        # TODO do this for multiple dependent variables
+
+        zs_raw = np.sqrt(partial_results[self.Z_SQ_RAW_tag])
+        zs_raw_avg = np.sqrt(partial_results[self.Z_SQ_RAW_AVG_tag])
+        stderr = statistician.get_std_err(zs_raw, zs_raw_avg, num_results, *stderr)
+
+        return stderr
+
+    def plot_results(self, plotter, partial_results, num_results, stderr):
+        """
+        Retrieves, reorganizes the data and sends it to the plotter.
+        """
+
+        indep_tags, dep_tags = self.results_tags
+
+        dependent_data = []
+        for tag in dep_tags:
+            # Take the square root of dependent variables. This step is required for
+            # dependent values calculated as I^2 + Q^2 in stream processing.
+            # Reshape the fetched data with buffer lengths
+            reshaped_data = np.sqrt(partial_results[tag]).reshape(self.buffering)
+            dependent_data.append(reshaped_data)
+
+        independent_data = []
+        for tag in indep_tags:
+            reshaped_data = partial_results[tag].reshape(self.buffering)
+            independent_data.append(reshaped_data)
+
+        # if an internal sweep is defined in the child experiment class, add its value
+        # as independent variable data. The values are repeated so the dimensions match
+        # the other independent data shapes.
+        try:
+            internal_sweep = self.internal_sweep
+            # Repeat the values
+            for indx in range(len(self.buffering) - 1):
+                internal_sweep = [internal_sweep] * self.buffering[indx]
+
+            independent_data.append(internal_sweep)
+            internal_sweep_dict = {"internal sweep": internal_sweep}
+        except AttributeError:
+            internal_sweep_dict = {}
+            pass
+
+        # Retrieve and reshape standard error estimation
+        error_data = stderr[0].reshape(self.buffering)
+
+        plotter.live_plot(
+            independent_data,
+            dependent_data,
+            num_results,
+            fit_fn=self.fit_fn,
+            err=error_data,
+        )
+
+        # build data dictionary for final save
+        dep_data_dict = {dep_tags[i]: dependent_data[i] for i in range(len(dep_tags))}
+        indep_data_dict = {
+            indep_tags[i]: independent_data[i] for i in range(len(indep_tags))
+        }
+
+        return dep_data_dict | indep_data_dict | internal_sweep_dict

@@ -12,17 +12,19 @@ from qm import qua
 # ---------------------------------- Class -------------------------------------
 
 
-class QubitSpectroscopy(Experiment):
+class CavityT1(Experiment):
 
-    name = "qubit_spec"
+    name = "cavity_T1"
 
     _parameters: ClassVar[set[str]] = Experiment._parameters | {
+        "cav_op",  # operation for displacing the cavity
         "qubit_op",  # operation used for exciting the qubit
         "fit_fn",  # fit function
     }
 
-    def __init__(self, qubit_op, fit_fn="lorentzian", **other_params):
+    def __init__(self, cav_op, qubit_op, fit_fn="exp_decay", **other_params):
 
+        self.cav_op = cav_op
         self.qubit_op = qubit_op
         self.fit_fn = fit_fn
 
@@ -32,13 +34,15 @@ class QubitSpectroscopy(Experiment):
         """
         Defines pulse sequence to be played inside the experiment loop
         """
-        qubit, rr = self.modes  # get the modes
+        qubit, cav, rr = self.modes  # get the modes
 
-        qua.update_frequency(qubit.name, self.x)  # update resonator pulse frequency
+        cav.play(self.cav_op)  # play displacement to cavity
+        qua.wait(self.x, cav.name)  # wait relaxation
+        qua.align(cav.name, qubit.name)  # align all modes
         qubit.play(self.qubit_op)  # play qubit pulse
-        qua.align(qubit.name, rr.name)  # wait qubit pulse to end
+        qua.align(qubit.name, rr.name)  # align all modes
         rr.measure((self.I, self.Q))  # measure transmitted signal
-        qua.wait(int(self.wait_time // 4), rr.name)  # wait system reset
+        qua.wait(int(self.wait_time // 4), cav.name)  # wait system reset
 
         self.QUA_stream_results()  # stream variables (I, Q, x, etc)
 
@@ -48,18 +52,19 @@ class QubitSpectroscopy(Experiment):
 if __name__ == "__main__":
 
     parameters = {
-        "modes": ["QUBIT", "RR"],
-        "reps": 20000,
-        "wait_time": 32000,
-        "x_sweep": (int(-53e6), int(-47e6 + 0.05e6 / 2), int(0.05e6)),
-        "qubit_op": "gaussian_pulse",
+        "modes": ["QUBIT", "CAV", "RR"],
+        "reps": 50000,
+        "wait_time": 600000,
+        "x_sweep": (int(16), int(100000 + 2000 / 2), int(2000)),
+        "qubit_op": "pi",
+        "cav_op": "constant_pulse",
     }
 
     plot_parameters = {
-        "xlabel": "Qubit pulse frequency (Hz)",
+        "xlabel": "Cavity relaxation time (clock cycles)",
     }
 
-    experiment = QubitSpectroscopy(**parameters)
+    experiment = CavityT1(**parameters)
     experiment.setup_plot(**plot_parameters)
 
     prof.run(experiment)

@@ -1,7 +1,6 @@
 """ The professor is qcrew's experiment run manager. Professor provides the `run()` method, which when called by the user, executes the experiment, enters its fetch-analyze-plot-save loop, and closes the loop by calling the experiment's `update()` method. """
 
 import time
-
 import numpy as np
 
 from qcrew.analyze import stats
@@ -14,27 +13,6 @@ from qcrew.measure.experiment import Experiment
 
 import matplotlib.pyplot as plt
 from IPython import display
-
-
-def temp_live_plot(x, y, n, err, fit_fn=None):
-    plt.cla()
-    plt.errorbar(
-        x,
-        y,
-        yerr=err,
-        ls="none",
-        lw=1,
-        ecolor="black",
-        marker="o",
-        ms=4,
-        mfc="black",
-        mec="black",
-        capsize=3,
-        fillstyle="none",
-    )
-    plt.title(f"{n} reps")
-    display.display(plt.gcf())  # plot latest batch
-    display.clear_output(wait=True)  # clear plot when new plot is available
 
 
 def run(experiment: Experiment) -> None:
@@ -65,7 +43,7 @@ def run(experiment: Experiment) -> None:
         fetcher = QMResultFetcher(handle=qm_job.result_handles)
         stderr = (None, None, None)  # to hold running (stderr, mean, variance * (n-1))
 
-        plotter = Plotter(experiment.name, experiment.plot_setup["xlabel"])
+        plotter = Plotter(experiment.plot_setup)
 
         db = initialise_database(
             exp_name=experiment.name,
@@ -101,27 +79,22 @@ def run(experiment: Experiment) -> None:
 
                 #######            CALCULATE RUNNING MEAN STANDARD ERROR         #######
 
-                Z_SQ_RAW_tag, Z_SQ_RAW_AVG_tag = experiment.sd_estimation_tags
-
-                zs_raw = np.sqrt(partial_results[Z_SQ_RAW_tag])
-                zs_raw_avg = np.sqrt(partial_results[Z_SQ_RAW_AVG_tag])
-                stderr = stats.get_std_err(zs_raw, zs_raw_avg, num_results, *stderr)
+                stderr = experiment.estimate_sd(
+                    stats, partial_results, num_results, stderr
+                )
 
                 #############            LIVE PLOT AVAILABLE RESULTS         ###########
 
-                Z_AVG_tag, x_tag = experiment.results_tags
-
-                zs = np.sqrt(partial_results[Z_AVG_tag])  # latest batch of avg signal
-                xs = partial_results[x_tag]
-                plotter.live_plot(
-                    xs, zs, num_results, fit_fn=experiment.fit_fn, err=stderr[0]
+                final_save_dict = experiment.plot_results(
+                    plotter, partial_results, num_results, stderr
                 )
                 time.sleep(1)  # prevent over-fetching, over-saving, ultra-fast plotting
 
             ##################         SAVE REMAINING DATA         #####################
 
-            final_save_dict = {Z_AVG_tag: zs, x_tag: xs}
-            datasaver.add_multiple_results(final_save_dict, group="data")
+            datasaver.add_multiple_results(
+                final_save_dict, save=final_save_dict.keys(), group="data"
+            )
 
         ##########################          fin           #############################
 

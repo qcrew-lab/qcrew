@@ -4,6 +4,7 @@ from setuptools import setup
 packages = \
 ['qcrew',
  'qcrew.analyze',
+ 'qcrew.analyze.fit_funcs',
  'qcrew.control',
  'qcrew.control.instruments',
  'qcrew.control.instruments.meta',
@@ -25,10 +26,12 @@ install_requires = \
  'h5py>=3.3.0,<4.0.0',
  'ipykernel>=6.0.2,<7.0.0',
  'ipython>=7.25.0,<8.0.0',
+ 'lmfit>=1.0.2,<2.0.0',
  'loguru>=0.5.3,<0.6.0',
  'matplotlib>=3.4.2,<4.0.0',
  'numpy>=1.21.0,<2.0.0',
- 'qm @ https://qm-pypi-repository.s3.amazonaws.com/qm-0.90.1736.tar.gz']
+ 'qm @ https://qm-pypi-repository.s3.amazonaws.com/qm-1.10.1904.tar.gz',
+ 'uncertainties>=3.1.6,<4.0.0']
 
 extras_require = \
 {':python_version >= "3.9" and python_version < "3.10"': ['scipy>=1.7.0,<2.0.0']}

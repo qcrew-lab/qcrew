@@ -44,5 +44,5 @@ class GaussianPulse(Pulse):
         ts = np.linspace(start, stop, self.length)
         exponential = np.exp(-(ts ** 2) / (2.0 * self.sigma ** 2))
         i_wave = BASE_PULSE_AMP * self.ampx * exponential
-        q_wave = self.drag * (np.exp(0.5) / self.sigma) * i_wave
+        q_wave = self.drag * (np.exp(0.5) / self.sigma) * -ts * i_wave
         return i_wave, q_wave

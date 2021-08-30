@@ -9,15 +9,9 @@ from matplotlib import colors
 class Plotter:
     """Single axis x-y plotter. Supports line, scatter, and errorbar plot. Provides a rudimentary live plotting routine."""
 
-    def __init__(self, title: str, xlabel: str, ylabel: str = "Signal (A.U.)"):
+    def __init__(self, plot_setup):
 
-        self.title = title
-        self.xlabel = xlabel
-        self.ylabel = ylabel
-        self.fig = plt.figure()
-        self.ax = self.fig.add_subplot(1, 1, 1)
-        self.hdisplay = display.display("", display_id=True)
-
+        # matplotlib config
         mpl.rcParams["figure.figsize"] = (9, 6)  # in inches by default
         mpl.rcParams["axes.linewidth"] = 1
         mpl.rcParams["xtick.major.size"] = 1
@@ -34,8 +28,31 @@ class Plotter:
         mpl.rcParams["font.size"] = 12
         mpl.rcParams["axes.labelsize"] = 12
         mpl.rcParams["legend.fontsize"] = 12
+        
+        # plot setup
+        self.plot_setup = plot_setup
 
-    def fit(self, x, y, fit_func) -> tuple:
+        # subplots 
+        if "nrows" in plot_setup and "ncols" in plot_setup: 
+            self.nrows = plot_setup["nrows"]
+            self.ncols = plot_setup["ncols"]
+        else: 
+            self.nrows = 1
+            self.ncols = 1
+        
+        #suptitle
+        if "suptitle" in plot_setup:
+            self.title = plot_setup["suptitle"]
+
+        self.create_subplot()
+
+    def create_subplot(self):
+        self.fig, self.axs = plt.subplots(self.nrows, self.ncols)
+        self.hdisplay = display.display(self.fig, display_id=True)
+        self.fig.suptitle(self.title)
+
+    @staticmethod
+    def fit(x, y, fit_func) -> tuple:
         """
         Args:
         x: x axis values
@@ -63,58 +80,77 @@ class Plotter:
 
         return fit_text, fit_y, params
     
-    def live_2dplot(self, x, y, z, plot_type="pcolormesh", cmap="terrain", colorbar=True, colorbar_label=""):
-
-        self.ax.clear()
-        vmin = min(z)
-        vmax = max(z)
-        norm = colors.LogNorm(vmin=vmin, vmax=vmax)
-        mpl.rcParams["pcolormesh.cmap"] = cmap
-        mpl.rcParams["pcolormesh.norm"] = norm
-
-        if plot_type == "pcolormesh":
-            im = self.ax.pcolormesh(x, y, (z))
+    def live_1dplot(
+            self,
+            ax,
+            independent_data,
+            dependent_data,
+            n,
+            fit_func=None,
+            errbar=None,
+        ):
         
-        if colorbar:
-            cbar = self.fig.colorbar(im, ax=self.ax, orientation="vertical", fraction=.1, pad =0.023)
-            cbar.set_label(colorbar_label)
-        
-        self.ax.set_title(self.title)
-        self.ax.set_xlabel(self.xlabel)
-        self.ax.set_ylabel(self.ylabel)
+        ax.clear()
 
+        if "plot_type" in self.plot_setup:
+            plot_type = self.plot_setup["plot_type"]
+        else:
+            plot_type = "scatter"
+
+        if len(independent_data) == 1 and len(dependent_data) == 1:
+            x = independent_data[0]
+            y = dependent_data[0]
+            try:
+                label = self.plot_setup["trace_labels"]
+            except IndexError:
+                label = None
+
+            self.plot_1d(ax, x, y, 
+                        plot_type=plot_type,
+                        fit_func=fit_func,
+                        errbar=errbar, 
+                        label=label)
+        
+        elif len(independent_data) == 2:
+            x = independent_data[0]
+            label_data = independent_data[1]
+
+            for index, trace in enumerate(label_data):
+                try:
+                    label = self.plot_setup["trace_labels"] + str(trace)
+                except IndexError:
+                    label = str(trace)
+
+                y = dependent_data[index]
+                self.plot_1d(ax, x, y, 
+                        plot_type=plot_type,
+                        fit_func=fit_func,
+                        errbar=errbar, 
+                        label=label)
+             
+
+        ax.set_title(self.title + f": {n} repetition{'s' if n > 1 else ''}")
+        ax.set_xlabel(self.plot_setup["xlabel"])
+        ax.set_ylabel(self.plot_setup["zlabel"])
+        ax.legend()
+        
         self.hdisplay.update(self.fig)
 
-    def live_plot(self, x, y, n, label=None, fit_func=None, errorbar=None, plot_type="scatter"):
-        """  If `live_plot(data)` is called in an IPython terminal context, the axis is refreshed and plotted with the new data using IPython `display` tools.
-
-        Args:
-        x: x axis values
-        y: y axis values
-        n: repetition number so far
-        label: trace label
-        fit_func: the name of fit function, the default is "None" representing that the fit trace is not displayed 
-        errorbar: the errorbar of y axis value, the default is "None" representing that the errorbar in y axis is not displayed 
-        plot_type: either "scatter" or "line"
-        
-        """
-        # clear the figure 
-        self.ax.clear()
-
-        # plot the data
-        label = label or "data"
+    
+    def plot_1d(self, ax, x, y, plot_type ="scatter",fit_func=None, errbar=None, label=None):
         if plot_type == "scatter":
-            if errorbar is not None:
-                self.plot_errorbar(x, y, self.ax, errorbar, label:str)
+            if errbar is not None:
+                self.plot_errorbar(ax, x, y, errbar, label)
             else:
-                self.plot_scatter(x, y, self.ax, label)
-        elif plot_type == "line":
-            self.plot_line(x, y, self.ax, label)
+                self.plot_scatter(ax, x, y, errbar, label)
+        
+        elif plot_type  == "line":
+            self.plot_line(ax, x, y, label)
 
         if fit_func:
             # plot the fit curve
-            fit_text, fit_y = self.fit(x, y, fit_func=fit_func)
-            
+            fit_text, fit_y = Plotter.fit(x, y, fit_func=fit_func)
+        
             # fit text position 
             left = 0
             bottom = -0.1
@@ -124,19 +160,12 @@ class Plotter:
                 fit_text,
                 horizontalalignment="left",
                 verticalalignment="top",
-                transform=self.ax.transAxes,
-            )
-            self.plot_line(x, fit_y, self.ax, label="fit", color="r")
+                transform=self.ax.transAxes)
 
-        self.ax.set_title(self.title + f": {n} repetition{'s' if n > 1 else ''}")
-        self.ax.set_xlabel(self.xlabel)
-        self.ax.set_ylabel(self.ylabel)
-        self.ax.legend()
+            self.plot_line(ax, x, fit_y,  label="fit of" +label, color="r")
 
-        self.hdisplay.update(self.fig)
 
-    def plot_errorbar(self, x, y, axis, yerr, label: str):
-
+    def plot_errorbar(self, ax, x, y, yerr, label):
         mpl.rcParams["errorbar.capsize"] = 3 
         mpl.rcParams["errorbar.ls"] = "none" 
         mpl.rcParams["errorbar.ecolor"] = "b"
@@ -147,14 +176,59 @@ class Plotter:
         mpl.rcParams["errorbar.mec"] = "b"
         mpl.rcParams["errorbar.fillstyle"] = "none"
 
-        axis.errorbar(x, y, yerr=yerr, label=label)
+        ax.errorbar(x, y, yerr=yerr, label=label)
 
-    def plot_scatter(self, x, y, axis, label):
+    def plot_scatter(self, ax, x, y, label):
         mpl.rcParams["scatter.s"] = 4
         mpl.rcParams["scatter.color"] = "b"
         mpl.rcParams["scatter.marker"] = "o"
 
-        axis.scatter(x, y, label=label)
+        ax.scatter(x, y, label=label)
 
-    def plot_line(self, x, y, axis, label, color="b"):
-        axis.plot(x, y, color=color, lw=2, label=label)
+    def plot_line(self, ax, x, y, label, color="b"):
+        ax.plot(x, y, color=color, lw=2, label=label)
+
+    def live_2dplot(self,
+                    ax,
+                    independent_data,
+                    dependent_data,
+                    n):
+            
+        ax.clear()
+        
+        x = independent_data[0]
+        y = independent_data[1]
+        z = dependent_data[0]
+
+        vmin = min(z)
+        vmax = max(z)
+        norm = colors.LogNorm(vmin=vmin, vmax=vmax)
+
+        if "cmap" in self.plot_setup: 
+            mpl.rcParams["pcolormesh.cmap"] = self.plot_setup["cmap"]
+        else:
+            mpl.rcParams["pcolormesh.cmap"] = "terrain"
+        
+        if "norm" in self.plot_setup: 
+            mpl.rcParams["pcolormesh.norm"] = self.plot_setup["norm"]
+        else:
+            mpl.rcParams["pcolormesh.norm"] = norm
+
+        if self.plot_setup["plot_setup"] == "pcolormesh": 
+            im = ax.pcolormesh(x, y, (z), shading="auto")
+
+        if "colorbar"in self.plot_setup:
+            if self.plot_setup["colorbar"] == True: 
+                cbar = self.fig.colorbar(im, ax=ax, orientation="vertical", fraction=.1, pad =0.023)
+            
+                if "colorbar_label" in self.plot_setup:
+                    colorbar_label = self.plot_setup["colorbar_label"] 
+                    cbar.set_label(colorbar_label)
+        
+        self.ax.set_title(self.plot_setup["title"] + f": {n} repetition{'s' if n > 1 else ''}")
+        self.ax.set_xlabel(self.plot_setup["xlabel"])
+        self.ax.set_ylabel(self.plot_setup["ylabel"])
+
+        self.hdisplay.update(self.fig)
+
+

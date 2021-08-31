@@ -20,6 +20,7 @@ class Experiment(Parametrized):
         "mode_names",  # names of the modes used in the experiment
         "reps",  # number of times the experiment is repeated
         "wait_time",  # wait time in nanoseconds between repetitions
+        "fetch_period",  # wait time between fetching and plotting
     }
 
     def __init__(
@@ -29,6 +30,7 @@ class Experiment(Parametrized):
         wait_time,
         x_sweep=None,
         y_sweep=None,
+        fetch_period=1,
     ):
 
         # List of modes used in the experiment. String values will be replaced by
@@ -38,6 +40,9 @@ class Experiment(Parametrized):
         # Experiment loop variables
         self.reps = reps
         self.wait_time = wait_time
+
+        # Wait time between live fetching/plotting/saving rounds
+        self.fetch_period = fetch_period
 
         # Sweep configurations
         self.sweep_config = {"n": (0, self.reps, 1), "x": x_sweep, "y": y_sweep}
@@ -105,6 +110,7 @@ class Experiment(Parametrized):
         title=None,
         plot_type="1D",
         err=True,
+        cmap="viridian",
     ):
         """
         Updates self.plot_setup dictionary with the parameters to be used by the
@@ -135,6 +141,7 @@ class Experiment(Parametrized):
             "title": title,
             "plot_type": plot_type,
             "plot_err": err,
+            "cmap": cmap,
         }
 
         return
@@ -236,6 +243,7 @@ class Experiment(Parametrized):
 
         zs_raw = np.sqrt(partial_results[self.Z_SQ_RAW_tag])
         zs_raw_avg = np.sqrt(partial_results[self.Z_SQ_RAW_AVG_tag])
+
         stderr = statistician.get_std_err(zs_raw, zs_raw_avg, num_results, *stderr)
 
         return stderr

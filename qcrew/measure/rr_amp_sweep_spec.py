@@ -20,7 +20,7 @@ class RRAmpSpectroscopy(Experiment):
         "fit_fn",  # fit function
     }
 
-    def __init__(self, fit_fn="lorentzian", **other_params):
+    def __init__(self, fit_fn=None, **other_params):
 
         self.fit_fn = fit_fn
 

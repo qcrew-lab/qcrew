@@ -71,17 +71,17 @@ if __name__ == "__main__":
         "reps": 50000,
         "wait_time": 600000,
         "fetch_period": 2,  # time between data fetching rounds in sec
-        "delay": 2940,  # pi/chi
-        "x_sweep": (-1, 1 + 0.05 / 2, 0.05),
-        "y_sweep": (-1, 1 + 0.05 / 2, 0.05),
+        "delay": (int(1000), int(2940*2 + 40 / 2), int(40)), #2940,  # pi/chi
+        "x_sweep": 0.25,#(-1, 1 + 0.05 / 2, 0.05),
+        "y_sweep": 0.25, #(-1, 1 + 0.05 / 2, 0.05),
         "qubit_op": "pi2",
         "cav_op": "constant_pulse",
     }
 
     plot_parameters = {
-        "xlabel": "X",
-        "ylabel": "Y",
-        "plot_type": "2D",
+        "xlabel": "delay",
+        "ylabel": "W",
+        "plot_type": "1D",
         "err": False,
         "cmap": "bwr",
     }

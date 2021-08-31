@@ -75,6 +75,7 @@ if __name__ == "__main__":
         "y_sweep": (-1, 1, 0.05),
         "qubit_op": "pi2",
         "cav_op": "constant_pulse",
+        "wait2"
     }
 
     plot_parameters = {

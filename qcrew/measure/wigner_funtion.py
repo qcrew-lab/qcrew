@@ -59,7 +59,8 @@ class Wigner_function(Experiment):
         self.QUA_stream_results()  # stream variables (I, Q, x, etc)
     
     def plot(plotter, independent_data, dependent_data, n, *args, **kwargs):
-        plotter.live_2dplot(plotter.axs[0,0], independent_data,dependent_data, n)
+        
+        plotter.live_2dplot(plotter.axis[0,0], independent_data,dependent_data, n)
 
 
 # -------------------------------- Execution -----------------------------------

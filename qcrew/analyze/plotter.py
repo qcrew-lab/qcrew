@@ -144,7 +144,7 @@ class Plotter:
 
     def plot_2D(self, x, y, z):
 
-        im = self.ax.pcolormesh(x, y, z, shading="auto")
+        im = self.ax.pcolormesh(x, y, z, shading="auto", cmap=self.plot_setup["cmap"])
         # cbar = self.fig.colorbar(im)
         # Set plot parameters
         self.ax.set_ylabel(self.plot_setup["ylabel"])

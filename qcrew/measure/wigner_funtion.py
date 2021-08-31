@@ -88,5 +88,5 @@ if __name__ == "__main__":
 
     experiment = WignerFunction(**parameters)
     experiment.setup_plot(**plot_parameters)
-
+    print(experiment.modes)
     prof.run(experiment)

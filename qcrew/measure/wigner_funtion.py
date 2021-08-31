@@ -59,6 +59,7 @@ class WignerFunction(Experiment):
         qua.wait(int(self.wait_time // 4), cav.name)
 
         self.QUA_stream_results()  # stream variables (I, Q, x, etc)
+        
 
 
 # -------------------------------- Execution -----------------------------------

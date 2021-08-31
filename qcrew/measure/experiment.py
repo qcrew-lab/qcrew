@@ -101,7 +101,7 @@ class Experiment(Parametrized):
         xlabel=None,
         ylabel=None,
         zlabel="Signal (a.u.)",
-        trace_labels=[],
+        trace_labels="",
         title=None,
         plot_type="1D",
         err=True,
@@ -135,6 +135,7 @@ class Experiment(Parametrized):
             "title": title,
             "plot_type": plot_type,
             "plot_err": err,
+            "suptitle": title,
         }
 
         return
@@ -239,11 +240,20 @@ class Experiment(Parametrized):
         stderr = statistician.get_std_err(zs_raw, zs_raw_avg, num_results, *stderr)
 
         return stderr
-    
-    def plot(plotter, independent_data, dependent_data, n, fit_func, errbar):
-        plotter.live_1dplot(plotter.axs[0,0], independent_data,dependent_data, n, fit_func, errbar)
 
-    def plot_results(self, plotter, partial_results, num_results, stderr, ):
+    def plot(self, plotter, independent_data, dependent_data, n, fit_func, errbar):
+
+        plotter.live_1dplot(
+            plotter.axis[0, 0], independent_data, dependent_data, n, fit_func, errbar
+        )
+
+    def plot_results(
+        self,
+        plotter,
+        partial_results,
+        num_results,
+        stderr,
+    ):
         """
         Retrieves, reorganizes the data and sends it to the plotter.
         """
@@ -279,17 +289,19 @@ class Experiment(Parametrized):
             pass
 
         # Retrieve and reshape standard error estimation
-        if stderr: 
+        if stderr:
             error_data = stderr[0].reshape(self.buffering)
         else:
             error_data = None
-        
-        self.plot(plotter, 
+
+        self.plot(
+            plotter,
             independent_data,
             dependent_data,
-            num_results, 
+            n=num_results,
             fit_func=self.fit_fn,
-            err=error_data)
+            errbar=error_data,
+        )
 
         # build data dictionary for final save
         dep_data_dict = {dep_tags[i]: dependent_data[i] for i in range(len(dep_tags))}

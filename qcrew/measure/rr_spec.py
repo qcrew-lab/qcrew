@@ -49,13 +49,14 @@ if __name__ == "__main__":
 
     parameters = {
         "modes": ["RR"],
-        "reps": 200,
+        "reps": 2000,
         "wait_time": 10000,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
     }
 
     plot_parameters = {
         "xlabel": "Resonator pulse frequency (Hz)",
+        # "suptitle": "rr spectroscopy",
     }
 
     experiment = RRSpectroscopy(**parameters)

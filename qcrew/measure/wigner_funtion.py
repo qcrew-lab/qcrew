@@ -22,13 +22,15 @@ class Wigner_function(Experiment):
         "cav_op",  # operation for displacing the cavity
         "qubit_op",  # operation used for exciting the qubit
         "fit_fn",  # fit function
+        "delay",
     }
 
-    def __init__(self, cav_op, qubit_op, fit_fn=None, **other_params):
+    def __init__(self, cav_op, qubit_op, fit_fn=None, delay=None,  **other_params):
 
         self.cav_op = cav_op
         self.qubit_op = qubit_op
         self.fit_fn = fit_fn
+        self.delay = delay
 
         super().__init__(**other_params)  # Passes other parameters to parent
 
@@ -47,7 +49,6 @@ class Wigner_function(Experiment):
         qua.wait(int(self.wait_time // 4), cav.name) # conditional phase gate on even, odd Fock state
         qubit.play(self.qubit_op)  # play pi/2 pulse around X
         
-
         # Measure cavity state
         qua.align(qubit.name, rr.name)  # align measurement
         rr.measure((self.I, self.Q))  # measure transmitted signal

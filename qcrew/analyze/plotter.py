@@ -45,9 +45,6 @@ class Plotter:
         if "suptitle" in plot_setup:
             self.title = plot_setup["suptitle"]
 
-        self.create_subplot()
-
-    def create_subplot(self):
         self.fig, self.axis = plt.subplots(self.nrows, self.ncols, squeeze=False)
         self.hdisplay = display.display(self.fig, display_id=True)
         # self.fig.suptitle(self.title)
@@ -89,7 +86,7 @@ class Plotter:
         n,
         fit_func=None,
         errbar=None,
-    ):
+    ) -> None:
 
         ax.clear()
 
@@ -101,6 +98,7 @@ class Plotter:
         if len(independent_data) == 1 and len(dependent_data) == 1:
             x = independent_data[0]
             y = dependent_data[0]
+
             try:
                 label = self.plot_setup["trace_labels"]
             except IndexError:
@@ -147,14 +145,13 @@ class Plotter:
     def plot_1d(
         self, ax, x, y, plot_type="scatter", fit_func=None, errbar=None, label=None
     ):
-        if plot_type == "scatter":
-            if errbar is not None:
-                self.plot_errorbar(ax, x, y, errbar, label)
-            else:
-                self.plot_scatter(ax, x, y, label)
 
-        elif plot_type == "line":
+        if plot_type == "line":
             self.plot_line(ax, x, y, label)
+        elif errbar is not None:
+            self.plot_errorbar(ax, x, y, errbar, label)
+        else:
+            self.plot_scatter(ax, x, y, label)
 
         if fit_func:
             # plot the fit curve
@@ -175,15 +172,13 @@ class Plotter:
             self.plot_line(ax, x, fit_y, label="fit of", color="r")
 
     def plot_errorbar(self, ax, x, y, yerr, label):
-        mpl.rcParams["errorbar.capsize"] = 3
-        mpl.rcParams["errorbar.ls"] = "none"
-        mpl.rcParams["errorbar.ecolor"] = "b"
-        mpl.rcParams["errorbar.lw"] = 1
-        mpl.rcParams["errorbar.marker"] = "o"
-        mpl.rcParams["errorbar.ms"] = 4
-        mpl.rcParams["errorbar.mfc"] = "b"
-        mpl.rcParams["errorbar.mec"] = "b"
-        mpl.rcParams["errorbar.fillstyle"] = "none"
+        # mpl.rcParams["errorbar.capsize"] = 3
+        # mpl.rcParams["errorbar.lw"] = 1
+        # mpl.rcParams["errorbar.marker"] = "o"
+        # mpl.rcParams["errorbar.ms"] = 4
+        # mpl.rcParams["errorbar.mfc"] = "b"
+        # mpl.rcParams["errorbar.mec"] = "b"
+        # mpl.rcParams["errorbar.fillstyle"] = "none"
 
         ax.errorbar(x, y, yerr=yerr, label=label)
 

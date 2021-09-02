@@ -59,7 +59,6 @@ class WignerFunction(Experiment):
         qua.wait(int(self.wait_time // 4), cav.name)
 
         self.QUA_stream_results()  # stream variables (I, Q, x, etc)
-        
 
 
 # -------------------------------- Execution -----------------------------------
@@ -68,10 +67,10 @@ if __name__ == "__main__":
 
     parameters = {
         "modes": ["QUBIT", "CAV", "RR"],
-        "reps": 50000,
+        "reps": 13298,
         "wait_time": 600000,
         "fetch_period": 2,  # time between data fetching rounds in sec
-        "delay": 2940,  # pi/chi
+        "delay":  2777, #2500, #2941 # pi/chi
         "x_sweep": (-1, 1 + 0.05 / 2, 0.05),
         "y_sweep": (-1, 1 + 0.05 / 2, 0.05),
         "qubit_op": "pi2",
@@ -83,6 +82,9 @@ if __name__ == "__main__":
         "ylabel": "Y",
         "plot_type": "2D",
         "err": False,
+        
+        
+        
         "cmap": "bwr",
     }
 

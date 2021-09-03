@@ -67,10 +67,10 @@ if __name__ == "__main__":
 
     parameters = {
         "modes": ["QUBIT", "CAV", "RR"],
-        "reps": 13298,
+        "reps": 10000,
         "wait_time": 600000,
-        "fetch_period": 2,  # time between data fetching rounds in sec
-        "delay":  2777, #2500, #2941 # pi/chi
+        "fetch_period": 4,  # time between data fetching rounds in sec
+        "delay":  1666, # 2272 #2777, #2500, #2941 # pi/chi
         "x_sweep": (-1, 1 + 0.05 / 2, 0.05),
         "y_sweep": (-1, 1 + 0.05 / 2, 0.05),
         "qubit_op": "pi2",

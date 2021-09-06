@@ -54,7 +54,7 @@ if __name__ == "__main__":
         "modes": ["QUBIT", "CAV", "RR"],
         "reps": 400000,
         "wait_time": 600000,
-        "x_sweep": (0, 0.7 + 0.04 / 2, 0.04),
+        "x_sweep": (-0.7, 0.7 + 0.04 / 2, 0.04),
         "qubit_op": "select_pi",
         "cav_op": "constant_pulse",
     }

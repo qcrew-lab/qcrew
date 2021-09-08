@@ -27,7 +27,7 @@ class Plotter:
 
         self.plot_setup = plot_setup
 
-        plt.rcParams["figure.figsize"] = (9, 6)  # in inches by default
+        plt.rcParams["figure.figsize"] = (9, 9)  # in inches by default
         plt.rcParams["axes.linewidth"] = 1
         plt.rcParams["xtick.major.size"] = 1
         plt.rcParams["ytick.major.size"] = 1

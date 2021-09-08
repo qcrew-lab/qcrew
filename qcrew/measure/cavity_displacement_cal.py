@@ -52,18 +52,19 @@ if __name__ == "__main__":
 
     parameters = {
         "modes": ["QUBIT", "CAV", "RR"],
-        "reps": 400000,
+        "reps": 50000,
         "wait_time": 600000,
-        "x_sweep": (-0.7, 0.7 + 0.04 / 2, 0.04),
+        "x_sweep": (0, 5+ 0.015 /2, 0.015),
         "qubit_op": "select_pi",
         "cav_op": "constant_pulse",
     }
 
     plot_parameters = {
         "xlabel": "Cavity pulse amplitude scaling",
+        "err": False,
     }
 
     experiment = CavityDisplacementCal(**parameters)
     experiment.setup_plot(**plot_parameters)
-
+    #print(experiment.x_sweep)
     prof.run(experiment)

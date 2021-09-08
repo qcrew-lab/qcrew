@@ -56,7 +56,7 @@ if __name__ == "__main__":
         "reps": 3000000,
         "wait_time": 600000,
         "x_sweep": (int(-50.9e6), int(-49.6e6 + 25e3 / 2), int(25e3)),
-        "y_sweep": (0, 0.182, 0.182 * 2 ** 0.5),
+        "y_sweep": (0, 0.182 * 2 ** 0.5, 0.182 * 2),
         "qubit_op": "select_pi",
         "cav_op": "constant_pulse",
     }

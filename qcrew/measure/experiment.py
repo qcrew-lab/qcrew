@@ -96,49 +96,49 @@ class Experiment(Parametrized):
 
         return indep_tags, dep_tags
 
-    def setup_plot(
-        self,
-        xlabel=None,
-        ylabel=None,
-        zlabel="Signal (a.u.)",
-        trace_labels="",
-        title=None,
-        plot_type="1D",
-        err=True,
-    ):
-        """
-        Updates self.plot_setup dictionary with the parameters to be used by the
-        plotter.
+    # def setup_plot(
+    #     self,
+    #     xlabel=None,
+    #     ylabel=None,
+    #     zlabel="Signal (a.u.)",
+    #     trace_labels="",
+    #     title=None,
+    #     plot_type="1D",
+    #     err=True,
+    # ):
+    #     """
+    #     Updates self.plot_setup dictionary with the parameters to be used by the
+    #     plotter.
 
-        The x and y labels are set up independently if the corresponding sweep exists.
+    #     The x and y labels are set up independently if the corresponding sweep exists.
 
-        plot_type identifies how the plotter should arrange the data. If "1D" and x,y
-        sweeps are configured, one x sweep trace is plotted for every value of y. If
-        the user wants to plot a colormesh instead, pass plot_type = '2D'.
+    #     plot_type identifies how the plotter should arrange the data. If "1D" and x,y
+    #     sweeps are configured, one x sweep trace is plotted for every value of y. If
+    #     the user wants to plot a colormesh instead, pass plot_type = '2D'.
 
-        trace_labels is a list of labels for each trace. If plot_type = "1D" and a y
-        sweep is
-        configured, each label will correspond to a value of y.
+    #     trace_labels is a list of labels for each trace. If plot_type = "1D" and a y
+    #     sweep is
+    #     configured, each label will correspond to a value of y.
 
-        plot_err toggles errorbar plotting.
+    #     plot_err toggles errorbar plotting.
 
-        """
+    #     """
 
-        if not title:
-            title = self.name
+    #     if not title:
+    #         title = self.name
 
-        self.plot_setup = {
-            "xlabel": xlabel,
-            "ylabel": ylabel,
-            "zlabel": zlabel,
-            "trace_labels": trace_labels,
-            "title": title,
-            "plot_type": plot_type,
-            "plot_err": err,
-            "suptitle": title,
-        }
+    #     self.plot_setup = {
+    #         "xlabel": xlabel,
+    #         "ylabel": ylabel,
+    #         "zlabel": zlabel,
+    #         "trace_labels": trace_labels,
+    #         "title": title,
+    #         "plot_type": plot_type,
+    #         "plot_err": err,
+    #         "suptitle": title,
+    #     }
 
-        return
+    #     return
 
     def _configure_sweeps(self, sweep_variables_keys):
         """
@@ -294,14 +294,14 @@ class Experiment(Parametrized):
         else:
             error_data = None
 
-        self.plot(
-            plotter,
-            independent_data,
-            dependent_data,
-            n=num_results,
-            fit_func=self.fit_fn,
-            errbar=error_data,
-        )
+        # self.plot(
+        #     plotter,
+        #     independent_data,
+        #     dependent_data,
+        #     n=num_results,
+        #     fit_func=self.fit_fn,
+        #     errbar=error_data,
+        # )
 
         # build data dictionary for final save
         dep_data_dict = {dep_tags[i]: dependent_data[i] for i in range(len(dep_tags))}

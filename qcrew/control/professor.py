@@ -98,4 +98,4 @@ def run(experiment: Experiment) -> None:
 
         ##########################          fin           #############################
 
-        print(qm_job.execution_report())
+        # print(qm_job.execution_report())

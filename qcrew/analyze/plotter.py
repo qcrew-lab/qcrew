@@ -5,6 +5,18 @@ from IPython import display
 from qcrew.analyze import fit
 import matplotlib as mpl
 from matplotlib import colors
+import time
+
+COLOR_LIST = (
+    "#0000FF",
+    "#FF3300",
+    "#33FF00",
+    "#2CDE00",
+    "#FF9933",
+    "#663399",
+    "#009966",
+    "#66CCCC",
+)
 
 
 class Plotter:
@@ -41,13 +53,15 @@ class Plotter:
             self.nrows = 1
             self.ncols = 1
 
+        self.fig, self.axis = plt.subplots(self.nrows, self.ncols, squeeze=False)
+
         # suptitle
         if "suptitle" in plot_setup:
             self.title = plot_setup["suptitle"]
+            self.fig.suptitle(self.title)
 
-        self.fig, self.axis = plt.subplots(self.nrows, self.ncols, squeeze=False)
-        self.hdisplay = display.display(self.fig, display_id=True)
-        # self.fig.suptitle(self.title)
+        plt.ion()
+        # self.hdisplay = display.display(self.fig, display_id=True)
 
     @staticmethod
     def fit(x, y, fit_func) -> tuple:
@@ -95,6 +109,9 @@ class Plotter:
         else:
             plot_type = "scatter"
 
+        if "title" in self.plot_setup:
+            title = self.plot_setup["title"]
+
         if len(independent_data) == 1 and len(dependent_data) == 1:
             x = independent_data[0]
             y = dependent_data[0]
@@ -135,12 +152,14 @@ class Plotter:
                     label=label,
                 )
 
-        ax.set_title(self.title + f": {n} repetition{'s' if n > 1 else ''}")
+        ax.set_title(title + f": {n} repetition{'s' if n > 1 else ''}")
         ax.set_xlabel(self.plot_setup["xlabel"])
         ax.set_ylabel(self.plot_setup["zlabel"])
         ax.legend()
 
-        self.hdisplay.update(self.fig)
+        # self.hdisplay.update(self.fig)
+        self.fig.canvas.draw()
+        self.fig.canvas.flush_events()
 
     def plot_1d(
         self, ax, x, y, plot_type="scatter", fit_func=None, errbar=None, label=None
@@ -233,4 +252,6 @@ class Plotter:
         ax.set_xlabel(self.plot_setup["xlabel"])
         ax.set_ylabel(self.plot_setup["ylabel"])
 
-        self.hdisplay.update(self.fig)
+        # self.hdisplay.update(self.fig)
+        self.fig.canvas.draw()
+        self.fig.canvas.flush_events()

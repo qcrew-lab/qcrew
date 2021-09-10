@@ -22,7 +22,7 @@ class CavityDisplacementCal(Experiment):
         "fit_fn",  # fit function
     }
 
-    def __init__(self, cav_op, qubit_op, fit_fn="gaussian", **other_params):
+    def __init__(self, cav_op, qubit_op, fit_fn="gaussian_0", **other_params):
 
         self.cav_op = cav_op
         self.qubit_op = qubit_op
@@ -52,16 +52,16 @@ if __name__ == "__main__":
 
     parameters = {
         "modes": ["QUBIT", "CAV", "RR"],
-        "reps": 50000,
+        "reps": 100000,
         "wait_time": 600000,
-        "x_sweep": (0, 5+ 0.015 /2, 0.015),
+        "x_sweep": (0, 2+ 0.05 /2, 0.05),
         "qubit_op": "select_pi",
-        "cav_op": "constant_pulse",
+        "cav_op": "gaussian_pulse",
     }
 
     plot_parameters = {
         "xlabel": "Cavity pulse amplitude scaling",
-        "err": False,
+        "err": True,
     }
 
     experiment = CavityDisplacementCal(**parameters)

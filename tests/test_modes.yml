@@ -1,0 +1,75 @@
+- !<Qubit>
+  name: QUBIT
+  lo: !<TestLabBrick>
+    id: 25331
+    name: TLB_QUBIT
+    frequency: 5.000000E+09
+    power: 13
+  int_freq: -5.000000E+07
+  ports:
+    I: 1
+    Q: 2
+  mixer_offsets:
+    I: 0.0
+    Q: 0.0
+    G: 0.0
+    P: 0.0
+  operations:
+    constant_pulse: !<ConstantPulse>
+      length: 1000
+      ampx: 1.0
+    gaussian_pulse: !<GaussianPulse>
+      sigma: 100
+      chop: 6
+      ampx: 1.0
+      drag: 0.0
+    rotation_pulse: !<GaussianPulse>
+      sigma: 10
+      chop: 6
+      ampx: 1.0
+      drag: 0.0
+  omegas: []
+  rotation_ampxs:
+    '0': 0.0
+    pi2: 0.0
+    pi: 0.0
+- !<Readout>
+  name: RR
+  lo: !<TestLabBrick>
+    id: 25335
+    name: TLB_RR
+    frequency: 8.000000E+09
+    power: 15
+  int_freq: -5.000000E+07
+  ports:
+    I: 4
+    Q: 3
+    out: 1
+  mixer_offsets:
+    I: 0.0
+    Q: 0.0
+    G: 0.0
+    P: 0.0
+    out: 0.0
+  operations:
+    constant_pulse: !<ConstantPulse>
+      length: 1000
+      ampx: 1.0
+    gaussian_pulse: !<GaussianPulse>
+      sigma: 100
+      chop: 6
+      ampx: 1.0
+      drag: 0.0
+    readout_pulse: !<ConstantPulse>
+      length: 400
+      ampx: 1.0
+      integration_weights: !<ConstantIntegrationWeights>
+        length: 100
+        magnitude:
+        - 1.0
+        - 0.0
+        - 0.0
+        - 1.0
+        is_pinned: true
+  time_of_flight: 180
+  smearing: 0

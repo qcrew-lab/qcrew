@@ -12,9 +12,9 @@ from qm import qua
 # ---------------------------------- Class -------------------------------------
 
 
-class CavityDisplacementCal(Experiment):
+class CavityT1(Experiment):
 
-    name = "cavity_displacement_cal"
+    name = "cavity_T1"
 
     _parameters: ClassVar[set[str]] = Experiment._parameters | {
         "cav_op",  # operation for displacing the cavity
@@ -22,7 +22,7 @@ class CavityDisplacementCal(Experiment):
         "fit_fn",  # fit function
     }
 
-    def __init__(self, cav_op, qubit_op, fit_fn="gaussian", **other_params):
+    def __init__(self, cav_op, qubit_op, fit_fn="exp_decay", **other_params):
 
         self.cav_op = cav_op
         self.qubit_op = qubit_op
@@ -36,12 +36,27 @@ class CavityDisplacementCal(Experiment):
         """
         qubit, cav, rr = self.modes  # get the modes
 
-        cav.play(self.cav_op, ampx=self.x)  # play displacement to cavity
-        qua.align(cav.name, qubit.name)  # align all modes
+        # TODO work in progress
+
+        # Prepare initial state (|0> + |1>)/sqrt(2)
+        cav.play(self.cav_op, ampx=0.44 * 0.56)  # displace by beta = 0.56
+        qua.align(cav.name, qubit.name)  # align pulses
+        qubit.play(self.qubit_op)  # SNAP: play pi pulse around X
+        qubit.play(self.qubit_op, phase=1.0)  # SNAP: play pi pulse around -X
+        qua.align(cav.name, qubit.name)  # align pulses
+        cav.play(self.cav_op, ampx=0.44 * -0.26)  # displace by beta = -0.26
+
+        # Wait relaxation
+        qua.wait(self.x, cav.name)
+
+        # Measure cavity state
+        qua.align(cav.name, qubit.name)  # align pulses
         qubit.play(self.qubit_op)  # play qubit pulse
-        qua.align(qubit.name, rr.name)  # align all modes
+        qua.align(qubit.name, rr.name)  # align measurement
         rr.measure((self.I, self.Q))  # measure transmitted signal
-        qua.wait(int(self.wait_time // 4), cav.name)  # wait system reset
+
+        # wait system reset
+        qua.wait(int(self.wait_time // 4), cav.name)
 
         self.QUA_stream_results()  # stream variables (I, Q, x, etc)
 
@@ -52,18 +67,18 @@ if __name__ == "__main__":
 
     parameters = {
         "modes": ["QUBIT", "CAV", "RR"],
-        "reps": 400000,
+        "reps": 50000,
         "wait_time": 600000,
-        "x_sweep": (-0.7, 0.7 + 0.04 / 2, 0.04),
-        "qubit_op": "select_pi",
+        "x_sweep": (int(16), int(80000 + 1000 / 2), int(1000)),
+        "qubit_op": "pi",
         "cav_op": "constant_pulse",
     }
 
     plot_parameters = {
-        "xlabel": "Cavity pulse amplitude scaling",
+        "xlabel": "Cavity relaxation time (clock cycles)",
     }
 
-    experiment = CavityDisplacementCal(**parameters)
+    experiment = CavityT1(**parameters)
     experiment.setup_plot(**plot_parameters)
 
     prof.run(experiment)

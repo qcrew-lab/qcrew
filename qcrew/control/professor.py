@@ -88,7 +88,9 @@ def run(experiment: Experiment) -> None:
                 final_save_dict = experiment.plot_results(
                     plotter, partial_results, num_results, stderr
                 )
-                time.sleep(1)  # prevent over-fetching, over-saving, ultra-fast plotting
+                time.sleep(
+                    experiment.fetch_period
+                )  # prevent over-fetching, over-saving, ultra-fast plotting
 
             ##################         SAVE REMAINING DATA         #####################
 

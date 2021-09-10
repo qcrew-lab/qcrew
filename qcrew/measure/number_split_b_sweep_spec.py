@@ -12,9 +12,9 @@ from qm import qua
 # ---------------------------------- Class -------------------------------------
 
 
-class CavityDisplacementCal(Experiment):
+class NSplitBSweepSpec(Experiment):
 
-    name = "cavity_displacement_cal"
+    name = "number_split_b_sweep_spec"
 
     _parameters: ClassVar[set[str]] = Experiment._parameters | {
         "cav_op",  # operation for displacing the cavity
@@ -22,10 +22,10 @@ class CavityDisplacementCal(Experiment):
         "fit_fn",  # fit function
     }
 
-    def __init__(self, cav_op, qubit_op, fit_fn="gaussian", **other_params):
+    def __init__(self, qubit_op, cav_op, fit_fn=None, **other_params):
 
-        self.cav_op = cav_op
         self.qubit_op = qubit_op
+        self.cav_op = cav_op
         self.fit_fn = fit_fn
 
         super().__init__(**other_params)  # Passes other parameters to parent
@@ -36,10 +36,11 @@ class CavityDisplacementCal(Experiment):
         """
         qubit, cav, rr = self.modes  # get the modes
 
-        cav.play(self.cav_op, ampx=self.x)  # play displacement to cavity
-        qua.align(cav.name, qubit.name)  # align all modes
+        qua.update_frequency(qubit.name, self.x)  # update qubit pulse frequency
+        cav.play(self.cav_op, ampx=self.y)  # prepare cavity state
+        qua.align(cav.name, qubit.name)  # align modes
         qubit.play(self.qubit_op)  # play qubit pulse
-        qua.align(qubit.name, rr.name)  # align all modes
+        qua.align(qubit.name, rr.name)  # align modes
         rr.measure((self.I, self.Q))  # measure transmitted signal
         qua.wait(int(self.wait_time // 4), cav.name)  # wait system reset
 
@@ -52,18 +53,20 @@ if __name__ == "__main__":
 
     parameters = {
         "modes": ["QUBIT", "CAV", "RR"],
-        "reps": 400000,
+        "reps": 3000000,
         "wait_time": 600000,
-        "x_sweep": (-0.7, 0.7 + 0.04 / 2, 0.04),
+        "x_sweep": (int(-50.9e6), int(-49.6e6 + 25e3 / 2), int(25e3)),
+        "y_sweep": (0, 0.182, 0.182 * 2 ** 0.5),
         "qubit_op": "select_pi",
         "cav_op": "constant_pulse",
     }
 
     plot_parameters = {
-        "xlabel": "Cavity pulse amplitude scaling",
+        "xlabel": "Qubit pulse frequency (Hz)",
+        "trace_labels": ["<n> = 0", "<n> = 1", "<n> = 2"],
     }
 
-    experiment = CavityDisplacementCal(**parameters)
+    experiment = NSplitBSweepSpec(**parameters)
     experiment.setup_plot(**plot_parameters)
 
     prof.run(experiment)

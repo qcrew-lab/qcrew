@@ -1,3 +1,4 @@
+data/
 config/
 pyproject.toml
 poetry.lock

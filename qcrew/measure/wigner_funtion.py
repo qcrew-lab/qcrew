@@ -25,12 +25,13 @@ class WignerFunction(Experiment):
         "delay",  # describe...
     }
 
-    def __init__(self, cav_op, qubit_op, fit_fn=None, delay=4, **other_params):
+    def __init__(self, cav_op, qubit_op, fit_fn=None, delay=4, dis = None, **other_params):
 
         self.cav_op = cav_op
         self.qubit_op = qubit_op
         self.fit_fn = fit_fn
         self.delay = delay
+        self.dis = dis
 
         super().__init__(**other_params)  # Passes other parameters to parent
 
@@ -42,8 +43,9 @@ class WignerFunction(Experiment):
         qua.reset_frame(cav.name)
 
         # TODO work in progress
+        cav.play(self.cav_op, ampx=self.dis, phase=0)
         cav.play(self.cav_op, ampx=self.x, phase=0)  # displacement in I direction
-        cav.play(self.cav_op, ampx=self.y, phase=0.25)  # displacement in Q direction
+        #cav.play(self.cav_op, ampx=self.y, phase=0.25)  # displacement in Q direction
         qua.align(cav.name, qubit.name)
         qubit.play(self.qubit_op)  # play pi/2 pulse around X
         qua.wait(
@@ -67,20 +69,22 @@ if __name__ == "__main__":
 
     parameters = {
         "modes": ["QUBIT", "CAV", "RR"],
-        "reps": 10000,
+        "reps": 20000,
         "wait_time": 600000,
         "fetch_period": 4,  # time between data fetching rounds in sec
-        "delay":  1666, # #2777, #2500, #2941 # pi/chi
-        "x_sweep": (-1, 1 + 0.05 / 2, 0.05),
+        "delay":  2941,#1666, # #2777, #2500, #2941 # pi/chi
+        "x_sweep": (-2, 0 + 0.05 / 2, 0.05),
         "y_sweep": (-1, 1 + 0.05 / 2, 0.05),
         "qubit_op": "pi2",
         "cav_op": "constant_pulse",
+        "dis": 1,
     }
 
     plot_parameters = {
         "xlabel": "X",
         "ylabel": "Y",
         "plot_type": "2D",
+        #"plot_type": "1D",
         "err": False,
         
         

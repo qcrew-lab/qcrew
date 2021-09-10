@@ -24,7 +24,7 @@ class Ramseyrevival(Experiment):
         "fit_fn",  # fit function
     }
 
-    def __init__(self, cav_op, qubit_op, fit_fn="sine", detuning=None, cav_amp = None, **other_params):
+    def __init__(self, cav_op, qubit_op, fit_fn="exp_decay_sine", detuning=None, cav_amp = None, **other_params):
 
         self.cav_op = cav_op
         self.qubit_op = qubit_op
@@ -41,7 +41,7 @@ class Ramseyrevival(Experiment):
         qubit, cav, rr = self.modes  # get the modes
 
         # TODO work in progress
-        cav.play(self.cav_op, ampx = self.cav_amp)
+        #cav.play(self.cav_op, ampx = self.cav_amp)
         qua.align(cav.name, qubit.name)
         #qua.update_frequency(qubit.name, qubit.int_freq + self.detuning)
         qubit.play(self.qubit_op)  # play pi/2 pulse around X
@@ -64,10 +64,10 @@ if __name__ == "__main__":
         "reps": 80000,
         "wait_time": 600000,
         "fetch_period": 3,  # time between data fetching rounds in sec
-        "x_sweep": (int(16), int(2500 + 50 / 2), int(50)),
+        "x_sweep": (int(16), int(3000 + 50 / 2), int(50)),
         "qubit_op": "pi2",
         "cav_op": "constant_pulse",
-        "cav_amp": 0.182 * 2,
+        "cav_amp": 0.182 * 2 **0.5,
         "detuning": int(0),
     }
 

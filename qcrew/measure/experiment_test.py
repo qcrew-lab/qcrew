@@ -427,7 +427,7 @@ param = {
     "a_step": 0.05,
 }
 
-exp = PowerRabi()
+exp = PowerRabi(param)
 
         
 

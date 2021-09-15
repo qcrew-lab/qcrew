@@ -91,75 +91,34 @@ class Plotter:
         fit_text = "\n".join(param_val_list)
 
         return fit_text, fit_y, params
+    
 
-    def live_1dplot(
-        self,
-        ax,
-        independent_data,
-        dependent_data,
-        n,
-        fit_func=None,
-        errbar=None,
-    ) -> None:
+    def live_1dplot(self, ax, x, y_dict, n:int, axis_index:int=0, errbar_dict=None, fit_func=None) -> None:
+        
+        ax_config = self.plot_setup["axis"][axis_index]
+        plot_type = ax_config.get("plot_type") or "scatter"
+        fit_func = ax_config.get("fit_func")
+        title =  ax_config.get("title") or "Exp"
+        xlabel = ax_config.get("xlabel")
+        ylabel = ax_config.get("ylabel")
+        label = ax_config.get("trace_labels")
+        fit_func = fit_func or ax_config.get("fit_func")
 
         ax.clear()
-
-        if "plot_type" in self.plot_setup:
-            plot_type = self.plot_setup["plot_type"]
-        else:
-            plot_type = "scatter"
-
-        if "title" in self.plot_setup:
-            title = self.plot_setup["title"]
-
-        if len(independent_data) == 1 and len(dependent_data) == 1:
-            x = independent_data[0]
-            y = dependent_data[0]
-
-            try:
-                label = self.plot_setup["trace_labels"]
-            except IndexError:
-                label = None
-
-            self.plot_1d(
-                ax,
-                x,
-                y,
-                plot_type=plot_type,
-                fit_func=fit_func,
-                errbar=errbar,
-                label=label,
-            )
-
-        elif len(independent_data) == 2:
-            x = independent_data[0]
-            label_data = independent_data[1]
-
-            for index, trace in enumerate(label_data):
-                try:
-                    label = self.plot_setup["trace_labels"] + str(trace)
-                except IndexError:
-                    label = str(trace)
-
-                y = dependent_data[index]
-                self.plot_1d(
-                    ax,
-                    x,
-                    y,
-                    plot_type=plot_type,
-                    fit_func=fit_func,
-                    errbar=errbar,
-                    label=label,
-                )
+    
+        for key, y in y_dict.item():
+            self.plot_1d(ax, x, y, plot_type=plot_type, fit_func=fit_func, errbar=errbar_dict[key],
+                    label=label + key)
 
         ax.set_title(title + f": {n} repetition{'s' if n > 1 else ''}")
-        ax.set_xlabel(self.plot_setup["xlabel"])
-        ax.set_ylabel(self.plot_setup["zlabel"])
+        ax.set_xlabel(xlabel)
+        ax.set_ylabel(ylabel)
         ax.legend()
 
-        # self.hdisplay.update(self.fig)
         self.fig.canvas.draw()
         self.fig.canvas.flush_events()
+
+
 
     def plot_1d(
         self, ax, x, y, plot_type="scatter", fit_func=None, errbar=None, label=None

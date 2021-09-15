@@ -28,20 +28,20 @@ class Experiment(Parametrized):
             macros.ExpVariable(name="I", var_type=qua.fixed),
             macros.ExpVariable(name="Q", var_type=qua.fixed)
         ]
-        self.variables.extend(parameters.get("variables"))
+        self.update_variable(parameters.get("variables"))
         
         # sweep variables
         self.sweep_variables= [
             macros.SweepVariable(name="n", var_type=int, sweep=(0, self.reps, 1)),
         ]
-        self.sweep_variables.extend(parameters.get("sweep_variables"))
+        self.update_sweep_variable(parameters.get("sweep_variables"))
 
         # stream variables 
         self.stream_variables = [
             macros.StreamVariable(name="I_stream"),
             macros.StreamVariable(name="Q_stream")
         ]
-        self.stream_variables.extend(parameters.get("stream_variables"))
+        self.update_stream_variable(parameters.get("stream_variables"))
 
         # data shape
         data_shape_list = []
@@ -106,14 +106,38 @@ class Experiment(Parametrized):
         """
         self.plot_setup.update(plot_setup)
     
-    def update_variable(self, variable: List[macros.ExpVariable]) -> None:
-        self.variables.expend(variable)
+    def update_variable(self, variable: Optional[List[macros.ExpVariable]]) -> None:
+        var_name_list = [var.name for var in self.variables]
+        
+        if variable:
+            for new_var in variable:
+                if new_var.name in var_name_list:
+                    index = var_name_list.index(new_var.name)
+                    self.variables[index] = new_var
+                else:
+                    self.variables.append(new_var)
     
-    def update_sweep_variable(self, variable: List[macros.SweepVariable]) -> None:
-        self.sweep_variables.expend(variable)
+    def update_sweep_variable(self, variable: Optional[List[macros.ExpVariable]]) -> None:
+        var_name_list = [var.name for var in self.sweep_variables]
+        
+        if variable:
+            for new_var in variable:
+                if new_var.name in var_name_list:
+                    index = var_name_list.index(new_var.name)
+                    self.sweep_variables[index] = new_var
+                else:
+                    self.sweep_variables.append(new_var)
     
-    def update_stream_variable(self, variable: List[macros.StreamVariable]) -> None:
-        self.stream_variables.expend(variable)
+    def update_stream_variable(self, variable: Optional[List[macros.ExpVariable]]) -> None:
+        var_name_list = [var.name for var in self.stream_variables]
+        
+        if variable:
+            for new_var in variable:
+                if new_var.name in var_name_list:
+                    index = var_name_list.index(new_var.name)
+                    self.stream_variables[index] = new_var
+                else:
+                    self.stream_variables.append(new_var)
     
     @abc.abstractmethod
     def qua_sequence(self):

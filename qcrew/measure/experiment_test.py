@@ -1,4 +1,3 @@
-
 from qcrew.analyze.plotter import Plotter
 from qcrew.analyze.stats import get_std_err
 from qcrew.control.instruments.qm import QMResultFetcher
@@ -8,69 +7,64 @@ from qcrew.helpers import logger
 from qcrew.helpers.parametrizer_test import Parametrized
 import qcrew.measure.qua_macros_test as macros
 
+import copy
 from qm import qua
 import numpy as np
 import time
 from typing import Optional, Union, List
 import abc
 
-class Experiment(Parametrized):
 
+class Experiment(Parametrized):
     def __init__(self, parameters: dict, **kwargs):
-        # experiment basic 
+        # experiment basic
         self.name = self.__class__.__name__ or parameters.get("name")
         self.modes = parameters.get("modes")
         self.reps = parameters.get("reps")
-        self.wait_time = 100e3 or parameters.get("wait_time") # in nanosecond
-        
-        # exp variables 
+        self.wait_time = 100e3 or parameters.get("wait_time")  # in nanosecond
+
+        # exp variables
         self.variables = [
             macros.ExpVariable(name="I", var_type=qua.fixed),
-            macros.ExpVariable(name="Q", var_type=qua.fixed)
+            macros.ExpVariable(name="Q", var_type=qua.fixed),
         ]
         self.update_variable(parameters.get("variables"))
-        
+
         # sweep variables
-        self.sweep_variables= [
+        self.sweep_variables = [
             macros.SweepVariable(name="n", var_type=int, sweep=(0, self.reps, 1)),
         ]
         self.update_sweep_variable(parameters.get("sweep_variables"))
 
-        # stream variables 
+        # stream variables
         self.stream_variables = [
             macros.StreamVariable(name="I_stream"),
-            macros.StreamVariable(name="Q_stream")
+            macros.StreamVariable(name="Q_stream"),
         ]
         self.update_stream_variable(parameters.get("stream_variables"))
 
         # data shape
-        data_shape_list = []
-        for var in self.sweep_variables:
-            data_shape_list.append(var.length)
+        data_shape_list = [var.length for var in self.sweep_variables]
         self.data_shape = tuple(data_shape_list)
 
         # buffer shape
-        del data_shape_list[0]
-        self.buffer_shape = tuple(data_shape_list.reverse())
+        self.buffer_shape = tuple(data_shape_list[1::-1]) if data_shape_list else None
 
-        
-        # qua plotting variables 
-        self.indep_tags = []
-        self.dep_tags = []
-        self.indep_tags.extend(parameters.get("indep_tags"))
-        self.dep_tags.extend(parameters.get("dep_tags"))
+        # qua plotting variables
+        self.indep_tags = Experiment.update_list([], parameters.get("indep_tags"))
+        self.dep_tags = Experiment.update_list([], parameters.get("dep_tags"))
 
         # fetch configurations
-        self.fetch_period = 1 or parameters.get("fetch_period") # in second
-        
-        # saving configurations
-        self.live_saving_tags = [self.variables[0].name, self.variables[1].name]
-        self.final_saving_tags = []
-        self.parameter_saving_tags = self.indep_tags
+        self.fetch_period = 1 or parameters.get("fetch_period")  # in second
 
-        self.live_saving_tags.extend(parameters.get("live_saving_tags"))
-        self.final_saving_tags.extend(parameters.get("final_saving_tags"))
-        self.parameter_saving_tags.extend(parameters.get("parameter_saving_tags"))
+        # saving configurations
+        self.live_saving_tags = Experiment.update_list(
+            [self.variables[0].name, self.variables[1].name],
+            parameters.get("live_saving_tags"),
+        )
+        self.final_saving_tags = Experiment.update_list(
+            self.indep_tags, parameters.get("final_saving_tags")
+        )
 
         # plot configurations
         self.plot_setup = {
@@ -91,9 +85,11 @@ class Experiment(Parametrized):
             ],
         }
 
-        # initization the parent class 
-        super().__init__(**kwargs)
+        # initization the parent class
+        parametrized_dict = copy.deepcopy(self.__dict__)
+        parametrized_dict.update(kwargs)
 
+        super().__init__(**parametrized_dict)
 
         # log
         logger.info(f"Created {type(self).__name__}")
@@ -104,11 +100,22 @@ class Experiment(Parametrized):
         Args:
             plot_setup (dict): a dictionary contains the updated plotting configurations
         """
-        self.plot_setup.update(plot_setup)
-    
+        if plot_setup:
+            self.plot_setup.update(plot_setup)
+
+    @staticmethod
+    def update_list(old: list, new: Optional[list]) -> list:
+        if new:
+            for item in new:
+                if item in old:
+                    continue
+                else:
+                    old.append(item)
+        return old
+
     def update_variable(self, variable: Optional[List[macros.ExpVariable]]) -> None:
         var_name_list = [var.name for var in self.variables]
-        
+
         if variable:
             for new_var in variable:
                 if new_var.name in var_name_list:
@@ -116,10 +123,12 @@ class Experiment(Parametrized):
                     self.variables[index] = new_var
                 else:
                     self.variables.append(new_var)
-    
-    def update_sweep_variable(self, variable: Optional[List[macros.ExpVariable]]) -> None:
+
+    def update_sweep_variable(
+        self, variable: Optional[List[macros.ExpVariable]]
+    ) -> None:
         var_name_list = [var.name for var in self.sweep_variables]
-        
+
         if variable:
             for new_var in variable:
                 if new_var.name in var_name_list:
@@ -127,10 +136,12 @@ class Experiment(Parametrized):
                     self.sweep_variables[index] = new_var
                 else:
                     self.sweep_variables.append(new_var)
-    
-    def update_stream_variable(self, variable: Optional[List[macros.ExpVariable]]) -> None:
+
+    def update_stream_variable(
+        self, variable: Optional[List[macros.ExpVariable]]
+    ) -> None:
         var_name_list = [var.name for var in self.stream_variables]
-        
+
         if variable:
             for new_var in variable:
                 if new_var.name in var_name_list:
@@ -138,23 +149,21 @@ class Experiment(Parametrized):
                     self.stream_variables[index] = new_var
                 else:
                     self.stream_variables.append(new_var)
-    
+
     @abc.abstractmethod
     def qua_sequence(self):
         pass
-    
-    @abc.abstractmethod
-    def stream_process(self, 
-                       variables:list,
-                       sweep_variables:list,
-                       stream_variables:list):
+
+    def stream_process(
+        self, variables: list, sweep_variables: list, stream_variables: list
+    ):
         i_st = stream_variables[0]
         q_st = stream_variables[1]
-        
+
         result_tag = []
         res_iq = macros.IQ_results(i_st, q_st, self.buffer_shape)
         res_z = macros.Z_results(i_st, q_st, self.buffer_shape)
-        
+
         result_tag.extend(res_iq)
         result_tag.extend(res_z)
 
@@ -165,20 +174,23 @@ class Experiment(Parametrized):
         # TODO:check the sweep
         with qua.program() as qua_prog:
 
-            # Initial variable 
+            # Initial variable
             var = macros.qua_var_declare(self.variables)
             sweep_var = macros.qua_var_declare(self.sweep_variables)
             stream_var = macros.qua_var_declare(self.stream_variables)
 
-            macros.qua_loop(self.qua_sequence, 
-                            sweep_variables=self.sweep_variables, 
-                            declared_variables=sweep_var)
-            
-            
+            macros.qua_loop(
+                self.qua_sequence,
+                sweep_variables=self.sweep_variables,
+                declared_variables=sweep_var,
+            )
+
             with qua.stream_processing():
-                result_tag = macros.stream_process(variables=var,
-                                                    sweep_variables=sweep_var,
-                                                    stream_variables=stream_var)
+                result_tag = macros.stream_process(
+                    variables=var,
+                    sweep_variables=sweep_var,
+                    stream_variables=stream_var,
+                )
 
         return result_tag, qua_prog
 
@@ -190,7 +202,9 @@ class Experiment(Parametrized):
             empty_stderr_data[raw_tag] = (None, None, None)
         return empty_stderr_data
 
-    def estimate_std(self, partial_results: dict, num_results: int, stderr_data: dict) -> dict:
+    def estimate_std(
+        self, partial_results: dict, num_results: int, stderr_data: dict
+    ) -> dict:
         """[summary]
 
         Args:
@@ -237,7 +251,7 @@ class Experiment(Parametrized):
         return partial_results
 
     def std_tags_list(self) -> list:
-        
+
         std_tags = []
         for item in self.plot_setup["axis"]:
             if item.get("plot_errbar") == True:
@@ -268,27 +282,29 @@ class Experiment(Parametrized):
             error_data = None
 
         return dep_data, indep_data, error_data
-    
-    def filter_plot_data(self, partial_results:dict, stderr_data: dict) -> None:
+
+    def filter_plot_data(self, partial_results: dict, stderr_data: dict) -> None:
         new_dict = self.sqrt_root_data(partial_results)
         dep_data = {}
         indep_data = {}
         for key in self.dep_tags:
             if key in new_dict:
                 dep_data[key] = new_dict.get(key)
-        
+
         for key in self.indep_tags:
             if key in new_dict:
                 indep_data[key] = new_dict.get(key)
 
         return dep_data, indep_data, stderr_data
 
-    def plot(self,
+    def plot(
+        self,
         plotter: Plotter,
         independent_data: dict,
         dependent_data: dict,
         n: int,
-        errbar_dict: dict) -> None:
+        errbar_dict: dict,
+    ) -> None:
 
         x_tag = self.indep_tags[0]
         y_tag = self.dep_tags[0]
@@ -297,19 +313,18 @@ class Experiment(Parametrized):
         y_dict = {y_tag: dependent_data[y_tag]}
         err_dict = {y_tag: errbar_dict[y_tag]}
 
-        plotter.live_1dplot(plotter.axis[0, 0], x, y_dict, n=n, axis_index=0, errbar_dict=err_dict) 
+        plotter.live_1dplot(
+            plotter.axis[0, 0], x, y_dict, n=n, axis_index=0, errbar_dict=err_dict
+        )
 
-    def run(self, 
-            group="data", 
-            z_calculate:bool=True, 
-            z_tag:str="Z_SQ") -> None:
+    def run(self, group="data", z_calculate: bool = True, z_tag: str = "Z_SQ") -> None:
 
         # post-calculation
         if z_calculate:
             self.square_raw_tags = [f"{z_tag}_RAW"]
             self.square_avg_tags = [f"{z_tag}_RAW_AVG"]
             self.last_square_avg_tags = [f"{z_tag}_AVG"]
-            
+
             sqrt_tag = z_tag.replace("_SQ", "")
             self.sqrt_raw_tags = [f"{sqrt_tag}_RAW"]
             self.sqrt_avg_tags = [f"{sqrt_tag}_RAW_AVG"]
@@ -319,7 +334,7 @@ class Experiment(Parametrized):
 
         with Stagehand() as stage:
 
-            # connect to the stage modes 
+            # connect to the stage modes
             for index, mode_name in enumerate(self.modes):
                 try:
                     mode = getattr(stage, mode_name)
@@ -330,23 +345,25 @@ class Experiment(Parametrized):
 
             # qua program and result tags
             result_tag, qua_program = self.qua_program()
-            
+
             # execute qm program
             qm_job = stage.QM.execute(qua_program)
 
             # initiate fetcher and plotter
             fetcher = QMResultFetcher(handle=qm_job.result_handles)
             plotter = Plotter(self.plot_setup)
-            
+
             # initialize the database
-            db = initialise_database(exp_name=self.name,
-                                        sample_name=stage.sample_name,
-                                        project_name=stage.project_name,
-                                        path=stage.datapath)
+            db = initialise_database(
+                exp_name=self.name,
+                sample_name=stage.sample_name,
+                project_name=stage.project_name,
+                path=stage.datapath,
+            )
 
             # datasaver manager
             with DataSaver(db) as datasaver:
-                
+
                 # std error
                 stderr_dict = self.create_empty_stderr_data_dict
 
@@ -382,7 +399,7 @@ class Experiment(Parametrized):
                             independent_data=indep_data,
                             dependent_data=dep_data,
                             n=num_results,
-                            errbar=error_data,
+                            errbar_dict=error_data,
                         )
                         time.sleep(1)
                     else:
@@ -408,30 +425,28 @@ class PowerRabi(Experiment):
             "name": "Power Rabi",
             "modes": ["RR", "QUBIT"],
             "reps": 100,
-            "wait_time":1e6, 
-            "sweep_variables":[
-                macros.SweepVariable(name="a", var_type=int, sweep=(a_start, a_stop, a_step))
-                ],
+            "wait_time": 1e6,
+            "sweep_variables": [
+                macros.SweepVariable(
+                    name="a", var_type=int, sweep=(a_start, a_stop, a_step)
+                )
+            ],
         }
         param.update(parameters)
 
-        super().__init__(param)
+        super().__init__(parameters=param)
+
+    def qua_sequence(self):
+        pass
 
 
-param = {
+p = {
     "name": "Power Rabi",
     "reps": 100,
-    "wait_time":1e6, 
-    "a_start":-2,
+    "wait_time": 1e6,
+    "a_start": -2,
     "a_stop": 2,
     "a_step": 0.05,
 }
 
-exp = PowerRabi(param)
-
-        
-
-
-
-
-        
+exp = PowerRabi(p)

@@ -151,23 +151,19 @@ class Experiment(Parametrized):
                     self.stream_variables.append(new_var)
 
     @abc.abstractmethod
-    def qua_sequence(self):
+    def qua_sequence(self, *args, **kwargs):
         pass
 
     def stream_process(
         self, variables: list, sweep_variables: list, stream_variables: list
     ):
-        i_st = stream_variables[0]
-        q_st = stream_variables[1]
 
-        result_tag = []
-        res_iq = macros.IQ_results(i_st, q_st, self.buffer_shape)
-        res_z = macros.Z_results(i_st, q_st, self.buffer_shape)
+        [I, Q] = variables
+        [n, a] = sweep_variables
+        [I_st, Q_st] = stream_variables
 
-        result_tag.extend(res_iq)
-        result_tag.extend(res_z)
-
-        return result_tag
+        macros.IQ_results(I_st, Q_st, self.buffer_shape)
+        macros.Z_results(I_st, Q_st, self.buffer_shape)
 
     def qua_program(self):
 
@@ -179,20 +175,19 @@ class Experiment(Parametrized):
             sweep_var = macros.qua_var_declare(self.sweep_variables)
             stream_var = macros.qua_var_declare(self.stream_variables)
 
+            # Loop over sweep variable
             macros.qua_loop(
-                self.qua_sequence,
+                qua_function=self.qua_sequence,
+                qua_var=var,
+                qua_sweep_var=sweep_var,
+                qua_stream_var=stream_var,
                 sweep_variables=self.sweep_variables,
-                declared_variables=sweep_var,
             )
 
             with qua.stream_processing():
-                result_tag = macros.stream_process(
-                    variables=var,
-                    sweep_variables=sweep_var,
-                    stream_variables=stream_var,
-                )
+                self.stream_process(var, sweep_var, stream_var)
 
-        return result_tag, qua_prog
+        return qua_prog
 
     def create_empty_stderr_data_dict(self) -> dict:
 
@@ -254,7 +249,7 @@ class Experiment(Parametrized):
 
         std_tags = []
         for item in self.plot_setup["axis"]:
-            if item.get("plot_errbar") == True:
+            if item.get("plot_errbar") is True:
                 std_tags.append(item.get("std_tag"))
 
         return std_tags
@@ -341,13 +336,13 @@ class Experiment(Parametrized):
                 except AttributeError:
                     logger.error(f"'{mode_name}' does not exist on stage")
                 else:
-                    self.stage_modes[index] = mode
+                    self.modes[index] = mode
 
             # qua program and result tags
-            result_tag, qua_program = self.qua_program()
+            qua_prog = self.qua_program()
 
             # execute qm program
-            qm_job = stage.QM.execute(qua_program)
+            qm_job = stage.QM.execute(qua_prog)
 
             # initiate fetcher and plotter
             fetcher = QMResultFetcher(handle=qm_job.result_handles)
@@ -368,7 +363,7 @@ class Experiment(Parametrized):
                 stderr_dict = self.create_empty_stderr_data_dict
 
                 # metadata
-                datasaver.add_metadata(self._parameters)
+                datasaver.add_metadata(self.parameters)
                 for mode in stage.modes:
                     datasaver.add_metadata(mode.parameters)
 
@@ -417,36 +412,32 @@ class Experiment(Parametrized):
 class PowerRabi(Experiment):
     def __init__(self, parameters):
 
-        a_start = parameters.get("a_start")
-        a_stop = parameters.get("a_stop")
-        a_step = parameters.get("a_step")
-
         param = {
             "name": "Power Rabi",
             "modes": ["RR", "QUBIT"],
             "reps": 100,
             "wait_time": 1e6,
             "sweep_variables": [
-                macros.SweepVariable(
-                    name="a", var_type=int, sweep=(a_start, a_stop, a_step)
-                )
+                macros.SweepVariable(name="a", var_type=int, sweep=(0, 2, 0.1))
             ],
         }
+
         param.update(parameters)
 
         super().__init__(parameters=param)
 
-    def qua_sequence(self):
-        pass
+    def qua_sequence(
+        self, variables: list, sweep_variables: list, stream_variables: list
+    ):
+
+        rr, qubit = self.modes
+        [I, Q] = variables
+        [I_st, Q_st] = stream_variables
+
+        rr.measure((I, Q))
+        qua.save(I, I_st)
+        qua.save(Q, Q_st)
 
 
-p = {
-    "name": "Power Rabi",
-    "reps": 100,
-    "wait_time": 1e6,
-    "a_start": -2,
-    "a_stop": 2,
-    "a_step": 0.05,
-}
-
+p = {}
 exp = PowerRabi(p)

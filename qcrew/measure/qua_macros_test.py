@@ -1,7 +1,6 @@
 from google.protobuf.struct_pb2 import Value
 import numpy as np
 import copy
-from numpy.core.fromnumeric import var
 from qm import qua
 from qcrew.helpers.parametrizer_test import Parametrized
 from typing import Union, Optional, List, Tuple, Callable
@@ -20,21 +19,20 @@ class Variable(Parametrized):
         super().__init__(**parametrized_dict)
 
 
-
 class ExpVariable(Variable):
-    def __init__(self,
-                 name:str,
-                 var_type:QUA_VAR,
-                 value:Optional[Union[List[VAL_VAR], VAL_VAR]]=None,
-                 size:Optional[int]=None,
-                 **kwargs):
+    def __init__(
+        self,
+        name: str,
+        var_type: QUA_VAR,
+        value: Optional[Union[List[VAL_VAR], VAL_VAR]] = None,
+        size: Optional[int] = None,
+        **kwargs,
+    ):
 
         self.var_type = var_type
 
-        if value and not size:
-            self.value = value
-        if size and not value:
-            self.size = size
+        self.value = value
+        self.size = size
         if value:
             self.length = len(value)
 
@@ -132,11 +130,12 @@ def IQ_results(
     q = tag[1]
 
     if buffer_shape:
-        I_raw = I_stream.buffer(buffer_shape)
-        Q_raw = Q_stream.buffer(buffer_shape)
-    else:
-        I_raw = I_stream
-        Q_raw = Q_stream
+        for length in buffer_shape:
+            I_stream = I_stream.buffer(length)
+            Q_stream = Q_stream.buffer(length)
+
+    I_raw = I_stream
+    Q_raw = Q_stream
 
     I_raw.save_all(f"{i}_RAW")
     Q_raw.save_all(f"{q}_RAW")
@@ -182,12 +181,13 @@ def ADC_results(
     adc_stream, input: int = 1, buffer_shape: Optional[tuple] = None, tag: str = "ADC"
 ) -> list:
 
+    adc1 = adc_stream.input1()
+    adc2 = adc_stream.input2()
+
     if buffer_shape:
-        adc1 = adc_stream.input1().buffer(buffer_shape)
-        adc2 = adc_stream.input2().buffer(buffer_shape)
-    else:
-        adc1 = adc_stream.input1()
-        adc2 = adc_stream.input2()
+        for length in buffer_shape:
+            adc1 = adc1.buffer(length)
+            adc2 = adc2.buffer(length)
 
     if input == 1:
         adc1.timestamps().save_all(f"{tag}_TIMESTAMPS")
@@ -215,10 +215,10 @@ def STATE_results(
     state_stream, buffer_shape: Optional[tuple] = None, tag: str = "STATE"
 ) -> list:
 
+    state = state_stream
     if buffer_shape:
-        state = state_stream.buffer(buffer_shape)
-    else:
-        state = state_stream
+        for length in buffer_shape:
+            state = state.buffer(length)
 
     state.save_all(f"{tag}")
     result_var_list = []
@@ -236,12 +236,13 @@ def Z_results(
 ) -> list:
 
     # Z = I^2 + Q^2
+    I_raw = I_stream
+    Q_raw = Q_stream
+
     if buffer_shape:
-        I_raw = I_stream.buffer(buffer_shape)
-        Q_raw = Q_stream.buffer(buffer_shape)
-    else:
-        I_raw = I_stream
-        Q_raw = Q_stream
+        for length in buffer_shape:
+            I_raw = I_stream.buffer(length)
+            Q_raw = Q_stream.buffer(length)
 
     # we need these two streams to calculate  std err in a single pass
     (I_raw * I_raw + Q_raw * Q_raw).save_all(f"{tag}_RAW")
@@ -268,33 +269,35 @@ def Z_results(
 
 
 def qua_loop(
-    qua_funciton: Callable,
-    sweep_variables: List[SweepVariable],
-    declared_variables: list,
+    qua_function: Callable,
+    qua_var:list,
+    qua_sweep_var:list,
+    qua_stream_var:list,
+    sweep_variables:List[SweepVariable],
 ) -> None:
 
-    if len(sweep_variables) == len(declared_variables) and len(sweep_variables) != 0:
+    if len(sweep_variables) != 0:
         for index, var in enumerate(sweep_variables):
             if var.value is None and var.start is not None:
-                swept_var = declared_variables[index]
+                swept_var = qua_sweep_var[index]
                 with qua.for_(
                     swept_var,
                     var.start,
                     swept_var < var.stop + var.step / 2,
                     swept_var + var.step,
                 ):
-                    del sweep_variables[0]
-                    del declared_variables[0]
-                    qua_loop(qua_funciton, sweep_variables, declared_variables)
+                    remain_sweep = sweep_variables[1:]
+                    qua_loop(qua_function, qua_var, qua_sweep_var, qua_stream_var, remain_sweep)
+            
             elif var.value is not None:
-                swept_var = declared_variables[index]
+                swept_var = qua_sweep_var[index]
                 with qua.for_each_(swept_var, var.value):
-                    del sweep_variables[0]
-                    del declared_variables[0]
-                    qua_loop(qua_funciton, sweep_variables, declared_variables)
+                    
+                    remain_sweep = sweep_variables[1:]
+                    qua_loop(qua_function, qua_var, qua_sweep_var, qua_stream_var, remain_sweep)
 
     else:
-        qua_funciton()
+        qua_function(qua_var, qua_sweep_var, qua_stream_var)
 
 
 def qua_var_declare(

@@ -43,7 +43,7 @@ class Qfunction(Experiment):
         qua.reset_frame(cav.name)
 
         # TODO work in progress
-        cav.play(self.cav_op, ampx=self.dis, phase=0)
+        
         
     
         cav.play(self.cav_op, ampx=self.x, phase=0)  # displacement in I direction

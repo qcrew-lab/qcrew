@@ -37,7 +37,7 @@ class PowerRabi(Experiment):
 
         qubit.play(self.qubit_op, ampx=self.x)  # play qubit pulse
         qua.align(qubit.name, rr.name)  # wait qubit pulse to end
-        rr.measure((self.I, self.Q))  # measure qubit state
+        rr.measure((self.I, self.Q),ampx=0.22)  # measure qubit state
         qua.wait(int(self.wait_time // 4), rr.name)  # wait system reset
 
         self.QUA_stream_results()  # stream variables (I, Q, x, etc)
@@ -48,10 +48,10 @@ class PowerRabi(Experiment):
 if __name__ == "__main__":
 
     parameters = {
-        "modes": ["QUBIT", "RR"],
+        "modes": ["QUBIT", "RR"], 
         "reps": 2000000,
-        "wait_time": 32000,
-        "x_sweep": (-2, 2 + 0.1 / 2, 0.1),
+        "wait_time": 80000,
+        "x_sweep": (-2, 2 + 0.07 / 2, 0.07),
         "qubit_op": "gaussian_pulse",
     }
 

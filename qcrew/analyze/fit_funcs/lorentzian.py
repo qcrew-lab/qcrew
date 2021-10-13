@@ -9,7 +9,7 @@ def func(xs, ofs=0, area=10, x0=0, w=2):
 
 def guess(xs, ys):
     yofs = (ys[0] + ys[-1]) / 2
-    ys = ys - yofs
+    #ys = ys - yofs
     maxidx = np.argmax(np.abs(ys))
     area = np.sum(ys)
     w = (xs[-1] - xs[0]) / 5

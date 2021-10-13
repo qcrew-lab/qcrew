@@ -110,7 +110,7 @@ class Experiment(Parametrized):
         title=None,
         plot_type="1D",
         err=True,
-        cmap="viridian",
+        cmap="viridis",
     ):
         """
         Updates self.plot_setup dictionary with the parameters to be used by the

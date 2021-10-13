@@ -19,13 +19,14 @@ class QubitSpectroscopy(Experiment):
     _parameters: ClassVar[set[str]] = Experiment._parameters | {
         "qubit_op",  # operation used for exciting the qubit
         "fit_fn",  # fit function
+        "readout_ampx"
     }
 
-    def __init__(self, qubit_op, fit_fn="lorentzian", **other_params):
+    def __init__(self, qubit_op, readout_ampx, fit_fn="lorentzian", **other_params):
 
         self.qubit_op = qubit_op
         self.fit_fn = fit_fn
-
+        self.readout_ampx = readout_ampx
         super().__init__(**other_params)  # Passes other parameters to parent
 
     def QUA_play_pulse_sequence(self):
@@ -37,7 +38,7 @@ class QubitSpectroscopy(Experiment):
         qua.update_frequency(qubit.name, self.x)  # update resonator pulse frequency
         qubit.play(self.qubit_op)  # play qubit pulse
         qua.align(qubit.name, rr.name)  # wait qubit pulse to end
-        rr.measure((self.I, self.Q))  # measure transmitted signal
+        rr.measure((self.I, self.Q),ampx = self.readout_ampx)  # measure transmitted signal
         qua.wait(int(self.wait_time // 4), rr.name)  # wait system reset
 
         self.QUA_stream_results()  # stream variables (I, Q, x, etc)
@@ -48,11 +49,12 @@ class QubitSpectroscopy(Experiment):
 if __name__ == "__main__":
 
     parameters = {
-        "modes": ["QUBIT", "RR"],
-        "reps": 20000,
-        "wait_time": 32000,
-        "x_sweep": (int(-53e6), int(-47e6 + 0.05e6 / 2), int(0.05e6)),
-        "qubit_op": "gaussian_pulse",
+        "modes": ["QUBIT", "RR"],   
+        "reps": 2000000,
+        "wait_time": 80000,
+        "x_sweep": (int(-100e6), int(-40e6 + 0.1e6 / 2), int(0.1e6)),
+        "qubit_op": "constant_pulse",
+        "readout_ampx": 1.6,
     }
 
     plot_parameters = {

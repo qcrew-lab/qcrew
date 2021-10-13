@@ -6,7 +6,7 @@ from qm import qua
 import numpy as np
 
 
-reps = 100000
+reps = 20000
 
 
 def get_qua_program(rr):
@@ -15,7 +15,7 @@ def get_qua_program(rr):
         n = qua.declare(int)
 
         qua.update_frequency(rr.name, int(-50e6))
-        with qua.for_(n, 0, n < reps, n + 1):
+         with qua.for_(n, 0, n < reps, n + 1):
             qua.reset_phase(rr.name)
             qua.measure("readout_pulse" * qua.amp(1), rr.name, adc_stream)
             qua.wait(20000, rr.name)
@@ -32,8 +32,8 @@ if __name__ == "__main__":
     with Stagehand() as stage:
 
         rr = stage.RR
-        rr.readout_pulse(length=1000, ampx=1.0)
-        rr.time_of_flight = 248
+        rr.readout_pulse(length=2000, ampx=1)
+        rr.time_of_flight = 1024
 
         # Execute script
         job = stage.QM.execute(get_qua_program(rr))  # play IF to mode

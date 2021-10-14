@@ -1,4 +1,6 @@
-""" freq sweep v5 """
+"""
+QUA script for time of flight analysis for readout pulses.
+"""
 
 import matplotlib.pyplot as plt
 from qcrew.control import Stagehand
@@ -10,6 +12,14 @@ reps = 100000
 
 
 def get_qua_program(rr):
+    """Build QUA script for time of flight analysis.
+
+    Args:
+        rr ([Readout]): readout resonator mode
+
+    Returns:
+        [program()]: QUA script
+    """
     with qua.program() as raw_adc_avg:
         adc_stream = qua.declare_stream(adc_trace=True)
         n = qua.declare(int)

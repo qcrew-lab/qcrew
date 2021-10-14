@@ -1,5 +1,6 @@
 """
-A python class describing a qubit spectroscopy using QM.
+A python class describing a cavity photon number dependent qubit spectroscopy 
+with variable cavity displacement using QM.
 This class serves as a QUA script generator with user-defined parameters.
 """
 

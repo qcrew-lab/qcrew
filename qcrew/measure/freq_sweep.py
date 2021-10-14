@@ -1,4 +1,6 @@
-""" freq sweep v5 """
+"""
+Script for spectrum analysis of RF signals.
+"""
 
 import matplotlib.pyplot as plt
 from qcrew.control import Stagehand

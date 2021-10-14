@@ -40,8 +40,7 @@ class DRAGCalibration(Experiment):
         super().__init__(**other_params)  # Passes other parameters to parent
 
     def QUA_play_pulse_sequence(self):
-        """
-        Defines pulse sequence to be played inside the experiment loop
+        """Defines pulse sequence to be played inside the experiment loop
         """
         (qubit, rr) = self.modes  # get the modes
 

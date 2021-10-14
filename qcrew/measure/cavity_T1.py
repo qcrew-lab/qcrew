@@ -1,5 +1,5 @@
 """
-A python class describing a qubit spectroscopy using QM.
+A python class describing cavity T1 measurement using QM.
 This class serves as a QUA script generator with user-defined parameters.
 """
 
@@ -31,8 +31,7 @@ class CavityT1(Experiment):
         super().__init__(**other_params)  # Passes other parameters to parent
 
     def QUA_play_pulse_sequence(self):
-        """
-        Defines pulse sequence to be played inside the experiment loop
+        """Defines pulse sequence to be played inside the experiment loop
         """
         qubit, cav, rr = self.modes  # get the modes
 

@@ -1,6 +1,7 @@
 """
-A python class describing a readout resonator spectroscopy using QM.
-This class serves as a QUA script generator with user-defined parameters.
+A python class describing a readout resonator spectroscopy with variable readout 
+pulse amplitude using QM. This class serves as a QUA script generator with user-
+defined parameters.
 """
 
 from typing import ClassVar
@@ -27,8 +28,7 @@ class RRAmpSpectroscopy(Experiment):
         super().__init__(**other_params)  # Passes other parameters to parent
 
     def QUA_play_pulse_sequence(self):
-        """
-        Defines pulse sequence to be played inside the experiment loop
+        """Define pulse sequence to be played inside the experiment loop
         """
         (rr,) = self.modes  # get the modes
 

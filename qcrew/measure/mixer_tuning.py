@@ -1,4 +1,7 @@
-""" mixer tuning v5 """
+"""
+Script for automatic mixer tuning for suppresion of LO and sideband leakage 
+from RF signals.
+"""
 
 from qcrew.control.instruments.meta.mixer_tuner import MixerTuner
 from qcrew.control import Stagehand

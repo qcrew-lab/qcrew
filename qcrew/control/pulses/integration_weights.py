@@ -22,7 +22,13 @@ class ConstantIntegrationWeights(Parametrized, Yamlizable):
         magnitude: tuple[float] = (1.0, 0.0, 0.0, 1.0),  # (i_cos, i_sin, q_cos, q_sin)
         is_pinned: bool = True,  # if true, demodulation window == readout pulse length
     ) -> None:
-        """ """
+        """[summary]
+
+        Args:
+            length (int, optional): [description]. Defaults to None.
+            innsmagnitude (tuple[float], optional): [description]. Defaults to (1.0, 0.0, 0.0, 1.0).
+            demodulationwindow ([type], optional): [description]. Defaults to =readoutpulselength.
+        """
         self.length = length
         self.magnitude = magnitude
         self.is_pinned = is_pinned

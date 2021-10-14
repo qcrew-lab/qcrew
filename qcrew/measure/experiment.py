@@ -1,4 +1,3 @@
-# general packages
 from qcrew.helpers.parametrizer import Parametrized
 from qcrew.helpers import logger
 import qcrew.measure.qua_macros as macros
@@ -6,16 +5,11 @@ from typing import ClassVar
 import numpy as np
 import abc
 
-# qua modules
 from qm import qua
 
 
 class Experiment(Parametrized):
-    """
-    Abstract class for experiments using QUA sequences.
-    """
-
-    # logger.info(f"Created {self}")
+    
     _parameters: ClassVar[set[str]] = {
         "mode_names",  # names of the modes used in the experiment
         "reps",  # number of times the experiment is repeated
@@ -32,16 +26,30 @@ class Experiment(Parametrized):
         y_sweep=None,
         fetch_period=1,
     ):
+        """Abstract class for experiments using QUA sequences.
 
-        # List of modes used in the experiment. String values will be replaced by
-        # corresponding modes by the professor module.
+        Args:
+            modes ([list]): List of modes used in the experiment. String values will be
+            replaced by corresponding mode objects by the professor module.
+
+            reps ([int]): Number of repetitions of the experiment.
+
+            wait_time ([int]): Wait time between repetitions in ns.
+
+            x_sweep ([list], optional): List of values over which to define a QUA loop. 
+            If three values are given, loop over a then defined np.arange array if this 
+            has more than 3 elements. Defaults to None.
+
+            y_sweep ([list], optional): Same as x_sweep, except that it is executed in 
+            the outermost loop when both are defined. Defaults to None.
+
+            fetch_period (int, optional): Minimum wait time between live fetching/
+            plotting/saving rounds in s. Defaults to 1.
+        """
+
         self.modes = modes
-
-        # Experiment loop variables
         self.reps = reps
         self.wait_time = wait_time
-
-        # Wait time between live fetching/plotting/saving rounds
         self.fetch_period = fetch_period
 
         # Sweep configurations
@@ -82,15 +90,25 @@ class Experiment(Parametrized):
 
     @property
     def mode_names(self):
-        # return the name of each mode object in self.modes
-        # Assumes the professor has already updated self.modes
+        """Return list of names for every mode object in self.modes. 
+        
+        Assumes the professor has already updated self.modes
+
+        Returns:
+            [list]: List of names.
+        """
         return [mode.name for mode in self.modes]
 
     @property
     def results_tags(self):
-        # return the tags for independent variables x, y (if applicable) and dependent
-        # variables z for live plotting and data saving.
+        """Return tags for fetching data. 
 
+        Returns:
+            [tuple]: (indep_tags, dep_tags), where the indep_tags correspond to x, y
+            (if sweeps are configured) and dep_tags correspond to dependent variables
+            z used in live plotting and data saving.
+        """
+        
         indep_tags = []
         for var in ["x", "y"]:
             if self.variables[var].tag:
@@ -110,24 +128,31 @@ class Experiment(Parametrized):
         title=None,
         plot_type="1D",
         err=True,
-        cmap="viridian",
+        cmap="viridis",
     ):
-        """
-        Updates self.plot_setup dictionary with the parameters to be used by the
-        plotter.
+        """Update self.plot_setup dictionary with plotter configurations.
 
-        The x and y labels are set up independently if the corresponding sweep exists.
+        Args:
+            xlabel ([type], optional): Independent variable x label. Defaults to None.
 
-        plot_type identifies how the plotter should arrange the data. If "1D" and x,y
-        sweeps are configured, one x sweep trace is plotted for every value of y. If
-        the user wants to plot a colormesh instead, pass plot_type = '2D'.
+            ylabel ([type], optional): Independent variable y label. Defaults to None.
 
-        trace_labels is a list of labels for each trace. If plot_type = "1D" and a y
-        sweep is
-        configured, each label will correspond to a value of y.
+            zlabel (str, optional): Dependent variable label. Defaults to 
+            "Signal (a.u.)".
 
-        plot_err toggles errorbar plotting.
+            trace_labels (list, optional): List of str labels for each trace. Defaults 
+            to [].
 
+            title ([str], optional): Title of the plot. Defaults to None.
+
+            plot_type (str, optional): If "1D" and x,y sweeps are configured, 
+            one x sweep trace is plotted for every value of y. If the user wants to 
+            plot a colormesh instead, pass plot_type = '2D'. Defaults to "1D".
+
+            err (bool, optional): Whether to plot errorbars. Defaults to True.
+
+            cmap (str, optional): Colormap for colormesh plotting. Defaults to 
+            "viridis".
         """
 
         if not title:
@@ -145,6 +170,7 @@ class Experiment(Parametrized):
         }
 
         return
+
 
     def _configure_sweeps(self, sweep_variables_keys):
         """

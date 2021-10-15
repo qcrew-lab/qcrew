@@ -15,7 +15,7 @@ def get_qua_program(rr):
         n = qua.declare(int)
 
         qua.update_frequency(rr.name, int(-50e6))
-         with qua.for_(n, 0, n < reps, n + 1):
+        with qua.for_(n, 0, n < reps, n + 1):
             qua.reset_phase(rr.name)
             qua.measure("readout_pulse" * qua.amp(1), rr.name, adc_stream)
             qua.wait(20000, rr.name)
@@ -33,7 +33,7 @@ if __name__ == "__main__":
 
         rr = stage.RR
         rr.readout_pulse(length=2000, ampx=1)
-        rr.time_of_flight = 1024
+        rr.time_of_flight = 264
 
         # Execute script
         job = stage.QM.execute(get_qua_program(rr))  # play IF to mode

@@ -43,6 +43,7 @@ class QMResultFetcher:
             self.count = self._count_results()
             if self.count == self._last_count:  # no new results to fetch
                 if not self._handle.is_processing():
+                    print(f"NO NEW DATA + JOB DONE IS {self._handle.is_processing()}")
                     self.is_fetching, self._is_live = False, False  # live fetch is done
                 return dict()  # return empty dict because no new results to fetch
         else:

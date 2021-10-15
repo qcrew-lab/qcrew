@@ -69,6 +69,8 @@ def run(experiment: Experiment) -> None:
                 partial_results = fetcher.fetch()
                 num_results = fetcher.count
                 if not partial_results:  # empty dict means no new results available
+                    print(f"NO NEW DATA. FETCH COUNT = {fetcher.count}")
+                    time.sleep(experiment.fetch_period)
                     continue
 
                 ################            LIVE SAVE RESULTS         ##################

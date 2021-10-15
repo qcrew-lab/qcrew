@@ -38,7 +38,7 @@ class RRSpectroscopy(Experiment):
                 self.I,
                 self.Q,
             ),
-            ampx=1,
+            ampx=0.05,
         )  # measure transmitted signal
         qua.wait(int(self.wait_time // 4), rr.name)  # wait system reset
 
@@ -49,9 +49,9 @@ class RRSpectroscopy(Experiment):
 
 if __name__ == "__main__":
 
-    x_start = -70.0e6
-    x_stop = -30.00e6
-    x_step = 0.5e6
+    x_start = -55.0e6
+    x_stop = -45.0e6
+    x_step = 0.01e6
 
     parameters = {
         "modes": ["RR"],

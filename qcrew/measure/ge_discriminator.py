@@ -51,29 +51,29 @@ if __name__ == "__main__":
         }
 
         # Simulation
-        # train0 = TwoStateDiscriminator(
-        #     qmm,
-        #     config=sim_config,
-        #     path=save_path / "simulated_ge_discriminator_params_gmm.npz",
-        # )
+        train0 = TwoStateDiscriminator(
+            qmm,
+            config=sim_config,
+            path=save_path / "simulated_ge_discriminator_params_gmm.npz",
+        )
 
-        # train0.train(plot=True, simulate=True, correction_method="gmm", reps=100)
+        train0.train(plot=True, simulate=True, correction_method="none", reps=100)
         # train0.test_after_train(simulate=True)
 
         # Averaging
-        train1 = TwoStateDiscriminator(
-            qmm=qmm,
-            config=old_config,
-            resonator=rr_name,
-            resonator_pulse=readout_pulse,
-            qubit=qubit_name,
-            qubit_pulse=pi_pulse,
-            analog_input=None,  # "out1" by default
-            path=save_path / "ge_discriminator_params_gmm.npz",
-            metadata=metadata,
-        )
+        # train1 = TwoStateDiscriminator(
+        #     qmm=qmm,
+        #     config=old_config,
+        #     resonator=rr_name,
+        #     resonator_pulse=readout_pulse,
+        #     qubit=qubit_name,
+        #     qubit_pulse=pi_pulse,
+        #     analog_input=None,  # "out1" by default
+        #     path=save_path / "ge_discriminator_params_gmm.npz",
+        #     metadata=metadata,
+        # )
 
-        train1.train(plot=True, simulate=False, correction_method="none")
+        # train1.train(plot=True, simulate=False, correction_method="none")
         # train1.test_after_train(simulate=False)
 
         # Averaging

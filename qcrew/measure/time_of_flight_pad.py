@@ -17,7 +17,7 @@ def get_qua_program(rr):
         qua.update_frequency(rr.name, int(-50e6))
         with qua.for_(n, 0, n < reps, n + 1):
             qua.reset_phase(rr.name)
-            qua.measure("readout_pulse" * qua.amp(1), rr.name, adc_stream)
+            qua.measure("pad_readout_pulse" * qua.amp(1), rr.name, adc_stream)
             qua.wait(20000, rr.name)
 
         with qua.stream_processing():
@@ -33,8 +33,8 @@ if __name__ == "__main__":
 
         rr = stage.RR
         # rr.readout_pulse(length=1000, ampx=1.0, pad=1000)
-        rr.readout_pulse(length=1000, ampx=1.0)
-        rr.time_of_flight = 500  # 248
+        rr.pad_readout_pulse(length=1000, ampx=1.0, pad=2000)
+        rr.time_of_flight = 400  # 248
 
         # Execute script
         job = stage.QM.execute(get_qua_program(rr))  # play IF to mode
@@ -42,8 +42,9 @@ if __name__ == "__main__":
         handle = job.result_handles
         handle.wait_for_all_values()
         results = handle.get("adc_results").fetch_all()
+        
         results_fft = handle.get("adc_fft").fetch_all()
-        pulse_len = rr.readout_pulse.length
+        pulse_len = len(results)
         results_fft = np.sqrt(np.sum(np.squeeze(results_fft) ** 2, axis=1)) / pulse_len
         freqs = np.arange(0, 0.5, 1 / pulse_len)[:] * 1e9
         amps = results_fft[: int(np.ceil(pulse_len / 2))]

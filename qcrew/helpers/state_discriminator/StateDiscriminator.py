@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import matplotlib as mpl
 from sklearn import mixture
 from scipy import signal
+import scipy.fftpack
 
 from .TimeDiffCalibrator import TimeDiffCalibrator
 from qm.QuantumMachinesManager import QuantumMachinesManager
@@ -101,7 +102,8 @@ class StateDiscriminator:
         self.saved_data = None
         self.time_diff = None
         self.finish_train = 0
-        self._load_file(path)
+        if path:
+            self._load_file(path)
 
     def _load_file(self, path):
         if os.path.isfile(path):
@@ -156,21 +158,21 @@ class StateDiscriminator:
     def _downconvert(self, x, ts, simulate=False):
 
         # calculate the time difference
-        if self.time_diff is None:
-            td = TimeDiffCalibrator(self.qmm, self.config, self.resonator, reps=1)
-            self.time_diff = td.calibrate(simulate=simulate)
-            print(
-                "The time difference between the modualtion signal and the cos/sin calcualtion over the adc is ",
-                self.time_diff,
-                "ns",
-            )
+        # if self.time_diff is None:
+        #     td = TimeDiffCalibrator(self.qmm, self.config, self.resonator, reps=1)
+        #     self.time_diff = td.calibrate(simulate=simulate)
+        #     print(
+        #         "The time difference between the modualtion signal and the cos/sin calcualtion over the adc is ",
+        #         self.time_diff,
+        #         "ns",
+        #     )
 
         # return the signal with exp(j2pif(t-time_diff))
         # NOTE: For the QM example, they use exp(-j2pif(t-time_diff)), it seems that it is suitable for the setting
         # Q = -Q1 + I2
         # For the IR mixer, when we use exp(-j2pif(t-time_diff)), we get best discriminaiton in the axis of Q
         # rather than I axis. Thereby, we use exp(j2pif(t-time_diff)) to get the maximal discrimination in the I axis.
-
+        self.time_diff = 36
         rr_freq = self._get_qe_freq(self.resonator)
         sig = x * np.exp(1j * 2 * np.pi * rr_freq * 1e-9 * (ts - self.time_diff))
 
@@ -242,6 +244,7 @@ class StateDiscriminator:
             raise Exception("unknown correction_method")
 
         print("------------------------------------------------")
+
         plt.figure()
         plt.title("Trace of ground state")
         plt.plot(np.abs(traces[0]), label="abs")
@@ -250,12 +253,35 @@ class StateDiscriminator:
         plt.legend()
         plt.show()
 
+        # FFT
+        sig = np.real(traces[0])
+        N = len(sig)
+        # sample spacing
+        T = float(1e-9)
+        yf = scipy.fftpack.fft(sig)
+        xf = np.linspace(0.0, 1.0 / (2.0 * T), N // 2) * 1e-6
+
+        fig, ax = plt.subplots()
+        ax.plot(xf, 2.0 / N * np.abs(yf[: N // 2]))
+        plt.show()
+
         plt.figure()
         plt.title("Trace of excited state")
         plt.plot(np.abs(traces[1]), label="abs")
         plt.plot(np.real(traces[1]), label="real")
         plt.plot(np.imag(traces[1]), label="imag")
         plt.legend()
+        plt.show()
+
+        sig = np.real(traces[1])
+        N = len(sig)
+        # sample spacing
+        T = float(1e-9)
+        yf = scipy.fftpack.fft(sig)
+        xf = np.linspace(0.0, 1.0 / (2.0 * T), N // 2) * 1e-6
+
+        fig, ax = plt.subplots()
+        ax.plot(xf, 2.0 / N * np.abs(yf[: N // 2]))
         plt.show()
 
         if use_hann_filter:

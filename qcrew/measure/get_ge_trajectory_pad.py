@@ -10,7 +10,8 @@ from qcrew.helpers.state_discriminator.TwoStateDiscriminator import (
 
 reps = 200000
 wait_time = 200000
-readout_length = 600
+readout_length = 1000
+pad = 1000
 
 
 def get_qua_program(rr, qubit):
@@ -22,13 +23,13 @@ def get_qua_program(rr, qubit):
         with qua.for_(n, 0, n < reps, n + 1):
             qua.align(rr.name, qubit.name)
             # qua.reset_phase(rr.name)
-            qua.measure("readout_pulse" * qua.amp(1), rr.name, adcg)
+            qua.measure("pad_readout_pulse" * qua.amp(1), rr.name, adcg)
             qua.wait(wait_time, rr.name)
 
             qua.align(rr.name, qubit.name)
             qua.play("pi" * qua.amp(1), qubit.name)
             qua.align(rr.name, qubit.name)
-            qua.measure("readout_pulse" * qua.amp(1), rr.name, adce)
+            qua.measure("pad_readout_pulse" * qua.amp(1), rr.name, adce)
             qua.wait(wait_time, rr.name)
 
         with qua.stream_processing():
@@ -51,8 +52,8 @@ if __name__ == "__main__":
 
         rr = stage.RR
         qubit = stage.QUBIT
-        rr.readout_pulse(length=readout_length, ampx=1.0)
-        rr.time_of_flight = 500  # 248
+        rr.pad_readout_pulse(length=readout_length, ampx=1.0, pad=pad)
+        rr.time_of_flight = 400  # 248
 
         qmm = stage._qmm
         config = stage.QM.get_config()

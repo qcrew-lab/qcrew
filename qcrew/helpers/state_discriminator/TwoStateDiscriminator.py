@@ -6,6 +6,7 @@ from qm import SimulationConfig, LoopbackInterface
 from qm.QuantumMachinesManager import QuantumMachinesManager
 from typing import Optional
 import seaborn as sns
+import scipy.fftpack
 
 
 class TwoStateDiscriminator(StateDiscriminator):
@@ -220,17 +221,35 @@ class TwoStateDiscriminator(StateDiscriminator):
             [[i] * measures_per_state for i in range(self.num_of_states)]
         ).flatten()
 
-        print(np.mean(adc_g, axis=0))
-        plt.figure()
-        plt.plot(np.mean(adc_g, axis=0), label="adc_g")
-        plt.legend()
+        print("====================================================")
+        fig, axes = plt.subplots(2, 1)
+        sig = np.mean(adc_g, axis=0)
+        print("adc length:", len(sig))
+        axes[0].set_title("adc_g")
+        axes[0].plot(sig)
+        N = len(sig)
+        T = float(1e-9)
+        yf = scipy.fftpack.fft(sig)
+        xf = np.linspace(0.0, 1.0 / (2.0 * T), N // 2) * 1e-6
+        axes[1].set_title("adc_g fft")
+        axes[1].plot(xf, 2.0 / N * np.abs(yf[: N // 2]))
+        fig.tight_layout()
         plt.show()
 
-        print(np.mean(adc_e, axis=0))
-        plt.figure()
-        plt.plot(np.mean(adc_e, axis=0), label="adc_g")
-        plt.legend()
+        fig, axes = plt.subplots(2, 1)
+        sig = np.mean(adc_e, axis=0)
+        print("adc length:", len(sig))
+        axes[0].set_title("adc_g")
+        axes[0].plot(sig)
+        N = len(sig)
+        T = float(1e-9)
+        yf = scipy.fftpack.fft(sig)
+        xf = np.linspace(0.0, 1.0 / (2.0 * T), N // 2) * 1e-6
+        axes[1].set_title("adc_g fft")
+        axes[1].plot(xf, 2.0 / N * np.abs(yf[: N // 2]))
+        fig.tight_layout()
         plt.show()
+        print("====================================================")
 
         return I_res, Q_res, timestamps, adc, res
 

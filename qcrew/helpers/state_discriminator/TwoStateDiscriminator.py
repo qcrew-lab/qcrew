@@ -60,7 +60,7 @@ class TwoStateDiscriminator(StateDiscriminator):
             "cosine": np.real(b_vec).tolist(),
             "sine": (np.imag(b_vec)).tolist(),
         }
-        self._add_iw_to_all_pulses(self.opt_iw_sin)
+        self._add_iw_to_all_pulses(self.opt_iw_cos)
 
         # TODO: check the sign of cosine
         self.config["integration_weights"][self.opt_iw_sin] = {
@@ -78,7 +78,7 @@ class TwoStateDiscriminator(StateDiscriminator):
             simulation_interface=LoopbackInterface(
                 [("con1", 1, "con1", 1), ("con1", 2, "con1", 1)],
                 latency=self.time_of_flight,
-                noisePower=0.2 ** 2,
+                noisePower=0.07 ** 2,
             ),
         )
         return simulation_config
@@ -140,8 +140,10 @@ class TwoStateDiscriminator(StateDiscriminator):
                 wait(self.wait_time, self.resonator)
 
                 # if not be simualted
+                align(self.qubit, self.resonator)
                 with if_(~is_simulated):
                     play(self.qubit_pulse, self.qubit)
+
                 align(self.qubit, self.resonator)
                 measure(
                     readout_pulse_e,
@@ -218,6 +220,18 @@ class TwoStateDiscriminator(StateDiscriminator):
             [[i] * measures_per_state for i in range(self.num_of_states)]
         ).flatten()
 
+        print(np.mean(adc_g, axis=0))
+        plt.figure()
+        plt.plot(np.mean(adc_g, axis=0), label="adc_g")
+        plt.legend()
+        plt.show()
+
+        print(np.mean(adc_e, axis=0))
+        plt.figure()
+        plt.plot(np.mean(adc_e, axis=0), label="adc_g")
+        plt.legend()
+        plt.show()
+
         return I_res, Q_res, timestamps, adc, res
 
     def get_threshold(self):
@@ -243,8 +257,10 @@ class TwoStateDiscriminator(StateDiscriminator):
         if program is None:
             program = self._qua_program(simulate=simulate, use_opt_weights=True)
 
-        if simulate and simulation_config is None:
+        if simulate and (simulation_config is None):
             simulation_config = self._simulation_config()
+        else:
+            simulation_config = None
 
         results = self._execute_and_fetch(
             program, simulation_config=simulation_config, **execute_args

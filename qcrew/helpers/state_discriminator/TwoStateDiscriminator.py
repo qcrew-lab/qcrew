@@ -55,7 +55,7 @@ class TwoStateDiscriminator(StateDiscriminator):
     def _update_config(self):
         """Update the integration weights in the opened config for the OPX"""
         weights = self.saved_data["weights"]
-
+        
         b_vec = weights[0, :] - weights[1, :]
         self.config["integration_weights"][self.opt_iw_cos] = {
             "cosine": np.real(b_vec).tolist(),

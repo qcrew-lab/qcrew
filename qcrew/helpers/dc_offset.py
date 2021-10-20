@@ -41,7 +41,30 @@ class DCoffsetCalibrator:
         return config
 
     @staticmethod
-    def calibrate(qmm, config, qe) -> dict:
+    def update_dc_offset(
+        qe: str, offset: float, config: dict, analog_input: int = 1
+    ) -> dict:
+        config = deepcopy(config)
+
+        con_name = config["elements"][qe]["outputs"]["out1"][0]
+        if analog_input == 1:
+            config["controllers"][con_name]["analog_inputs"][analog_input] = {
+                "offset": offset
+            }
+        elif analog_input == 1:
+            config["controllers"][con_name]["analog_inputs"][analog_input] = {
+                "offset": offset
+            }
+        else:
+            raise ValueError(
+                "The analog input {} does not exist in the configuration.".format(
+                    analog_input
+                )
+            )
+        return config
+
+    @staticmethod
+    def calibrate(qmm, config: dict, qe: str) -> dict:
         """
         Returns the offset that should be applied for the analog inputs of each controller.
         Assumes that when nothing is played there should be zero incoming signal.
@@ -50,7 +73,6 @@ class DCoffsetCalibrator:
         qmm: the QuantumMachineManager to execute the program on
         config: the configuration
         qe: quantum element name
-        analog_input: can be either [1], [2] or [1,2]
 
         Return:
         A dictionary whose key is the controller name and item is a tuple of two port offsets.
@@ -78,9 +100,13 @@ class DCoffsetCalibrator:
         adc2 = np.mean(job.result_handles.get("adc2").fetch_all()["value"])
 
         con_name = config["elements"][qe]["outputs"]["out1"][0]
+        offset1 = -adc1 * (2 ** -12)
+        offset2 = -adc2 * (2 ** -12)
+        
         print("DC offsets to apply:")
-        print(f"input 1 on {con_name}: ", -adc1 * (2 ** -12))
-        print(f"input 2 on {con_name}: ", -adc2 * (2 ** -12))
-        offsets[con_name] = (-adc1 * (2 ** -12), -adc2 * (2 ** -12))
+        print(f"input 1 on {con_name}: ", offset1)
+        print(f"input 2 on {con_name}: ", offset2)
 
-        return offsets
+        return (offset1, offset2)
+
+

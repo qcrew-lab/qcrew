@@ -173,7 +173,8 @@ class StateDiscriminator:
         # For the IR mixer, when we use exp(-j2pif(t-time_diff)), we get best discriminaiton in the axis of Q
         # rather than I axis. Thereby, we use exp(j2pif(t-time_diff)) to get the maximal discrimination in the I axis.
         self.time_diff = 36
-        rr_freq = self._get_qe_freq(self.resonator)
+        # rr_freq = self._get_qe_freq(self.resonator)
+        rr_freq = -50e6
         sig = x * np.exp(1j * 2 * np.pi * rr_freq * 1e-9 * (ts - self.time_diff))
 
         return sig

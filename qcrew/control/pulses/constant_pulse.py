@@ -10,34 +10,49 @@ from qcrew.control.pulses.pulse import BASE_PULSE_AMP, Pulse
 class ConstantPulse(Pulse):
     """ """
 
+    def __call__(self, length: int, ampx: float = None) -> None:
+        """ """
+        super().__call__(length=length, ampx=ampx)
+
+    @property
+    def samples(self) -> tuple[np.ndarray]:
+        i_wave = np.full(self.length, (BASE_PULSE_AMP * self.ampx))
+        q_wave = np.zeros(self.length)
+        return i_wave, q_wave
+
+
+class ReadoutPulse(Pulse):
+    """ """
+
     _parameters: ClassVar[set[str]] = Pulse._parameters | {
         "pad",
-        "threshold",
         "const_length",
+        "threshold",
     }
 
     def __init__(
         self,
-        length: int,
-        ampx: float = 1.0,
+        *,
+        length: int = None,
+        ampx: float = None,
         pad: int = None,
+        const_length: int = None,
         threshold: float = None,
         integration_weights=None,
     ) -> None:
-        """ """
-        self.pad = pad
-        self.threshold = threshold
+        if (pad is None) and (length is not None) and (const_length is not None):
+            self.pad = length - const_length
+        else:
+            self.pad = pad
+        if (const_length is None) and (pad is not None) and (length is not None):
+            self.const_length = length - pad
+        else:
+            self.const_length = const_length
 
-        # if length and (not const_length):
-        #     self.pad = pad or 0
-        #     if length > self.pad:
-        #         self.const_length = length - self.pad
-        #     else:
-        #         raise ValueError("length should be larger than pad")
-        # elif (not length) and const_length:
-        #     self.pad = pad or 0
-        #     self.const_length = const_length
-        #     length = self.const_length + self.pad
+        if (length is None) and (pad is not None) and (const_length is not None):
+            length = pad + const_length
+
+        self.threshold = threshold
 
         super().__init__(
             length=length, ampx=ampx, integration_weights=integration_weights
@@ -45,36 +60,29 @@ class ConstantPulse(Pulse):
 
     def __call__(
         self,
+        *,
+        length: int = None,
+        pad: int = None,
         const_length: int = None,
         ampx: float = None,
-        pad: int = None,
         threshold: float = None,
-        length: int = None,
     ) -> None:
         """ """
-        if const_length and (not pad) and (not length):
-            length = const_length + self.pad
-        elif const_length and pad and (not length):
-            length = const_length + pad
-        elif (not const_length) and pad and (not length):
+
+        if (length is not None) and (pad is None) and (const_length is None):
+            pad = length - self.const_length
+        elif (length is not None) and (pad is not None) and (const_length is None):
+            const_length = length - pad
+        elif (length is None) and (pad is not None) and (const_length is None):
             length = self.const_length + pad
-        elif (not const_length) and (not pad) and length:
-            if length > self.const_length:
-                pad = length - self.const_length
-            else:
-                const_length = length
-                pad = 0
-        elif (not const_length) and pad and length:
-            if length > pad:
-                const_length = length - pad
-            else:
-                raise ValueError("length should be larger than pad")
+        elif (length is None) and (pad is not None) and (const_length is not None):
+            length = pad + const_length
 
         super().__call__(
-            const_length=const_length,
             length=length,
-            ampx=ampx,
             pad=pad,
+            const_length=const_length,
+            ampx=ampx,
             threshold=threshold,
         )
 

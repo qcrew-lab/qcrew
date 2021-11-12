@@ -6,7 +6,7 @@ from qm import qua
 import numpy as np
 
 
-reps = 70000
+reps = 100000
 
 
 def get_qua_program(rr):
@@ -34,7 +34,7 @@ if __name__ == "__main__":
         rr = stage.RR
         # rr.readout_pulse(length=1000, ampx=1.0, pad=1000)
         rr.readout_pulse(length=1000, ampx=1.0)
-        rr.time_of_flight = 500  # 248
+        rr.time_of_flight = 200  # 248
 
         # Execute script
         job = stage.QM.execute(get_qua_program(rr))  # play IF to mode

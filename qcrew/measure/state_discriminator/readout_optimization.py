@@ -1,23 +1,22 @@
 """ get ge state trajectory v5 """
 
-import matplotlib.pyplot as plt
 from qm.QuantumMachinesManager import QuantumMachinesManager
 from qcrew.control import Stagehand
 from qm import qua
 import numpy as np
-from qcrew.helpers import time_difference
-from qcrew.helpers.discriminator import (
-    StateDiscriminator,
+from qcrew.measure.state_discriminator.helpers.discriminator import (
     histogram_plot,
     fidelity_plot,
 )
-from qcrew.helpers.dc_offset import DCoffsetCalibrator
-from qcrew.helpers.time_difference import TimeDiffCalibrator
+from qcrew.measure.state_discriminator.helpers.dc_offset_calibrator import (
+    DCoffsetCalibrator,
+)
 
 num_of_states = 2
-reps = 10000
+reps = 100
+
 wait_time = 400000
-readout_length = 500
+readout_length = 1000
 pad = 3000
 readout_pulse = "opt_readout_pulse"
 # NOTE: if the envelope has wired startind and ending, dc_offset need to be updated
@@ -80,7 +79,7 @@ if __name__ == "__main__":
 
         rr = stage.RR
         qubit = stage.QUBIT
-        rr.opt_readout_pulse(length=readout_length, ampx=1.0, pad=pad)
+        rr.opt_readout_pulse(const_length=readout_length, pad=pad)
 
         thres = rr.opt_readout_pulse.threshold
         state_seq = np.array([[i] * reps for i in range(num_of_states)]).flatten()
@@ -92,7 +91,7 @@ if __name__ == "__main__":
 
         qmm = QuantumMachinesManager()
         qm = qmm.open_qm(config)
-        job = qm.execute(get_qua_program(rr, qubit))
+        job = qm.execute(get_qua_program(rr, qubit, thres))
 
         handle = job.result_handles
         handle.wait_for_all_values()
@@ -104,7 +103,7 @@ if __name__ == "__main__":
         Qg_res = handle.get("Qg").fetch_all()["value"]
         Qe_res = handle.get("Qe").fetch_all()["value"]
         Q_res = np.concatenate((Qg_res, Qe_res), axis=0)
-        
+
         stateg_res = handle.get("resg").fetch_all()["value"]
         statee_res = handle.get("rese").fetch_all()["value"]
         state = np.concatenate((stateg_res, statee_res), axis=0)

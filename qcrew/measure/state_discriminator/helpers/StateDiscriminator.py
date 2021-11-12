@@ -3,17 +3,13 @@ from pandas import DataFrame
 from qm.qua import *
 import os
 import matplotlib.pyplot as plt
-import matplotlib as mpl
 from sklearn import mixture
 from scipy import signal
 import scipy.fftpack
 
-from .TimeDiffCalibrator import TimeDiffCalibrator
 from qm.QuantumMachinesManager import QuantumMachinesManager
-from qm import SimulationConfig, LoopbackInterface
-from typing import Optional, List
+from typing import Optional
 from scipy.integrate import simps
-import itertools
 
 
 class StateDiscriminator:

@@ -7,10 +7,6 @@ import seaborn as sns
 
 import matplotlib.pyplot as plt
 
-import os
-from qm.QuantumMachinesManager import QuantumMachinesManager
-from qcrew.helpers.time_difference import TimeDiffCalibrator
-
 
 class StateDiscriminator:
     def __init__(
@@ -169,7 +165,7 @@ class StateDiscriminator:
         b_vec = raw_weights[0, :] - raw_weights[1, :]
         weights["I"] = np.array([np.real(b_vec).tolist(), (-np.imag(b_vec)).tolist()])
         weights["Q"] = np.array([np.imag(b_vec).tolist(), np.real(b_vec).tolist()])
-        
+
         return weights, threshold
 
     @staticmethod
@@ -216,7 +212,8 @@ def histogram_plot(I, Q, state_seq, num_of_states, threshold):
         I_ = I[state_seq == i]
         Q_ = Q[state_seq == i]
         plt.plot(I_, Q_, ".", label=f"state {i}")
-        plt.axis("equal")
+
+    plt.axis("equal")
     plt.xlabel("I")
     plt.ylabel("Q")
     plt.legend()
@@ -226,6 +223,7 @@ def histogram_plot(I, Q, state_seq, num_of_states, threshold):
     for i in range(num_of_states):
         plt.hist(I[np.array(state_seq) == i], 50, label=f"state {i}")
     plt.plot([threshold] * 2, [0, num_of_states / 100], "g")
+    plt.legend()
     plt.show()
 
 

@@ -1,6 +1,5 @@
 """ g e state discriminator """
 
-from qm.QuantumMachinesManager import QuantumMachinesManager
 from qcrew.control import Stagehand
 from qcrew.helpers.state_discriminator.TwoStateDiscriminator import (
     TwoStateDiscriminator,

@@ -8,7 +8,6 @@ import numpy as np
 from qcrew.helpers.state_discriminator.TwoStateDiscriminator import (
     TwoStateDiscriminator,
 )
-from qcrew.helpers.state_discriminator.DCoffsetCalibrator import DCoffsetCalibrator
 
 reps = 200000
 wait_time = 200000

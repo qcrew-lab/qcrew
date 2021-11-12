@@ -5,20 +5,18 @@ from qm.QuantumMachinesManager import QuantumMachinesManager
 from qcrew.control import Stagehand
 from qm import qua
 import numpy as np
-from qcrew.helpers import time_difference
 from qcrew.helpers.discriminator import StateDiscriminator
 from qcrew.helpers.dc_offset import DCoffsetCalibrator
-from qcrew.helpers.time_difference import TimeDiffCalibrator
 from pathlib import Path
 
-reps = 1000
+reps = 100
 wait_time = 400000
-readout_length = 500
-pad = 3000
+readout_length = 1000
+pad = 1000
 readout_pulse = "readout_pulse"
 # NOTE: if the envelope has wired startind and ending, dc_offset need to be updated
 # Refer to dc_offset.py
-dc_offset = 0.020341857986814565
+dc_offset = 0.0204631123046875
 analog_input = 1
 path = Path("C:/Users/qcrew/qcrew/qcrew/config") / "opt_readout_weights.npz"
 
@@ -34,11 +32,11 @@ def get_qua_program(rr, qubit):
             qua.update_frequency(rr.name, int(-50e6))
 
             qua.align(rr.name, qubit.name)
-            qua.reset_phase(rr.name)
+            # qua.reset_phase(rr.name)
             qua.measure(readout_pulse * qua.amp(1), rr.name, adcg)
             qua.wait(wait_time, rr.name)
 
-            qua.update_frequency(rr.name, int(-49e6))
+            qua.update_frequency(rr.name, int(-50e6))
 
             qua.align(rr.name, qubit.name)
             qua.play("pi" * qua.amp(1), qubit.name)
@@ -90,6 +88,49 @@ if __name__ == "__main__":
         # td = TimeDiffCalibrator(qmm, config, rr.name)
         # time_diff = td.calibrate()
         # print("Time difference: ", time_diff)
+
+        adc_g_avg = handle.get("adc_g_avg").fetch_all()
+        adc_g_fft = handle.get("adc_g_fft").fetch_all()
+
+        adc_e_avg = handle.get("adc_e_avg").fetch_all()
+        adc_e_fft = handle.get("adc_e_fft").fetch_all()
+        #####################################################################
+        g_pulse_len = len(adc_g_avg)
+        g_results_fft = (
+            np.sqrt(np.sum(np.squeeze(adc_g_fft) ** 2, axis=1)) / g_pulse_len
+        )
+        g_amps = g_results_fft[: int(np.ceil(g_pulse_len / 2))]
+        g_freqs = (
+            np.arange(0, (1 / g_pulse_len) * len(g_amps), 1 / g_pulse_len)[:] * 1e9
+        )
+
+        fig, axes = plt.subplots(2, 1)
+        print("adc length:", len(adc_g_avg))
+        axes[0].set_title("g state adc trace")
+        axes[0].plot(adc_g_avg)
+        axes[1].set_title("g state fft")
+        axes[1].plot(g_freqs[5:] / 1e6, g_amps[5:])
+        fig.tight_layout()
+        plt.show()
+
+        e_pulse_len = len(adc_e_avg)
+        e_results_fft = (
+            np.sqrt(np.sum(np.squeeze(adc_e_fft) ** 2, axis=1)) / e_pulse_len
+        )
+        e_amps = e_results_fft[: int(np.ceil(e_pulse_len / 2))]
+        e_freqs = (
+            np.arange(0, (1 / e_pulse_len) * len(e_amps), 1 / e_pulse_len)[:] * 1e9
+        )
+
+        fig, axes = plt.subplots(2, 1)
+        print("adc length:", len(adc_e_avg))
+        axes[0].set_title("e state adc trace")
+        axes[0].plot(adc_e_avg)
+        axes[1].set_title("e state fft")
+        axes[1].plot(e_freqs[5:] / 1e6, e_amps[5:])
+        fig.tight_layout()
+        plt.show()
+        #######################################################################
 
         sd = StateDiscriminator(resonator=rr.name, config=config, time_diff=None)
         env = sd.get_envelopes(adc=adc, ts=timestamps)

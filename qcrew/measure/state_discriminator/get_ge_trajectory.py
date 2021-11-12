@@ -5,8 +5,8 @@ from qm.QuantumMachinesManager import QuantumMachinesManager
 from qcrew.control import Stagehand
 from qm import qua
 import numpy as np
-from qcrew.helpers.discriminator import StateDiscriminator
-from qcrew.helpers.dc_offset import DCoffsetCalibrator
+from qcrew.measure.state_discriminator.helpers.discriminator import StateDiscriminator
+from qcrew.measure.state_discriminator.helpers.dc_offset_calibrator import DCoffsetCalibrator
 from pathlib import Path
 
 reps = 100

@@ -1,16 +1,13 @@
 """ g e state discriminator """
 
 from qcrew.control import Stagehand
-from qcrew.helpers.state_discriminator.TwoStateDiscriminator import (
+from qcrew.measure.state_discriminator.helpers.TwoStateDiscriminator import (
     TwoStateDiscriminator,
 )
-from qcrew.helpers.state_discriminator.simulate_configuration import (
+from qcrew.measure.state_discriminator.helpers.simulate_configuration import (
     config as sim_config,
 )
 
-import matplotlib.pyplot as plt
-from qm import qua
-import numpy as np
 import yaml
 from pathlib import Path
 

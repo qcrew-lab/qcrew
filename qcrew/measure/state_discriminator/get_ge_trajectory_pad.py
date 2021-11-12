@@ -5,7 +5,7 @@ from qcrew.control import Stagehand
 from qm import qua
 from qm.qua import *
 import numpy as np
-from qcrew.helpers.state_discriminator.TwoStateDiscriminator import (
+from qcrew.measure.state_discriminator.helpers.TwoStateDiscriminator import (
     TwoStateDiscriminator,
 )
 

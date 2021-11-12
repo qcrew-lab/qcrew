@@ -4,11 +4,13 @@ from qm.QuantumMachinesManager import QuantumMachinesManager
 from qcrew.control import Stagehand
 from qm import qua
 import numpy as np
-from qcrew.helpers.discriminator import (
+from qcrew.measure.state_discriminator.helpers.discriminator import (
     histogram_plot,
     fidelity_plot,
 )
-from qcrew.helpers.dc_offset import DCoffsetCalibrator
+from qcrew.measure.state_discriminator.helpers.dc_offset_calibrator import (
+    DCoffsetCalibrator,
+)
 
 num_of_states = 2
 reps = 100

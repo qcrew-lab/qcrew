@@ -1,6 +1,5 @@
 """ Python driver for Anritsu VNA MS46522B """
 
-import numpy as np
 import pyvisa
 
 from qcrew.control.instruments.instrument import Instrument
@@ -21,7 +20,6 @@ class VNA(Instrument):
     MAX_BANDWIDTH = 500000
     MIN_TRACES = 1
     MAX_TRACES = 16
-    VALID_SWEEP_MODES = ("single", "continuous")
     VALID_S_PARAMETERS = ("s11", "s12", "s21", "s22")
     VALID_TRACE_FORMATS = (
         "imaginar",
@@ -93,17 +91,10 @@ class VNA(Instrument):
             if hasattr(self, parameter):
                 setattr(self, parameter, value)
 
-    def sweep(self, mode="single") -> None:
+    def sweep(self) -> None:
         """ """
-        if mode not in VNA.VALID_SWEEP_MODES:
-            return ValueError(f"Invalid {mode = }. Valid = {VNA.VALID_SWEEP_MODES}")
-
-        if mode == "continuous":
-            self.handle.write(":sense:hold:function continuous")
-        elif mode == "single":
-            self.hold()
-            self.handle.write(":trigger:single")
-            self.handle.write(":display:window:y:auto")  # auto-scale all traces
+        self.handle.write(":trigger:single")  # trigger single sweep
+        self.handle.write(":display:window:y:auto")  # auto-scale all traces
 
     def hold(self) -> None:
         """ """
@@ -116,26 +107,28 @@ class VNA(Instrument):
         self.handle.close()
 
     @property
-    def data(self) -> dict[str, list[float]]:
+    def data(self):
         """ """
         self.hold()
         self.handle.write(":display:window:y:auto")  # auto-scale all traces
 
         data = dict()
-        traces = self.traces
-        for count, trace_info in enumerate(traces, start=1):
+        for count, key in enumerate(self.datakeys, start=1):
             self.handle.write(f":calculate:parameter{count}:select")
             data_str = self.handle.query(":calculate:data:fdata?")[VNA.HEADER_LEN :]
-            s_param, trace_format = trace_info
-            key = f"{s_param}_{trace_format}"
-            data[key] = np.array([float(value) for value in data_str.split()])
+            data[key] = [float(value) for value in data_str.split()]
         return data
 
     @property
-    def frequencies(self) -> np.ndarray:
+    def datakeys(self):
+        """ """
+        return [f"{s_param}_{trace_format}" for s_param, trace_format in self._traces]
+
+    @property
+    def frequencies(self) -> list:
         """ """
         freq_str = self.handle.query(":sense:frequency:data?")[VNA.HEADER_LEN :]
-        return np.array([float(freq) for freq in freq_str.split()])
+        return [float(freq) for freq in freq_str.split()]
 
     @property
     def fcenter(self) -> float:
@@ -230,6 +223,10 @@ class VNA(Instrument):
     def averaging_count(self) -> int:
         """ """
         return int(self.handle.query(":sense:average:sweep?"))
+
+    def reset_averaging_count(self):
+        """ """
+        self.handle.write(":sense:average:clear")  # restart averaging sweep count
 
     @property
     def sweep_repetitions(self) -> int:

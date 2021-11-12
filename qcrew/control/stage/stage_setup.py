@@ -13,7 +13,7 @@ _CONFIGPATH = Path(__file__).resolve().parents[3] / "config/stage.yml"
 _REMOTE_CONFIGPATH = Path(yml.load(_CONFIGPATH)["remote"])
 
 if __name__ == "__main__":
-    remote_classes = {Parametrized, qci.Instrument, qci.LabBrick, qci.Sa124}
+    remote_classes = {Parametrized, qci.Instrument, qci.LabBrick, qci.Sa124, qci.VNA}
     for remote_class in remote_classes:
         pyro.expose(remote_class)
     logger.debug(f"Exposed qcrew classes: {[cls_.__name__ for cls_ in remote_classes]}")

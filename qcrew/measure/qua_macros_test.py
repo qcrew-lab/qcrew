@@ -1,25 +1,34 @@
-from google.protobuf.struct_pb2 import Value
+"""This module contains the classes that pack the QUA variables and statements
+"""
 import numpy as np
-import copy
 from qm import qua
 from qcrew.helpers.parametrizer_test import Parametrized
-from typing import Union, Optional, List, Tuple, Callable
+from typing import Union, Optional, List, Callable
 
 QUA_VAR = Union[int, bool, qua.fixed]
 VAL_VAR = Union[int, float, bool]
 
 
 class Variable(Parametrized):
+    """[summary]
+
+    Args:
+        Parametrized ([type]): [description]
+    """
+
     def __init__(self, name: str, **kwargs):
         self.name = name
 
-        parametrized_dict = copy.deepcopy(self.__dict__)
-        parametrized_dict.update(kwargs)
-
-        super().__init__(**parametrized_dict)
+        super().__init__(**kwargs)
 
 
 class ExpVariable(Variable):
+    """[summary]
+
+    Args:
+        Variable ([type]): [description]
+    """
+
     def __init__(
         self,
         name: str,
@@ -30,7 +39,6 @@ class ExpVariable(Variable):
     ):
 
         self.var_type = var_type
-
         self.value = value
         self.size = size
         if value:
@@ -43,6 +51,12 @@ class ExpVariable(Variable):
 
 
 class SweepVariable(ExpVariable):
+    """[summary]
+
+    Args:
+        ExpVariable ([type]): [description]
+    """
+
     def __init__(
         self,
         name: str,
@@ -59,21 +73,30 @@ class SweepVariable(ExpVariable):
         # TODO: type check
         if value:
             self.sweep_type = "for_each_"
-        if sweep:
-            self.start = sweep[0]
-            self.stop = sweep[1]
-            self.step = sweep[2]
-            self.length = len(
-                np.arange(self.start, self.stop + self.step / 2, self.step)
-            )
+            self.length = len(value)
+        elif sweep:
+            if var_type == int:
+                self.start = int(sweep[0])
+                self.stop = int(sweep[1])
+                self.step = int(sweep[2])
+            elif var_type == qua.fixed:
+                self.start = float(sweep[0])
+                self.stop = float(sweep[1])
+                self.step = float(sweep[2])
+
+            self.length = len(np.arange(self.start, self.stop, self.step))
             self.sweep_type = "for_"
         elif start and stop and step:
-            self.start = start
-            self.stop = stop
-            self.step = step
-            self.length = len(
-                np.arange(self.start, self.stop + self.step / 2, self.step)
-            )
+            if var_type == int:
+                self.start = int(start)
+                self.stop = int(stop)
+                self.step = int(step)
+            elif var_type == qua.fixed:
+                self.start = float(start)
+                self.stop = float(stop)
+                self.step = float(step)
+
+            self.length = len(np.arange(self.start, self.stop, self.step))
             self.sweep_type = "for_"
 
         super().__init__(name=name, var_type=var_type, value=value, size=size, **kwargs)
@@ -99,6 +122,12 @@ class StreamVariable(Variable):
 
 
 class ResultVariable(Variable):
+    """[summary]
+
+    Args:
+        Variable ([type]): [description]
+    """
+
     def __init__(
         self,
         name: str,
@@ -110,7 +139,7 @@ class ResultVariable(Variable):
         **kwargs,
     ):
 
-        self.name = (name,)
+        self.name = name
         self.average = average
         self.timestamps = timestamps
         self.save_all = save_all
@@ -120,14 +149,25 @@ class ResultVariable(Variable):
         super().__init__(name=name, **kwargs)
 
 
+def sweep_results(var_stream, tag: str, buffer_shape: Optional[tuple] = None):
+
+    if buffer_shape:
+        for length in buffer_shape:
+            var_stream = var_stream.buffer(length)
+
+    var_stream.save(tag)
+
+
 def IQ_results(
     I_stream,
     Q_stream,
     buffer_shape: Optional[tuple] = None,
-    tag: List[str] = ["I", "Q"],
+    tag: Optional[list[str]] = None,
 ) -> list:
-    i = tag[0]
-    q = tag[1]
+    if tag:
+        i, q = tag[0], tag[1]
+    else:
+        i, q = "I", "Q"
 
     if buffer_shape:
         for length in buffer_shape:
@@ -178,7 +218,10 @@ def IQ_results(
 
 
 def ADC_results(
-    adc_stream, input: int = 1, buffer_shape: Optional[tuple] = None, tag: str = "ADC"
+    adc_stream,
+    analog_input: str = "out1",
+    buffer_shape: Optional[tuple] = None,
+    tag: str = "ADC",
 ) -> list:
 
     adc1 = adc_stream.input1()
@@ -189,10 +232,10 @@ def ADC_results(
             adc1 = adc1.buffer(length)
             adc2 = adc2.buffer(length)
 
-    if input == 1:
+    if analog_input == "out1":
         adc1.timestamps().save_all(f"{tag}_TIMESTAMPS")
         adc1.save_all(f"{tag}_RAW")
-    elif input == 2:
+    elif analog_input == "out2":
         adc2.timestamps().save_all(f"{tag}_TIMESTAMPS")
         adc2.save_all(f"{tag}_RAW")
 
@@ -227,6 +270,20 @@ def STATE_results(
             f"{tag}", buffer_shape=buffer_shape, average=False, save_all=True
         )
     )
+
+    return result_var_list
+
+
+def var_results(var_stream_list: list, var_name_list: list) -> list:
+    result_var_list = []
+    if len(var_stream_list) == len(var_name_list):
+        for index, var_stream, name in enumerate(zip(var_stream_list, var_name_list)):
+            var_stream.save(name)
+            result_var_list.append(ResultVariable(name, average=False, save=True))
+    else:
+        raise ValueError(
+            "The lengths of var_stream_list and var_name_list do not match"
+        )
 
     return result_var_list
 
@@ -270,32 +327,45 @@ def Z_results(
 
 def qua_loop(
     qua_function: Callable,
-    qua_var:list,
-    qua_sweep_var:list,
-    qua_stream_var:list,
-    sweep_variables:List[SweepVariable],
+    qua_var: list,
+    qua_sweep_var: list,
+    qua_stream_var: list,
+    sweep_variables: List[SweepVariable],
 ) -> None:
 
     if len(sweep_variables) != 0:
-        for index, var in enumerate(sweep_variables):
-            if var.value is None and var.start is not None:
-                swept_var = qua_sweep_var[index]
-                with qua.for_(
-                    swept_var,
-                    var.start,
-                    swept_var < var.stop + var.step / 2,
-                    swept_var + var.step,
-                ):
-                    remain_sweep = sweep_variables[1:]
-                    qua_loop(qua_function, qua_var, qua_sweep_var, qua_stream_var, remain_sweep)
-            
-            elif var.value is not None:
-                swept_var = qua_sweep_var[index]
-                with qua.for_each_(swept_var, var.value):
-                    
-                    remain_sweep = sweep_variables[1:]
-                    qua_loop(qua_function, qua_var, qua_sweep_var, qua_stream_var, remain_sweep)
 
+        var = sweep_variables[0]
+        index = len(qua_sweep_var) - len(sweep_variables)
+
+        if var.value is None and var.start is not None:
+            swept_var = qua_sweep_var[index]
+
+            with qua.for_(
+                swept_var,
+                var.start,
+                swept_var < var.stop + var.step / 2,
+                swept_var + var.step,
+            ):
+                qua_loop(
+                    qua_function,
+                    qua_var,
+                    qua_sweep_var,
+                    qua_stream_var,
+                    sweep_variables[1:],
+                )
+                qua.save(swept_var, var.name)
+        elif var.value is not None:
+            swept_var = qua_sweep_var[index]
+            with qua.for_each_(swept_var, var.value):
+                qua_loop(
+                    qua_function,
+                    qua_var,
+                    qua_sweep_var,
+                    qua_stream_var,
+                    sweep_variables[1:],
+                )
+                qua.save(swept_var, var.name)
     else:
         qua_function(qua_var, qua_sweep_var, qua_stream_var)
 
@@ -312,4 +382,5 @@ def qua_var_declare(
 
 
 if __name__ == "__main__":
+    var_test = ExpVariable(name="n", var_type=int)
     sweep_test = SweepVariable(name="a", var_type=qua.fixed, sweep=(0, 5, 1))

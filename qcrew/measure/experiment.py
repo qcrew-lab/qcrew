@@ -204,6 +204,7 @@ class Experiment(Parametrized):
             # Stores QUA variables as attributes for easy use
             for key, value in self.variables.items():
                 setattr(self, key, value.var)
+                
             # Plays pulse sequence in a loop. Variable order defines loop nesting order
             sweep_variables = [self.variables[key] for key in ["n", "x", "y"]]
             macros.QUA_loop(self.QUA_play_pulse_sequence, sweep_variables)

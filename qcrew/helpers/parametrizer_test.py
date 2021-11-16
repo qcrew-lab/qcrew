@@ -1,24 +1,35 @@
+"""
+Parametrized class
+"""
 from typing import Any, ClassVar
 from collections.abc import MutableMapping
 from qcrew.helpers import logger
 import yaml
 from qm import qua
 import numpy as np
-import copy
 
 
 class Parametrized(MutableMapping):
+    """Parent class of Variable and Experiment. It stores a set of attribute keys
+    in class variable ``_parameter``, whcih is update according to the assigned
+    attributes of the child class. It defines a property ``parameters`` to return
+    the metadata dictionary related to the instance. When print the instance, it
+    prints the ``parameters`` in a yaml serialization format.
+
+    Args:
+        MutableMapping ([type]): Realize the dictionary0like functions
+    """
 
     # class variable defining the default parameter set for Parametrized objects
-    # subclasses to override
-    _parameters = set()
+    _parameters: ClassVar[set[str]] = set()
+    # ClassVar: indicate the type checker that this variable should not be
+    # set on instances
 
     def __init__(self):
         self._parameters = set(self.__dict__.keys())
 
     @property
     def parameters(self) -> dict[str, Any]:
-
         param_dict = dict()
         for param in self._parameters:
 
@@ -100,9 +111,3 @@ if __name__ == "__main__":
             super().__init__()
 
     a = Test()
-    print("===================")
-    print(a.parameters)
-    print("===================")
-    print(a)
-    print("===================")
-    print(a.get("name"))

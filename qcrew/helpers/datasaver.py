@@ -8,7 +8,6 @@ import os
 import time
 import h5py
 import numpy as np
-import logging as log
 from uncertainties import UFloat
 from pathlib import Path
 from typing import Union, Optional, Dict, List

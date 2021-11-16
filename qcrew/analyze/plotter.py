@@ -1,21 +1,19 @@
 """ Qcrew plotter v1.0 """
 
 import matplotlib.pyplot as plt
+from qcrew.helpers import logger
 from IPython import display
 from qcrew.analyze import fit
-import matplotlib as mpl
-from matplotlib import colors
-import time
 
 COLOR_LIST = (
     "#0000FF",
     "#FF3300",
-    "#33FF00",
-    "#2CDE00",
+    "#2cde00",
     "#FF9933",
     "#663399",
     "#009966",
     "#66CCCC",
+    "#000000",
 )
 
 
@@ -23,194 +21,179 @@ class Plotter:
     """Single axis x-y plotter. Supports line, scatter, and errorbar plot. Provides a rudimentary live plotting routine."""
 
     def __init__(self, plot_setup):
+        """
+        Plot setup is a dictionary with user-defined parameters for plotting such as axis labels, title, plot type etc.
+        """
 
-        # matplotlib config
-        mpl.rcParams["figure.figsize"] = (9, 6)  # in inches by default
-        mpl.rcParams["axes.linewidth"] = 1
-        mpl.rcParams["xtick.major.size"] = 1
-        mpl.rcParams["ytick.major.size"] = 1
-        mpl.rcParams["xtick.minor.size"] = 0.5
-        mpl.rcParams["ytick.minor.size"] = 0.5
-        mpl.rcParams["legend.frameon"] = True
-        mpl.rcParams["legend.loc"] = "best"
-        mpl.rcParams["xtick.major.width"] = 1
-        mpl.rcParams["ytick.major.width"] = 1
-        mpl.rcParams["xtick.minor.width"] = 0.5
-        mpl.rcParams["ytick.minor.width"] = 0.5
-        mpl.rcParams["font.sans-serif"] = "Arial"
-        mpl.rcParams["font.size"] = 12
-        mpl.rcParams["axes.labelsize"] = 12
-        mpl.rcParams["legend.fontsize"] = 12
-
-        # plot setup
         self.plot_setup = plot_setup
 
-        # subplots
-        if "nrows" in plot_setup and "ncols" in plot_setup:
-            self.nrows = plot_setup["nrows"]
-            self.ncols = plot_setup["ncols"]
-        else:
-            self.nrows = 1
-            self.ncols = 1
+        plt.rcParams["figure.figsize"] = (9, 6)  # in inches by default
+        plt.rcParams["axes.linewidth"] = 1
+        plt.rcParams["xtick.major.size"] = 1
+        plt.rcParams["ytick.major.size"] = 1
+        plt.rcParams["xtick.minor.size"] = 0.5
+        plt.rcParams["ytick.minor.size"] = 0.5
+        plt.rcParams["legend.frameon"] = True
+        plt.rcParams["legend.loc"] = "best"
+        plt.rcParams["xtick.major.width"] = 1
+        plt.rcParams["ytick.major.width"] = 1
+        plt.rcParams["xtick.minor.width"] = 0.5
+        plt.rcParams["ytick.minor.width"] = 0.5
+        plt.rcParams["font.sans-serif"] = "Arial"
+        plt.rcParams["font.size"] = 12
+        plt.rcParams["axes.labelsize"] = 12
+        plt.rcParams["legend.fontsize"] = 12
 
-        self.fig, self.axis = plt.subplots(self.nrows, self.ncols, squeeze=False)
+        self.fig = plt.figure()
+        self.ax = self.fig.add_subplot(1, 1, 1)
+        self.hdisplay = display.display(self.fig, display_id=True)
 
-        # suptitle
-        if "suptitle" in plot_setup:
-            self.title = plot_setup["suptitle"]
-            self.fig.suptitle(self.title)
-
-        plt.ion()
-        # self.hdisplay = display.display(self.fig, display_id=True)
-
-    @staticmethod
-    def fit(x, y, fit_func) -> tuple:
-        """
-        Args:
-        x: x axis values
-        y: y axis values
-        fit_func: the name of fit funciton
-
-        Return:
-        fit_text: a string text containing the fit parameters which is shown in the figure
-        fit_y： the fitted y axis values
-
-        """
+    def fit(self, xs, ys, fit_fn) -> tuple:
 
         # get fit parameters
-        params = fit.do_fit(fit_func, x, y)
+        params = fit.do_fit(fit_fn, xs, ys)
+        fit_ys = fit.eval_fit(fit_fn, params, xs)
 
-        # get the fitted y trace
-        fit_y = fit.eval_fit(fit_func, params, x)
-
-        # convert param values into formated strings
+        # convert param values into formated string
         param_val_list = [
             key + " = {:.3e}".format(val.value) for key, val in params.items()
         ]
         # Join list in a single block of text
         fit_text = "\n".join(param_val_list)
 
-        return fit_text, fit_y, params
-    
+        return fit_text, fit_ys
 
-    def live_1dplot(self, ax, x, y_dict, n:int, axis_index:int=0, errbar_dict=None, fit_func=None) -> None:
-        
-        ax_config = self.plot_setup["axis"][axis_index]
-        plot_type = ax_config.get("plot_type") or "scatter"
-        fit_func = ax_config.get("fit_func")
-        title =  ax_config.get("title") or "Exp"
-        xlabel = ax_config.get("xlabel")
-        ylabel = ax_config.get("ylabel")
-        label = ax_config.get("trace_labels")
-        fit_func = fit_func or ax_config.get("fit_func")
-
-        ax.clear()
-    
-        for key, y in y_dict.item():
-            self.plot_1d(ax, x, y, plot_type=plot_type, fit_func=fit_func, errbar=errbar_dict[key],
-                    label=label + key)
-
-        ax.set_title(title + f": {n} repetition{'s' if n > 1 else ''}")
-        ax.set_xlabel(xlabel)
-        ax.set_ylabel(ylabel)
-        ax.legend()
-
-        self.fig.canvas.draw()
-        self.fig.canvas.flush_events()
-
-
-
-    def plot_1d(
-        self, ax, x, y, plot_type="scatter", fit_func=None, errbar=None, label=None
+    def live_plot(
+        self,
+        independent_data,
+        dependent_data,
+        n,
+        fit_fn=None,
+        err=None,
     ):
+        """
+        If `live_plot(data)` is called in an IPython terminal context, the axis is refreshed and plotted with the new data using IPython `display` tools.
+        This version of the plotter assumes 1 dependent variable and up to 2 independent variables.
+        """
 
-        if plot_type == "line":
-            self.plot_line(ax, x, y, label)
-        elif errbar is not None:
-            self.plot_errorbar(ax, x, y, errbar, label)
+        self.ax.clear()
+
+        # Determine how to plot the data
+        if self.plot_setup["plot_type"] == "1D":
+
+            # If only one independent variable, plot a single trace
+            if len(independent_data) == 1:
+                x_data = independent_data[0]
+                z_data = dependent_data[0]
+                try:
+                    label = self.plot_setup["trace_labels"][0]
+                except IndexError:
+                    label = None
+                self.plot_1D(x_data, z_data, fit_fn, label=label, err=err)
+
+            # Plot a trace for each value in independent_data[1]
+            if len(independent_data) == 2:
+                x_data = independent_data[0]
+                y_data = independent_data[1]
+                z_data = dependent_data[0]
+                for indx, trace_y in enumerate(y_data[0]):
+
+                    # Pass user-defined label to the plot if provided, else pass
+                    # y_value as a string
+                    try:
+                        label = self.plot_setup["trace_labels"][indx]
+                    except IndexError:
+                        label = str(trace_y)
+
+                    # Get z data corresponding to this trace
+                    z_trace_data = z_data[:, indx]
+                    x_trace_data = x_data[:, indx]
+                    err_trace_data = err[:, indx]
+
+                    color = COLOR_LIST[indx]
+                    self.plot_1D(
+                        x_trace_data,
+                        z_trace_data,
+                        fit_fn,
+                        label=label,
+                        err=err_trace_data,
+                        color=color,
+                    )
+
+            # Set plot parameters
+            self.ax.set_ylabel(self.plot_setup["zlabel"])
+            self.ax.legend()
+
+        if self.plot_setup["plot_type"] == "2D":
+            if len(independent_data) != 2:
+                logger.error(f"2D sweeps require 2 independent variables")
+                return
+
+            x_data = independent_data[0]
+            y_data = independent_data[1]
+            z_data = dependent_data[0]
+
+            self.plot_2D(x_data, y_data, z_data)
+
+        # Set plot parameters
+        self.ax.set_title(
+            self.plot_setup["title"] + f": {n} repetition{'s' if n > 1 else ''}"
+        )
+        self.ax.set_xlabel(self.plot_setup["xlabel"])
+        self.hdisplay.update(self.fig)
+
+    def plot_2D(self, x, y, z):
+
+        im = self.ax.pcolormesh(x, y, z, shading="auto", cmap=self.plot_setup["cmap"])
+        # cbar = self.fig.colorbar(im)
+        # Set plot parameters
+        self.ax.set_ylabel(self.plot_setup["ylabel"])
+        # cbar.set_label(self.plot_setup["zlabel"])
+
+    def plot_1D(self, x, z, fit_fn, label=None, err=None, color="b"):
+
+        # plot the data
+        label = label or "data"
+        if err is not None and self.plot_setup["plot_err"]:
+            self.plot_errorbar(x, z, self.ax, err, label, color=color)
         else:
-            self.plot_scatter(ax, x, y, label)
+            self.plot_scatter(x, z, self.ax, label, color=color)
 
-        if fit_func:
+        if fit_fn:
             # plot the fit curve
-            fit_text, fit_y, params = Plotter.fit(x, y, fit_func=fit_func)
-
-            # fit text position
+            fit_text, fit_z = self.fit(x, z, fit_fn=fit_fn)
             left = 0
             bottom = -0.1
-            ax.text(
+            self.ax.text(
                 left,
                 bottom,
                 fit_text,
                 horizontalalignment="left",
                 verticalalignment="top",
-                transform=ax.transAxes,
+                transform=self.ax.transAxes,
             )
+            self.plot_line(x, fit_z, self.ax, label="fit", color=color)
 
-            self.plot_line(ax, x, fit_y, label="fit of", color="r")
-
-    def plot_errorbar(self, ax, x, y, yerr, label):
-        # mpl.rcParams["errorbar.capsize"] = 3
-        # mpl.rcParams["errorbar.lw"] = 1
-        # mpl.rcParams["errorbar.marker"] = "o"
-        # mpl.rcParams["errorbar.ms"] = 4
-        # mpl.rcParams["errorbar.mfc"] = "b"
-        # mpl.rcParams["errorbar.mec"] = "b"
-        # mpl.rcParams["errorbar.fillstyle"] = "none"
-
-        ax.errorbar(x, y, yerr=yerr, label=label)
-
-    def plot_scatter(self, ax, x, y, label):
-        mpl.rcParams["scatter.s"] = 4
-        mpl.rcParams["scatter.color"] = "b"
-        mpl.rcParams["scatter.marker"] = "o"
-
-        ax.scatter(x, y, label=label)
-
-    def plot_line(self, ax, x, y, label, color="b"):
-        ax.plot(x, y, color=color, lw=2, label=label)
-
-    def live_2dplot(self, ax, independent_data, dependent_data, n):
-
-        ax.clear()
-
-        x = independent_data[0]
-        y = independent_data[1]
-        z = dependent_data[0]
-
-        vmin = min(z)
-        vmax = max(z)
-        norm = colors.LogNorm(vmin=vmin, vmax=vmax)
-
-        if "cmap" in self.plot_setup:
-            mpl.rcParams["pcolormesh.cmap"] = self.plot_setup["cmap"]
-        else:
-            mpl.rcParams["pcolormesh.cmap"] = "terrain"
-
-        if "norm" in self.plot_setup:
-            mpl.rcParams["pcolormesh.norm"] = self.plot_setup["norm"]
-        else:
-            mpl.rcParams["pcolormesh.norm"] = norm
-
-        if self.plot_setup["plot_setup"] == "pcolormesh":
-            im = ax.pcolormesh(x, y, (z), shading="auto")
-
-        if "colorbar" in self.plot_setup:
-            if self.plot_setup["colorbar"] == True:
-                cbar = self.fig.colorbar(
-                    im, ax=ax, orientation="vertical", fraction=0.1, pad=0.023
-                )
-
-                if "colorbar_label" in self.plot_setup:
-                    colorbar_label = self.plot_setup["colorbar_label"]
-                    cbar.set_label(colorbar_label)
-
-        ax.set_title(
-            self.plot_setup["title"] + f": {n} repetition{'s' if n > 1 else ''}"
+    def plot_errorbar(self, x, z, axis, zerr, label, color="b"):
+        axis.errorbar(
+            x,
+            z,
+            yerr=zerr,
+            label=label,
+            ls="none",
+            lw=1,
+            ecolor=color,
+            color=color,
+            marker="o",
+            ms=4,
+            mfc=color,
+            mec=color,
+            capsize=3,
+            fillstyle="none",
         )
-        ax.set_xlabel(self.plot_setup["xlabel"])
-        ax.set_ylabel(self.plot_setup["ylabel"])
 
-        # self.hdisplay.update(self.fig)
-        self.fig.canvas.draw()
-        self.fig.canvas.flush_events()
+    def plot_scatter(self, x, z, axis, label, color="b"):
+        axis.scatter(x, z, s=4, color=color, marker="o", label=label)
+
+    def plot_line(self, x, z, axis, label, color="b"):
+        axis.plot(x, z, color=color, lw=2, label=label)

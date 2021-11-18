@@ -100,6 +100,7 @@ class VNA(Instrument):
         """ """
         state = self.handle.query(":sense:hold:function?").rstrip().lower()
         if state != "hold":
+            logger.info("VNA on hold")
             self.handle.write(":sense:hold:function hold")
 
     def disconnect(self) -> None:

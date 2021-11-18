@@ -26,8 +26,8 @@ class Yoko(Instrument):
         """ """
         # do a self-test to see if instrument is ok
         status = self.handle.query("*TST?")
-        if not status == 0:  # all good
-            raise RuntimeError("{self} self-test failed, please check the instrument")
+        if not int(status) == 0:  # if status == 0, all is good
+            raise RuntimeError(f"{self} self-test failed, please check the instrument")
 
     @property
     def state(self) -> str:

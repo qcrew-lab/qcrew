@@ -24,9 +24,9 @@ class VNADataSaver:
         filename = f"{time}_{measurementname}_{usersuffix}.hdf5"
         filedir = datapath / date
         filedir.mkdir(parents=True, exist_ok=True)
-        filepath = filedir / filename
+        self.filepath = filedir / filename
 
-        self.datafile = h5py.File(str(filepath), "a")
+        self.datafile = h5py.File(str(self.filepath), "a")
         self.datagroup = datagroup
         self.datatype = datatype
         self.datasets = {}
@@ -70,8 +70,8 @@ class VNADataSaver:
                     rep_count = (*pos,)
                     dataset[rep_count] = datastream
                 elif len(pos) == 2:
-                    rep_count, power_count = pos
-                    dataset[rep_count, power_count] = datastream
+                    rep_count, var_count = pos
+                    dataset[rep_count, var_count] = datastream
                 else:
                     raise RuntimeError(f"WE DO NOT DO {len(pos)}D SWEEPS HERE...")
         self.datafile.flush()

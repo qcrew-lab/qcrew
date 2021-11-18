@@ -68,7 +68,7 @@ class VNA(Instrument):
         """ """
         resource_name = f"TCPIP0::{self.id}::INSTR"
         self.handle = pyvisa.ResourceManager().open_resource(resource_name)
-        logger.info(f"Connected to {self}")
+        logger.info(self.handle.query("*IDN?"))
         self._initialize()
 
     def _initialize(self) -> None:

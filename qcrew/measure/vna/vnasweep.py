@@ -108,7 +108,7 @@ if __name__ == "__main__":
             # IF bandwidth (Hz), [1, 500000]
             "bandwidth": 1e3,
             # number of frequency sweep points, [2, 200001]
-            "sweep_points": 1001,
+            "sweep_points": 101,
             # delay (s) between successive sweep points, [0.0, 100.0]
             "sweep_delay": 1e-3,
             # trace data to be displayed and acquired, max traces = 16
@@ -130,7 +130,7 @@ if __name__ == "__main__":
         # these parameters are looped over during the measurement
         measurement_parameters = {
             # Number of sweep averages, must be an integer > 0
-            "repetitions": 25,
+            "repetitions": 5,
             # Input powers at (<port1>, <port2>) (dBm), range [-30.0, 15.0]
             # <portX> (X=1,2) can be a set {a, b,...}, tuple (st, stop, step), or constant x
             # use set for discrete sweep points a, b, ...

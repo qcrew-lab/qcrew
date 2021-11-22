@@ -140,7 +140,7 @@ if __name__ == "__main__":
             # eg 1: powers = ((-30, 15, 5), 0) will sweep port 1 power from -30dBm to 15dBm inclusive in steps of 5dBm with port 2 power remaining constant at 0 dBm
             # eg 2: powers = ({-15, 0, 15}, {-5, 0}) will result in sweep points (-15, -5), (-15, 0), (0, -5), (0, 0), (15, -5), (15, 0)
             # eg 3: powers = (0, 0) will set both port powers to 0, no power sweep happens
-            "powers": ({0, -5, 10}, 0),
+            "powers": ((0, 5, 1), 0),
         }
 
         # create measurement instance with instruments and measurement_parameters

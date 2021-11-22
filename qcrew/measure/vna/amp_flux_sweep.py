@@ -25,7 +25,7 @@ class AmpFluxSweep:
         self._run = self._run_fasweep  # by default, run freq & amp sweep
         if isinstance(currents, tuple) and len(currents) == 3:
             start, stop, step = currents
-            self.currents = np.arange(start, stop + step / 2, step)
+            self.currents = np.arange(start, stop + step / 2, step).round(7)
             datashape = (self.repetitions, len(self.currents), vna.sweep_points)
         elif isinstance(currents, set):
             self.currents = sorted(currents)
@@ -97,15 +97,15 @@ if __name__ == "__main__":
             # frequency sweep start value (Hz)
             "fstart": 3e9,
             # frequency sweep stop value (Hz)
-            "fstop": 8.5e9,
+            "fstop": 9e9,
             # IF bandwidth (Hz), [1, 500000]
             "bandwidth": 1e3,
             # number of frequency sweep points, [2, 200001]
-            "sweep_points": 501,
+            "sweep_points": 2501,
             # delay (s) between successive sweep points, [0.0, 100.0]
             "sweep_delay": 1e-3,
             # input powers (port1, port2)
-            "powers": (-25, -25),
+            "powers": (-20, -20),
             # trace data to be displayed and acquired, max traces = 16
             # each tuple in the list is (<S parameter>, <trace format>)
             # valid S parameter keys = ("s11", "s12", "s21", "s22")
@@ -125,7 +125,7 @@ if __name__ == "__main__":
         # these parameters are looped over during the measurement
         measurement_parameters = {
             # Number of sweep averages, must be an integer > 0
-            "repetitions": 10,
+            "repetitions": 25,
             # Input currents from yoko
             # "currents" can be a set {a, b,...}, tuple (st, stop, step), or constant x
             # use set for discrete sweep points a, b, ...
@@ -134,7 +134,7 @@ if __name__ == "__main__":
             # eg 1: currents = (-10e-6, 0e-6, 1e-6) will sweep current from -10uA to 0uA inclusive in steps of 1uA
             # eg 2: currents = {-15e-6, 0e-6, 15e-6} will sweep curent at -15uA, 0uA, and 15uA
             # eg 3: currents = 0 will do a frequency sweep at constant current of 0uA i.e. no current sweep
-            "currents": (-3e-3, 3e-3, 0.1e-3),
+            "currents": (0, 6e-3, 0.02e-3),
         }
 
         # create measurement instance with instruments and measurement_parameters
@@ -157,3 +157,18 @@ if __name__ == "__main__":
             vna.hold()
             filepath = vnadatasaver.filepath
             logger.info("Done ampfluxsweep!")
+
+""" 
+use this code to plot after msmt is done # TEMPORARY
+import h5py
+import numpy as np
+import matplotlib.pyplot as plt
+file = h5py.File(filepath, "r")
+s21_phase = file["data"]["s21_phase"]
+currs = file["data"]["current"]
+freqs = file["data"]["frequency"]
+s21_phase_avg = np.mean(s21_phase, axis=0)
+plt.figure(figsize=(12, 8))
+plt.pcolormesh(currs, freqs, s21_phase_avg.T, cmap="twilight_shifted", shading="auto")
+plt.colorbar()
+"""

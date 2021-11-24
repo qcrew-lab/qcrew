@@ -94,21 +94,22 @@ if __name__ == "__main__":
     with Stagehand() as stage:
         # connect to VNA
         vna = stage.VNA
+        vna.connect()
 
         # these parameters are set on VNA and do not change during the measurement run
         vna_parameters = {
             # frequency sweep center (Hz)
-            #"fcenter": 6.12725e9,
+            "fcenter": 7.346e9,
             # frequency sweep span (Hz)
-            #"fspan": 20e6,
+            "fspan": 20e6,
             # frequency sweep start value (Hz)
-            "fstart": 4e9,
+            #"fstart": 4e9,
             # frequency sweep stop value (Hz)
-            "fstop": 8e9,
+            #"fstop": 8e9,
             # IF bandwidth (Hz), [1, 500000]
-            "bandwidth": 1e3,
+            "bandwidth": 1e2,
             # number of frequency sweep points, [2, 200001]
-            "sweep_points": 101,
+            "sweep_points": 2501,
             # delay (s) between successive sweep points, [0.0, 100.0]
             "sweep_delay": 1e-3,
             # trace data to be displayed and acquired, max traces = 16
@@ -123,14 +124,14 @@ if __name__ == "__main__":
             ],
             # if true, VNA will display averaged traces on the Shockline app
             # if false, VNA will display the trace of the current run
-            "is_averaging": True,
+            "is_averaging": False,
         }
         vna.configure(**vna_parameters)
 
         # these parameters are looped over during the measurement
         measurement_parameters = {
             # Number of sweep averages, must be an integer > 0
-            "repetitions": 5,
+            "repetitions": 100,
             # Input powers at (<port1>, <port2>) (dBm), range [-30.0, 15.0]
             # <portX> (X=1,2) can be a set {a, b,...}, tuple (st, stop, step), or constant x
             # use set for discrete sweep points a, b, ...
@@ -140,7 +141,7 @@ if __name__ == "__main__":
             # eg 1: powers = ((-30, 15, 5), 0) will sweep port 1 power from -30dBm to 15dBm inclusive in steps of 5dBm with port 2 power remaining constant at 0 dBm
             # eg 2: powers = ({-15, 0, 15}, {-5, 0}) will result in sweep points (-15, -5), (-15, 0), (0, -5), (0, 0), (15, -5), (15, 0)
             # eg 3: powers = (0, 0) will set both port powers to 0, no power sweep happens
-            "powers": ((0, 5, 1), 0),
+            "powers": ((-30, 15, 5), 0),
         }
 
         # create measurement instance with instruments and measurement_parameters
@@ -151,14 +152,18 @@ if __name__ == "__main__":
         # {datapath} / {YYYYMMDD} / {HHMMSS}_{measurementname}_{usersuffix}.hdf5
         save_parameters = {
             "datapath": pathlib.Path(stage.datapath) /"coaxmux",
-            "usersuffix": "test",
+            "usersuffix": "7.35GHz",
             "measurementname": measurement.__class__.__name__.lower(),
             **measurement.dataspec,
         }
 
         # run measurement and save data
+        #fcenters = [5.3543e9, 5.93454e9, 6.12576e9]
+        #vna_parameters["fcenter"] = fcenter
+        #vna.fcenter = fcenter
+        #save_parameters["usersuffix"] = f"{fcenter:.2}GHz"
         with VNADataSaver(**save_parameters) as vnadatasaver:
             vnadatasaver.save_metadata({**vna_parameters, **measurement_parameters})
             measurement.run(saver=vnadatasaver)
             vna.hold()
-            logger.info("Done vnasweep!")
+        logger.info("Done vnasweep!")

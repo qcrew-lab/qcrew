@@ -64,13 +64,13 @@ class AmpFluxSweep:
             saver.save_data(self.vna.data, pos=(rep,))  # save to root group
             logger.info(f"Frequency sweep count = {rep+1} / {self.repetitions}")
 
-
     def _run_fasweep(self, saver) -> None:
         # save current data since its already available
         saver.save_data({"current": self.currents})
 
         num_currents = len(self.currents)
         # for n reps, for each current in self.currents, do fsweep
+        """
         for rep in range(self.repetitions):
             logger.info(f"Repetition: {rep+1}/{self.repetitions}")
             for count, current in enumerate(self.currents):
@@ -79,13 +79,24 @@ class AmpFluxSweep:
                 time.sleep(0.1)  # for yoko output level to stabilize
                 self.vna.sweep()
                 saver.save_data(self.vna.data, pos=(rep, count))
+        """
 
+        # try with outermost loop being current
+        for count, current in enumerate(self.currents):
+            self.yoko.level = current
+            logger.info(f"Set {current = }, sweep count: {count+1}/{num_currents}")
+            time.sleep(0.1)  # for yoko output level to stabilize
+            for rep in range(self.repetitions):
+                logger.info(f"Repetition: {rep+1}/{self.repetitions}")
+                self.vna.sweep()
+                saver.save_data(self.vna.data, pos=(rep, count))
 
 if __name__ == "__main__":
 
     with Stagehand() as stage:
         # connect to VNA
         vna = stage.VNA
+        vna.connect()  # this is needed to switch back to remote mode
         yoko = stage.YOKO
 
         # these parameters are set on VNA and do not change during the measurement run
@@ -95,7 +106,7 @@ if __name__ == "__main__":
             # frequency sweep span (Hz)
             #"fspan": 20e6,
             # frequency sweep start value (Hz)
-            "fstart": 3e9,
+            "fstart": 4e9,
             # frequency sweep stop value (Hz)
             "fstop": 9e9,
             # IF bandwidth (Hz), [1, 500000]
@@ -105,7 +116,7 @@ if __name__ == "__main__":
             # delay (s) between successive sweep points, [0.0, 100.0]
             "sweep_delay": 1e-3,
             # input powers (port1, port2)
-            "powers": (-20, -20),
+            "powers": (-30, -30),
             # trace data to be displayed and acquired, max traces = 16
             # each tuple in the list is (<S parameter>, <trace format>)
             # valid S parameter keys = ("s11", "s12", "s21", "s22")
@@ -118,14 +129,14 @@ if __name__ == "__main__":
             ],
             # if true, VNA will display averaged traces on the Shockline app
             # if false, VNA will display the trace of the current run
-            "is_averaging": True,
+            "is_averaging": False,
         }
         vna.configure(**vna_parameters)
 
         # these parameters are looped over during the measurement
         measurement_parameters = {
             # Number of sweep averages, must be an integer > 0
-            "repetitions": 25,
+            "repetitions": 10,
             # Input currents from yoko
             # "currents" can be a set {a, b,...}, tuple (st, stop, step), or constant x
             # use set for discrete sweep points a, b, ...
@@ -134,7 +145,7 @@ if __name__ == "__main__":
             # eg 1: currents = (-10e-6, 0e-6, 1e-6) will sweep current from -10uA to 0uA inclusive in steps of 1uA
             # eg 2: currents = {-15e-6, 0e-6, 15e-6} will sweep curent at -15uA, 0uA, and 15uA
             # eg 3: currents = 0 will do a frequency sweep at constant current of 0uA i.e. no current sweep
-            "currents": (0, 6e-3, 0.02e-3),
+            "currents": (-2e-3, 1.5e-3, 0.02e-3),
         }
 
         # create measurement instance with instruments and measurement_parameters
@@ -143,7 +154,7 @@ if __name__ == "__main__":
         # hdf5 file saved at:
         # {datapath} / {YYYYMMDD} / {HHMMSS}_{measurementname}_{usersuffix}.hdf5
         save_parameters = {
-            "datapath": pathlib.Path(stage.datapath) / "djext",
+            "datapath": pathlib.Path(stage.datapath) / "jpa",
             "usersuffix": "",
             "measurementname": measurement.__class__.__name__.lower(),
             **measurement.dataspec,
@@ -158,17 +169,16 @@ if __name__ == "__main__":
             filepath = vnadatasaver.filepath
             logger.info("Done ampfluxsweep!")
 
-""" 
-use this code to plot after msmt is done # TEMPORARY
-import h5py
-import numpy as np
-import matplotlib.pyplot as plt
-file = h5py.File(filepath, "r")
-s21_phase = file["data"]["s21_phase"]
-currs = file["data"]["current"]
-freqs = file["data"]["frequency"]
-s21_phase_avg = np.mean(s21_phase, axis=0)
-plt.figure(figsize=(12, 8))
-plt.pcolormesh(currs, freqs, s21_phase_avg.T, cmap="twilight_shifted", shading="auto")
-plt.colorbar()
-"""
+        # use this code to plot after msmt is done
+        import h5py
+        import matplotlib.pyplot as plt
+        file = h5py.File(filepath, "r")
+        data = file["data"]
+        s21_phase = data["s21_phase"]
+        currs = data["current"]
+        freqs = data["frequency"]
+        s21_phase_avg = np.mean(s21_phase, axis=0)
+        plt.figure(figsize=(12, 8))
+        plt.pcolormesh(currs, freqs, s21_phase_avg.T, cmap="twilight_shifted", shading="auto")
+        plt.colorbar()
+        plt.show()

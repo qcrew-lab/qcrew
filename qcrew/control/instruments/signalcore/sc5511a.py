@@ -17,10 +17,6 @@ import pathlib
 from qcrew.control.instruments.instrument import Instrument
 from qcrew.helpers import logger
 
-DLLNAME = "sc5511a.dll"
-DRIVERPATH = pathlib.Path(__file__).resolve().parent / DLLNAME
-SC = CDLL(str(DRIVERPATH))
-
 
 class RFParams(Structure):
     _fields_ = [
@@ -95,6 +91,10 @@ class DeviceStatus(Structure):
         ("pll_status", PLLStatus),
     ]
 
+
+DLLNAME = "sc5511a.dll"
+DRIVERPATH = pathlib.Path(__file__).resolve().parent / DLLNAME
+SC = CDLL(str(DRIVERPATH))
 
 SC.sc5511a_open_device.argtypes = [c_char_p]
 SC.sc5511a_open_device.restype = c_void_p

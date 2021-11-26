@@ -99,9 +99,9 @@ if __name__ == "__main__":
         # these parameters are set on VNA and do not change during the measurement run
         vna_parameters = {
             # frequency sweep center (Hz)
-            "fcenter": 7.346e9,
+            "fcenter": 7.94758e9,
             # frequency sweep span (Hz)
-            "fspan": 20e6,
+            "fspan": 10e6,
             # frequency sweep start value (Hz)
             #"fstart": 4e9,
             # frequency sweep stop value (Hz)
@@ -109,7 +109,7 @@ if __name__ == "__main__":
             # IF bandwidth (Hz), [1, 500000]
             "bandwidth": 1e2,
             # number of frequency sweep points, [2, 200001]
-            "sweep_points": 2501,
+            "sweep_points": 1001,
             # delay (s) between successive sweep points, [0.0, 100.0]
             "sweep_delay": 1e-3,
             # trace data to be displayed and acquired, max traces = 16
@@ -152,18 +152,19 @@ if __name__ == "__main__":
         # {datapath} / {YYYYMMDD} / {HHMMSS}_{measurementname}_{usersuffix}.hdf5
         save_parameters = {
             "datapath": pathlib.Path(stage.datapath) /"coaxmux",
-            "usersuffix": "7.35GHz",
+            "usersuffix": "7.95GHz",
             "measurementname": measurement.__class__.__name__.lower(),
             **measurement.dataspec,
         }
 
         # run measurement and save data
-        #fcenters = [5.3543e9, 5.93454e9, 6.12576e9]
-        #vna_parameters["fcenter"] = fcenter
-        #vna.fcenter = fcenter
-        #save_parameters["usersuffix"] = f"{fcenter:.2}GHz"
-        with VNADataSaver(**save_parameters) as vnadatasaver:
-            vnadatasaver.save_metadata({**vna_parameters, **measurement_parameters})
-            measurement.run(saver=vnadatasaver)
-            vna.hold()
+        fcenters = [5.93454e9, 6.12576e9, 7.66412e9, 7.94758e9]
+        for fcenter in fcenters:
+            vna.fcenter = fcenter
+            vna_parameters["fcenter"] = fcenter
+            save_parameters["usersuffix"] = f"{fcenter:E}GHz"
+            with VNADataSaver(**save_parameters) as vnadatasaver:
+                vnadatasaver.save_metadata({**vna_parameters, **measurement_parameters})
+                measurement.run(saver=vnadatasaver)
+                vna.hold()
         logger.info("Done vnasweep!")

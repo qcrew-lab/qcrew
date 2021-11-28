@@ -67,4 +67,3 @@ SC.sc5503b_SetRfOutput.argtypes = [c_void_p, c_ubyte]
 SC.sc5503b_GetRfParameters.argtypes = [c_void_p, POINTER(RFParameters)]
 SC.sc5503b_GetDeviceStatus.argtypes = [c_void_p, POINTER(DeviceStatus)]
 
-

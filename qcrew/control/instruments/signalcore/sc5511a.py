@@ -133,8 +133,8 @@ class CoreA(Instrument):
 
     def disconnect(self):
         """ """
-        SC.sc5511a_close_device(self._handle)
         self.rf = False
+        SC.sc5511a_close_device(self._handle)
         logger.info(f"Disconnected {self}")
 
     @property

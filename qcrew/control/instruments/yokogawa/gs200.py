@@ -1,5 +1,6 @@
 """ """
 
+from typing import ClassVar
 import pyvisa
 
 from qcrew.control.instruments.instrument import Instrument
@@ -8,6 +9,8 @@ from qcrew.helpers import logger
 
 class Yoko(Instrument):
     """ """
+
+    _parameters: ClassVar[set[str]] = {"state", "source", "level"}
 
     def __init__(self, id: str, name="") -> None:
         """ """
@@ -30,19 +33,17 @@ class Yoko(Instrument):
             raise RuntimeError(f"{self} self-test failed, please check the instrument")
 
     @property
-    def state(self) -> str:
+    def state(self) -> bool:
         """ """
         value = self.handle.query(":output?")
-        return "on" if value else "off"
+        return bool(value)
 
     @state.setter
     def state(self, value):
         """ """
-        value = str(value).lower()
-        valid_values = ("0", "1", "on", "off")
-        if value not in valid_values:
-            raise ValueError(f"Invalid {value = }, {valid_values = }")
-        self.handle.write(f"output {value}")
+        if not isinstance(value, bool):
+            raise ValueError(f"Invalid {value = }, must be True or False")
+        self.handle.write(f"output {int(value)}")
 
     @property
     def source(self) -> str:
@@ -61,7 +62,7 @@ class Yoko(Instrument):
             valid_values = ("volt", "voltage", "curr", "current")
             if value not in valid_values:
                 raise ValueError(f"Invalid {value = }, {valid_values = }")
-            self.state = "off"
+            self.state = False
             self.handle.write(f":source:function {value}")
 
     @property
@@ -77,5 +78,5 @@ class Yoko(Instrument):
 
     def disconnect(self) -> None:
         """ """
-        self.state = "off"
+        self.state = False
         self.handle.close()

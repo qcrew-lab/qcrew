@@ -13,6 +13,7 @@ from ctypes import (
     c_ushort,
 )
 import pathlib
+from typing import ClassVar
 
 from qcrew.control.instruments.instrument import Instrument
 from qcrew.helpers import logger
@@ -109,6 +110,8 @@ SC.sc5511a_get_device_status.argtypes = [c_void_p, POINTER(DeviceStatus)]
 
 class CoreA(Instrument):
     """ """
+
+    _parameters: ClassVar[set[str]] = {"frequency", "power", "rf"}
 
     def __init__(self, id, name="Core_A"):
         """ """

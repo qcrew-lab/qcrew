@@ -31,10 +31,21 @@ if __name__ == "__main__":
 
     with Stagehand() as stage:
 
-        rr = stage.RR
+        core_a = stage.CORE_A
+        core_a.frequency = 7.57e9
+        core_a.power = -19.30
+        core_a.rf = True
+        lb_rr.frequency = 7.63e9
+        lb_rr.power = 13
+        lb_rr.rf = True
+
+        yoko.source = "current"
+        yoko.level = 0.295e-3  # in Amperes
+        yoko.state = True
+
         # rr.readout_pulse(length=1000, ampx=1.0, pad=1000)
         rr.readout_pulse(length=1000, ampx=1.0)
-        rr.time_of_flight = 200  # 248
+        rr.time_of_flight = 280  # 248
 
         # Execute script
         job = stage.QM.execute(get_qua_program(rr))  # play IF to mode

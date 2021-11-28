@@ -6,16 +6,10 @@ from qcrew.control import Stagehand
 
 if __name__ == "__main__":
     with Stagehand() as stage:
-        qubit, rr, sa = stage.QUBIT, stage.RR, stage.SA
-
-        # set new carrier and intermediate frequencies to the modes
-        qubit.lo_freq = 5.0e9
-        qubit.int_freq = -50e6
-        rr.lo_freq = 9e9
-        rr.int_freq = -50e6
+        rr, sa, lb_rr = stage.RR, stage.SA, stage.LB_RR
 
         # get an already configured qm after making changes to modes
         qm = stage.QM
 
-        mxrtnr = MixerTuner(qubit, rr, sa=sa, qm=qm)
+        mxrtnr = MixerTuner(rr, sa=sa, qm=qm)
         mxrtnr.tune()

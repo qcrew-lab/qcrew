@@ -68,12 +68,12 @@ class LocalStage(Stage):
         super()._setup()
 
         if self.connect_qm:
-            self._qmm = QuantumMachinesManager()
-            self._qcb = qciqm.QMConfigBuilder(*self.modes)
-
             # NOTE for now, only support staging modes locally
             self.modes = [v for v in self._config if isinstance(v, qcm.Mode)]
             logger.debug(f"Found {len(self.modes)} modes")
+
+            self._qmm = QuantumMachinesManager()
+            self._qcb = qciqm.QMConfigBuilder(*self.modes)
 
     @property  # qm getter
     def QM(self) -> QuantumMachine:

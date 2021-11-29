@@ -21,6 +21,7 @@ if __name__ == "__main__":
         qci.VNA,
         qci.Yoko,
         qci.CoreA,
+        qci.CoreB,
     }
     for remote_class in remote_classes:
         pyro.expose(remote_class)

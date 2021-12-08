@@ -1,5 +1,6 @@
 """ """
 
+
 import pathlib
 import time
 
@@ -9,33 +10,32 @@ from qcrew.helpers import logger
 
 from vnasavedata import VNADataSaver
 
-
-class AmpFluxSweep:
+class PumpPowerSweep:
     """ """
 
-    def __init__(self, vna, yoko, repetitions: int, currents: tuple) -> None:
+    def __init__(self, vna, pump, repetitions: int, powers: tuple) -> None:
         """ """
         self.repetitions = repetitions
         self.vna = vna
-        self.yoko = yoko
+        self.pump = pump
         self.vna.is_averaging = (
             False  # if you set to True, VNA will give you averaged data, not raw data
         )
 
-        self._run = self._run_fasweep  # by default, run freq & amp sweep
-        if isinstance(currents, tuple) and len(currents) == 3:
-            start, stop, step = currents
-            self.currents = np.arange(start, stop + step / 2, step).round(7)
-            datashape = (self.repetitions, len(self.currents), vna.sweep_points)
-        elif isinstance(currents, set):
-            self.currents = sorted(currents)
-            datashape = (self.repetitions, len(self.currents), vna.sweep_points)
-        elif isinstance(currents, (int, float)):
-            self.currents = currents
+        self._run = self._run_fpsweep  # by default, run freq & pow sweep
+        if isinstance(powers, tuple) and len(powers) == 3:
+            start, stop, step = powers
+            self.powers = np.arange(start, stop + step / 2, step).round(7)
+            datashape = (self.repetitions, len(self.powers), vna.sweep_points)
+        elif isinstance(powers, set):
+            self.powers = sorted(powers)
+            datashape = (self.repetitions, len(self.powers), vna.sweep_points)
+        elif isinstance(powers, (int, float)):
+            self.powers = powers
             self._run = self._run_fsweep
             datashape = (self.repetitions, vna.sweep_points)
         else:
-            raise ValueError(f"Invalid specification of {currents = }")
+            raise ValueError(f"Invalid specification of {powers = }")
 
         # set dataspec
         self.dataspec = {
@@ -48,46 +48,32 @@ class AmpFluxSweep:
     def run(self, saver) -> None:
         # save frequency data since its already available and is the same for all sweeps
         saver.save_data({"frequency": self.vna.frequencies})  # arg must be a dict
-        self.yoko.source = "current"
-        self.yoko.level = 0  # set output to nominal value
-        self.yoko.state = "on"
+        self.pump.power = -20  # nominal value
+        self.pump.rf = True
 
         self._run(saver)  # runs fsweep or fpsweep based on sweep initialization
-    
-        self.yoko.level = 0
-        self.yoko.state = "off"
+
+        self.pump.rf = False
 
     def _run_fsweep(self, saver) -> None:
-        self.yoko.level = self.currents
+        self.pump.power = self.powers
         for rep in range(self.repetitions):
             self.vna.sweep()
             saver.save_data(self.vna.data, pos=(rep,))  # save to root group
             logger.info(f"Frequency sweep count = {rep+1} / {self.repetitions}")
 
-    def _run_fasweep(self, saver) -> None:
-        # save current data since its already available
-        saver.save_data({"current": self.currents})
+    def _run_fpsweep(self, saver) -> None:
+        # save power data since its already available
+        saver.save_data({"power": self.powers})
 
-        num_currents = len(self.currents)
-        # for n reps, for each current in self.currents, do fsweep
-        """
+        num_powers = len(self.powers)
+        # for n reps, for each pump power in self.powers, do fsweep
         for rep in range(self.repetitions):
             logger.info(f"Repetition: {rep+1}/{self.repetitions}")
-            for count, current in enumerate(self.currents):
-                self.yoko.level = current
-                logger.info(f"Set {current = }, sweep count: {count+1}/{num_currents}")
-                time.sleep(0.1)  # for yoko output level to stabilize
-                self.vna.sweep()
-                saver.save_data(self.vna.data, pos=(rep, count))
-        """
-
-        # try with outermost loop being current
-        for count, current in enumerate(self.currents):
-            self.yoko.level = current
-            logger.info(f"Set {current = }, sweep count: {count+1}/{num_currents}")
-            time.sleep(0.1)  # for yoko output level to stabilize
-            for rep in range(self.repetitions):
-                logger.info(f"Repetition: {rep+1}/{self.repetitions}")
+            for count, power in enumerate(self.powers):
+                self.pump.power = power
+                logger.info(f"Set {power = }, sweep count: {count+1}/{num_powers}")
+                time.sleep(0.1)  # for signalcore output level to stabilize
                 self.vna.sweep()
                 saver.save_data(self.vna.data, pos=(rep, count))
 
@@ -97,7 +83,7 @@ if __name__ == "__main__":
         # connect to VNA
         vna = stage.VNA
         vna.connect()  # this is needed to switch back to remote mode
-        yoko = stage.YOKO
+        pump = stage.CORE_B
 
         # these parameters are set on VNA and do not change during the measurement run
         vna_parameters = {
@@ -132,30 +118,33 @@ if __name__ == "__main__":
             "is_averaging": False,
         }
         vna.configure(**vna_parameters)
+        
+        # set pump frequency
+        pump.frequency = 5e9
 
         # these parameters are looped over during the measurement
         measurement_parameters = {
             # Number of sweep averages, must be an integer > 0
-            "repetitions": 10,
-            # Input currents from yoko
-            # "currents" can be a set {a, b,...}, tuple (st, stop, step), or constant x
+            "repetitions": 5,
+            # Input powers from pump
+            # "powers" can be a set {a, b,...}, tuple (st, stop, step), or constant x
             # use set for discrete sweep points a, b, ...
             # use tuple for linear sweep given by np.arange(start, stop + step/2, step) (inclusive of start and stop)
-            # use constant to get a frequency sweep at constant current
-            # eg 1: currents = (-10e-6, 0e-6, 1e-6) will sweep current from -10uA to 0uA inclusive in steps of 1uA
-            # eg 2: currents = {-15e-6, 0e-6, 15e-6} will sweep curent at -15uA, 0uA, and 15uA
-            # eg 3: currents = 0 will do a frequency sweep at constant current of 0uA i.e. no current sweep
-            "currents": (-4e-3, 4e-3, 0.1e-3),
+            # use constant to get a frequency sweep at constant powers
+            # eg 1: powers = (-10, 0, 1) will sweep powers from -10dBm to 0dBm inclusive in steps of 1dBm
+            # eg 2: powers = {-15, 0, 15} will sweep power at -15dBm, 0dBm, and 15dBm
+            # eg 3: powers = 0 will do a frequency sweep at constant power of 0 dBm i.e. no power sweep
+            "powers": (-20, -10, 3),
         }
 
         # create measurement instance with instruments and measurement_parameters
-        measurement = AmpFluxSweep(vna, yoko, **measurement_parameters)
+        measurement = PumpPowerSweep(vna, pump, **measurement_parameters)
 
         # hdf5 file saved at:
         # {datapath} / {YYYYMMDD} / {HHMMSS}_{measurementname}_{usersuffix}.hdf5
         save_parameters = {
-            "datapath": pathlib.Path(stage.datapath) / "djext",
-            "usersuffix": "",
+            "datapath": pathlib.Path(stage.datapath) / "djint",
+            "usersuffix": "test",
             "measurementname": measurement.__class__.__name__.lower(),
             **measurement.dataspec,
         }
@@ -167,18 +156,18 @@ if __name__ == "__main__":
             measurement.run(saver=vnadatasaver)
             vna.hold()
             filepath = vnadatasaver.filepath
-            logger.info("Done ampfluxsweep!")
+            logger.info("Done pump power sweep!")
 
         # use this code to plot after msmt is done
         import h5py
         import matplotlib.pyplot as plt
         file = h5py.File(filepath, "r")
         data = file["data"]
-        s21_phase = data["s21_phase"]
-        currs = data["current"]
+        s21_mlog = data["s21_mlog"]
+        pows = data["power"]
         freqs = data["frequency"]
-        s21_phase_avg = np.mean(s21_phase, axis=0)
+        s21_mlog_avg = np.mean(s21_mlog, axis=0)
         plt.figure(figsize=(12, 8))
-        plt.pcolormesh(currs, freqs, s21_phase_avg.T, cmap="twilight_shifted", shading="auto")
+        plt.pcolormesh(pows, freqs, s21_mlog_avg.T, cmap="twilight_shifted", shading="auto")
         plt.colorbar()
         plt.show()

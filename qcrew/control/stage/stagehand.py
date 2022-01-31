@@ -30,6 +30,7 @@ class Stagehand:
             datapath=Path(_STAGE_CONFIG["data"]),
             sample_name=_STAGE_CONFIG["sample"],
             project_name=_STAGE_CONFIG["project"],
+            connect_qm=_STAGE_CONFIG["connect_qm"],
         )
 
         self.proxies = dict()  # update by _stage_remote_objects()
@@ -42,9 +43,10 @@ class Stagehand:
 
     def _stage_local_objects(self) -> None:
         """ """
-        for mode in self.stage.modes:
-            setattr(self.stage, mode.name, mode)
-            logger.success(f"Set stage attribute '{mode.name}'")
+        if self.stage.connect_qm:
+            for mode in self.stage.modes:
+                setattr(self.stage, mode.name, mode)
+                logger.success(f"Set stage attribute '{mode.name}'")
 
     def _stage_remote_objects(self) -> None:
         """ """
@@ -56,15 +58,16 @@ class Stagehand:
                 self.proxies[name] = instrument_proxy
                 setattr(self.stage, name, instrument_proxy)
                 logger.success(f"Set stage attribute '{name}'")
-
-            for mode in self.stage.modes:
-                lo_name = mode.lo
-                if lo_name in self.proxies:
-                    mode.lo = self.proxies[lo_name]
-                    logger.debug(f"Connected {lo_name} as {mode.name} lo")
+            if self.stage.connect_qm:
+                for mode in self.stage.modes:
+                    lo_name = mode.lo
+                    if lo_name in self.proxies:
+                        mode.lo = self.proxies[lo_name]
+                        logger.debug(f"Connected {lo_name} as {mode.name} lo")
 
     def __exit__(self, exc_type, exc_value, exc_traceback) -> None:
         """ """
-        for mode in self.stage.modes:
-            mode.lo = mode.lo.name
+        if self.stage.connect_qm:
+            for mode in self.stage.modes:
+                mode.lo = mode.lo.name
         self.stage.teardown()

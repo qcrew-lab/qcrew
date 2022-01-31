@@ -22,6 +22,15 @@ def run(experiment: Experiment) -> None:
 
     with Stagehand() as stage:
 
+        # Setup amplifier
+        core, yoko = stage.CORE_B, stage.YOKO
+        core.frequency = 7.57e9
+        core.power = -19.30
+        core.rf = True
+        yoko.source = "current"
+        yoko.level = 0.295e-3  # in Amperes
+        yoko.state = True
+
         ###################        LINK EXPERIMENT AND MODES        ####################
 
         for index, mode_name in enumerate(experiment.modes):

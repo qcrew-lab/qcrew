@@ -14,10 +14,9 @@ def get_qua_program(rr):
         adc_stream = qua.declare_stream(adc_trace=True)
         n = qua.declare(int)
 
-        qua.update_frequency(rr.name, int(-50e6))
         with qua.for_(n, 0, n < reps, n + 1):
             qua.reset_phase(rr.name)
-            qua.measure("readout_pulse" * qua.amp(1), rr.name, adc_stream)
+            qua.measure("readout_pulse", rr.name, adc_stream)
             qua.wait(20000, rr.name)
 
         with qua.stream_processing():

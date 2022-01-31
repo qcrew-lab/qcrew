@@ -27,9 +27,12 @@ class QMResultFetcher:
     def _set_result_spec(self):
         """ """
         for tag, result in self._handle:
-            if isinstance(result, SingleNamedJobResult):
+            # if isinstance(result, SingleNamedJobResult):
+            if type(result).__name__ == "SingleNamedJobResult":
                 self._result_spec["single"][tag] = self._fetch_single
-            elif isinstance(result, MultipleNamedJobResult):
+
+            # elif isinstance(result, MultipleNamedJobResult):
+            elif type(result).__name__ == "MultipleNamedJobResult":
                 if self._is_live:
                     self._result_spec["multiple"][tag] = self._fetch_batch
                 else:

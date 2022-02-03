@@ -35,7 +35,7 @@ class RRSpectroscopy(Experiment):
         qua.update_frequency(rr.name, self.x)  # update resonator pulse frequency
         rr.measure((self.I, self.Q))  # measure transmitted signal
         qua.wait(int(self.wait_time // 4), rr.name)  # wait system reset
-
+    
         self.QUA_stream_results()  # stream variables (I, Q, x, etc)
 
 
@@ -49,8 +49,8 @@ if __name__ == "__main__":
 
     parameters = {
         "modes": ["RR"],
-        "reps": 200,
-        "wait_time": 10000,
+        "reps": 100,
+        "wait_time": 1000,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
     }
 

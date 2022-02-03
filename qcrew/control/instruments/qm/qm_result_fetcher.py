@@ -2,7 +2,7 @@
 
 from typing import Callable
 
-from qm._results import MultipleNamedJobResult, SingleNamedJobResult
+from qm._results_01 import MultipleNamedJobResult, SingleNamedJobResult
 from qm.QmJob import JobResults
 
 

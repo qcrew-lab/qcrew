@@ -38,9 +38,6 @@ def run(experiment: Experiment) -> None:
         qua_program = experiment.QUA_sequence()
         qm = stage.QM
         qm_job = qm.execute(qua_program)
-        handle = qm_job.result_handles
-        for tag, result in handle:
-            print(tag)
 
         #########################        INVOKE HELPERS        #########################
 

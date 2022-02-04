@@ -49,9 +49,9 @@ if __name__ == "__main__":
 
     parameters = {
         "modes": ["QUBIT", "RR"],
-        "reps": 2000000,
-        "wait_time": 32000,
-        "x_sweep": (-2, 2 + 0.1 / 2, 0.1),
+        "reps": 10000,
+        "wait_time": 40000,
+        "x_sweep": (-0.7, 0.7 + 0.02 / 2, 0.02),
         "qubit_op": "gaussian_pulse",
     }
 

@@ -33,7 +33,7 @@ class T1(Experiment):
         Defines pulse sequence to be played inside the experiment loop
         """
         qubit, rr = self.modes  # get the modes
-
+        
         qubit.play(self.qubit_op)  # play pi qubit pulse
         qua.wait(self.x, qubit.name)  # wait for partial qubit decay
         qua.align(qubit.name, rr.name)  # wait qubit pulse to end
@@ -41,7 +41,6 @@ class T1(Experiment):
         qua.wait(int(self.wait_time // 4), rr.name)  # wait system reset
 
         self.QUA_stream_results()  # stream variables (I, Q, x, etc)
-
 
 # -------------------------------- Execution -----------------------------------
 
@@ -51,8 +50,8 @@ if __name__ == "__main__":
         "modes": ["QUBIT", "RR"],
         "reps": 20000,
         "wait_time": 32000,
-        "x_sweep": (int(16), int(1000 + 40 / 2), int(40)),
-        "qubit_op": "gaussian_pulse",
+        "x_sweep": (int(16), int(40e3 + 200 / 2), int(200)),
+        "qubit_op": "pi",
     }
 
     plot_parameters = {

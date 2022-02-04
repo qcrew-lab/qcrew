@@ -11,7 +11,7 @@ from qcrew.measure.state_discriminator.helpers.simulate_configuration import (
 import yaml
 from pathlib import Path
 
-save_path = Path("C:\\Users\\qcrew\\qcrew\\data")
+save_path = Path("C:\\Users\\Desktop\\qcrew\\data")
 
 if __name__ == "__main__":
 

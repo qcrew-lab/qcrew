@@ -6,6 +6,7 @@ This class serves as a QUA script generator with user-defined parameters.
 from typing import ClassVar
 
 from qcrew.control import professor as prof
+from qcrew.control import Stagehand
 from qcrew.measure.experiment import Experiment
 from qm import qua
 
@@ -35,7 +36,7 @@ class RRSpectroscopy(Experiment):
         qua.update_frequency(rr.name, self.x)  # update resonator pulse frequency
         rr.measure((self.I, self.Q))  # measure transmitted signal
         qua.wait(int(self.wait_time // 4), rr.name)  # wait system reset
-    
+
         self.QUA_stream_results()  # stream variables (I, Q, x, etc)
 
 
@@ -43,14 +44,14 @@ class RRSpectroscopy(Experiment):
 
 if __name__ == "__main__":
 
-    x_start = -200e6
-    x_stop = 200e6
-    x_step = 5e6
+    x_start = -55e6
+    x_stop = -45e6
+    x_step = 0.1e6
 
     parameters = {
         "modes": ["RR"],
-        "reps": 100,
-        "wait_time": 1000,
+        "reps": 10000,
+        "wait_time": 40000,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
     }
 

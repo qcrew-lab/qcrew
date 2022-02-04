@@ -1,5 +1,5 @@
 """
-A python class describing a T1 measurement using QM.
+A python class describing a e-f qubit spectroscopy using QM.
 This class serves as a QUA script generator with user-defined parameters.
 """
 
@@ -12,19 +12,22 @@ from qm import qua
 # ---------------------------------- Class -------------------------------------
 
 
-class T1(Experiment):
+class QubitSpectroscopy(Experiment):
 
-    name = "T1"
+    name = "qubit_ef_spec"
 
     _parameters: ClassVar[set[str]] = Experiment._parameters | {
         "qubit_op",  # operation used for exciting the qubit
         "fit_fn",  # fit function
     }
 
-    def __init__(self, qubit_op, fit_fn="exp_decay", **other_params):
+    def __init__(
+        self, qubit_op, qubit_pi_pulse_name, fit_fn="lorentzian", **other_params
+    ):
 
-        self.qubit_op = qubit_op  # pi pulse
+        self.qubit_op = qubit_op
         self.fit_fn = fit_fn
+        self.qubit_pi_pulse_name = qubit_pi_pulse_name
 
         super().__init__(**other_params)  # Passes other parameters to parent
 
@@ -33,32 +36,38 @@ class T1(Experiment):
         Defines pulse sequence to be played inside the experiment loop
         """
         qubit, rr = self.modes  # get the modes
-        
-        qubit.play(self.qubit_op)  # play pi qubit pulse
-        qua.wait(self.x, qubit.name)  # wait for partial qubit decay
+
+        qubit.play(self.qubit_pi_pulse_name)
+        qua.update_frequency(qubit.name, self.x)
+        qubit.play(self.qubit_op)  # play qubit pulse
+        qua.update_frequency(qubit.name, qubit.int_freq)
+        qubit.play(self.qubit_pi_pulse_name)
         qua.align(qubit.name, rr.name)  # wait qubit pulse to end
-        rr.measure((self.I, self.Q))  # measure qubit state
+        rr.measure((self.I, self.Q))  # measure transmitted signal
         qua.wait(int(self.wait_time // 4), rr.name)  # wait system reset
 
         self.QUA_stream_results()  # stream variables (I, Q, x, etc)
+
 
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
 
+    xstep = 1e6
     parameters = {
         "modes": ["QUBIT", "RR"],
-        "reps": 20000,
-        "wait_time": 32000,
-        "x_sweep": (int(16), int(40e3 + 200 / 2), int(200)),
-        "qubit_op": "pi",
+        "reps": 10000,
+        "wait_time": 40000,
+        "x_sweep": (int(-10e6), int(150e6 + xstep / 2), int(xstep)),
+        "qubit_op": "constant_pulse",
+        "qubit_pi_pulse_name": "pi",
     }
 
     plot_parameters = {
-        "xlabel": "Relaxation time (clock cycles)",
+        "xlabel": "Qubit pulse frequency (Hz)",
     }
 
-    experiment = T1(**parameters)
+    experiment = QubitSpectroscopy(**parameters)
     experiment.setup_plot(**plot_parameters)
 
     prof.run(experiment)

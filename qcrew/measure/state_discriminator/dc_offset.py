@@ -15,3 +15,4 @@ if __name__ == "__main__":
         config = stage.QM.get_config()
 
         df_offset = DCoffsetCalibrator.calibrate(qmm, config, rr.name)
+        print(df_offset)

@@ -47,7 +47,12 @@ class LocalStage(Stage):
     """ """
 
     def __init__(
-        self, configpath: Path, datapath: Path, sample_name: str, project_name: str
+        self,
+        configpath: Path,
+        datapath: Path,
+        sample_name: str,
+        project_name: str,
+        connect_qm: bool,
     ) -> None:
         """ """
         super().__init__(configpath=configpath)
@@ -55,23 +60,30 @@ class LocalStage(Stage):
         self.sample_name = sample_name
         self.project_name = project_name
         self.modes = None  # updated by _setup()
+        self.connect_qm = connect_qm
         self._setup()
 
     def _setup(self) -> None:
         """ """
         super()._setup()
 
-        # NOTE for now, only support staging modes locally
-        self.modes = [v for v in self._config if isinstance(v, qcm.Mode)]
-        logger.debug(f"Found {len(self.modes)} modes")
+        if self.connect_qm:
+            # NOTE for now, only support staging modes locally
+            self.modes = [v for v in self._config if isinstance(v, qcm.Mode)]
+            logger.debug(f"Found {len(self.modes)} modes")
 
-        self._qmm = QuantumMachinesManager()
-        self._qcb = qciqm.QMConfigBuilder(*self.modes)
+            self._qmm = QuantumMachinesManager()
+            self._qcb = qciqm.QMConfigBuilder(*self.modes)
 
     @property  # qm getter
     def QM(self) -> QuantumMachine:
         """ """
-        qm = self._qmm.open_qm(self._qcb.config)
+        if not self.connect_qm:
+            raise RuntimeError(
+                "Please set 'qm' to True in stage.yml to connect to QM and re-run 'setup_stage'"
+            )
+        cfg = self._qcb.config
+        qm = self._qmm.open_qm(cfg)
         return qm
 
 

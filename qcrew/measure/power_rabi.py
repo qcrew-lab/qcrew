@@ -50,9 +50,9 @@ if __name__ == "__main__":
     parameters = {
         "modes": ["QUBIT", "RR"],
         "reps": 10000,
-        "wait_time": 40000,
-        "x_sweep": (-0.7, 0.7 + 0.02 / 2, 0.02),
-        "qubit_op": "gaussian_pulse",
+        "wait_time": 100000,
+        "x_sweep": (-1.5, 1.5 + 0.05 / 2, 0.05),
+        "qubit_op": "pi",
     }
 
     plot_parameters = {

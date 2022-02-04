@@ -35,8 +35,9 @@ class QubitSpectroscopy(Experiment):
         qubit, rr = self.modes  # get the modes
 
         qubit.play("pi")
-        qua.update_frequency(qubit.name, self.x)  # update resonator pulse frequency
+        qua.update_frequency(qubit.name, self.x)
         qubit.play(self.qubit_op)  # play qubit pulse
+        qua.update_frequency(qubit.name, qubit.int_freq)
         qubit.play("pi")
         qua.align(qubit.name, rr.name)  # wait qubit pulse to end
         rr.measure((self.I, self.Q))  # measure transmitted signal

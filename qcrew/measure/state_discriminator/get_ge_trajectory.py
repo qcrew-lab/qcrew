@@ -9,16 +9,17 @@ from qcrew.measure.state_discriminator.helpers.discriminator import StateDiscrim
 from qcrew.measure.state_discriminator.helpers.dc_offset_calibrator import DCoffsetCalibrator
 from pathlib import Path
 
-reps = 100
-wait_time = 400000
-readout_length = 1000
-pad = 1000
+reps =1000
+wait_time = 100000
+readout_length = 500
+pad = 1200
 readout_pulse = "readout_pulse"
+qubit_pi_pulse_name = "pi"
 # NOTE: if the envelope has wired startind and ending, dc_offset need to be updated
 # Refer to dc_offset.py
-dc_offset = 0.0204631123046875
+dc_offset = 0.01652087841796875
 analog_input = 1
-path = Path("C:/Users/qcrew/qcrew/qcrew/config") / "opt_readout_weights.npz"
+path = Path("C:/Users/qcrew/Desktop/qcrew/qcrew/config") / "opt_readout_weights.npz"
 
 
 def get_qua_program(rr, qubit):
@@ -29,19 +30,20 @@ def get_qua_program(rr, qubit):
 
         with qua.for_(n, 0, n < reps, n + 1):
 
-            qua.update_frequency(rr.name, int(-50e6))
+            #qua.update_frequency(rr.name, -50.01e6)
 
-            qua.align(rr.name, qubit.name)
+            #qua.align(rr.name, qubit.name)
             # qua.reset_phase(rr.name)
-            qua.measure(readout_pulse * qua.amp(1), rr.name, adcg)
+            qua.measure(readout_pulse * qua.amp(1.4), rr.name, adcg)
             qua.wait(wait_time, rr.name)
 
-            qua.update_frequency(rr.name, int(-50e6))
-
+           # qua.update_frequency(rr.name, -50e6)
+           
+            # qua.reset_phase(rr.name)
             qua.align(rr.name, qubit.name)
-            qua.play("pi" * qua.amp(1), qubit.name)
+            qubit.play(qubit_pi_pulse_name)
             qua.align(rr.name, qubit.name)
-            qua.measure(readout_pulse * qua.amp(1), rr.name, adce)
+            qua.measure(readout_pulse * qua.amp(1.4), rr.name, adce)
             qua.wait(wait_time, rr.name)
 
         with qua.stream_processing():

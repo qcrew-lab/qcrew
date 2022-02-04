@@ -28,7 +28,7 @@ def get_qua_program(rr, qubit):
             qua.measure("opt_readout_pulse" * qua.amp(1), rr.name, adcg)
             qua.wait(wait_time, rr.name)
 
-            qua.update_frequency(rr.name, int(-49e6))
+            # qua.update_frequency(rr.name, int(-49e6))
             qua.align(rr.name, qubit.name)
             qua.play("pi" * qua.amp(1), qubit.name)
             qua.align(rr.name, qubit.name)

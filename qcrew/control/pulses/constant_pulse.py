@@ -33,10 +33,10 @@ class ReadoutPulse(Pulse):
     def __init__(
         self,
         *,
-        length: int = None,
-        ampx: float = None,
-        pad: int = None,
-        const_length: int = None,
+        length: int = 400,
+        ampx: float = 1.0,
+        pad: int = 0,
+        const_length: int = 400,
         threshold: float = None,
         integration_weights=None,
     ) -> None:

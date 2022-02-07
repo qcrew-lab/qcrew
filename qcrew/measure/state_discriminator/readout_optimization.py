@@ -15,7 +15,7 @@ from qcrew.measure.state_discriminator.helpers.dc_offset_calibrator import (
 num_of_states = 2
 reps = 100
 
-wait_time = 400000
+wait_time = 100000
 readout_length = 1000
 pad = 3000
 readout_pulse = "opt_readout_pulse"

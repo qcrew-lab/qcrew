@@ -5,7 +5,9 @@ from qcrew.control import Stagehand
 from qm import qua
 import numpy as np
 
-
+readout_length = 900
+pad = 900
+readout_pulse = "constant_pulse"
 reps = 10000
 
 
@@ -32,7 +34,7 @@ if __name__ == "__main__":
     with Stagehand() as stage:
 
         rr = stage.RR
-        rr.readout_pulse(length=1200, ampx=0.06)
+        rr.readout_pulse(length=1000, ampx=0.06, pad=90)
         rr.time_of_flight = 28
 
         # Execute script

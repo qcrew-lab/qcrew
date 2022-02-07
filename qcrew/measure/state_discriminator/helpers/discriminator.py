@@ -162,7 +162,8 @@ class StateDiscriminator:
         raw_weights = np.array(squeezed_envelope)
 
         weights = {}
-        b_vec = raw_weights[0, :] - raw_weights[1, :]
+        b_vec = raw_weights[0, :] - 1j * raw_weights[1, :]
+        # b_vec = raw_weights[0, :] - raw_weights[1, :]
         weights["I"] = np.array([np.real(b_vec).tolist(), (-np.imag(b_vec)).tolist()])
         weights["Q"] = np.array([np.imag(b_vec).tolist(), np.real(b_vec).tolist()])
 

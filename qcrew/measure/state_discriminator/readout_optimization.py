@@ -13,15 +13,15 @@ from qcrew.measure.state_discriminator.helpers.dc_offset_calibrator import (
 )
 
 num_of_states = 2
-reps = 100
+reps = 1000
 
-wait_time = 100000
-readout_length = 1000
-pad = 3000
+wait_time = 5000
+readout_length = 1800
+pad = 900
 readout_pulse = "opt_readout_pulse"
 # NOTE: if the envelope has wired startind and ending, dc_offset need to be updated
 # Refer to dc_offset.py
-dc_offset = 0.020341857986814565
+dc_offset = 0.01652087841796875
 analog_input = 1
 out = "out1"
 
@@ -43,8 +43,8 @@ def get_qua_program(rr, qubit, threshold):
                 readout_pulse * qua.amp(1),
                 rr.name,
                 None,
-                qua.demod.full("iw_i", Ig, out),
-                qua.demod.full("iw_q", Qg, out),
+                qua.demod.full("iw_q", Ig, out),
+                qua.demod.full("iw_i", Qg, out),
             )
             qua.assign(resg, Ig > threshold)
             qua.save(resg, "resg")
@@ -52,7 +52,6 @@ def get_qua_program(rr, qubit, threshold):
             qua.save(Qg, "Qg")
             qua.wait(wait_time, rr.name)
 
-            qua.update_frequency(rr.name, int(-49.5e6))
             qua.align(rr.name, qubit.name)
             qua.play("pi" * qua.amp(1), qubit.name)
             qua.align(rr.name, qubit.name)
@@ -60,8 +59,8 @@ def get_qua_program(rr, qubit, threshold):
                 readout_pulse * qua.amp(1),
                 rr.name,
                 None,
-                qua.demod.full("iw_i", Ie, out),
-                qua.demod.full("iw_q", Qe, out),
+                qua.demod.full("iw_q", Ie, out),
+                qua.demod.full("iw_i", Qe, out),
             )
 
             qua.assign(rese, Ie > threshold)
@@ -79,8 +78,7 @@ if __name__ == "__main__":
 
         rr = stage.RR
         qubit = stage.QUBIT
-        rr.opt_readout_pulse(const_length=readout_length, pad=pad)
-
+        rr.opt_readout_pulse(const_length=readout_length, ampx=0.08, pad=pad)
         thres = rr.opt_readout_pulse.threshold
         state_seq = np.array([[i] * reps for i in range(num_of_states)]).flatten()
 
@@ -115,4 +113,4 @@ if __name__ == "__main__":
             num_of_states=num_of_states,
             threshold=thres,
         )
-        fidelity_plot(res=state, state_seq=state_seq)
+        # fidelity_plot(res=state, state_seq=state_seq)

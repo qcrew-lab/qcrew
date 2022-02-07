@@ -35,7 +35,7 @@ class T2(Experiment):
         Defines pulse sequence to be played inside the experiment loop
         """
         qubit, rr = self.modes  # get the modes
-        # qua.update_frequency(qubit.name, qubit.int_freq + self.detuning)  # detune
+        qua.update_frequency(qubit.name, qubit.int_freq + self.detuning)  # detune
         qubit.play(self.qubit_op)  # play half pi qubit pulse
         qua.wait(self.x, qubit.name)  # wait for partial qubit decay
         qubit.play(self.qubit_op)  # play half pi qubit pulse
@@ -52,11 +52,11 @@ if __name__ == "__main__":
 
     parameters = {
         "modes": ["QUBIT", "RR"],
-        "reps": 8000,
-        "wait_time": 32000,
-        "x_sweep": (int(16), int(8000 + 100 / 2), int(100)),
+        "reps": 500000,
+        "wait_time": 400000,
+        "x_sweep": (int(16), int(10000 + 100 / 2), int(100)),
         "qubit_op": "pi2",
-        # "detuning": int(700e3),
+        "detuning": int(150e3),
     }
 
     plot_parameters = {

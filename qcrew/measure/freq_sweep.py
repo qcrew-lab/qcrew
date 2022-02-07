@@ -22,7 +22,7 @@ if __name__ == "__main__":
 
     with Stagehand() as stage:
         rr, sa, qubit = stage.RR, stage.SA, stage.QUBIT
-        mode = qubit  # select the mode whose spectrum you want to sweep
+        mode = rr  # select the mode whose spectrum you want to sweep
 
         job = stage.QM.execute(get_qua_program())  # play IF to mode
 

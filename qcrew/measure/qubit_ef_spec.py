@@ -11,8 +11,7 @@ from qm import qua
 
 # ---------------------------------- Class -------------------------------------
 
-# 4.837
-# 4.5476
+
 class QubitSpectroscopy(Experiment):
 
     name = "qubit_ef_spec"

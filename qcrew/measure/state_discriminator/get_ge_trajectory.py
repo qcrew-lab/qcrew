@@ -12,7 +12,7 @@ from qcrew.measure.state_discriminator.helpers.dc_offset_calibrator import (
 from pathlib import Path
 
 reps = 2000
-wait_time = 50000
+wait_time = 100000
 readout_length = 1800
 pad = 900
 readout_pulse = "readout_pulse"
@@ -68,7 +68,7 @@ if __name__ == "__main__":
 
         rr = stage.RR
         qubit = stage.QUBIT
-        rr.readout_pulse(const_length=readout_length, ampx=0.08, pad=pad)
+        rr.readout_pulse(const_length=readout_length, ampx=0.12, pad=pad)
 
         config = stage.QM.get_config()
         config = DCoffsetCalibrator.update_dc_offset(

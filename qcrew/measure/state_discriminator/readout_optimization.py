@@ -15,7 +15,7 @@ from qcrew.measure.state_discriminator.helpers.dc_offset_calibrator import (
 num_of_states = 2
 reps = 1000
 
-wait_time = 5000
+wait_time = 100000
 readout_length = 1800
 pad = 900
 readout_pulse = "opt_readout_pulse"
@@ -78,7 +78,7 @@ if __name__ == "__main__":
 
         rr = stage.RR
         qubit = stage.QUBIT
-        rr.opt_readout_pulse(const_length=readout_length, ampx=0.08, pad=pad)
+        rr.opt_readout_pulse(const_length=readout_length, ampx=0.12, pad=pad)
         thres = rr.opt_readout_pulse.threshold
         state_seq = np.array([[i] * reps for i in range(num_of_states)]).flatten()
 

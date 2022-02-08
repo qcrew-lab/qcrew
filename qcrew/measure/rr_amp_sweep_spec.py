@@ -46,15 +46,15 @@ if __name__ == "__main__":
     parameters = {
         "modes": ["RR", "QUBIT"],
         "reps": 50000,
-        "wait_time": 100000,
-        # "x_sweep": (int(), int( +  / 2), int())
-        "x_sweep": (-50e6, -30e6 + 0.5 / 2, 0.5),
-        "y_sweep": (0.1, 0.5 + 0.05 / 2, 0.05),
+        "wait_time": 400000,
+        "x_sweep": (int(-54e6), int(-49e6 + 0.5e6 / 2), int(0.5e6)),
+        "y_sweep": (0.01, 1 + 0.1 / 2, 0.1),
     }
     plot_parameters = {
         "xlabel": "Resonator pulse frequency (Hz)",
         "ylabel": "Resonator pulse amplitude scaling",
         "plot_type": "2D",
+        "cmap": "terrain",
     }
 
     experiment = RRAmpSpectroscopy(**parameters)

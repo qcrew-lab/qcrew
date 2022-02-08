@@ -32,9 +32,8 @@ if __name__ == "__main__":
     with Stagehand() as stage:
 
         rr = stage.RR
-        rr.readout_pulse(length=2000, ampx=0.5)
-        rr.time_of_flight = 100
-
+        rr.readout_pulse(length=1000, ampx=0.5)
+        rr.time_of_flight = 500
         # Execute script
         job = stage.QM.execute(get_qua_program(rr))  # play IF to mode
 
@@ -51,6 +50,8 @@ if __name__ == "__main__":
 
         axes[0].plot(results / 2 ** 12)
         axes[1].plot(freqs[5:] / 1e6, amps[5:])
+        axes[0].set_title("Voltage over time after time-of-flight")
+        axes[1].set_xlabel("Fourier transform of the signal")
 
         # Retrieving and plotting FFT data.
         plt.show()

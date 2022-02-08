@@ -43,7 +43,7 @@ class RepPowerRabi(Experiment):
         qua.wait(int(self.wait_time // 4), rr.name)  # wait system reset
 
         self.QUA_stream_results()  # stream variables (I, Q, x, etc)
-
+        
 
 # -------------------------------- Execution -----------------------------------
 

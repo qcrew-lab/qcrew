@@ -10,38 +10,43 @@ import abc
 from qm import qua
 
 
-class Experiment(Parametrized):
-    """
-    Abstract class for experiments using QUA sequences.
-    """
+# class Experiment(Parametrized):
+#     """
+#     Abstract class for experiments using QUA sequences.
+#     """
 
-    # logger.info(f"Created {self}")
-    _parameters: ClassVar[set[str]] = {
-        "mode_names",  # names of the modes used in the experiment
-        "reps",  # number of times the experiment is repeated
-        "wait_time",  # wait time in nanoseconds between repetitions
-    }
+#     # logger.info(f"Created {self}")
+#     _parameters: ClassVar[set[str]] = {
+#         "mode_names",  # names of the modes used in the experiment
+#         "reps",  # number of times the experiment is repeated
+#         "wait_time",  # wait time in nanoseconds between repetitions
+#         "fetch_period",  # wait time between fetching and plotting
+#     }
 
-    def __init__(
-        self,
-        modes,
-        reps,
-        wait_time,
-        x_sweep=None,
-        y_sweep=None,
-    ):
+#     def __init__(
+#         self,
+#         modes,
+#         reps,
+#         wait_time,
+#         x_sweep=None,
+#         y_sweep=None,
+#         fetch_period=1,
+#     ):
 
         # List of modes used in the experiment. String values will be replaced by
         # corresponding modes by the professor module.
-        self.modes = modes
+        # self.modes = modes
 
         # Experiment loop variables
-        self.reps = reps
-        self.wait_time = wait_time
+        # self.reps = reps
+        # self.wait_time = wait_time
 
-        # Sweep configurations
-        self.sweep_config = {"n": (0, self.reps, 1), "x": x_sweep, "y": y_sweep}
-        self.buffering = tuple()  # defined in _configure_sweeps
+        # Wait time between live fetching/plotting/saving rounds
+        # self.fetch_period = fetch_period
+
+        # # Sweep configurations
+        # self.sweep_config = {"n": (0, self.reps, 1), "x": x_sweep, "y": y_sweep}
+        # self.buffering = tuple()  # defined in _configure_sweeps
 
         # ExpVariable definitions. This list is updated in _configure_sweeps and after
         # stream and variable declaration.
@@ -69,11 +74,11 @@ class Experiment(Parametrized):
             self.variables[v].tag for v in ["x", "y"] if self.variables[v].tag
         ]
 
-        # parameters to be used by the plotter. Updated in self.setup_plot method.
-        self.plot_setup = dict()
-        self.setup_plot(**self.plot_setup)
+        # # parameters to be used by the plotter. Updated in self.setup_plot method.
+        # self.plot_setup = dict()
+        # self.setup_plot(**self.plot_setup)
 
-        logger.info(f"Created {type(self).__name__}")
+        # logger.info(f"Created {type(self).__name__}")
 
     @property
     def mode_names(self):
@@ -101,10 +106,11 @@ class Experiment(Parametrized):
     #     xlabel=None,
     #     ylabel=None,
     #     zlabel="Signal (a.u.)",
-    #     trace_labels="",
+    #     trace_labels=[],
     #     title=None,
     #     plot_type="1D",
     #     err=True,
+    #     cmap="viridian",
     # ):
     #     """
     #     Updates self.plot_setup dictionary with the parameters to be used by the
@@ -135,7 +141,7 @@ class Experiment(Parametrized):
     #         "title": title,
     #         "plot_type": plot_type,
     #         "plot_err": err,
-    #         "suptitle": title,
+    #         "cmap": cmap,
     #     }
 
     #     return
@@ -204,7 +210,6 @@ class Experiment(Parametrized):
             # Stores QUA variables as attributes for easy use
             for key, value in self.variables.items():
                 setattr(self, key, value.var)
-                
             # Plays pulse sequence in a loop. Variable order defines loop nesting order
             sweep_variables = [self.variables[key] for key in ["n", "x", "y"]]
             macros.QUA_loop(self.QUA_play_pulse_sequence, sweep_variables)
@@ -228,86 +233,71 @@ class Experiment(Parametrized):
         """
         macros.stream_results(self.variables)
 
-    def estimate_sd(self, statistician, partial_results, num_results, stderr):
-        """
-        Method to call the statistician and estimate running mean standard error.
-        stderr holds the running values of (stderr, mean, variance * (n-1))
-        """
+    # def estimate_sd(self, statistician, partial_results, num_results, stderr):
+    #     """
+    #     Method to call the statistician and estimate running mean standard error.
+    #     stderr holds the running values of (stderr, mean, variance * (n-1))
+    #     """
 
-        # TODO do this for multiple dependent variables
+    #     # TODO do this for multiple dependent variables
 
-        zs_raw = np.sqrt(partial_results[self.Z_SQ_RAW_tag])
-        zs_raw_avg = np.sqrt(partial_results[self.Z_SQ_RAW_AVG_tag])
-        stderr = statistician.get_std_err(zs_raw, zs_raw_avg, num_results, *stderr)
+    #     zs_raw = np.sqrt(partial_results[self.Z_SQ_RAW_tag])
+    #     zs_raw_avg = np.sqrt(partial_results[self.Z_SQ_RAW_AVG_tag])
 
-        return stderr
+    #     stderr = statistician.get_std_err(zs_raw, zs_raw_avg, num_results, *stderr)
 
-    def plot(self, plotter, independent_data, dependent_data, n, fit_func, errbar):
+    #     return stderr
 
-        plotter.live_1dplot(
-            plotter.axis[0, 0], independent_data, dependent_data, n, fit_func, errbar
-        )
+    # def plot_results(self, plotter, partial_results, num_results, stderr):
+    #     """
+    #     Retrieves, reorganizes the data and sends it to the plotter.
+    #     """
 
-    def plot_results(
-        self,
-        plotter,
-        partial_results,
-        num_results,
-        stderr,
-    ):
-        """
-        Retrieves, reorganizes the data and sends it to the plotter.
-        """
+    #     indep_tags, dep_tags = self.results_tags
 
-        indep_tags, dep_tags = self.results_tags
+    #     dependent_data = []
+    #     for tag in dep_tags:
+    #         # Take the square root of dependent variables. This step is required for
+    #         # dependent values calculated as I^2 + Q^2 in stream processing.
+    #         # Reshape the fetched data with buffer lengths
+    #         reshaped_data = np.sqrt(partial_results[tag]).reshape(self.buffering)
+    #         dependent_data.append(reshaped_data)
 
-        dependent_data = []
-        for tag in dep_tags:
-            # Take the square root of dependent variables. This step is required for
-            # dependent values calculated as I^2 + Q^2 in stream processing.
-            # Reshape the fetched data with buffer lengths
-            reshaped_data = np.sqrt(partial_results[tag]).reshape(self.buffering)
-            dependent_data.append(reshaped_data)
+    #     independent_data = []
+    #     for tag in indep_tags:
+    #         reshaped_data = partial_results[tag].reshape(self.buffering)
+    #         independent_data.append(reshaped_data)
 
-        independent_data = []
-        for tag in indep_tags:
-            reshaped_data = partial_results[tag].reshape(self.buffering)
-            independent_data.append(reshaped_data)
+    #     # if an internal sweep is defined in the child experiment class, add its value
+    #     # as independent variable data. The values are repeated so the dimensions match
+    #     # the other independent data shapes.
+    #     try:
+    #         internal_sweep = self.internal_sweep
+    #         # Repeat the values
+    #         for indx in range(len(self.buffering) - 1):
+    #             internal_sweep = [internal_sweep] * self.buffering[indx]
 
-        # if an internal sweep is defined in the child experiment class, add its value
-        # as independent variable data. The values are repeated so the dimensions match
-        # the other independent data shapes.
-        try:
-            internal_sweep = self.internal_sweep
-            # Repeat the values
-            for indx in range(len(self.buffering) - 1):
-                internal_sweep = [internal_sweep] * self.buffering[indx]
+    #         independent_data.append(internal_sweep)
+    #         internal_sweep_dict = {"internal sweep": internal_sweep}
+    #     except AttributeError:
+    #         internal_sweep_dict = {}
+    #         pass
 
-            independent_data.append(internal_sweep)
-            internal_sweep_dict = {"internal sweep": internal_sweep}
-        except AttributeError:
-            internal_sweep_dict = {}
-            pass
+    #     # Retrieve and reshape standard error estimation
+    #     error_data = stderr[0].reshape(self.buffering)
 
-        # Retrieve and reshape standard error estimation
-        if stderr:
-            error_data = stderr[0].reshape(self.buffering)
-        else:
-            error_data = None
+    #     plotter.live_plot(
+    #         independent_data,
+    #         dependent_data,
+    #         num_results,
+    #         fit_fn=self.fit_fn,
+    #         err=error_data,
+    #     )
 
-        # self.plot(
-        #     plotter,
-        #     independent_data,
-        #     dependent_data,
-        #     n=num_results,
-        #     fit_func=self.fit_fn,
-        #     errbar=error_data,
-        # )
+    #     # build data dictionary for final save
+    #     dep_data_dict = {dep_tags[i]: dependent_data[i] for i in range(len(dep_tags))}
+    #     indep_data_dict = {
+    #         indep_tags[i]: independent_data[i] for i in range(len(indep_tags))
+    #     }
 
-        # build data dictionary for final save
-        dep_data_dict = {dep_tags[i]: dependent_data[i] for i in range(len(dep_tags))}
-        indep_data_dict = {
-            indep_tags[i]: independent_data[i] for i in range(len(indep_tags))
-        }
-
-        return dep_data_dict | indep_data_dict | internal_sweep_dict
+    #     return dep_data_dict | indep_data_dict | internal_sweep_dict

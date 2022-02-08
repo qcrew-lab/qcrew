@@ -8,7 +8,6 @@ import os
 import time
 import h5py
 import numpy as np
-import logging as log
 from uncertainties import UFloat
 from pathlib import Path
 from typing import Union, Optional, Dict, List
@@ -117,8 +116,48 @@ def write_dict_to_hdf5(
                 entry_point=entry_point[str_key],
                 group_overwrite_level=group_overwrite_level - 1,
             )
+        elif isinstance(item, (set, frozenset)):
+
+            if len(item) > 0:
+                if isinstance(item, set):
+                    entry_point[key].attrs["data_type"] = "set"
+                elif isinstance(item, frozenset):
+                    entry_point[key].attrs["data_type"] = "frozenset"
+
+                item = list(item)
+                elt_type = type(item[0])
+
+                if all(isinstance(x, elt_type) for x in item) and not isinstance(
+                    item[0], dict
+                ):
+                    if isinstance(item[0], (int, float, np.int32, np.int64)):
+                        entry_point.create_dataset(key, data=np.array(item))
+                        entry_point[key].attrs["list_type"] = "array"
+
+                    # strings are saved as a special dtype hdf5 dataset
+                    elif isinstance(item[0], str):
+                        dt = h5py.special_dtype(vlen=str)
+                        data = np.array(item)
+                        data = data.reshape((-1, 1))
+                        ds = entry_point.create_dataset(key, (len(data), 1), dtype=dt)
+                        ds.attrs["list_type"] = "str"
+                        ds[:] = data
+                    else:
+                        # For nested list we don't throw warning, it will be
+                        # recovered in case of a snapshot
+                        warn_msg = (
+                            'Set of type "{}" for "{}":"{}" not '
+                            "supported, storing as string".format(elt_type, key, item)
+                        )
+                        if elt_type is list:
+                            log.debug(warn_msg)
+                        else:
+                            log.warning(warn_msg)
+
+                        entry_point.attrs[key] = str(item)
 
         elif isinstance(item, (list, tuple)):
+
             if len(item) > 0:
 
                 elt_type = type(item[0])
@@ -606,7 +645,7 @@ class DataHandle:
                 # convert the shape of new data
                 if len(new_data_shape) == 1:
                     shape_list = list(exist_data_shape)
-                    shape_list[0]= 1
+                    shape_list[0] = 1
                     new_shape = tuple(shape_list)
                     data = data.reshape(new_shape)
                     new_data_shape = data.shape
@@ -765,21 +804,27 @@ class DataHandle:
             for i, (key, value) in enumerate(data_dict.items()):
                 self.add_result(name=key, data=value, overwirte=overwrite, group=group)
 
-    def add_metadata(self, metadata_dict: dict, overwrite: bool = False) -> None:
+    def add_metadata(
+        self,
+        metadata_dict: dict,
+        group: Optional[str] = "metadata",
+        overwrite: bool = False,
+    ) -> None:
         if overwrite:
             overwirte_level = 0
         else:
             overwirte_level = np.inf
-        write_dict_to_hdf5(metadata_dict, self.db, overwirte_level)
+        enter_point = self.db.require_group(group)
+        write_dict_to_hdf5(metadata_dict, enter_point, overwirte_level)
 
-    def get_metadata(self, read_dict: dict) -> None:
-        get_dict = read_dict_from_hdf5(read_dict, self.db)
-        return get_dict
+    def get_metadata(self, read_dict: dict, group: Optional[str] = "metadata") -> None:
+        enter_point = self.db.require_group(group)
+        return read_dict_from_hdf5(read_dict, enter_point)
 
 
 def get_dict(results: dict, *args) -> dict:
-    get_dict = {}
+    new_dict = {}
     for key in args:
         if isinstance(key, str) and key in results.keys():
-            get_dict[key] = results
-    return get_dict
+            new_dict[key] = results
+    return new_dict

@@ -53,4 +53,5 @@ if __name__ == "__main__":
         axes[1].plot(freqs[5:] / 1e6, amps[5:])
 
         # Retrieving and plotting FFT data.
+
         plt.show()

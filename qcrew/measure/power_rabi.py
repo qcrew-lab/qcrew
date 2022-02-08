@@ -56,7 +56,7 @@ if __name__ == "__main__":
         "reps": 10000,
         "wait_time": 400000,
         "x_sweep": (amp_start, amp_stop + amp_step / 2, amp_step),
-        "qubit_op": "pi",
+        "qubit_op": "gaussian_pulse",
     }
 
     plot_parameters = {

@@ -54,7 +54,7 @@ if __name__ == "__main__":
         "modes": ["QUBIT", "RR"],
         "reps": 20000,
         "wait_time": 100000,
-        "x_sweep": (int(16), int(10000 + 100 / 2), int(100)),
+        "x_sweep": (int(16), int(10000 + 200 / 2), int(200)),
         "qubit_op": "pi2",
         "detuning": int(0),
     }

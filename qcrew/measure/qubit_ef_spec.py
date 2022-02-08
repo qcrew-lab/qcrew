@@ -37,11 +37,11 @@ class QubitSpectroscopy(Experiment):
         """
         qubit, rr = self.modes  # get the modes
 
-        qubit.play("pi")  # g->e
+        qubit.play(self.qubit_pi_pulse_name)  # g->e
         qua.update_frequency(qubit.name, self.x)  # update to e->f (sweep variable)
         qubit.play(self.qubit_op)  # e->f
         qua.update_frequency(qubit.name, qubit.int_freq)  # update to g->e
-        qubit.play("pi")  # g->e
+        qubit.play(self.qubit_pi_pulse_name)  # g->e
         qua.align(qubit.name, rr.name)  # wait qubit pulse to end
         rr.measure((self.I, self.Q))  # measure transmitted signal
         qua.wait(int(self.wait_time // 4), rr.name)  # wait system reset

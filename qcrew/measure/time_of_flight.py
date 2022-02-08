@@ -5,7 +5,6 @@ from qcrew.control import Stagehand
 from qm import qua
 import numpy as np
 
-
 reps = 10000
 
 

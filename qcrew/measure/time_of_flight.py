@@ -5,7 +5,7 @@ from qcrew.control import Stagehand
 from qm import qua
 import numpy as np
 
-reps = 10000
+reps = 1000
 
 
 def get_qua_program(rr):
@@ -17,7 +17,7 @@ def get_qua_program(rr):
         with qua.for_(n, 0, n < reps, n + 1):
             qua.reset_phase(rr.name)
             qua.measure("readout_pulse" * qua.amp(1), rr.name, adc_stream)
-            qua.wait(20000, rr.name)
+            qua.wait(50000, rr.name)
 
         with qua.stream_processing():
             adc_stream.input1().average().save("adc_results")
@@ -31,7 +31,7 @@ if __name__ == "__main__":
     with Stagehand() as stage:
 
         rr = stage.RR
-        rr.readout_pulse(length=900, ampx=0.08, pad=0)
+        rr.readout_pulse(const_length=500, ampx=0.08, pad=500)
         rr.time_of_flight = 280
 
         # Execute script

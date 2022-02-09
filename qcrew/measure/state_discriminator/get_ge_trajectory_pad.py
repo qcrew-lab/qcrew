@@ -108,7 +108,7 @@ if __name__ == "__main__":
 
         qm = qmm.open_qm(config)
         # Execute script
-        job = qm.execute(get_qua_program(rr, qubit))
+        job = qm.execute(get_test_qua_program(rr, qubit))
 
         handle = job.result_handles
         handle.wait_for_all_values()

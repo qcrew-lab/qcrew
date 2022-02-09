@@ -21,7 +21,8 @@ pad = 900
 readout_pulse = "opt_readout_pulse"
 # NOTE: if the envelope has wired startind and ending, dc_offset need to be updated
 # Refer to dc_offset.py
-dc_offset = 0.01652087841796875
+dc_offset = 0.019733012451171875
+
 analog_input = 1
 out = "out1"
 

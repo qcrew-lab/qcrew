@@ -11,10 +11,10 @@ from qcrew.measure.state_discriminator.helpers.dc_offset_calibrator import (
 )
 from pathlib import Path
 
-reps = 2000
-wait_time = 100000
-readout_length = 1800
-pad = 900
+reps = 1
+wait_time = 50000
+readout_length = 900
+pad = 500
 readout_pulse = "readout_pulse"
 qubit_pi_pulse_name = "pi"
 # NOTE: if the envelope has wired startind and ending, dc_offset need to be updated
@@ -33,13 +33,9 @@ def get_qua_program(rr, qubit):
         with qua.for_(n, 0, n < reps, n + 1):
 
             # qua.update_frequency(rr.name, -50.01e6)
-
-            # qua.align(rr.name, qubit.name)
-            # qua.reset_phase(rr.name)
+            qua.reset_phase(rr.name)
             qua.measure(readout_pulse * qua.amp(1), rr.name, adcg)
             qua.wait(wait_time, rr.name)
-
-            # qua.update_frequency(rr.name, -50e6)
 
             # qua.reset_phase(rr.name)
             qua.align(rr.name, qubit.name)
@@ -68,7 +64,7 @@ if __name__ == "__main__":
 
         rr = stage.RR
         qubit = stage.QUBIT
-        rr.readout_pulse(const_length=readout_length, ampx=0.12, pad=pad)
+        rr.readout_pulse(const_length=readout_length, ampx=0.08, pad=pad)
 
         config = stage.QM.get_config()
         config = DCoffsetCalibrator.update_dc_offset(
@@ -108,14 +104,14 @@ if __name__ == "__main__":
             np.arange(0, (1 / g_pulse_len) * len(g_amps), 1 / g_pulse_len)[:] * 1e9
         )
 
-        # fig, axes = plt.subplots(2, 1)
-        # print("adc length:", len(adc_g_avg))
-        # axes[0].set_title("g state adc trace")
-        # axes[0].plot(adc_g_avg)
-        # axes[1].set_title("g state fft")
-        # axes[1].plot(g_freqs[5:] / 1e6, g_amps[5:])
-        # fig.tight_layout()
-        # plt.show()
+        fig, axes = plt.subplots(2, 1)
+        print("adc length:", len(adc_g_avg))
+        axes[0].set_title("g state adc trace")
+        axes[0].plot(adc_g_avg)
+        axes[1].set_title("g state fft")
+        axes[1].plot(g_freqs[5:] / 1e6, g_amps[5:])
+        fig.tight_layout()
+        plt.show()
 
         e_pulse_len = len(adc_e_avg)
         e_results_fft = (
@@ -126,14 +122,14 @@ if __name__ == "__main__":
             np.arange(0, (1 / e_pulse_len) * len(e_amps), 1 / e_pulse_len)[:] * 1e9
         )
 
-        # fig, axes = plt.subplots(2, 1)
-        # print("adc length:", len(adc_e_avg))
-        # axes[0].set_title("e state adc trace")
-        # axes[0].plot(adc_e_avg)
-        # axes[1].set_title("e state fft")
-        # axes[1].plot(e_freqs[5:] / 1e6, e_amps[5:])
-        # fig.tight_layout()
-        # plt.show()
+        fig, axes = plt.subplots(2, 1)
+        print("adc length:", len(adc_e_avg))
+        axes[0].set_title("e state adc trace")
+        axes[0].plot(adc_e_avg)
+        axes[1].set_title("e state fft")
+        axes[1].plot(e_freqs[5:] / 1e6, e_amps[5:])
+        fig.tight_layout()
+        plt.show()
         #######################################################################
 
         sd = StateDiscriminator(resonator=rr.name, config=config, time_diff=None)

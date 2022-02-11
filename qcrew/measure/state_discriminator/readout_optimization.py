@@ -8,7 +8,7 @@ from qcrew.measure.state_discriminator.helpers.discriminator import (
     histogram_plot,
     fidelity_plot,
 )
-from qcrew.measure.state_discriminator.helpers.dc_offset_calibrator import (
+from qcrew.measure.state_discriminator.helpers.calibrate_dc_offset import (
     DCoffsetCalibrator,
 )
 
@@ -82,14 +82,13 @@ if __name__ == "__main__":
         thres = rr.opt_readout_pulse.threshold
         state_seq = np.array([[i] * reps for i in range(num_of_states)]).flatten()
 
-        config = stage.QM.get_config()
-        config = DCoffsetCalibrator.update_dc_offset(
-            offset=dc_offset, config=config, qe=rr.name, analog_input=analog_input
+        # Calibrate DC offset
+        df_offset = DCoffsetCalibrator.calibrate(
+            stage._qmm, stage.QM.get_config(), rr.name, rr.ports["out"]
         )
+        rr.mixer_offsets = {"out": df_offset}
 
-        qmm = QuantumMachinesManager()
-        qm = qmm.open_qm(config)
-        job = qm.execute(get_qua_program(rr, qubit, thres))
+        job = stage.QM.execute(get_qua_program(rr, qubit, thres))
 
         handle = job.result_handles
         handle.wait_for_all_values()

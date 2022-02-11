@@ -48,10 +48,8 @@ class StateDiscriminator:
         # get data
         self.adc = adc
         self.ts = ts
-
-        if I is not None and Q is not None:
-            self.I = I
-            self.Q = Q
+        self.I = I
+        self.Q = Q
 
         ############################################
         # get parameters
@@ -72,8 +70,10 @@ class StateDiscriminator:
         # For the IR mixer, when we use exp(-j2pif(t-time_diff)), we get best discriminaiton in the axis of Q
         # rather than I axis. Thereby, we use exp(j2pif(t-time_diff)) to get the maximal discrimination in the I axis.
 
+        n_datapoints = adc.shape[1]
+        t_rel = np.linspace(0, n_datapoints - 1, n_datapoints)
         sig = adc * np.exp(
-            1j * 2 * np.pi * self.int_freq * 1e-9 * (ts - self.time_diff)
+            1j * 2 * np.pi * self.int_freq * 1e-9 * t_rel  # (ts)  # - self.time_diff)
         )
 
         ############################################
@@ -125,6 +125,7 @@ class StateDiscriminator:
 
         ############################################
         # Hann filter
+
         if use_hann_filter:
             period_ns = int(1 / np.abs(self.int_freq) * 1e9)
             hann = signal.hann(period_ns * 2, sym=True)
@@ -136,8 +137,11 @@ class StateDiscriminator:
                     for i in range(self.num_of_states)
                 ]
             )
+        else:
+            env = avg_trace
 
         self.envelopes = env
+
         return env
 
     def get_weights_threshold(self, envelope: np.ndarray) -> tuple:
@@ -146,10 +150,11 @@ class StateDiscriminator:
         # normalization and threshold
         norm = np.max(np.abs(envelope))
         envelope = envelope / norm
-
+        print(envelope.shape)
         bias = (
             (np.linalg.norm(envelope * norm, axis=1) ** 2) / norm / 2 * (2 ** -24) * 4
         )
+        print(bias)
         threshold = bias[0] - bias[1]
 
         ############################################
@@ -160,13 +165,14 @@ class StateDiscriminator:
                 np.average(np.reshape(envelope[i, :], (-1, 4)), axis=1)
             )
         raw_weights = np.array(squeezed_envelope)
+        print(raw_weights.shape)
 
         weights = {}
         # b_vec = -1 * (raw_weights[0, :] - raw_weights[1, :]).conj()
         b_vec = (raw_weights[0, :] - raw_weights[1, :]).conj()
         weights["I"] = np.array([np.real(b_vec).tolist(), (-np.imag(b_vec)).tolist()])
         weights["Q"] = np.array([np.imag(b_vec).tolist(), np.real(b_vec).tolist()])
-        print("did we run this part? ")
+        
         return weights, threshold
 
     @staticmethod

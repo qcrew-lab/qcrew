@@ -183,9 +183,11 @@ class Mode(Parametrized, Yamlizable):
         except TypeError:
             num_ampxs = 1
 
-        qua.frame_rotation_2pi(phase, self.name)
+        if phase:
+            qua.frame_rotation_2pi(phase, self.name)
         if num_ampxs == 1:
             qua.play(key * qua.amp(ampx), self.name, **kwargs)
         else:
             qua.play(key * qua.amp(*ampx), self.name, **kwargs)
-        qua.frame_rotation_2pi(-phase, self.name)
+        if phase:
+            qua.frame_rotation_2pi(-phase, self.name)

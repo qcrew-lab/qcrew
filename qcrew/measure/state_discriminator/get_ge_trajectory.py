@@ -11,15 +11,15 @@ from qcrew.measure.state_discriminator.helpers.dc_offset_calibrator import (
 )
 from pathlib import Path
 
-reps = 1
+reps = 10000
 wait_time = 50000
 readout_length = 900
-pad = 500
+pad = 200
 readout_pulse = "readout_pulse"
 qubit_pi_pulse_name = "pi"
-# NOTE: if the envelope has wired startind and ending, dc_offset need to be updated
+# NOTE: if the envelope has weired starting and ending, dc_offset need to be updated
 # Refer to dc_offset.py
-dc_offset = 0.01652087841796875
+dc_offset = 0.04934577099609375
 analog_input = 1
 path = Path("C:/Users/qcrew/Desktop/qcrew/qcrew/config") / "opt_readout_weights.npz"
 
@@ -33,12 +33,13 @@ def get_qua_program(rr, qubit):
         with qua.for_(n, 0, n < reps, n + 1):
 
             # qua.update_frequency(rr.name, -50.01e6)
-            qua.reset_phase(rr.name)
+            # qua.reset_phase(rr.name)
             qua.measure(readout_pulse * qua.amp(1), rr.name, adcg)
             qua.wait(wait_time, rr.name)
 
             # qua.reset_phase(rr.name)
             qua.align(rr.name, qubit.name)
+            # qua.play(qubit_pi_pulse_name, qubit.name)
             qubit.play(qubit_pi_pulse_name)
             qua.align(rr.name, qubit.name)
             qua.measure(readout_pulse * qua.amp(1), rr.name, adce)
@@ -137,7 +138,7 @@ if __name__ == "__main__":
         sd.plot(env[0], title="The envelope for g state")
         sd.plot(env[1], title="The envelope for e state")
 
-        weights, threshold = sd.get_weights_threshold(env)
+        weights, threshold, bias = sd.get_weights_threshold(env)
         rr.opt_readout_pulse(threshold=threshold)
 
         np.savez(path, **weights)

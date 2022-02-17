@@ -13,15 +13,13 @@ from qcrew.measure.state_discriminator.helpers.dc_offset_calibrator import (
 )
 
 num_of_states = 2
-reps = 1000
+reps = 5000
 
 wait_time = 100000
-readout_length = 1800
-pad = 900
-readout_pulse = "opt_readout_pulse"
+readout_pulse = "readout_pulse"
 # NOTE: if the envelope has wired startind and ending, dc_offset need to be updated
 # Refer to dc_offset.py
-dc_offset = 0.019733012451171875
+dc_offset = 0.04934577099609375
 
 analog_input = 1
 out = "out1"
@@ -79,7 +77,7 @@ if __name__ == "__main__":
 
         rr = stage.RR
         qubit = stage.QUBIT
-        rr.opt_readout_pulse(const_length=readout_length, ampx=0.12, pad=pad)
+        #rr.opt_readout_pulse(const_length=readout_length, ampx=0.12, pad=pad)
         thres = rr.opt_readout_pulse.threshold
         state_seq = np.array([[i] * reps for i in range(num_of_states)]).flatten()
 

@@ -75,13 +75,13 @@ class OptimizedIntegrationWeights(Parametrized, Yamlizable):
             return {
                 self.keys[0]: {
                     "cosine": self.weights["I"][0],
-                    # "sine": self.weights["Q"][1],
-                    "sine": np.zeros(len(self.weights["I"][0])),
+                    "sine": self.weights["Q"][0],
+                    # "sine": np.zeros(len(self.weights["I"][0])),
                 },
                 self.keys[1]: {
-                    # "cosine": self.weights["Q"][0],
-                    "cosine": np.zeros(len(self.weights["I"][0])),
-                    "sine": self.weights["Q"][0],
+                    "cosine": self.weights["I"][1],
+                    # "cosine": np.zeros(len(self.weights["I"][0])),
+                    "sine": self.weights["Q"][1],
                 },
             }
         else:

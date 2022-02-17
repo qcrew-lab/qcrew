@@ -71,7 +71,8 @@ class StateDiscriminator:
         # Q = -Q1 + I2
         # For the IR mixer, when we use exp(-j2pif(t-time_diff)), we get best discriminaiton in the axis of Q
         # rather than I axis. Thereby, we use exp(j2pif(t-time_diff)) to get the maximal discrimination in the I axis.
-
+        # ts = np.linspace(0, int(len(adc[0, :])) - 1, int(len(adc[0, :])))
+        # adc = adc + 227
         sig = adc * np.exp(
             1j * 2 * np.pi * self.int_freq * 1e-9 * (ts - self.time_diff)
         )
@@ -85,6 +86,7 @@ class StateDiscriminator:
                     for i in range(self.num_of_states)
                 ]
             )
+
         elif method == "gmm":
             if I is not None and Q is not None:
                 data = {"x": I, "y": Q}
@@ -144,30 +146,37 @@ class StateDiscriminator:
 
         ############################################
         # normalization and threshold
+        #### this is dodgy, we should look into it. 
         norm = np.max(np.abs(envelope))
-        envelope = envelope / norm
+        # bias = (
+        #     (np.linalg.norm(envelope * norm, axis=1) ** 2) / norm / 2 * (2 ** -24) * 4
+        # )
+        bias = (np.linalg.norm(envelope, axis=1) ** 2) / norm / 2 * (2 ** -24) * 4
 
-        bias = (
-            (np.linalg.norm(envelope * norm, axis=1) ** 2) / norm / 2 * (2 ** -24) * 4
-        )
         threshold = bias[0] - bias[1]
 
         ############################################
         # quantization
+        envelope = envelope / norm  # scale envelopes to be 0 to 1
         squeezed_envelope = []
         for i in range(envelope.shape[0]):
             squeezed_envelope.append(
-                np.average(np.reshape(envelope[i, :], (-1, 4)), axis=1)
+                np.average(np.reshape(envelope[i, :], (-1, 4)), axis=1)  #
             )
         raw_weights = np.array(squeezed_envelope)
 
         weights = {}
         # b_vec = -1 * (raw_weights[0, :] - raw_weights[1, :]).conj()
-        b_vec = (raw_weights[0, :] - raw_weights[1, :]).conj()
-        weights["I"] = np.array([np.real(b_vec).tolist(), (-np.imag(b_vec)).tolist()])
-        weights["Q"] = np.array([np.imag(b_vec).tolist(), np.real(b_vec).tolist()])
-        print("did we run this part? ")
-        return weights, threshold
+        b_vec = raw_weights[1, :] - raw_weights[0, :]
+        b_vec *= 1j
+        # raw_weights[1, :] - raw_weight[0, :] should be in accordance with the yale practice.
+        # np.real(b_vec).tolist()
+        weights["I"] = np.array(
+            [np.real(b_vec).tolist(), (-1 * np.imag(b_vec)).tolist()]
+        )
+        weights["Q"] = np.array([np.imag(b_vec).tolist(), (np.real(b_vec)).tolist()])
+
+        return weights, threshold, bias
 
     @staticmethod
     def plot(

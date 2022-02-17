@@ -37,11 +37,11 @@ class QubitSpectroscopy(Experiment):
         """
         qubit, rr = self.modes  # get the modes
 
-        qubit.play(self.qubit_pi_pulse_name)
-        qua.update_frequency(qubit.name, self.x)
-        qubit.play(self.qubit_op)  # play qubit pulse
-        qua.update_frequency(qubit.name, qubit.int_freq)
-        qubit.play(self.qubit_pi_pulse_name)
+        qubit.play(self.qubit_pi_pulse_name)  # g->e
+        qua.update_frequency(qubit.name, self.x)  # update to e->f (sweep variable)
+        qubit.play(self.qubit_op)  # e->f
+        qua.update_frequency(qubit.name, qubit.int_freq)  # update to g->e
+        qubit.play(self.qubit_pi_pulse_name)  # g->e
         qua.align(qubit.name, rr.name)  # wait qubit pulse to end
         rr.measure((self.I, self.Q))  # measure transmitted signal
         qua.wait(int(self.wait_time // 4), rr.name)  # wait system reset
@@ -53,13 +53,13 @@ class QubitSpectroscopy(Experiment):
 
 if __name__ == "__main__":
 
-    xstep = 1e6
+    xstep = 0.1e6
     parameters = {
         "modes": ["QUBIT", "RR"],
         "reps": 10000,
-        "wait_time": 40000,
-        "x_sweep": (int(-10e6), int(150e6 + xstep / 2), int(xstep)),
-        "qubit_op": "constant_pulse",
+        "wait_time": 100000,
+        "x_sweep": (int(-92e6), int(-84e6 + xstep / 2), int(xstep)),
+        "qubit_op": "gaussian_pulse",
         "qubit_pi_pulse_name": "pi",
     }
 

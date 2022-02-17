@@ -50,8 +50,8 @@ if __name__ == "__main__":
     parameters = {
         "modes": ["QUBIT", "RR"],
         "reps": 10000,
-        "wait_time": 40000,
-        "x_sweep": (int(-60e6), int(-40e6 + 0.05e6 / 2), int(0.05e6)),
+        "wait_time": 100000,
+        "x_sweep": (int(185e6), int(195e6 + 0.05e6 / 2), int(0.05e6)),
         "qubit_op": "pi",
     }
 

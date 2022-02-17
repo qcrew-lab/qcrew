@@ -5,7 +5,6 @@ from qcrew.control import Stagehand
 from qm import qua
 import numpy as np
 
-
 reps = 10000
 
 
@@ -32,8 +31,8 @@ if __name__ == "__main__":
     with Stagehand() as stage:
 
         rr = stage.RR
-        rr.readout_pulse(length=1200, ampx=0.06)
-        rr.time_of_flight = 28
+        rr.readout_pulse(length=900, ampx=0.08, pad=0)
+        rr.time_of_flight = 280
 
         # Execute script
         job = stage.QM.execute(get_qua_program(rr))  # play IF to mode

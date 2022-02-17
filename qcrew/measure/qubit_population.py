@@ -1,5 +1,5 @@
 """
-A python class describing a power rabi measurement with repeated qubit pulses using QM.
+A python class describing a ef power rabi measurement using QM.
 This class serves as a QUA script generator with user-defined parameters.
 """
 
@@ -9,24 +9,28 @@ from qcrew.control import professor as prof
 from qcrew.measure.experiment import Experiment
 from qm import qua
 
+
 # ---------------------------------- Class -------------------------------------
 
 
-class RepPowerRabi(Experiment):
+class QubitPopulation(Experiment):
 
-    name = "repeat_power_rabi"
+    name = "qubit_population"
 
     _parameters: ClassVar[set[str]] = Experiment._parameters | {
-        "qubit_op",  # operation used for exciting the qubit
+        "qubit_ge_pi",
+        "qubit_ef_pi",  # operation used for exciting the qubit
         "fit_fn",  # fit function
-        "pulse_number",  # number of times qubit pulse is repeated
     }
 
-    def __init__(self, qubit_op, pulse_number, fit_fn="sine", **other_params):
+    def __init__(
+        self, qubit_ge_pi, qubit_ef_pi, ef_int_freq, fit_fn="sine", **other_params
+    ):
 
-        self.qubit_op = qubit_op
+        self.qubit_ge_pi = qubit_ge_pi
         self.fit_fn = fit_fn
-        self.pulse_number = pulse_number
+        self.qubit_ef_pi = qubit_ef_pi
+        self.ef_int_freq = ef_int_freq
 
         super().__init__(**other_params)  # Passes other parameters to parent
 
@@ -36,8 +40,12 @@ class RepPowerRabi(Experiment):
         """
         qubit, rr = self.modes  # get the modes
 
-        for k in range(self.pulse_number):  # play qubit pulse multiple times
-            qubit.play(self.qubit_op, ampx=self.x)
+        qubit.play(self.qubit_ge_pi, ampx=self.y)
+        qua.update_frequency(qubit.name, self.ef_int_freq)
+        qubit.play(self.qubit_ef_pi, ampx=self.x)  # e-> f
+        qua.update_frequency(qubit.name, qubit.int_freq)
+        qubit.play(self.qubit_ge_pi)  # e-> f
+
         qua.align(qubit.name, rr.name)  # wait qubit pulse to end
         rr.measure((self.I, self.Q))  # measure qubit state
         qua.wait(int(self.wait_time // 4), rr.name)  # wait system reset
@@ -51,18 +59,20 @@ if __name__ == "__main__":
 
     parameters = {
         "modes": ["QUBIT", "RR"],
-        "reps": 30000,
-        "wait_time": 100000,
-        "x_sweep": (-0.5, 0.5 + 0.02 / 2, 0.02),
-        "qubit_op": "gaussian_pulse",
-        "pulse_number": 2,
+        "reps": 20000,
+        "wait_time": 120000,
+        "ef_int_freq": -87.8e6,
+        "qubit_ge_pi": "pi",
+        "qubit_ef_pi": "ef_pi",
+        "x_sweep": (-1.8, 1.8 + 0.1 / 2, 0.1),
+        "y_sweep": [0.0, 1.0],
     }
 
     plot_parameters = {
         "xlabel": "Qubit pulse amplitude scaling",
     }
 
-    experiment = RepPowerRabi(**parameters)
+    experiment = QubitPopulation(**parameters)
     experiment.setup_plot(**plot_parameters)
 
     prof.run(experiment)

@@ -182,10 +182,11 @@ class Mode(Parametrized, Yamlizable):
                 raise ValueError(f"Invalid ampx value count, expect 4, got {num_ampxs}")
         except TypeError:
             num_ampxs = 1
-
-        qua.frame_rotation_2pi(phase, self.name)
+        if phase != 0.0:
+            qua.frame_rotation_2pi(phase, self.name)
         if num_ampxs == 1:
             qua.play(key * qua.amp(ampx), self.name, **kwargs)
         else:
             qua.play(key * qua.amp(*ampx), self.name, **kwargs)
-        qua.frame_rotation_2pi(-phase, self.name)
+        if phase != 0.0:
+            qua.frame_rotation_2pi(-phase, self.name)

@@ -13,11 +13,13 @@ from vnasavedata import VNADataSaver
 class VNASweep:
     """ """
 
-    def __init__(self, vna, repetitions: int, powers: tuple) -> None:
+    def __init__(
+        self, vna, repetitions: int, powers: tuple, attenuation: tuple
+    ) -> None:
         """ """
         self.repetitions = repetitions
         self.vna = vna
-
+        self.port1_attenuation, self.port2_attenuation = attenuation
         if self.vna.is_averaging:
             self.vna.sweep_repetitions = repetitions
 
@@ -43,7 +45,7 @@ class VNASweep:
                     start, stop, step = powerspec
                     powerlist.append(np.arange(start, stop + step / 2, step))
                 elif isinstance(powerspec, set):
-                    powerlist.append(powerspec)
+                    powerlist.append(sorted(powerspec))
             self.powers = list(itertools.product(*powerlist))
             logger.info(f"Found {len(self.powers)} input power combinations specified")
             datashape = (self.repetitions, len(self.powers), vna.sweep_points)
@@ -75,7 +77,9 @@ class VNASweep:
         """ """
         # save power data since its already available
         powers = np.array(tuple(self.powers)).T
-        saver.save_data({"power1": powers[0], "power2": powers[1]})
+        port1_powers = powers[0] - self.port1_attenuation
+        port2_powers = powers[1] - self.port2_attenuation
+        saver.save_data({"power": port1_powers, "power2": port2_powers})
 
         # for each power tuple in self.powers, do fsweep, for n reps
         for power_count, (p1, p2) in enumerate(self.powers):  # p1, p2 = port powers
@@ -103,9 +107,9 @@ if __name__ == "__main__":
             # frequency sweep span (Hz)
             "fspan": 4e6,
             # frequency sweep start value (Hz)
-            #"fstart": 4e9,
+            # "fstart": 4e9,
             # frequency sweep stop value (Hz)
-            #"fstop": 8e9,
+            # "fstop": 8e9,
             # IF bandwidth (Hz), [1, 500000]
             "bandwidth": 1e2,
             # number of frequency sweep points, [2, 200001]
@@ -140,6 +144,9 @@ if __name__ == "__main__":
             # eg 2: powers = ({-15, 0, 15}, {-5, 0}) will result in sweep points (-15, -5), (-15, 0), (0, -5), (0, 0), (15, -5), (15, 0)
             # eg 3: powers = (0, 0) will set both port powers to 0, no power sweep happens
             "powers": ({0, -10, -20, -30}, 0),
+            # total physical attenuation added to VNA ports, if any
+            # (port_1_attenuation, port_2_attenuation) in dB
+            "attenuation": (40.0, 0),
         }
 
         # create measurement instance with instruments and measurement_parameters
@@ -149,13 +156,14 @@ if __name__ == "__main__":
         # hdf5 file saved at:
         # {datapath} / {YYYYMMDD} / {HHMMSS}_{measurementname}_{usersuffix}.hdf5
         save_parameters = {
-            "datapath": pathlib.Path(stage.datapath) /"coaxmux",
+            "datapath": pathlib.Path(stage.datapath) / "coaxmux",
             "usersuffix": "",
             "measurementname": measurement.__class__.__name__.lower(),
             **measurement.dataspec,
         }
 
-        # run measurement and save data
+        # run measurement and save data for multiple fcenters at once
+        # a datafile will be created for each fcenter
         fcenters = [4.29829e9, 5.20155e9, 5.645545e9]
         fspans = [4e6, 4e6, 10e6]
         for idx, fcenter in enumerate(fcenters):
@@ -163,7 +171,7 @@ if __name__ == "__main__":
             vna.fspan = fspans[idx]
             vna_parameters["fcenter"] = fcenter
             vna_parameters["fspan"] = fspans[idx]
-            save_parameters["usersuffix"] = f"lp{fcenter:.3E}"
+            save_parameters["usersuffix"] = f"{fcenter:.2}GHz"
             with VNADataSaver(**save_parameters) as vnadatasaver:
                 vnadatasaver.save_metadata({**vna_parameters, **measurement_parameters})
                 measurement.run(saver=vnadatasaver)

@@ -174,6 +174,9 @@ class Plotter:
             )
             self.plot_line(x, fit_z, self.ax, label="fit", color=color)
 
+        if self.plot_setup["zlimits"]:
+            self.ax.set_ylim(self.plot_setup["zlimits"])
+
     def plot_errorbar(self, x, z, axis, zerr, label, color="b"):
         axis.errorbar(
             x,

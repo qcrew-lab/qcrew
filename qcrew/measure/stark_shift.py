@@ -1,5 +1,5 @@
 """
-A python class describing a T2 measurement using QM.
+A python class describing a qubit spectroscopy using QM.
 This class serves as a QUA script generator with user-defined parameters.
 """
 
@@ -12,21 +12,21 @@ from qm import qua
 # ---------------------------------- Class -------------------------------------
 
 
-class T2(Experiment):
+class StarkShift(Experiment):
 
-    name = "T2"
+    name = "stark_shift"
 
     _parameters: ClassVar[set[str]] = Experiment._parameters | {
         "qubit_op",  # operation used for exciting the qubit
-        "fit_fn",  # fit function
-        "detuning",  # qubit pulse detuning
+        "fit_fn",
+        "qubit_drive_op",# fit function
     }
 
-    def __init__(self, qubit_op, detuning=0, fit_fn="exp_decay_sine", **other_params):
+    def __init__(self, qubit_op, qubit_drive_op, fit_fn="lorentzian", **other_params):
 
-        self.qubit_op = qubit_op  # half pi pulse
+        self.qubit_op = qubit_op
+        self.qubit_drive_detuned = qubit_drive_op
         self.fit_fn = fit_fn
-        self.detuning = detuning  # frequency detuning of qubit operation
 
         super().__init__(**other_params)  # Passes other parameters to parent
 
@@ -34,13 +34,13 @@ class T2(Experiment):
         """
         Defines pulse sequence to be played inside the experiment loop
         """
-        qubit, rr = self.modes  # get the modes
-        qua.update_frequency(qubit.name, qubit.int_freq + self.detuning)  # detune
-        qubit.play(self.qubit_op)  # play half pi qubit pulse
-        qua.wait(self.x, qubit.name)  # wait for partial qubit decay
-        qubit.play(self.qubit_op)  # play half pi qubit pulse
-        qua.align(qubit.name, rr.name)  # wait last qubit pulse to end
-        rr.measure((self.I, self.Q))  # measure qubit state
+        qubit, rr, qu_drive = self.modes  # get the modes
+        
+        qu_drive.play(self.qubit_drive_op, ampx=self.y) # play a detuned tone to the qubit to shift the frequency,
+        qua.update_frequency(qubit.name, self.x)  # update resonator pulse frequency
+        qubit.play(self.qubit_op)  # play qubit pulse
+        qua.align(qubit.name, rr.name)  # wait qubit pulse to end
+        rr.measure((self.I, self.Q))  # measure transmitted signal
         qua.wait(int(self.wait_time // 4), rr.name)  # wait system reset
 
         self.QUA_stream_results()  # stream variables (I, Q, x, etc)
@@ -53,17 +53,18 @@ if __name__ == "__main__":
     parameters = {
         "modes": ["QUBIT", "RR"],
         "reps": 50000,
-        "wait_time": 500000,
-        "x_sweep": (int(16), int(15000 + 300 / 2), int(300)),
-        "qubit_op": "pi2",
-        "detuning": int(-230.0E3),
+        "wait_time": 20000,
+        "x_sweep": (int(-60e6), int(-40e6), int(0.5e6)),
+        "y_sweep": (-1.8, 1.8, 0.1),
+        "qubit_op": "constant_pulse",
+        "qubit_drive_op": "constant_pulse"
     }
 
     plot_parameters = {
-        "xlabel": "Relaxation time (clock cycles)",
+        "xlabel": "Qubit pulse frequency (Hz)", 
     }
 
-    experiment = T2(**parameters)
+    experiment = StarkShift(**parameters)
     experiment.setup_plot(**plot_parameters)
 
     prof.run(experiment)

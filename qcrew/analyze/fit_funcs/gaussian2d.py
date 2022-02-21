@@ -14,7 +14,7 @@ def guess(xs, ys, zs):
 
     xspan = xs[0, -1] - xs[0, 0]
     yspan = ys[-1, 0] - ys[0, 0]
-    print("xspan, ", xspan)
+
     sigmax = xspan / 5
     sigmay = yspan / 5
 

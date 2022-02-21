@@ -12,8 +12,8 @@ def guess(xs, ys, zs):
     maxidxy = np.argmax(np.abs(zs).sum(axis=1))
     maxidxx = np.argmax(np.abs(zs).sum(axis=0))
 
-    xspan = xs[0, -1] - xs[0, 0]
-    yspan = ys[-1, 0] - ys[0, 0]
+    xspan = xs[-1, 0] - xs[0, 0]
+    yspan = ys[0, -1] - ys[0, 0]
 
     sigmax = xspan / 5
     sigmay = yspan / 5

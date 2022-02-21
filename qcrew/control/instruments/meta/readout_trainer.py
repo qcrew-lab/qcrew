@@ -19,13 +19,6 @@ ADC_TO_VOLTS = 2 ** -12
 class ReadoutTrainer:
     """ """
 
-    simplex: np.ndarray = np.array([[0.0, 0.0], [0.0, 0.1], [0.1, 0.0]])
-    threshold: float = 2.0  # in dBm
-    maxiter: int = 100
-    span: float = 2e6
-    rbw: float = 50e3
-    ref_power: float = 0.0
-
     def __init__(self, rr: qcm.Mode, qubit: qcm.Mode, qm: QuantumMachine, params: dict):
         """ """
         self._rr: qcm.Mode = rr
@@ -40,18 +33,38 @@ class ReadoutTrainer:
         Obtain integration weights of rr given the excited and ground states of qubit and update rr mode.
         """
 
+        # Start with constant integration weights. Not necessary, really
+        self._reset_weights()
+
         trace_g_list, timestamps_g = self._acquire_traces(excite_qubit=False)
         env_g = self._calc_average_envelope(ADC_TO_VOLTS * trace_g_list, timestamps_g)
 
         trace_e_list, timestamps_e = self._acquire_traces(excite_qubit=True)
         env_e = self._calc_average_envelope(ADC_TO_VOLTS * trace_e_list, timestamps_e)
 
-        weights = env_g - env_e
-        squeezed_weights = self._squeeze_weights(weights)  # convert to useful shape
+        # Get discrimination threshold
+        threshold = self._get_threshold(env_g, env_e)
 
-        self._update_weights(squeezed_weights)
+        # Get difference between envelopes and normalize
+        envelope_diff = env_g - env_e
 
-        return env_g, env_e, weights, squeezed_weights
+        # Normalize and squeeze envelope_diff by 1/4th
+        norm = np.max(np.abs(envelope_diff))
+        norm_envelope_diff = envelope_diff / norm
+        squeezed_diff = self._squeeze_array(norm_envelope_diff)  # convert shape
+
+        self._update_weights(squeezed_diff, threshold)
+
+        return env_g, env_e
+
+    def _reset_weights(self):
+        """
+        Start the pulse with constant integration weights
+        """
+        integration_weights = qcp.OptimizedIntegrationWeights(
+            length=int(self._rr.readout_pulse.length / 4)
+        )
+        self._rr.readout_pulse.integration_weights = integration_weights
 
     def _acquire_traces(self, excite_qubit: bool = False) -> tuple[list]:
         """
@@ -107,7 +120,7 @@ class ReadoutTrainer:
         int_freq = np.abs(self._rr.int_freq)
 
         # demodulate
-        s = trace_list * np.exp(1j * 2 * np.pi * int_freq * 1e-9 * timestamps)
+        s = trace_list * np.exp(1j * 2 * np.pi * int_freq * 1e-9 * (timestamps - 36))
 
         # filter 2*omega_IF using hann filter
         hann = signal.hann(int(2 * 1e9 / int_freq), sym=True)
@@ -122,25 +135,42 @@ class ReadoutTrainer:
 
         return avg_env
 
-    def _squeeze_weights(self, weights):
+    def _squeeze_array(self, s):
         """
-        Split the weights in bins of 4 values and average them. QM requires the weights to have 1/4th of the length of the readout pulse.
+        Split the array in bins of 4 values and average them. QM requires the weights to have 1/4th of the length of the readout pulse.
         """
-        return np.average(np.reshape(weights, (-1, 4)), axis=1)
+        return np.average(np.reshape(s, (-1, 4)), axis=1)
 
-    def _update_weights(self, weights):
+    def _update_weights(self, squeezed_diff, threshold):
+
+        # Update the threshold
+        self._rr.readout_pulse(threshold=threshold)
+
+        weights = {}
+        weights["I"] = np.array(
+            [np.real(squeezed_diff).tolist(), (np.imag(squeezed_diff)).tolist()]
+        )
+        weights["Q"] = np.array(
+            [np.imag(-squeezed_diff).tolist(), np.real(squeezed_diff).tolist()]
+        )
 
         path = self.params["weights_file_path"]
-        # Save weights to npz file
-        np.savez(path, weights)
-        # self._rr.opt_readout_pulse(threshold=threshold)
-        # self._rr.readout_pulse.integration_weights(path=path)
-        # integration_weights = qcp.OptimizedIntegrationWeights(len(weights), path)
 
-        # integration_weights = qcp.ConstantIntegrationWeights()
-        # readout_pulse = qcp.ReadoutPulse(
-        #    length=int(10000),
-        #    const_length=int(10000),
-        #    ampx=0,
-        #    integration_weights=integration_weights,
-        # )
+        # Save weights to npz file
+        np.savez(path, **weights)
+
+        # Update the readout pulse with the npz file path
+        self._rr.readout_pulse.integration_weights(path=path)
+
+    def _get_threshold(self, env_g, env_e):
+
+        norm = np.max(np.abs(np.concatenate((env_g, env_e))))
+
+        # The square of Frobenius norm of the raw weights
+        bias_g = (np.linalg.norm(env_g) ** 2) / 2 * 4
+        bias_e = (np.linalg.norm(env_e) ** 2) / 2 * 4
+
+        threshold = bias_e - bias_g
+        print(threshold)
+
+        return threshold

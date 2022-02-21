@@ -54,8 +54,12 @@ class Experiment(Parametrized):
             "n": macros.ExpVariable(var_type=int, sweep=self.sweep_config["n"]),
             "x": macros.ExpVariable(average=False, save_all=False),
             "y": macros.ExpVariable(average=False, save_all=False),
-            "I": macros.ExpVariable(tag="I", var_type=qua.fixed, buffer=True),
-            "Q": macros.ExpVariable(tag="Q", var_type=qua.fixed, buffer=True),
+            "I": macros.ExpVariable(
+                average=False, tag="I", var_type=qua.fixed, buffer=True
+            ),
+            "Q": macros.ExpVariable(
+                average=False, tag="Q", var_type=qua.fixed, buffer=True
+            ),
         }
 
         # Extra memory tags for saving server-side stream operation results
@@ -260,6 +264,7 @@ class Experiment(Parametrized):
             # Take the square root of dependent variables. This step is required for
             # dependent values calculated as I^2 + Q^2 in stream processing.
             # Reshape the fetched data with buffer lengths
+
             reshaped_data = np.sqrt(partial_results[tag]).reshape(self.buffering)
             dependent_data.append(reshaped_data)
 
@@ -267,6 +272,15 @@ class Experiment(Parametrized):
         for tag in indep_tags:
             reshaped_data = partial_results[tag].reshape(self.buffering)
             independent_data.append(reshaped_data)
+
+        # Phase information useful for troubleshooting and rr spectroscopy
+        # freqs = independent_data[0]
+        # phase = (
+        #    np.arctan(partial_results["Q"] / partial_results["I"])
+        #    - 0 * 2 * np.pi * freqs * 31e-9 * 8
+        # )
+        # reshaped_phase_data = np.average(phase, axis=0).reshape(self.buffering)
+        # dependent_data.append(reshaped_phase_data)
 
         # if an internal sweep is defined in the child experiment class, add its value
         # as independent variable data. The values are repeated so the dimensions match

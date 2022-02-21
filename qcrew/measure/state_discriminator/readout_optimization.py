@@ -1,6 +1,5 @@
 """ get ge state trajectory v5 """
 
-from qm.QuantumMachinesManager import QuantumMachinesManager
 from qcrew.control import Stagehand
 from qm import qua
 import numpy as np
@@ -8,20 +7,12 @@ from qcrew.measure.state_discriminator.helpers.discriminator import (
     histogram_plot,
     fidelity_plot,
 )
-from qcrew.measure.state_discriminator.helpers.calibrate_dc_offset import (
-    DCoffsetCalibrator,
-)
 
 num_of_states = 2
-reps = 1000
+reps = 5000
 
-wait_time = 100000
-readout_length = 1800
-pad = 900
-readout_pulse = "opt_readout_pulse"
-# NOTE: if the envelope has wired startind and ending, dc_offset need to be updated
-# Refer to dc_offset.py
-dc_offset = 0.01652087841796875
+wait_time = 300000
+readout_pulse = "readout_pulse"
 analog_input = 1
 out = "out1"
 
@@ -37,15 +28,10 @@ def get_qua_program(rr, qubit, threshold):
         n = qua.declare(int)
 
         with qua.for_(n, 0, n < reps, n + 1):
-            qua.update_frequency(rr.name, int(-50e6))
             qua.align(rr.name, qubit.name)
-            qua.measure(
-                readout_pulse * qua.amp(1),
-                rr.name,
-                None,
-                qua.demod.full("iw_q", Ig, out),
-                qua.demod.full("iw_i", Qg, out),
-            )
+
+            rr.measure((Ig, Qg))
+
             qua.assign(resg, Ig > threshold)
             qua.save(resg, "resg")
             qua.save(Ig, "Ig")
@@ -53,15 +39,10 @@ def get_qua_program(rr, qubit, threshold):
             qua.wait(wait_time, rr.name)
 
             qua.align(rr.name, qubit.name)
-            qua.play("pi" * qua.amp(1), qubit.name)
+            qua.play("pi", qubit.name)
             qua.align(rr.name, qubit.name)
-            qua.measure(
-                readout_pulse * qua.amp(1),
-                rr.name,
-                None,
-                qua.demod.full("iw_q", Ie, out),
-                qua.demod.full("iw_i", Qe, out),
-            )
+
+            rr.measure((Ie, Qe))
 
             qua.assign(rese, Ie > threshold)
             qua.save(rese, "rese")
@@ -78,17 +59,10 @@ if __name__ == "__main__":
 
         rr = stage.RR
         qubit = stage.QUBIT
-        rr.opt_readout_pulse(const_length=readout_length, ampx=0.12, pad=pad)
-        thres = rr.opt_readout_pulse.threshold
+
         state_seq = np.array([[i] * reps for i in range(num_of_states)]).flatten()
 
-        # Calibrate DC offset
-        df_offset = DCoffsetCalibrator.calibrate(
-            stage._qmm, stage.QM.get_config(), rr.name, rr.ports["out"]
-        )
-        rr.mixer_offsets = {"out": df_offset}
-
-        job = stage.QM.execute(get_qua_program(rr, qubit, thres))
+        job = stage.QM.execute(get_qua_program(rr, qubit, 0))
 
         handle = job.result_handles
         handle.wait_for_all_values()
@@ -105,11 +79,30 @@ if __name__ == "__main__":
         statee_res = handle.get("rese").fetch_all()["value"]
         state = np.concatenate((stateg_res, statee_res), axis=0)
 
+        from qcrew.analyze import fit
+        import matplotlib.pyplot as plt
+
+        fit_fn = "gaussian2d"
+
+        hist_data_g = plt.hist2d(Ig_res, Qg_res, bins=1000)
+        plt.show()
+        # get fit parameters
+        params = fit.do_fit(fit_fn, Ig_res, Qg_res, hist_data_g)
+        fit_zs = fit.eval_fit(fit_fn, params, Ig_res, Qg_res)
+
+        # convert param values into formated string
+        param_val_list = [
+            key + " = {:.3e}".format(val.value) for key, val in params.items()
+        ]
+        # Join list in a single block of text
+        fit_text = "\n".join(param_val_list)
+
+        # return fit_text, fit_ys
+
         histogram_plot(
             I_res,
             Q_res,
             state_seq=state_seq,
             num_of_states=num_of_states,
-            threshold=thres,
+            threshold=5e-5,
         )
-        # fidelity_plot(res=state, state_seq=state_seq)

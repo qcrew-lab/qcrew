@@ -58,12 +58,11 @@ if __name__ == "__main__":
 
     parameters = {
         "modes": ["QUBIT", "RR"],
-        "reps": 20000,
+        "reps": 10000,
         "wait_time": 100000,
-        "x_sweep": (int(16), int(10000 + 200 / 2), int(200)),
+        "x_sweep": (int(16), int(100000 + 2500 / 2), int(2500)),
         "qubit_pi2": "pi2",
         "qubit_pi": "pi",
-        "detuning": int(0),
     }
 
     plot_parameters = {

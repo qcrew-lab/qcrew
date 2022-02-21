@@ -21,8 +21,8 @@ import time
 if __name__ == "__main__":
 
     with Stagehand() as stage:
-        rr, sa, qubit = stage.RR, stage.SA, stage.QUBIT
-        mode = rr  # select the mode whose spectrum you want to sweep
+        rr, sa, qubit, qubit_drive = stage.RR, stage.SA, stage.QUBIT, stage.QUBIT_DRIVE
+        mode = qubit  # select the mode whose spectrum you want to sweep
 
         job = stage.QM.execute(get_qua_program())  # play IF to mode
         sweep_parameters = {  # set sweep parameters

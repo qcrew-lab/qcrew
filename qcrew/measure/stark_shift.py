@@ -18,14 +18,14 @@ class StarkShift(Experiment):
 
     _parameters: ClassVar[set[str]] = Experiment._parameters | {
         "qubit_op",  # operation used for exciting the qubit
-        "fit_fn",
-        "qubit_drive_op",# fit function
+        "qubit_drive_op", # operation used to play a detuned qubit pulse to shift qubit freq
+        "fit_fn", # fit function
     }
 
-    def __init__(self, qubit_op, qubit_drive_op, fit_fn="lorentzian", **other_params):
+    def __init__(self, qubit_op, qubit_drive_op, fit_fn=None, **other_params):
 
         self.qubit_op = qubit_op
-        self.qubit_drive_detuned = qubit_drive_op
+        self.qubit_drive_op = qubit_drive_op
         self.fit_fn = fit_fn
 
         super().__init__(**other_params)  # Passes other parameters to parent
@@ -36,10 +36,11 @@ class StarkShift(Experiment):
         """
         qubit, rr, qu_drive = self.modes  # get the modes
         
-        qu_drive.play(self.qubit_drive_op, ampx=self.y) # play a detuned tone to the qubit to shift the frequency,
+        
         qua.update_frequency(qubit.name, self.x)  # update resonator pulse frequency
         qubit.play(self.qubit_op)  # play qubit pulse
-        qua.align(qubit.name, rr.name)  # wait qubit pulse to end
+        qu_drive.play(self.qubit_drive_op, ampx=self.y)
+        qua.align(qubit.name, qu_drive.name, rr.name, )  # wait qubit pulse to end
         rr.measure((self.I, self.Q))  # measure transmitted signal
         qua.wait(int(self.wait_time // 4), rr.name)  # wait system reset
 
@@ -51,12 +52,12 @@ class StarkShift(Experiment):
 if __name__ == "__main__":
 
     parameters = {
-        "modes": ["QUBIT", "RR"],
+        "modes": ["QUBIT", "RR", "QUBIT_DRIVE"],
         "reps": 50000,
-        "wait_time": 20000,
-        "x_sweep": (int(-60e6), int(-40e6), int(0.5e6)),
-        "y_sweep": (-1.8, 1.8, 0.1),
-        "qubit_op": "constant_pulse",
+        "wait_time":200000,
+        "x_sweep": (int(-60e6), int(-46e6), int(0.25e6)),
+        "y_sweep": [0, 0.2],
+        "qubit_op": "pi",
         "qubit_drive_op": "constant_pulse"
     }
 

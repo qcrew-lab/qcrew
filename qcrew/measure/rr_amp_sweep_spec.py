@@ -45,16 +45,16 @@ if __name__ == "__main__":
 
     parameters = {
         "modes": ["RR", "QUBIT"],
-        "reps": 500,
-        "wait_time": 400000,
-        "x_sweep": (int(-56e6), int(-48e6 + 0.1e6 / 2), int(0.1e6)),
-        "y_sweep": (0.01, 2 + 0.03 / 2, 0.03),
-        "fetch_period": 15,
+        "reps": 10000,
+        "wait_time": 10000,
+        "x_sweep": (int(-56e6), int(-48e6 + 0.2e6 / 2), int(0.2e6)),
+        "y_sweep": [0.2, 0.25, 0.3, 0.35],
+        "fetch_period": 1,
     }
     plot_parameters = {
         "xlabel": "Resonator pulse frequency (Hz)",
         "ylabel": "Resonator pulse amplitude scaling",
-        "plot_type": "2D",
+        # "plot_type": "2D",
         "cmap": "terrain",
         
     }

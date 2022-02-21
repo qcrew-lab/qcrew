@@ -48,15 +48,15 @@ class QubitSpectroscopy(Experiment):
 if __name__ == "__main__":
 
     parameters = {
-        "modes": ["QUBIT", "RR"],
+        "modes": ["QUBIT", "RR",],
         "reps": 50000,
-        "wait_time": 20000,
-        "x_sweep": (int(-60e6), int(-40e6), int(0.5e6)),
-        "qubit_op": "constant_pulse",
+        "wait_time": 200000,
+        "x_sweep": (int(-58e6), int(-46e6), int(0.1e6)),
+        "qubit_op": "pi",
     }
 
     plot_parameters = {
-        "xlabel": "Qubit pulse frequency (Hz)", 
+        "xlabel": "Qubit pulse frequency (Hz)",
     }
 
     experiment = QubitSpectroscopy(**parameters)

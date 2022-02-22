@@ -131,6 +131,7 @@ class Experiment(Parametrized):
         err=True,
         cmap="viridis",
         zlimits=None,
+        zlog=False,
     ):
         """
         Updates self.plot_setup dictionary with the parameters to be used by the
@@ -155,7 +156,7 @@ class Experiment(Parametrized):
         if not zlabel:
             zlabel = "<Z>" if self.single_shot else "Signal (a.u.)"
         if not zlimits:
-            zlimits = (-0.05, 1.05) if self.single_shot else None
+            zlimits = (-0.05, 1.05) if self.single_shot and not zlog else None
 
         self.plot_setup = {
             "xlabel": xlabel,
@@ -167,6 +168,7 @@ class Experiment(Parametrized):
             "plot_err": err,
             "cmap": cmap,
             "zlimits": zlimits,
+            "zlog": zlog,
         }
 
         return
@@ -324,8 +326,17 @@ class Experiment(Parametrized):
             internal_sweep_dict = {}
             pass
 
-        # Retrieve and reshape standard error estimation
-        error_data = stderr[0].reshape(self.buffering)
+        # Estimate standard error
+        if self.single_shot:
+            # Variance of the binomial variable assuming our estimate for probabilities
+            # are accurate.
+            error_data = np.sqrt(
+                dependent_data[0] * (1 - dependent_data[0]) / num_results
+            )
+
+        else:
+            # Retrieve and reshape standard error estimation
+            error_data = stderr[0].reshape(self.buffering)
 
         plotter.live_plot(
             independent_data,

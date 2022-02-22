@@ -10,6 +10,6 @@ The time_diff_calc script calculates the time offset that is hardcoded on the Re
 To reset to constant integration weights, use the following script in setup_modes.py:
 
 integration_weights = qcp.OptimizedIntegrationWeights(
-    length=int(self._rr.readout_pulse.length / 4)
+    length=int(rr.readout_pulse.length / 4)
 )
 rr.readout_pulse.integration_weights = integration_weights

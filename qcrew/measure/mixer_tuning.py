@@ -17,5 +17,5 @@ if __name__ == "__main__":
         # get an already configured qm after making changes to modes
         qm = stage.QM
 
-        mxrtnr = MixerTuner(qubit_drive, sa=sa, qm=qm)
+        mxrtnr = MixerTuner(qubit, sa=sa, qm=qm)
         mxrtnr.tune()

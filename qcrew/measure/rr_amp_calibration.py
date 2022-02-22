@@ -1,5 +1,5 @@
 """
-A python class describing a readout resonator spectroscopy using QM.
+A python class describing a readout pulse amplitude calibration using QM.
 This class serves as a QUA script generator with user-defined parameters.
 """
 
@@ -12,16 +12,18 @@ from qm import qua
 # ---------------------------------- Class -------------------------------------
 
 
-class RRAmpSpectroscopy(Experiment):
+class RRAmpCalibration(Experiment):
 
-    name = "rr_amp_sweep_spec"
+    name = "rr_amp_calibration"
 
     _parameters: ClassVar[set[str]] = Experiment._parameters | {
         "fit_fn",  # fit function
+        "qubit_pi_pulse",  # well
     }
 
-    def __init__(self, fit_fn=None, **other_params):
+    def __init__(self, qubit_pi_pulse, fit_fn=None, **other_params):
 
+        self.qubit_pi_pulse = qubit_pi_pulse
         self.fit_fn = fit_fn
 
         super().__init__(**other_params)  # Passes other parameters to parent
@@ -32,8 +34,9 @@ class RRAmpSpectroscopy(Experiment):
         """
         rr, qubit = self.modes  # get the modes
 
-        qua.update_frequency(rr.name, self.x)  # update resonator pulse frequency
-        rr.measure((self.I, self.Q), ampx=self.y)  # measure transmitted signal
+        qubit.play(self.qubit_pi_pulse, ampx=self.y)
+        qua.align(qubit.name, rr.name)
+        rr.measure((self.I, self.Q), ampx=self.x)  # measure transmitted signal
         qua.wait(int(self.wait_time // 4), rr.name)  # wait system reset
 
         self.QUA_stream_results()  # stream variables (I, Q, x, etc)
@@ -45,20 +48,17 @@ if __name__ == "__main__":
 
     parameters = {
         "modes": ["RR", "QUBIT"],
-        "reps": 100000,
-        "wait_time": 10000,
-        "x_sweep": (int(-56e6), int(-47e6 + 0.1e6 / 2), int(0.1e6)),
-        "y_sweep": (0.1, 1, 0.05),
-        "fetch_period": 1,
+        "reps": 10000,
+        "wait_time": 500000,
+        "qubit_pi_pulse": "pi",
+        "x_sweep": (1.2, 1.8 + 0.05 / 2, 0.05),
+        "y_sweep": (0.0, 1.0),
     }
     plot_parameters = {
-        "xlabel": "Resonator pulse frequency (Hz)",
-        "ylabel": "Resonator pulse amplitude scaling",
-         "plot_type": "2D",
-        "cmap": "terrain",
-        #"log": True
+        "xlabel": "Resonator pulse amplitude scaling",
+        "ylabel": "Qubit state",
     }
 
-    experiment = RRAmpSpectroscopy(**parameters)
+    experiment = RRAmpCalibration(**parameters)
     experiment.setup_plot(**plot_parameters)
     prof.run(experiment)

@@ -31,8 +31,8 @@ if __name__ == "__main__":
     with Stagehand() as stage:
 
         rr = stage.RR
-        rr.readout_pulse(length=800, ampx=1.5, pad = 0)
-        rr.time_of_flight = 424
+        rr.readout_pulse(length=1200, ampx=1, pad=200)
+        rr.time_of_flight = 324
         # Execute script
         job = stage.QM.execute(get_qua_program(rr))  # play IF to mode
 

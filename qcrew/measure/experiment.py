@@ -111,6 +111,7 @@ class Experiment(Parametrized):
         plot_type="1D",
         err=True,
         cmap="viridis",
+        log=None,
     ):
         """
         Updates self.plot_setup dictionary with the parameters to be used by the
@@ -142,6 +143,7 @@ class Experiment(Parametrized):
             "plot_type": plot_type,
             "plot_err": err,
             "cmap": cmap,
+            "log": log,
         }
 
         return

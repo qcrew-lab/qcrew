@@ -1,6 +1,7 @@
 """ Qcrew plotter v1.0 """
 
 import matplotlib.pyplot as plt
+import matplotlib.colors as colors
 from qcrew.helpers import logger
 from IPython import display
 from qcrew.analyze import fit
@@ -46,7 +47,6 @@ class Plotter:
         plt.rcParams["legend.fontsize"] = 12
 
         self.fig = plt.figure()
-        # self.ax = self.fig.add_subplot(1, 1, 1)
         self.hdisplay = display.display(self.fig, display_id=True)
 
     def fit(self, xs, ys, fit_fn) -> tuple:
@@ -158,9 +158,29 @@ class Plotter:
 
         # cbar = self.fig.colorbar(im, use_gridspec=True)
 
+        if self.plot_setup["zlog"]:
+            if self.plot_setup["zlimits"]:
+                vmin = self.plot_setup["zlimits"][0]
+                vmax = self.plot_setup["zlimits"][1]
+                norm = colors.LogNorm(vmin=vmin, vmax=vmax)
+            else:
+                norm = colors.LogNorm(vmin=z.min(), vmax=z.max())
+        else:
+            if self.plot_setup["zlimits"]:
+                vmin = self.plot_setup["zlimits"][0]
+                vmax = self.plot_setup["zlimits"][1]
+                norm = colors.Normalize(vmin=vmin, vmax=vmax)
+            else:
+                norm = None
+
+        ax = self.fig.gca()
+        im = ax.pcolormesh(
+            x, y, z, norm=norm, shading="auto", cmap=self.plot_setup["cmap"]
+        )
+        cbar = self.fig.colorbar(im)
         # Set plot parameters
         ax.set_ylabel(self.plot_setup["ylabel"])
-        # cbar.set_label(self.plot_setup["zlabel"])
+        cbar.set_label(self.plot_setup["zlabel"])
 
     def plot_1D(self, x, z, fit_fn, label=None, err=None, color="b"):
 
@@ -187,7 +207,14 @@ class Plotter:
                 verticalalignment="top",
                 transform=ax.transAxes,
             )
+
+            if self.plot_setup["zlog"]:
+                ax.set_yscale("log")
+
             self.plot_line(x, fit_z, ax, label="fit", color=color)
+
+        if self.plot_setup["zlimits"]:
+            ax.set_ylim(self.plot_setup["zlimits"])
 
     def plot_errorbar(self, x, z, axis, zerr, label, color="b"):
         axis.errorbar(

@@ -21,6 +21,7 @@ class Experiment(Parametrized):
         "reps",  # number of times the experiment is repeated
         "wait_time",  # wait time in nanoseconds between repetitions
         "fetch_period",  # wait time between fetching and plotting
+        "single_shot",
     }
 
     def __init__(
@@ -31,6 +32,7 @@ class Experiment(Parametrized):
         x_sweep=None,
         y_sweep=None,
         fetch_period=1,
+        single_shot=False,
     ):
 
         # List of modes used in the experiment. String values will be replaced by
@@ -47,6 +49,7 @@ class Experiment(Parametrized):
         # Sweep configurations
         self.sweep_config = {"n": (0, self.reps, 1), "x": x_sweep, "y": y_sweep}
         self.buffering = tuple()  # defined in _configure_sweeps
+        self.single_shot = single_shot
 
         # ExpVariable definitions. This list is updated in _configure_sweeps and after
         # stream and variable declaration.
@@ -54,9 +57,25 @@ class Experiment(Parametrized):
             "n": macros.ExpVariable(var_type=int, sweep=self.sweep_config["n"]),
             "x": macros.ExpVariable(average=False, save_all=False),
             "y": macros.ExpVariable(average=False, save_all=False),
-            "I": macros.ExpVariable(tag="I", var_type=qua.fixed, buffer=True),
-            "Q": macros.ExpVariable(tag="Q", var_type=qua.fixed, buffer=True),
+            "I": macros.ExpVariable(
+                average=False, tag="I", var_type=qua.fixed, buffer=True
+            ),
+            "Q": macros.ExpVariable(
+                average=False, tag="Q", var_type=qua.fixed, buffer=True
+            ),
         }
+
+        # Single shot
+        if self.single_shot:
+            self.variables |= {
+                "state": macros.ExpVariable(
+                    average=True,
+                    tag="state",
+                    var_type=qua.fixed,
+                    buffer=True,
+                    save_all=False,
+                )
+            }
 
         # Extra memory tags for saving server-side stream operation results
         self.Z_SQ_RAW_tag = "Z_SQ_RAW"
@@ -97,7 +116,7 @@ class Experiment(Parametrized):
                 indep_tags.append(self.variables[var].tag)
 
         # TODO: implement more than 1 dependent variable (multiple readout)
-        dep_tags = [self.Z_AVG_tag]
+        dep_tags = ["state" if self.single_shot else self.Z_AVG_tag]
 
         return indep_tags, dep_tags
 
@@ -105,13 +124,14 @@ class Experiment(Parametrized):
         self,
         xlabel=None,
         ylabel=None,
-        zlabel="Signal (a.u.)",
+        zlabel=None,
         trace_labels=[],
         title=None,
         plot_type="1D",
         err=True,
         cmap="viridis",
-        log=None,
+        zlimits=None,
+        zlog=False,
     ):
         """
         Updates self.plot_setup dictionary with the parameters to be used by the
@@ -133,6 +153,10 @@ class Experiment(Parametrized):
 
         if not title:
             title = self.name
+        if not zlabel:
+            zlabel = "<Z>" if self.single_shot else "Signal (a.u.)"
+        if not zlimits:
+            zlimits = (-0.05, 1.05) if self.single_shot and not zlog else None
 
         self.plot_setup = {
             "xlabel": xlabel,
@@ -143,7 +167,8 @@ class Experiment(Parametrized):
             "plot_type": plot_type,
             "plot_err": err,
             "cmap": cmap,
-            "log": log,
+            "zlimits": zlimits,
+            "zlog": zlog,
         }
 
         return
@@ -259,10 +284,16 @@ class Experiment(Parametrized):
 
         dependent_data = []
         for tag in dep_tags:
-            # Take the square root of dependent variables. This step is required for
-            # dependent values calculated as I^2 + Q^2 in stream processing.
+
+            if tag == "Z_AVG":
+                # Take the square root of Z_AVG variables. This step is required for
+                # dependent values calculated as I^2 + Q^2 in stream processing.
+                data = np.sqrt(partial_results[tag])
+            else:
+                data = partial_results[tag]
+
             # Reshape the fetched data with buffer lengths
-            reshaped_data = np.sqrt(partial_results[tag]).reshape(self.buffering)
+            reshaped_data = data.reshape(self.buffering)
             dependent_data.append(reshaped_data)
 
         independent_data = []
@@ -270,9 +301,19 @@ class Experiment(Parametrized):
             reshaped_data = partial_results[tag].reshape(self.buffering)
             independent_data.append(reshaped_data)
 
+        # Phase information useful for troubleshooting and rr spectroscopy
+        # freqs = independent_data[0]
+        # phase = (
+        #    np.arctan(partial_results["Q"] / partial_results["I"])
+        #    - 0 * 2 * np.pi * freqs * 31e-9 * 8
+        # )
+        # reshaped_phase_data = np.average(phase, axis=0).reshape(self.buffering)
+        # dependent_data.append(reshaped_phase_data)
+
         # if an internal sweep is defined in the child experiment class, add its value
         # as independent variable data. The values are repeated so the dimensions match
         # the other independent data shapes.
+
         try:
             internal_sweep = self.internal_sweep
             # Repeat the values
@@ -285,8 +326,17 @@ class Experiment(Parametrized):
             internal_sweep_dict = {}
             pass
 
-        # Retrieve and reshape standard error estimation
-        error_data = stderr[0].reshape(self.buffering)
+        # Estimate standard error
+        if self.single_shot:
+            # Variance of the binomial variable assuming our estimate for probabilities
+            # are accurate.
+            error_data = np.sqrt(
+                dependent_data[0] * (1 - dependent_data[0]) / num_results
+            )
+
+        else:
+            # Retrieve and reshape standard error estimation
+            error_data = stderr[0].reshape(self.buffering)
 
         plotter.live_plot(
             independent_data,

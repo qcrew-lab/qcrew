@@ -35,19 +35,21 @@ class QSwitchT1(Experiment):
         """
         Defines pulse sequence to be played inside the experiment loop
         """
-        qubit, rr = self.modes  # get the modes
+        qubit, rr, qubit_drive = self.modes  # get the modes
 
-        qua.update_frequency(qubit.name, qubit.int_freq)
+        # qua.update_frequency(qubit.name, qubit.int_freq)
         qubit.play(self.qubit_op)  # play pi qubit pulse
 
-        qua.update_frequency(qubit.name, qubit.int_freq + self.qubit_drive_detuning)
+        # qua.update_frequency(qubit.name, qubit.int_freq + self.qubit_drive_detuning)
         qua.update_frequency(
-            rr.name, rr.int_freq + self.qubit_drive_detuning + int(-19e6)
+            rr.name, rr.int_freq + self.qubit_drive_detuning + int(-7.8e6)
         )
-        qua.align(rr.name, qubit.name)
-        qubit.play("constant_pulse", duration=self.x, ampx=0.5)  # play qubit drive
-        rr.play("constant_pulse", duration=self.x, ampx=0.5)  # play rr drive
-        qua.align(rr.name, qubit.name)
+        qua.align(rr.name, qubit.name, qubit_drive.name)
+        qubit_drive.play(
+            "constant_pulse", duration=self.x, ampx=0.1 * self.y
+        )  # play qubit drive
+        rr.play("constant_pulse", duration=self.x, ampx=0.2 * self.y)  # play rr drive
+        qua.align(rr.name, qubit.name, qubit_drive.name)
         qua.update_frequency(rr.name, rr.int_freq)
         rr.measure((self.I, self.Q))  # measure qubit state
         if self.single_shot:
@@ -64,13 +66,14 @@ class QSwitchT1(Experiment):
 if __name__ == "__main__":
 
     parameters = {
-        "modes": ["QUBIT", "RR"],
+        "modes": ["QUBIT", "RR", "QUBIT_DRIVE"],
         "reps": 5000,
         "wait_time": 400000,
-        "x_sweep": (int(16), int(80e3 + 1000 / 2), int(1000)),
+        "x_sweep": (int(16), int(100e3 + 2000 / 2), int(2000)),
         "qubit_op": "pi",
-        "qubit_drive_detuning": int(120e6),
-        "single_shot": True,
+        "qubit_drive_detuning": int(40e6),
+        "single_shot": False,
+        "y_sweep": (0, 1.0),
     }
 
     plot_parameters = {

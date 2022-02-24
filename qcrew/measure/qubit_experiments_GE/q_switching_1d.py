@@ -33,19 +33,21 @@ class QSwitch1D(Experiment):
         """
         Defines pulse sequence to be played inside the experiment loop
         """
-        qubit, rr = self.modes  # get the modes
+        qubit, rr, qdrive = self.modes  # get the modes
 
-        qua.update_frequency(qubit.name, qubit.int_freq)
+        # qua.update_frequency(qubit.name, qubit.int_freq)
         qubit.play(self.qubit_op)  # play pi qubit pulse
-        qua.wait(4, qubit.name, rr.name)
-        qua.update_frequency(qubit.name, qubit.int_freq + self.qubit_drive_detuning)
+        # qua.wait(4, qubit.name, rr.name)
+        # qua.update_frequency(qubit.name, qubit.int_freq + self.qubit_drive_detuning)
         qua.update_frequency(rr.name, rr.int_freq + self.qubit_drive_detuning + self.x)
-        qua.align(rr.name, qubit.name)
-        qubit.play("constant_pulse", duration=25000, ampx=0.4)  # play pi qubit pulse
-        rr.play("constant_pulse", duration=25000, ampx=0.6)  # play pi qubit pulse
-        qua.align(rr.name, qubit.name)
+        qua.align(rr.name, qubit.name, qdrive.name)
+        qdrive.play(
+            "constant_pulse", duration=5000, ampx=0.1
+        )  # qswitch pumps, note this duration is also in clock cycles, not ns
+        rr.play("constant_pulse", duration=5000, ampx=0.2)  # qswitch pumps
+        qua.align(rr.name, qubit.name, qdrive.name)
         qua.update_frequency(rr.name, rr.int_freq)
-        qua.wait(4, qubit.name, rr.name)
+        qua.wait(4, qubit.name, rr.name, qdrive.name)
         rr.measure((self.I, self.Q))  # measure qubit state
         if self.single_shot:
             qua.assign(
@@ -59,16 +61,19 @@ class QSwitch1D(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
+    x_start = -10e6
+    x_stop = 0e6
+    x_step = 0.1e6
 
     parameters = {
-        "modes": ["QUBIT", "RR"],
-        "reps": 1500,
-        "wait_time": 400000,
-        "x_sweep": (int(-30e6), int(0e6 + 0.2e6 / 2), int(0.2e6)),
+        "modes": ["QUBIT", "RR", "QUBIT_DRIVE"],
+        "reps": 50000,
+        "wait_time": 200000,
+        "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
         "qubit_op": "pi",
-        "qubit_drive_detuning": int(125e6),
-        "fetch_period": 2,
-        "single_shot": True,
+        "qubit_drive_detuning": int(40e6),
+        "fetch_period": 1,
+        "single_shot": False,
     }
 
     plot_parameters = {

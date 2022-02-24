@@ -48,16 +48,16 @@ class StarkShift(Experiment):
 
 if __name__ == "__main__":
     amp_start = 0
-    amp_stop = 1.0
-    amp_step = 0.02
+    amp_stop = 0.5
+    amp_step = 0.025
 
     parameters = {
         "modes": ["QUBIT", "RR", "QUBIT_DRIVE"],
         "reps": 10000,
         "wait_time": 300000,
-        "x_sweep": (int(-80e6), int(-47e6 + 0.4e6 / 2), int(0.4e6)),
+        "x_sweep": (int(-60e6), int(-48e6 + 0.4e6 / 2), int(0.4e6)),
         "qubit_op": "pi",
-        "fetch_period": 6,
+        "fetch_period": 4,
         "y_sweep": (amp_start, amp_stop + amp_step / 2, amp_step),
     }
 

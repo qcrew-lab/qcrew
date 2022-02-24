@@ -145,17 +145,6 @@ class Plotter:
 
     def plot_2D(self, x, y, z):
         ax = self.fig.gca()
-        if self.plot_setup["log"]:
-            norm = colors.LogNorm(vmin=z.min(), vmax=z.max())
-        else:
-            norm = None
-
-        im = ax.pcolormesh(
-            x, y, z, norm=norm, shading="auto", cmap=self.plot_setup["cmap"]
-        )
-
-        cbar = self.fig.colorbar(im, orientation="vertical")
-
         # cbar = self.fig.colorbar(im, use_gridspec=True)
 
         if self.plot_setup["zlog"]:

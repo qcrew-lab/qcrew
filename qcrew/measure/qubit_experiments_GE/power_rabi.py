@@ -37,7 +37,7 @@ class PowerRabi(Experiment):
 
         qubit.play(self.qubit_op, ampx=self.x)  # play qubit pulse
         qua.align(qubit.name, rr.name)  # wait qubit pulse to end
-        rr.measure((self.I, self.Q), ampx = 1.65)  # measure qubit state
+        rr.measure((self.I, self.Q), ampx=1)  # measure qubit state
         qua.wait(int(self.wait_time // 4), rr.name)  # wait system reset
 
         if self.single_shot:  # assign state to G or E
@@ -52,9 +52,9 @@ class PowerRabi(Experiment):
 
 if __name__ == "__main__":
 
-    amp_start = -1.2
-    amp_stop = 1.2
-    amp_step = 0.1
+    amp_start = -1.7
+    amp_stop = 1.7
+    amp_step = 0.05
 
     parameters = {
         "modes": ["QUBIT", "RR"],

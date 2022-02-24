@@ -30,7 +30,7 @@ if __name__ == "__main__":
     with Stagehand() as stage:
 
         rr = stage.RR
-        rr.readout_pulse(length=1200, ampx=1, pad=200)
+        rr.readout_pulse(length=1200, ampx=0.08, pad=500)
         rr.time_of_flight = 324
         # Execute script
         qm = stage.QM

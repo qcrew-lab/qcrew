@@ -41,8 +41,8 @@ class QSwitch2D(Experiment):
         qua.update_frequency(qubit.name, qubit.int_freq + self.qubit_drive_detuning)
         qua.update_frequency(rr.name, rr.int_freq + self.qubit_drive_detuning + self.y)
         qua.align(rr.name, qubit.name)
-        qubit.play("constant_pulse", duration=4000)  # play pi qubit pulse
-        rr.play("constant_pulse", duration=4000)  # play pi qubit pulse
+        qubit.play("constant_pulse", duration=self.x)  # play pi qubit pulse
+        rr.play("constant_pulse", duration=self.x)  # play pi qubit pulse
         qua.align(rr.name, qubit.name)
         qua.update_frequency(rr.name, rr.int_freq)
         rr.measure((self.I, self.Q))  # measure qubit state
@@ -61,14 +61,14 @@ if __name__ == "__main__":
 
     parameters = {
         "modes": ["QUBIT", "RR"],
-        "reps": 5000,
-        "wait_time": 400000,
-        "x_sweep": (int(16), int(20e3 + 1000 / 2), int(1000)),
-        "y_sweep": (int(-25e6), int(-10e6 + 0.1e6 / 2), int(0.4e6)),
+        "reps": 50000,
+        "wait_time": 100000,
+        "x_sweep": (int(16), int(40e3 + 1000 / 2), int(1000)),
+        "y_sweep": (int(-32e6), int(-20e6 + 0.4e6 / 2), int(0.4e6)),
         "qubit_op": "pi",
         "qubit_drive_detuning": int(120e6),
-        "fetch_period": 4,
-        "single_shot": True,
+        "fetch_period": 1,
+        "single_shot": False,
     }
 
     plot_parameters = {

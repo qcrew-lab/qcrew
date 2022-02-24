@@ -59,15 +59,19 @@ class T2_Echo(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-
+    x_start = 10
+    x_stop = 25e3
+    x_step = 0.24e3
+    df = 0
+    
     parameters = {
         "modes": ["QUBIT", "RR"],
         "reps": 10000,
-        "wait_time": 100000,
-        "x_sweep": (int(16), int(100000 + 2500 / 2), int(2500)),
+        "wait_time": 500000,
+        "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
         "qubit_pi2": "pi2",
         "qubit_pi": "pi",
-        "single_shot": True,
+        "single_shot": False,
     }
 
     plot_parameters = {

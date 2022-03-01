@@ -5,36 +5,52 @@ from scipy import signal
 
 import qcrew.control.modes as qcm
 import qcrew.control.pulses as qcp
-import qcrew.control.instruments.qm as qciqm
 from qcrew.analyze import fit
 
 # from qcrew.control.pulses import integration_weights
 from qcrew.helpers import logger
+from qcrew.helpers.parametrizer import Parametrized
 
+from typing import ClassVar
+import matplotlib.pyplot as plt
 from qm import _Program
 from qm import qua
-import matplotlib.pyplot as plt
 
 ADC_TO_VOLTS = 2 ** -12
 TS = 1e-9  # Sampling time of the OPX in seconds
 T_OFS = 35.96
 
 
-class ReadoutTrainer:
+class ReadoutTrainer(Parametrized):
     """ """
+
+    _parameters: ClassVar[set[str]] = {
+        "mode_names",  # names of the modes used in the experiment
+        "reps",  # number of times the experiment is repeated
+        "wait_time",  # wait time between fetching and plotting
+        "qubit_pi_pulse",
+    }
 
     def __init__(
         self,
         rr: qcm.Mode,
         qubit: qcm.Mode,
         qm,
-        params: dict,
+        reps,
+        wait_time,
+        qubit_pi_pulse,
+        weights_file_path=None,
     ):
         """ """
         self._rr: qcm.Mode = rr
         self._qubit: qcm.Mode = qubit
         self._qm = qm
-        self.params: dict = params
+        self.modes = [rr, qubit]
+        self.mode_names = [mode.name for mode in self.modes]
+        self.reps = reps
+        self.wait_time = wait_time
+        self.qubit_pi_pulse = qubit_pi_pulse
+        self.weights_file_path = weights_file_path
 
         logger.info(f"Initialized ReadoutTrainer with {self._rr} and {self._qubit}")
 
@@ -108,10 +124,10 @@ class ReadoutTrainer:
 
     def _get_QUA_trace_acquisition(self, excite_qubit: bool = False) -> _Program:
         """ """
-        reps = self.params["reps"]
-        wait_time = self.params["wait_time"]
+        reps = self.reps
+        wait_time = self.wait_time
         readout_pulse = "readout_pulse"
-        qubit_pi_pulse = self.params["qubit_pi_pulse"]
+        qubit_pi_pulse = self.qubit_pi_pulse
 
         with qua.program() as acquire_traces:
             adc = qua.declare_stream(adc_trace=True)
@@ -177,7 +193,7 @@ class ReadoutTrainer:
             [np.imag(-squeezed_diff).tolist(), np.real(squeezed_diff).tolist()]
         )
 
-        path = self.params["weights_file_path"]
+        path = self.weights_file_path
 
         # Save weights to npz file
         np.savez(path, **weights)
@@ -245,13 +261,32 @@ class ReadoutTrainer:
         ax.legend()
         plt.show()
 
+        # Plot I histogram
+        fig, ax = plt.subplots(figsize=(7, 4))
+        ax.hist(Ig_list, bins=50)
+        ax.hist(Ie_list, bins=50)
+
+        ax.set_title("Projection of the IQ blobs onto the I axis")
+        ax.set_ylabel("counts")
+        ax.set_xlabel("I")
+        ax.legend()
+        plt.show()
+
         # Update readout with optimal threshold
         self._update_threshold(threshold)
 
         # Calculates the confusion matrix of the readout
         self._calculate_confusion_matrix(Ig_list, Ie_list, threshold)
 
-        return threshold
+        # Organize the raw I and Q data for each G and E measurement
+        data = {
+            "Ig": Ig_list,
+            "Qg": Qg_list,
+            "Ie": Ie_list,
+            "Qe": Qe_list,
+        }
+
+        return threshold, data
 
     def _fit_IQ_blob(self, I_list, Q_list):
 
@@ -283,9 +318,9 @@ class ReadoutTrainer:
 
     def _get_QUA_IQ_acquisition(self, excite_qubit: bool = False):
         """ """
-        reps = self.params["reps"]
-        wait_time = self.params["wait_time"]
-        qubit_pi_pulse = self.params["qubit_pi_pulse"]
+        reps = self.reps
+        wait_time = self.wait_time
+        qubit_pi_pulse = self.qubit_pi_pulse
 
         with qua.program() as acquire_IQ:
             I = qua.declare(qua.fixed)

@@ -44,14 +44,18 @@ def run(experiment: Experiment) -> None:
         fetcher = QMResultFetcher(handle=qm_job.result_handles)
         stderr = (None, None, None)  # to hold running (stderr, mean, variance * (n-1))
 
-        plotter = Plotter(experiment.plot_setup)
-
         db = initialise_database(
             exp_name=experiment.name,
             sample_name=stage.sample_name,
             project_name=stage.project_name,
             path=stage.datapath,
-        )
+        )  # db.filename
+
+        # Update experiment with the filename of the data
+        # Filename will be sent to the plotter as title if no other title is set.
+        experiment.filename = db.filename
+
+        plotter = Plotter(experiment.plot_setup)
 
         ##################        LIVE POST-PROCESSING LOOP        ####################
 

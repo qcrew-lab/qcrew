@@ -175,6 +175,8 @@ class Experiment(Parametrized):
 
         # title is updated later with the filename, experiment name and number of
         # repetitions
+        if not title:
+            title = ""
 
         if not zlabel:
             zlabel = "P1" if self.single_shot else "Signal (a.u.)"

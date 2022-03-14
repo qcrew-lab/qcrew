@@ -47,12 +47,16 @@ class QubitSpectroscopy(Experiment):
 
 if __name__ == "__main__":
 
+    x_start = int(-55e6)
+    x_stop = int(-45e6)
+    x_step = int(0.05e6)
+
     parameters = {
         "modes": ["QUBIT", "RR"],
-        "reps": 4000,
-        "wait_time": 100000,
-        "x_sweep": (int(-115e6), int(-100e6 + 0.1e6 / 2), int(0.1e6)),
-        "qubit_op": "constant_pulse",
+        "reps": 40000,
+        "wait_time": 10000,
+        "x_sweep": (x_start, x_stop + x_step / 2, x_step),
+        "qubit_op": "gaussian_pulse",
         "fit_fn": None,
     }
 

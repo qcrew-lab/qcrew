@@ -22,7 +22,7 @@ class CavitySpectroscopy(Experiment):
         "fit_fn",  # fit function
     }
 
-    def __init__(self, cav_op, qubit_op, fit_fn="lorentzian", **other_params):
+    def __init__(self, cav_op, qubit_op, fit_fn="gaussian", **other_params):
 
         self.cav_op = cav_op
         self.qubit_op = qubit_op
@@ -49,14 +49,18 @@ class CavitySpectroscopy(Experiment):
 
 # -------------------------------- Execution -----------------------------------
 
+
 if __name__ == "__main__":
 
+    x_start = -50.2e6
+    x_stop = -49.8e6
+    x_step = 0.01e6
     parameters = {
         "modes": ["QUBIT", "CAV", "RR"],
         "reps": 50000,
-        "wait_time": 600000,
-        "x_sweep": (int(-50.3e6), int(-49.7e6 + 0.02e6 / 2), int(0.02e6)),
-        "qubit_op": "pi",
+        "wait_time": 1000000,
+        "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
+        "qubit_op": "pi_selective",
         "cav_op": "constant_pulse",
     }
 

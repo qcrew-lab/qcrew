@@ -21,7 +21,7 @@ class QubitSpectroscopy(Experiment):
         "fit_fn",  # fit function
     }
 
-    def __init__(self, qubit_op, fit_fn="lorentzian", **other_params):
+    def __init__(self, qubit_op, fit_fn=None, **other_params):
 
         self.qubit_op = qubit_op
         self.fit_fn = fit_fn
@@ -35,7 +35,7 @@ class QubitSpectroscopy(Experiment):
         qubit, rr = self.modes  # get the modes
 
         qua.update_frequency(qubit.name, self.x)  # update resonator pulse frequency
-        qubit.play(self.qubit_op)  # play qubit pulse
+        qubit.play(self.qubit_op, ampx=1)  # play qubit pulse
         qua.align(qubit.name, rr.name)  # wait qubit pulse to end
         rr.measure((self.I, self.Q))  # measure transmitted signal
         qua.wait(int(self.wait_time // 4), rr.name)  # wait system reset
@@ -46,12 +46,14 @@ class QubitSpectroscopy(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-
+    x_start = 100e6
+    x_stop = 200e6
+    x_step = 1e6
     parameters = {
         "modes": ["QUBIT", "RR"],
-        "reps": 10000,
-        "wait_time": 300000,
-        "x_sweep": (int(-50.2e6), int(-49.8e6 + 0.01e6 / 2), int(0.01e6)),
+        "reps": 30000,
+        "wait_time": 400000,
+        "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
         "qubit_op": "pi",
     }
 

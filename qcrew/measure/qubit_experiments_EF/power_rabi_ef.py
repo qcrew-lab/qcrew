@@ -18,18 +18,15 @@ class PowerRabiEF(Experiment):
     name = "power_rabi_ef"
 
     _parameters: ClassVar[set[str]] = Experiment._parameters | {
-        "qubit_op",  # operation used for exciting the qubit
+        "qubit_ef_op",  # operation used for exciting the qubit
         "fit_fn",  # fit function
     }
 
-    def __init__(
-        self, qubit_op, qubit_pi_pulse_name, ef_int_freq, fit_fn="sine", **other_params
-    ):
+    def __init__(self, qubit_ef_op, qubit_pi_pulse_name, fit_fn="sine", **other_params):
 
-        self.qubit_op = qubit_op
+        self.qubit_ef_op = qubit_ef_op
         self.fit_fn = fit_fn
         self.qubit_pi_pulse_name = qubit_pi_pulse_name
-        self.ef_int_freq = ef_int_freq
 
         super().__init__(**other_params)  # Passes other parameters to parent
 
@@ -37,14 +34,14 @@ class PowerRabiEF(Experiment):
         """
         Defines pulse sequence to be played inside the experiment loop
         """
-        qubit, rr = self.modes  # get the modes
+        qubit, rr, qubit_ef = self.modes  # get the modes
 
         qubit.play(self.qubit_pi_pulse_name)  # g-> e
-        qua.update_frequency(qubit.name, self.ef_int_freq)
-        qubit.play(self.qubit_op, ampx=self.x)  # e-> f
-        qua.update_frequency(qubit.name, qubit.int_freq)
+        qua.align(qubit.name, qubit_ef.name)
+        qubit_ef.play(self.qubit_ef_op, ampx=self.x)  # e-> f
+        qua.align(qubit.name, qubit_ef.name)
         qubit.play(self.qubit_pi_pulse_name)  # e->g
-        qua.align(qubit.name, rr.name)  # wait qubit pulse to end
+        qua.align(qubit.name, qubit_ef.name, rr.name)  # wait qubit pulse to end
         rr.measure((self.I, self.Q))  # measure qubit state
         qua.wait(int(self.wait_time // 4), rr.name)  # wait system reset
 
@@ -54,15 +51,17 @@ class PowerRabiEF(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
+    amp_start = -1.5
+    amp_stop = 1.5
+    amp_step = 0.05
 
     parameters = {
-        "modes": ["QUBIT", "RR"],
-        "reps": 10000,
-        "wait_time": 300000,
-        "ef_int_freq": -87.7e6,
+        "modes": ["QUBIT", "RR", "QUBIT_EF"],
+        "reps": 20000,
+        "wait_time": 100000,
         "qubit_pi_pulse_name": "pi",
-        "x_sweep": (-1.8, 1.8 + 0.1 / 2, 0.1),
-        "qubit_op": "gaussian_pulse",
+        "x_sweep": (amp_start, amp_stop + amp_step / 2, amp_step),
+        "qubit_ef_op": "pi",
     }
 
     plot_parameters = {

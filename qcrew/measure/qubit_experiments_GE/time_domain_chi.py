@@ -1,8 +1,3 @@
-"""
-A python class describing a T2 measurement using QM.
-This class serves as a QUA script generator with user-defined parameters.
-"""
-
 from typing import ClassVar
 
 from qcrew.control import professor as prof
@@ -12,21 +7,23 @@ from qm import qua
 # ---------------------------------- Class -------------------------------------
 
 
-class T2(Experiment):
+class time_domain_chi(Experiment):
 
-    name = "T2"
+    name = "time_domain_chi"
 
     _parameters: ClassVar[set[str]] = Experiment._parameters | {
+        "cav_op",  # operation for displacing the cavity
         "qubit_op",  # operation used for exciting the qubit
         "fit_fn",  # fit function
-        "detuning",  # qubit pulse detuning
+        # "detuning",  # qubit pulse detuning
     }
 
-    def __init__(self, qubit_op, detuning=0, fit_fn="exp_decay_sine", **other_params):
+    def __init__(self, cav_op, qubit_op, fit_fn="exp_decay_sine", **other_params):
 
+        self.cav_op = cav_op  # operation for displacing the cavity
         self.qubit_op = qubit_op  # half pi pulse
         self.fit_fn = fit_fn
-        self.detuning = detuning  # frequency detuning of qubit operation
+        # self.detuning = detuning  # frequency detuning of qubit operation
 
         super().__init__(**other_params)  # Passes other parameters to parent
 
@@ -34,12 +31,19 @@ class T2(Experiment):
         """
         Defines pulse sequence to be played inside the experiment loop
         """
-        qubit, rr = self.modes  # get the modes
-        qua.update_frequency(qubit.name, qubit.int_freq + self.detuning)  # detune
+        qubit, cav, rr = self.modes  # get the modes
+
+        qua.update_frequency(qubit.name, qubit.int_freq)
+
+        cav.play(self.cav_op, ampx=0.5)  # displacement
+        qua.align(cav.name, qubit.name)  # align modes
+
         qubit.play(self.qubit_op)  # play half pi qubit pulse
         qua.wait(self.x, qubit.name)  # wait for partial qubit decay
+
         qubit.play(self.qubit_op)  # play half pi qubit pulse
         qua.align(qubit.name, rr.name)  # wait last qubit pulse to end
+
         rr.measure((self.I, self.Q))  # measure qubit state
         if self.single_shot:  # assign state to G or E
             qua.assign(
@@ -49,31 +53,32 @@ class T2(Experiment):
 
         self.QUA_stream_results()  # stream variables (I, Q, x, etc)
 
-
+ 
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
 
     x_start = 10
     x_stop = 4000
-    x_step = 40
-    detuning = 0.0e6
+    x_step = 20
 
     parameters = {
-        "modes": ["QUBIT", "RR"],
-        "reps": 5000,
+        "modes": ["QUBIT", "CAV", "RR"],
+        "reps": 2000000,
         "wait_time": 75000,
-        "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
+        "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),  # wait time
         "qubit_op": "pi2",
-        "detuning": int(detuning),
+        "cav_op": "pi",
+        #"y_sweep":   # displacement
+        # "detuning": int(detuning),
         "single_shot": False,
     }
 
     plot_parameters = {
-        "xlabel": "Relaxation time (clock cycles)",
+        "xlabel": "Delay (clock cycles)",
     }
 
-    experiment = T2(**parameters)
+    experiment = time_domain_chi(**parameters)
     experiment.setup_plot(**plot_parameters)
 
     prof.run(experiment)

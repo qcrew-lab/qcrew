@@ -21,21 +21,33 @@ class CharacteristicFunction(Experiment):
     name = "characteristic_function"
 
     _parameters: ClassVar[set[str]] = Experiment._parameters | {
+        "cav_state_op",
         "cav_op",  # operation for displacing the cavity
-        "qubit_op",  # operation used for exciting the qubit
+        "qubit_op1",
+        "qubit_op2",  # operation used for exciting the qubit
         "fit_fn",  # fit function
         "delay",  # describe...
+        "measure_real"
     }
 
     def __init__(
-        self, cav_op, qubit_op1, qubit_op2, fit_fn=None, delay=4, **other_params
+        self,
+        cav_state_op,
+        cav_op,
+        qubit_op1,
+        qubit_op2,
+        fit_fn= None,
+        delay=4,
+        measure_real = True,
+        **other_params
     ):
-
+        self.cav_state_op = cav_state_op
         self.cav_op = cav_op
         self.qubit_op1 = qubit_op1
         self.qubit_op2 = qubit_op2
         self.fit_fn = fit_fn
         self.delay = delay
+        self.measure_real = measure_real
 
         super().__init__(**other_params)  # Passes other parameters to parent
 
@@ -44,9 +56,11 @@ class CharacteristicFunction(Experiment):
         Defines pulse sequence to be played inside the experiment loop
         """
         qubit, cav, rr = self.modes  # get the modes
-        qua.reset_frame(cav.name) 
 
-        qubit.play(self.qubit_op)  # bring qubit into superposition
+        qua.reset_frame(cav.name)
+        cav.play(self.cav_state_op, phase=0.0)  # t o create a coherent state
+
+        qubit.play(self.qubit_op1)  # bring qubit into superposition
 
         # start ECD gate
         qua.align(cav.name, qubit.name)  # wait for qubit pulse to end
@@ -62,8 +76,9 @@ class CharacteristicFunction(Experiment):
         qua.align(qubit.name, cav.name)
 
         qubit.play(
-            self.qubit_op1, phase=0
-        )  # play pi/2 pulse around X or Y, to measure either the real or imaginary part of the characteristic function
+            self.qubit_op1, phase=0.0 if self.measure_real else 0.25
+        )  # play pi/2 pulse around X or SY, to measure either the real or imaginary part of the characteristic function
+
         qua.align(qubit.name, rr.name)  # align measurement
         rr.measure((self.I, self.Q))  # measure transmitted signal
 
@@ -79,18 +94,23 @@ if __name__ == "__main__":
 
     parameters = {
         "modes": ["QUBIT", "CAV", "RR"],
-        "reps": 50000,
+        "reps": 1000000,
         "wait_time": 600000,
         "fetch_period": 2,  # time between data fetching rounds in sec
-        "delay": 1000,  # wait time between opposite sign displacements
-        "x_sweep": (0.2, 1 + 0.05 / 2, 0.05),
+        "delay": 500,  # wait time between opposite sign displacements
+        "x_sweep": (-1.5, 1.5 + 0.01 / 2, 0.01), # ampitude sweep of the displacement pulses in the ECD
         "qubit_op1": "pi2",
         "qubit_op2": "pi",
-        "cav_op": "displacement",
+        "cav_state_op": "Cohstate_2",
+        "cav_op": "CD_cali",
+        #"ECD_phase": 0
+        "measure_real": False  # measure real part of char function if True, imag Part if false
+        
     }
 
     plot_parameters = {
         "xlabel": "X",  # beta of (ECD(beta))
+        
     }
 
     experiment = CharacteristicFunction(**parameters)

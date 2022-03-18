@@ -24,12 +24,12 @@ import time
 
 if __name__ == "__main__":
 
-    current_start = 4.5e-3
-    current_stop = -10.1e-3
+    current_start = 5e-3
+    current_stop = -10e-3
     current_step = -0.5e-3
     current_sweep = np.arange(current_start, current_stop, current_step)
 
-    qubit_lo_start = 5.42733e9
+    qubit_lo_start = 5.4879e9
     qubit_lo_stop = 4e9
     qubit_lo_step = -200e6
     qubit_lo_sweep = np.arange(qubit_lo_start, qubit_lo_stop, qubit_lo_step)
@@ -110,10 +110,12 @@ if __name__ == "__main__":
                     # prevent over-fetching, over-saving, ultra-fast plotting
                     time.sleep(rr_spec.fetch_period)
 
-                ## Get frequency of MAXIMUM transmission (transmission measurement)
                 z_avg = np.array(rr_spec_data["Z_AVG"])
                 frequencies = np.array(rr_spec_data["x"])
-                rr_if = frequencies[np.argmax(z_avg)]
+                ## Get frequency of MAXIMUM transmission (transmission measurement)
+                # rr_if = frequencies[np.argmax(z_avg)]
+                ## Get frequency of MINIMUM transmission (reflection measurement)
+                rr_if = frequencies[np.argmin(z_avg)]
 
                 stage.RR.int_freq = float(rr_if)  # update RR IF
 
@@ -129,8 +131,8 @@ if __name__ == "__main__":
 
                     qubit_spec_parameters = {
                         "modes": [stage.QUBIT, stage.RR],
-                        "reps": 4000,
-                        "wait_time": 100000,
+                        "reps": 500,
+                        "wait_time": 50000,
                         "x_sweep": (
                             int(x_start),
                             int(x_stop + x_step / 2),

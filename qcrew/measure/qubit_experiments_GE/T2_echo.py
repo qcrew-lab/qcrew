@@ -47,7 +47,7 @@ class T2_Echo(Experiment):
         qubit.play(self.qubit_pi2)  # play half pi qubit pulse
         qua.align(qubit.name, rr.name)  # wait last qubit pulse to end
         rr.measure((self.I, self.Q))  # measure qubit state
-        if self.single_shot: # assign state to G or E
+        if self.single_shot:  # assign state to G or E
             qua.assign(
                 self.state, qua.Cast.to_fixed(self.I < rr.readout_pulse.threshold)
             )
@@ -59,15 +59,18 @@ class T2_Echo(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
+    x_start = 10
+    x_stop = 60000
+    x_step = 800
 
     parameters = {
         "modes": ["QUBIT", "RR"],
         "reps": 10000,
-        "wait_time": 100000,
-        "x_sweep": (int(16), int(100000 + 2500 / 2), int(2500)),
+        "wait_time": 200000,
+        "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
         "qubit_pi2": "pi2",
         "qubit_pi": "pi",
-        "single_shot": True,
+        "single_shot": False,
     }
 
     plot_parameters = {

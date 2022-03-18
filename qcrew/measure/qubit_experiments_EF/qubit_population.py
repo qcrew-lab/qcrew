@@ -63,16 +63,19 @@ if __name__ == "__main__":
 
     parameters = {
         "modes": ["QUBIT", "RR"],
-        "reps": 10000,
-        "wait_time": 300000,
-        "ef_int_freq": -87.7e6,
+        "reps": 50000,
+        "wait_time": 200000,
+        "ef_int_freq": int(-63.85e6),
         "qubit_ge_pi": "pi",
         "qubit_ef_pi": "ef_pi",
-        "x_sweep": (-1.8, 1.8 + 0.1 / 2, 0.1),
+        "x_sweep": (-1.96, 1.6 + 0.05 / 2, 0.05),
         "y_sweep": [0.0, 1.0],
+        "single_shot": False,
     }
 
-    plot_parameters = {"xlabel": "Qubit pulse amplitude scaling", "single_shot": True}
+    plot_parameters = {
+        "xlabel": "Qubit pulse amplitude scaling",
+    }
 
     experiment = QubitPopulation(**parameters)
     experiment.setup_plot(**plot_parameters)

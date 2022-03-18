@@ -21,9 +21,13 @@ def get_sweep():
 if __name__ == "__main__":
 
     with Stagehand() as stage:
-        rr, sa, qubit = stage.RR, stage.SA, stage.QUBIT
+        sa, qubit = stage.SA, stage.QUBIT
         mode = qubit  # select the mode whose spectrum you want to sweep
         job = stage.QM.execute(get_qua_program())  # play IF to mode
+
+        qubit.lo_freq = 6e9
+        qubit.int_freq = -50e6
+    
         sweep_parameters = {  # set sweep parameters
             "center": mode.lo_freq,
             "span": 500e6,

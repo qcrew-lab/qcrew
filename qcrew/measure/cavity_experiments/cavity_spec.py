@@ -52,16 +52,16 @@ class CavitySpectroscopy(Experiment):
 
 if __name__ == "__main__":
 
-    x_start = -50.2e6
-    x_stop = -49.8e6
-    x_step = 0.01e6
+    x_start = -50.10e6
+    x_stop = -49.95e6
+    x_step = 0.002e6
     parameters = {
         "modes": ["QUBIT", "CAV", "RR"],
         "reps": 50000,
         "wait_time": 1000000,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
         "qubit_op": "pi_selective",
-        "cav_op": "constant_pulse",
+        "cav_op": "gaussian_pulse",
     }
 
     plot_parameters = {

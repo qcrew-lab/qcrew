@@ -16,9 +16,9 @@ import numpy as np
 # ---------------------------------- Class -------------------------------------
 
 
-class CharacteristicFunction(Experiment):
+class SqueezingECD(Experiment):
 
-    name = "characteristic_function"
+    name = "squeezing_ecd"
 
     _parameters: ClassVar[set[str]] = Experiment._parameters | {
         "cav_state_op",
@@ -56,30 +56,56 @@ class CharacteristicFunction(Experiment):
         Defines pulse sequence to be played inside the experiment loop
         """
         qubit, cav, rr = self.modes  # get the modes
-
-        qua.reset_frame(cav.name)
         
-        cav.play(self.cav_state_op, phase=0.0)  # t o create a coherent state
-        qua.align(cav.name, qubit.name)
-
-        qubit.play(self.qubit_op1)  # bring qubit into superposition
-
-        # start ECD gate
+        
+        # one iteration of the squeezing protcol
+        
+        # Initialize the qubit in a supersposition state
+        qubit.play(self.qubit_op1)
+        #ECD Gate
         qua.align(cav.name, qubit.name)  # wait for qubit pulse to end
         cav.play(self.cav_op, ampx=self.x, phase=0)  # First positive displacement
+        cav.play(self.cav_op, ampx=self.y, phase=0.25)
+        
+       # qua.reset_frame(cav.name)
         qua.wait(int(self.delay // 4), cav.name)
         cav.play(self.cav_op, ampx=-self.x, phase=0)  # First negative displacement
+        cav.play(self.cav_op, ampx=-self.y, phase=0.25)
+        
+        #qua.reset_frame(cav.name)
         qua.align(qubit.name, cav.name)
         qubit.play(self.qubit_op2)  # play pi to flip qubit around X
         qua.align(cav.name, qubit.name)  # wait for qubit pulse to end
         cav.play(self.cav_op, ampx=-self.x, phase=0)  # Second negative displacement
+        cav.play(self.cav_op, ampx=-self.y, phase=0.25)
+        
+        #qua.reset_frame(cav.name)
         qua.wait(int(self.delay // 4), cav.name)
         cav.play(self.cav_op, ampx=self.x, phase=0)  # Second positive displacement
-        qua.align(qubit.name, cav.name)
+        cav.play(self.cav_op, ampx=self.y, phase=0.25)
+        
+        # final pi2 pulse to end the squeezing sequence
+        qubit.play(self.qubit_op1)
+        
+        
+        
+        
+        # Measure the created state with the qfunc
+        cav.play(self.cav_op, ampx=self.x, phase=0)  # displacement in I direction
+        cav.play(self.cav_op, ampx=self.y, phase=0.25)  # displacement in Q direction
+        qua.align(cav.name, qubit.name)
+        qubit.play(self.qubit_op)  # play qubit selective pi-pulse
+        # Measure cavity state
+        qua.align(qubit.name, rr.name)  # align measurement
+        rr.measure((self.I, self.Q))  # measure transmitted signal
 
-        qubit.play(
-            self.qubit_op1, phase=0.0 if self.measure_real else 0.25
-        )  # play pi/2 pulse around X or SY, to measure either the real or imaginary part of the characteristic function
+        # wait system reset
+        qua.wait(int(self.wait_time // 4), cav.name)
+
+        self.QUA_stream_results()  # stream variables (I, Q, x, etc)
+        
+        
+        
 
         qua.align(qubit.name, rr.name)  # align measurement
         rr.measure((self.I, self.Q))  # measure transmitted signal
@@ -93,34 +119,38 @@ class CharacteristicFunction(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-    x_start = -1.5
-    x_stop = 1.5
-    x_step = 0.015
+    x_start = -1.5 *0.5
+    x_stop =  1.5 *0.5
+    x_step = 0.05
+    
+    y_start = -1.5 * 0.5
+    y_stop =  1.5 * 0.5
+    y_step = 0.05
+
 
     parameters = {
         "modes": ["QUBIT", "CAV", "RR"],
         "reps": 1000000,
-        "wait_time": 600000,
-        "fetch_period": 2,  # time between data fetching rounds in sec
+        "wait_time": 100000,
+        "fetch_period": 8,  # time between data fetching rounds in sec
         "delay": 500,  # wait time between opposite sign displacements
-        "x_sweep": (
-            x_start,
-            x_stop + x_step / 2,
-            x_step,
-        ),  # ampitude sweep of the displacement pulses in the ECD
-        "qubit_op1": "pi2",
-        "qubit_op2": "pi",
-        "cav_state_op": "cohstate_1",
+        "x_sweep": (x_start, x_stop + x_step / 2, x_step),  # ampitude sweep of the displacement pulses in the ECD
+        "y_sweep": (y_start, y_stop + y_step / 2, y_step),
+        "qubit_op_ECD": "pi2",
+        "qubit_op_qfunc": "pi_selective",
+        "cav_state_op": "cohstate_2",
         "cav_op": "CD_cali",
-        # "ECD_phase": 0
         "measure_real": True,  # measure real part of char function if True, imag Part if false
     }
 
     plot_parameters = {
         "xlabel": "X",  # beta of (ECD(beta))
+        "ylabel": "Y",
+        "plot_type": "2D",
+                "cmap": "bwr",
     }
 
-    experiment = CharacteristicFunction(**parameters)
+    experiment = SqueezingECD(**parameters)
     experiment.setup_plot(**plot_parameters)
 
     prof.run(experiment)

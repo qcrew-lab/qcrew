@@ -4,6 +4,7 @@ import math
 import time
 from typing import Callable
 
+import matplotlib.pyplot as plt
 import numpy as np
 import scipy.optimize
 
@@ -74,6 +75,7 @@ class MixerTuner:
             self._qm.set_output_dc_offset_by_element(mode_name, "I", i_offset)
             self._qm.set_output_dc_offset_by_element(mode_name, "Q", q_offset)
             contrast = self._get_contrast(center_idx, floor)
+            logger.info(f"Set I: {i_offset}, Q: {q_offset}. {contrast = }")
             return contrast
 
         result = self._minimize(objective_fn)
@@ -88,6 +90,7 @@ class MixerTuner:
             correction_matrix = qciqm.QMConfig.get_mixer_correction_matrix(*offsets)
             job.set_element_correction(mode.name, correction_matrix)
             contrast = self._get_contrast(center_idx, floor)
+            logger.info(f"Set G: {offsets[0]}, P: {offsets[1]}. {contrast = }")
             return contrast
 
         result = self._minimize(objective_fn)
@@ -104,7 +107,7 @@ class MixerTuner:
         contrast = amps[center_idx] - floor
         is_tuned = contrast < self.threshold
         real_center = fs[center_idx]
-        logger.debug(f"Tuning check at {real_center:E}: {contrast = :.5}dBm")
+        logger.info(f"Tuning check at {real_center:7E}: {contrast = :.5}dBm")
         return is_tuned, center_idx, floor
 
     def _get_qua_program(self, mode: qcm.Mode) -> _Program:
@@ -122,8 +125,11 @@ class MixerTuner:
     def _minimize(self, fn: Callable[[tuple[float]], float]) -> tuple[float]:
         """ """
         start_time = time.perf_counter()
-        fatol, simplex, maxiter = self.threshold, self.simplex, self.maxiter
-        opt = {"fatol": fatol, "initial_simplex": simplex, "maxiter": maxiter}
+        opt = {
+            "fatol": self.threshold,
+            "initial_simplex": self.simplex,
+            "maxiter": self.maxiter,
+        }
         result = scipy.optimize.minimize(fn, [0, 0], method="Nelder-Mead", options=opt)
         if result.success:
             time_, contrast = time.perf_counter() - start_time, fn(result.x)
@@ -134,3 +140,62 @@ class MixerTuner:
             return result.x
         else:
             logger.error(f"Minimization unsuccessful, details: {result.message}")
+
+    def landscape(self, mode, key, xlim, ylim, points):
+        """
+        mode: the mode object
+        key: string "LO" or " SB"
+        xlim: tuple (min, max) for the landscape x axis
+        ylim: tuple (min, max) for the landscape y axis
+        points: number of points to sweep for x and y
+        """
+        # create landscape grid
+        x = np.linspace(*xlim, points)
+        y = np.linspace(*ylim, points)
+        xx, yy = np.meshgrid(x, y)
+        zz = np.zeros((points, points))
+
+        mode.lo.rf = True  # play carrier freq to mode
+        job = self._qm.execute(self._get_qua_program(mode))  # play int freq
+
+        # prepare SA for fast sweeps and prepare the objective functions
+        func, center_idx = None, None
+        if key == "LO":
+            center = mode.lo_freq
+            # do this to set the SA
+            self._sa.sweep(center=center, span=self.span, rbw=self.rbw, ref_power=self.ref_power)
+            sweep_info = self._sa.sweep_info
+            center_idx = math.ceil(sweep_info["sweep_length"] / 2 + 1)
+
+            def lo_fn(offsets: tuple[float]) -> float:
+                self._qm.set_output_dc_offset_by_element(mode.name, "I", offsets[0])
+                self._qm.set_output_dc_offset_by_element(mode.name, "Q", offsets[1])
+                _, amps = self._sa.sweep()
+                return amps[center_idx]
+            func = lo_fn
+
+        elif key == "SB":
+            center = mode.lo_freq - mode.int_freq  # upper sideband to suppress
+            # do this to set the SA
+            self._sa.sweep(center=center, span=self.span, rbw=self.rbw, ref_power=self.ref_pow)
+            sweep_info = self._sa.sweep_info
+            center_idx = math.ceil(sweep_info["sweep_length"] / 2 + 1)
+
+            def sb_fn(offsets: tuple[float]) -> float:
+                c_matrix = qciqm.QMConfig.get_mixer_correction_matrix(*offsets)
+                job.set_element_correction(mode.name, c_matrix)
+                _, amps = self._sa.sweep()
+                return amps[center_idx]
+            func = sb_fn
+
+        logger.info(f"Finding {key} landscape for '{mode}'...")
+
+        # evaluate the objective functions on the grid
+        for i in range(points):
+            for j in range(points):
+                zz[i][j] = func((xx[i][j], yy[i][j]))
+                logger.info(f"Set: {xx[i][j]}, {yy[i][j]}. Get {zz[i][j]}")
+
+        # show final plot
+        plt.pcolormesh(x, y, zz, shading="auto", cmap="viridis")
+        plt.colorbar()

@@ -36,6 +36,8 @@ class MixerTuner:
         self._modes: tuple[qcm.Mode] = modes
         logger.info(f"Initialized MixerTuner with {self._modes}")
 
+        self.initial_contrast = None  # set during tuning check
+
     def tune(self) -> None:
         """ """
         try:
@@ -78,7 +80,7 @@ class MixerTuner:
             logger.info(f"Set I: {i_offset}, Q: {q_offset}. {contrast = }")
             return contrast
 
-        result = self._minimize(objective_fn)
+        result = self._minimize(objective_fn, bounds=((-0.5, 0.5), (-0.5, 0.5)))
         return result if result is not None else (None, None)
 
     def _tune_sb(
@@ -87,13 +89,17 @@ class MixerTuner:
         """ """
 
         def objective_fn(offsets: tuple[float]) -> float:
-            correction_matrix = qciqm.QMConfig.get_mixer_correction_matrix(*offsets)
-            job.set_element_correction(mode.name, correction_matrix)
+            c_matrix = qciqm.QMConfig.get_mixer_correction_matrix(*offsets)
+            print(offsets)
+            if any(x < -2 or x > 2 for x in c_matrix):
+                logger.info("Found bad value in c-matrix")
+                return self.initial_contrast
+            job.set_element_correction(mode.name, c_matrix)
             contrast = self._get_contrast(center_idx, floor)
             logger.info(f"Set G: {offsets[0]}, P: {offsets[1]}. {contrast = }")
             return contrast
 
-        result = self._minimize(objective_fn)
+        result = self._minimize(objective_fn, bounds=None)
         return result if result is not None else (None, None)
 
     def _check_tuning(self, center: float) -> tuple[bool, int, float]:
@@ -108,6 +114,7 @@ class MixerTuner:
         is_tuned = contrast < self.threshold
         real_center = fs[center_idx]
         logger.info(f"Tuning check at {real_center:7E}: {contrast = :.5}dBm")
+        self.initial_contrast = contrast
         return is_tuned, center_idx, floor
 
     def _get_qua_program(self, mode: qcm.Mode) -> _Program:
@@ -122,7 +129,11 @@ class MixerTuner:
         _, amps = self._sa.sweep()
         return abs(amps[center_idx] - floor)
 
-    def _minimize(self, fn: Callable[[tuple[float]], float]) -> tuple[float]:
+    def _minimize(
+        self,
+        fn: Callable[[tuple[float]], float],
+        bounds,
+    ) -> tuple[float]:
         """ """
         start_time = time.perf_counter()
         opt = {
@@ -130,7 +141,9 @@ class MixerTuner:
             "initial_simplex": self.simplex,
             "maxiter": self.maxiter,
         }
-        result = scipy.optimize.minimize(fn, [0, 0], method="Nelder-Mead", options=opt)
+        result = scipy.optimize.minimize(
+            fn, [0, 0], method="Nelder-Mead", bounds=bounds, options=opt
+        )
         if result.success:
             time_, contrast = time.perf_counter() - start_time, fn(result.x)
             logger.success(f"Minimized in {time_:.5}s with final {contrast = :.5}")
@@ -163,7 +176,9 @@ class MixerTuner:
         if key == "LO":
             center = mode.lo_freq
             # do this to set the SA
-            self._sa.sweep(center=center, span=self.span, rbw=self.rbw, ref_power=self.ref_power)
+            self._sa.sweep(
+                center=center, span=self.span, rbw=self.rbw, ref_power=self.ref_power
+            )
             sweep_info = self._sa.sweep_info
             center_idx = math.ceil(sweep_info["sweep_length"] / 2 + 1)
 
@@ -172,12 +187,15 @@ class MixerTuner:
                 self._qm.set_output_dc_offset_by_element(mode.name, "Q", offsets[1])
                 _, amps = self._sa.sweep()
                 return amps[center_idx]
+
             func = lo_fn
 
         elif key == "SB":
             center = mode.lo_freq - mode.int_freq  # upper sideband to suppress
             # do this to set the SA
-            self._sa.sweep(center=center, span=self.span, rbw=self.rbw, ref_power=self.ref_pow)
+            self._sa.sweep(
+                center=center, span=self.span, rbw=self.rbw, ref_power=self.ref_pow
+            )
             sweep_info = self._sa.sweep_info
             center_idx = math.ceil(sweep_info["sweep_length"] / 2 + 1)
 
@@ -186,6 +204,7 @@ class MixerTuner:
                 job.set_element_correction(mode.name, c_matrix)
                 _, amps = self._sa.sweep()
                 return amps[center_idx]
+
             func = sb_fn
 
         logger.info(f"Finding {key} landscape for '{mode}'...")

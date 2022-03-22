@@ -44,7 +44,7 @@ if __name__ == "__main__":
             # range of SB tuning offsets you want to sweep to tune SB
             sb_offsets_range = (-0.5, 0.5)  # (min =, max =)
             # number of offset sweep points in the given range i.e. decide step size
-            num_sb_offsets = 7
+            num_sb_offsets = 11
             # number of iterations of the minimization you want to run
             sb_iterations = 5
             # after each iteration, the sweep range will be reduced by this factor
@@ -60,9 +60,9 @@ if __name__ == "__main__":
             )
         else:
             mxrtnr = MixerTuner(qubit, sa=sa, qm=qm)
-            # mxrtnr.tune()
+            mxrtnr.tune()
 
             # run this to find the minimization landscape
-            mxrtnr.landscape(
-                mode=qubit, key="LO", xlim=(-0.4, 0.4), ylim=(-0.4, 0.4), points=101
-            )
+            #mxrtnr.landscape(
+            #    mode=qubit, key="LO", xlim=(-0.4, 0.4), ylim=(-0.4, 0.4), points=51
+            #)

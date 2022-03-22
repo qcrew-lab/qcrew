@@ -6,7 +6,7 @@ from qcrew.control.instruments import Sa124
 from qm import qua
 
 
-def get_qua_program():
+def get_qua_program(mode):
     with qua.program() as play_constant_pulse:
         with qua.infinite_loop_():
             mode.play("constant_pulse", ampx=1.0)
@@ -22,11 +22,11 @@ if __name__ == "__main__":
 
     with Stagehand() as stage:
         sa, qubit = stage.SA, stage.QUBIT
-        mode = qubit  # select the mode whose spectrum you want to sweep
-        job = stage.QM.execute(get_qua_program())  # play IF to mode
-
-        qubit.lo_freq = 6e9
         qubit.int_freq = -50e6
+        qubit.lo_freq = 5e9
+
+        mode = qubit  # select the mode whose spectrum you want to sweep
+        job = stage.QM.execute(get_qua_program(mode))  # play IF to mode
 
         sweep_parameters = {  # set sweep parameters
             "center": mode.lo_freq,

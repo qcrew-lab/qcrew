@@ -27,7 +27,7 @@ if __name__ == "__main__":
 
         qubit.lo_freq = 6e9
         qubit.int_freq = -50e6
-    
+
         sweep_parameters = {  # set sweep parameters
             "center": mode.lo_freq,
             "span": 500e6,

@@ -105,7 +105,6 @@ class Minimizer:
                     min_list[i_p].plot(p_vals, vs)
                     min_list[i_p].set_ylim(vs.min(), vs.max())
                     min_list[i_p].set_xlim(p_vals.min(), p_vals.max())
-                    fig.canvas.draw()
 
                 p.vrange /= self.range_div  # reduce sweep range for next iteration
 
@@ -161,10 +160,11 @@ class YaleMixerTuner:
             "rbw": Sa124.default_rbw,
             "ref_power": Sa124.default_ref_power,
         }
-        print("Final spectrum:")
         freqs, amps = self.sa.sweep(**sweep_parameters)
+        f = plt.figure(2)
         plt.plot(freqs, amps)
-        plt.show(block=False)
+        f.canvas.draw()
+        #plt.show(block=False)
         self.qm_job.halt()
 
     def _lo_func(self, params, delay=0.1):
@@ -184,7 +184,7 @@ class YaleMixerTuner:
         )
         self.qm_job.set_element_correction(self.mode.name, correction_matrix)
         time.sleep(delay)
-        val = self.sa.single_sweep(self.lo_freq)
+        val = self.sa.single_sweep(self.sb_freq)
         print(f"Measuring at G: {g_offset}, P: {p_offset}, amp: {val}")
         return val
 
@@ -199,9 +199,11 @@ class YaleMixerTuner:
         n_it=4,
         n_eval=11,
         range_div=4,
+        plot = False,
+        verbose = False,
     ):
         p0, p1 = param_names
-        m = Minimizer(func, n_it=n_it, n_eval=n_eval, range_div=range_div, verbose=True)
+        m = Minimizer(func, n_it=n_it, n_eval=n_eval, range_div=range_div, verbose=verbose, plot=plot)
         m.add_parameter(Parameter(p0, value=init0, vrange=range0))
         m.add_parameter(Parameter(p1, value=init1, vrange=range1))
         m.minimize()
@@ -238,7 +240,11 @@ class YaleMixerTuner:
             self._osb_func, ("G", "P"), g_offset, p_offset, range0, range1, **kwargs
         )
         min_g_offset, min_p_offset = opt_params["G"].value, opt_params["P"].value
+        correction_matrix = qciqm.QMConfig.get_mixer_correction_matrix(
+            min_g_offset, min_p_offset
+        )
         print(f"Done minimizing SB leakage! {min_g_offset = }, {min_p_offset = }")
+        print(f"Final {correction_matrix = }")
         self.mode.mixer_offsets = {"G": min_g_offset, "P": min_p_offset}
         self.clean_up()
         return opt_params

@@ -1,5 +1,6 @@
 """ freq sweep v5 """
 
+from time import time
 import matplotlib.pyplot as plt
 from qcrew.control import Stagehand
 from qcrew.control.instruments import Sa124
@@ -11,7 +12,7 @@ def get_qua_program(mode):
         with qua.infinite_loop_():
             mode.play("constant_pulse", ampx=1.0)
     return play_constant_pulse
-
+ 
 
 def get_sweep(mode, sa, qm, **sweep_params):
     job = qm.execute(get_qua_program(mode))  # play IF to mode

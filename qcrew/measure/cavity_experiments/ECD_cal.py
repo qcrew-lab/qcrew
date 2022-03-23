@@ -1,6 +1,8 @@
 """
-A python class describing a qubit spectroscopy using QM.
-This class serves as a QUA script generator with user-defined parameters.
+A python class describing an ECD calibration experiment, following Campagne-Ibarq et al. 2020 Quantum Error correction of a qubit encoded in a grid....
+It is essentially a characteristic function (C(\beta)) measurement of the vacuum state.
+
+NOT FINISHED
 """
 
 from typing import ClassVar
@@ -14,9 +16,9 @@ import numpy as np
 # ---------------------------------- Class -------------------------------------
 
 
-class WignerFunction(Experiment):
+class ECDCalibration(Experiment):
 
-    name = "wigner_function"
+    name = "ECD_calibration"
 
     _parameters: ClassVar[set[str]] = Experiment._parameters | {
         "cav_op",  # operation for displacing the cavity
@@ -25,10 +27,13 @@ class WignerFunction(Experiment):
         "delay",  # describe...
     }
 
-    def __init__(self, cav_op, qubit_op, fit_fn=None, delay=4, **other_params):
+    def __init__(
+        self, cav_op, qubit_op1, qubit_op2, fit_fn=None, delay=4, **other_params
+    ):
 
         self.cav_op = cav_op
-        self.qubit_op = qubit_op
+        self.qubit_op1 = qubit_op1
+        self.qubit_op2 = qubit_op2
         self.fit_fn = fit_fn
         self.delay = delay
 
@@ -42,16 +47,24 @@ class WignerFunction(Experiment):
         qua.reset_frame(cav.name)
 
         # TODO work in progress
-        cav.play(self.cav_op, ampx=self.x, phase=0)  # displacement in I direction
-        cav.play(self.cav_op, ampx=self.y, phase=0.25)  # displacement in Q direction
-        qua.align(cav.name, qubit.name)
-        qubit.play(self.qubit_op)  # play pi/2 pulse around X
-        qua.wait(
-            int(self.delay // 4), cav.name
-        )  # conditional phase gate on even, odd Fock state
         qubit.play(self.qubit_op)  # play pi/2 pulse around X
 
-        # Measure cavity state
+        # start ECD gate
+        qua.align(cav.name, qubit.name)  # wait for qubit pulse to end
+        cav.play(self.cav_op, ampx=self.x, phase=0)  # First positive displacement
+        qua.wait(int(self.delay // 4), cav.name)
+        cav.play(self.cav_op, ampx=-self.x, phase=0)  # First negative displacement
+        qua.align(qubit.name, cav.name)
+        qubit.play(self.qubit_op2)  # play pi to flip qubit around X
+        qua.align(cav.name, qubit.name)  # wait for qubit pulse to end
+        cav.play(self.cav_op, ampx=-self.x, phase=0)  # Second negative displacement
+        qua.wait(int(self.delay // 4), cav.name)
+        cav.play(self.cav_op, ampx=self.x, phase=0)  # Second positive displacement
+        qua.align(qubit.name, cav.name)
+
+        qubit.play(
+            self.qubit_op1, phase=0
+        )  # play pi/2 pulse around X or Y, to measure either the real or imaginary part of the characteristic function
         qua.align(qubit.name, rr.name)  # align measurement
         rr.measure((self.I, self.Q))  # measure transmitted signal
 
@@ -64,35 +77,24 @@ class WignerFunction(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-    x_start = -1.5 *0.5
-    x_stop =  1.5 *0.5
-    x_step = 0.05
-    
-    y_start = -1.5 * 0.5
-    y_stop =  1.5 * 0.5
-    y_step = 0.05
-    
+
     parameters = {
         "modes": ["QUBIT", "CAV", "RR"],
         "reps": 50000,
         "wait_time": 600000,
         "fetch_period": 2,  # time between data fetching rounds in sec
-        "delay": 2940,  # pi/chi
-        "x_sweep": (x_start, x_stop + x_step / 2, x_step),  # ampitude sweep of the displacement pulses in the ECD
-        "y_sweep": (y_start, y_stop + y_step / 2, y_step),
-        "qubit_op": "pi2",
+        "delay": 1000,  # pi/chi
+        "x_sweep": (0.2, 1 + 0.05 / 2, 0.05),
+        "qubit_op1": "pi2",
+        "qubit_op2": "pi",
         "cav_op": "constant_pulse",
     }
 
     plot_parameters = {
-        "xlabel": "X",
-        "ylabel": "Y",
-        "plot_type": "2D",
-        "err": False,
-        "cmap": "bwr",
+        "xlabel": "X",  # beta of (ECD(beta))
     }
 
-    experiment = WignerFunction(**parameters)
+    experiment = ECDCalibration(**parameters)
     experiment.setup_plot(**plot_parameters)
 
     prof.run(experiment)

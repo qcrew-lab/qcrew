@@ -214,7 +214,7 @@ class Sa124(Instrument):
         logger.info(f"Disconnected {self}")
 
     def single_sweep(
-        self, center, n_av=1, verify_freq=False, set_zeroif_params=False
+        self, center=default_center, n_av=1, verify_freq=False, set_zeroif_params=False
     ) -> float:
         """This method was adapated from the Yale codebase. This function is for mixer tuning.  It's effectively zero-IF mode. The SA124B has a zero IF mode you can access from the Spike software, but it's not documented in the API.  (It is documented for the BB series analyzers.)
 
@@ -229,9 +229,7 @@ class Sa124(Instrument):
         """
         # these zeroif params are hard-coded in the Yale codebase
         if set_zeroif_params:
-            self._set_sweep(rbw=250e3, span=250e3)
-
-        self._set_sweep(center=center)
+            self._set_sweep(center=center, rbw=250e3, span=250e3)
 
         if verify_freq:
             actual_freq = self._freqs[round(len(self._freqs) / 2)]

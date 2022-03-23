@@ -13,9 +13,12 @@ def get_qua_program(mode):
     return play_constant_pulse
 
 
-def get_sweep():
-    freqs, amps = sa.sweep(**sweep_parameters)  # get, plot, show sweep
+def get_sweep(mode, sa, qm, **sweep_params):
+    job = qm.execute(get_qua_program(mode))  # play IF to mode
+    freqs, amps = sa.sweep(**sweep_params)  # get, plot, show sweep
     plt.plot(freqs, amps)
+    plt.show()
+    job.halt()
 
 
 if __name__ == "__main__":
@@ -26,7 +29,6 @@ if __name__ == "__main__":
         qubit.lo_freq = 5e9
 
         mode = qubit  # select the mode whose spectrum you want to sweep
-        job = stage.QM.execute(get_qua_program(mode))  # play IF to mode
 
         sweep_parameters = {  # set sweep parameters
             "center": mode.lo_freq,
@@ -34,5 +36,4 @@ if __name__ == "__main__":
             "rbw": Sa124.default_rbw,
             "ref_power": Sa124.default_ref_power,
         }
-        get_sweep()
-        job.halt()
+        get_sweep(mode, sa, stage.QM, **sweep_parameters)

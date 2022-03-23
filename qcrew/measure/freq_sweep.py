@@ -9,7 +9,7 @@ from qm import qua
 def get_qua_program():
     with qua.program() as play_constant_pulse:
         with qua.infinite_loop_():
-            mode.play("constant_pulse", ampx=2.0)
+            mode.play("constant_pulse", ampx=1.0)
     return play_constant_pulse
 
  

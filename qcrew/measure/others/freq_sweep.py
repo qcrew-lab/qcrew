@@ -1,7 +1,7 @@
 """ freq sweep v5 """
 
 import matplotlib.pyplot as plt
-from qcrew.control import Stagehand
+from qcrew.control import Stagehand 
 from qcrew.control.instruments import Sa124
 from qm import qua
 
@@ -22,7 +22,7 @@ if __name__ == "__main__":
 
     with Stagehand() as stage:
         rr, sa, qubit = stage.RR, stage.SA, stage.QUBIT
-        mode = qubit  # select the mode whose spectrum you want to sweep
+        mode = qubit   # select the mode whose spectrum you want to sweep
         job = stage.QM.execute(get_qua_program())  # play IF to mode
         sweep_parameters = {  # set sweep parameters
             "center": mode.lo_freq,

@@ -6,9 +6,12 @@ from qcrew.control import Stagehand
 
 if __name__ == "__main__":
     with Stagehand() as stage:
-        rr, sa, lb_rr, qubit = stage.RR, stage.SA, stage.LB_RR, stage.QUBIT
+        cav, rr, sa, qubit, qubit_ef = stage.CAV, stage.RR, stage.SA, stage.QUBIT, stage.QUBIT_EF
         # get an already configured qm after making changes to modes
         qm = stage.QM
 
-        mxrtnr = MixerTuner(qubit, sa=sa, qm=qm)
+        mxrtnr = MixerTuner(qubit_ef, sa=sa, qm=qm)
         mxrtnr.tune()
+
+
+

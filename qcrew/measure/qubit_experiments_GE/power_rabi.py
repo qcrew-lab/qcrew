@@ -52,16 +52,20 @@ class PowerRabi(Experiment):
 
 if __name__ == "__main__":
 
-    amp_start = -1.80
-    amp_stop = 1.80
-    amp_step = 0.1
+    amp_start = -1.5
+    amp_stop =  1.5
+    amp_step = 0.05
 
     parameters = {
         "modes": ["QUBIT", "RR"],
         "reps": 5000,
-        "wait_time": 600000,
+        "wait_time": 50000,
         "x_sweep": (amp_start, amp_stop + amp_step / 2, amp_step),
+<<<<<<< HEAD
         "qubit_op": "gaussian_pulse",
+=======
+        "qubit_op": "pi_selective",
+>>>>>>> 9aa82c38fe04c7565f5f6e9352cb821b7fa7507a
         "single_shot": False,
     }
 

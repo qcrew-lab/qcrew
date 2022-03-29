@@ -212,3 +212,40 @@ class Sa124(Instrument):
         sa.sa_close_device(self._handle)
         del sa.ACTIVE_CONNECTIONS[self.id]
         logger.info(f"Disconnected {self}")
+
+    def single_sweep(
+        self, center=default_center, n_av=1, verify_freq=False, set_zeroif_params=False
+    ) -> float:
+        """This method was adapated from the Yale codebase. This function is for mixer tuning.  It's effectively zero-IF mode. The SA124B has a zero IF mode you can access from the Spike software, but it's not documented in the API.  (It is documented for the BB series analyzers.)
+
+        This function becomes notably faster without the verification step,
+        as well as without setting the zeroif_params. If you're going to be
+        looking at a frequency more than once (as you do when tuning a mixer),
+        there's no need to reset the zeroif_params or re-verify the frequency.
+        I recommend only doing those on the first call.
+
+        There's not too much of a need for averaging because the device is
+        quite sensitive.
+        """
+        # these zeroif params are hard-coded in the Yale codebase
+        if set_zeroif_params:
+            self._set_sweep(center=center, rbw=250e3, span=250e3)
+
+        if verify_freq:
+            actual_freq = self._freqs[round(len(self._freqs) / 2)]
+            diff = np.abs(center - actual_freq)
+            if diff > 100e3:
+                raise ValueError(
+                    "Center frequency set inaccurate. Not sure how to proceed with minimization"
+                )
+
+        ys = []
+        for i in range(n_av):
+            _, y = self.sweep()
+            ys.append(y[len(y) // 2])
+            print(ys)
+
+        ys = 10 ** (np.array(ys) / 10.0)
+        y = np.mean(ys)
+        val = 10 * np.log10(y)
+        return val

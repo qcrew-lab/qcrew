@@ -9,12 +9,12 @@ if __name__ == "__main__":
 
     with Stagehand() as stage:
 
-        sa, qubit, cav= stage.SA, stage.QUBIT, stage.CAV
+        sa, qubit, rr, cav= stage.SA, stage.QUBIT, stage.RR, stage.CAV
         qm = stage.QM
         mixer_tuner = MixerTuner(sa, qm)
 
         # this is the mode whose mixer's LO or SB leakage you are tuning
-        mode = cav
+        mode = rr
 
         # minimize LO leakage
 
@@ -34,7 +34,7 @@ if __name__ == "__main__":
             "plot": False,
         }
 
-        #mixer_tuner.tune_lo(mode=mode, method="BF", **bf_params_lo)
+        mixer_tuner.tune_lo(mode=mode, method="BF", **bf_params_lo)
 
         # user Nelder-Mead (NM) minimizer
         #mixer_tuner.tune_lo(mode=mode, method="NM")
@@ -48,7 +48,7 @@ if __name__ == "__main__":
             # number of DC offset sweep points in the given range i.e. decide step size
             "num_points": 11,
             # number of iterations of the minimization you want to run
-            "num_iterations": 150,
+            "num_iterations": 5,
             # after each iteration, the sweep range will be reduced by this factor
             "range_divider": 2,
             # if you want the full minimization traceback, set this to True

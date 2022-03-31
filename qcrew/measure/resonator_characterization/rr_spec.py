@@ -21,7 +21,7 @@ class RRSpectroscopy(Experiment):
         "fit_fn",  # fit function
     }
 
-    def __init__(self, fit_fn="lorentzian", **other_params):
+    def __init__(self, fit_fn= None, **other_params):
 
         self.fit_fn = fit_fn
 
@@ -44,24 +44,14 @@ class RRSpectroscopy(Experiment):
 
 if __name__ == "__main__":
 
-<<<<<<< HEAD
-    x_start = -55e6
-    x_stop = -45e6
-    x_step = 0.05e6
+    x_start = -80e6#-105e6#+0.1e6  #-56e6 #-41e6
+    x_stop = -20e6#-95e6#+0.1e6   #-48e6# -37e66
+    x_step = 0.5e6
 
     parameters = {
         "modes": ["RR"],
-        "reps": 6000,
-=======
-    x_start = -53e6
-    x_stop = -47e6
-    x_step = 0.1e6
-
-    parameters = {
-        "modes": ["RR"],
-        "reps": 50000,
->>>>>>> 9aa82c38fe04c7565f5f6e9352cb821b7fa7507a
-        "wait_time": 40000,
+        "reps": 2000,
+        "wait_time": 50000,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
     }
 

@@ -65,13 +65,16 @@ class CavityT2(Experiment):
 
 if __name__ == "__main__":
 
+    x_start = 40
+    x_stop = 100e3
+    x_step = 1e3
     parameters = {
         "modes": ["QUBIT", "CAV", "RR"],
         "reps": 50000,
-        "wait_time": 600000,
-        "x_sweep": (int(16), int(80000 + 1000 / 2), int(1000)),
+        "wait_time": 100000,
+        "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
         "qubit_op": "pi",
-        "cav_op": "constant_pulse",
+        "cav_op": "gaussian_pulse",
     }
 
     plot_parameters = {

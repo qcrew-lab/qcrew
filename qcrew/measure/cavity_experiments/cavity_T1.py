@@ -52,15 +52,16 @@ class CavityT1(Experiment):
 if __name__ == "__main__":
 
     x_start = 40
-    x_stop = 500e3
-    x_step = 5e3
+    x_stop = 60e3
+    x_step = 0.5e3
     parameters = {
         "modes": ["QUBIT", "CAV", "RR"],
-        "reps": 50000,
-        "wait_time": 1000000,
+        "reps": 4000,
+        "wait_time": 100000,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
-        "qubit_op": "pi_selective",
-        "cav_op": "pi",
+        "qubit_op": "pi_selective_2",
+        "cav_op": "pi_1",
+        "fetch_period": 3,
         
     }
 

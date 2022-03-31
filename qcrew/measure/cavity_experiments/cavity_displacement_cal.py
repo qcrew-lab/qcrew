@@ -43,7 +43,7 @@ class CavityDisplacementCal(Experiment):
         rr.measure((self.I, self.Q))  # measure transmitted signal
         qua.wait(int(self.wait_time // 4), cav.name)  # wait system reset
 
-        self.QUA_stream_results()  # stream variables (I, Q, x, etc)
+        self.QUA_stream_results()  # """ A """stream variables (I, Q, x, etc)
 
 
 # -------------------------------- Execution -----------------------------------
@@ -53,12 +53,12 @@ if __name__ == "__main__":
     x_stop =  1.5
     x_step = 0.02
     
-    parameters = {
+    parameters = {  
         "modes": ["QUBIT", "CAV", "RR"],
         "reps": 10000,
-        "wait_time": 1000000,
+        "wait_time": 100000,
         "x_sweep": (x_start, x_stop + x_step / 2, x_step),
-        "qubit_op": "pi_selective",
+        "qubit_op": "pi_selective_2",
         "cav_op": "gaussian_pulse",
     }
 

@@ -50,12 +50,16 @@ class T1(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-
+    amp_start = 16
+    amp_stop =  30e3
+    amp_step = 0.2e3
+    
     parameters = {
         "modes": ["QUBIT", "RR"],
-        "reps": 20000,
-        "wait_time": 75000,
-        "x_sweep": (int(16), int(50e3 + 500 / 2), int(500)),
+        "reps": 40000,
+        "wait_time": 100000,
+        # "x_sweep": (int(16), int(25e3 + 500 / 2), int(500)),
+        "x_sweep": (int(amp_start), int(amp_stop + amp_step / 2), int(amp_step)),
         "qubit_op": "pi",
         "single_shot": False,
     }

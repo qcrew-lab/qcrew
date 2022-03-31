@@ -60,10 +60,9 @@ class T2_Echo(Experiment):
 
 if __name__ == "__main__":
     x_start = 10
-    x_stop = 6000
+    x_stop = 20e3
     x_step = 100
-    detuning = -0.036e6
-
+    detuning = 0e6
     parameters = {
         "modes": ["QUBIT", "RR"],
         "reps": 30000,

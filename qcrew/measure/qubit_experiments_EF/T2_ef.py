@@ -67,13 +67,18 @@ class T2EF(Experiment):
 
 if __name__ == "__main__":
 
+    x_start = 16
+    x_stop = 10e3
+    x_step = 50
+
     parameters = {
-        "modes": ["QUBIT", "RR"],
-        "reps": 20000,
-        "wait_time": 150000,
-        "x_sweep": (int(16), int(3e3 + 20 / 2), int(20)),
+        "modes": ["QUBIT" ,"RR"],
+        "reps": 5000,
+        "wait_time": 100000,
+        # "x_sweep": (int(16), int(3e3 + 20 / 2), int(20)),
+        "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
         "qubit_ge_pi": "pi",
-        "qubit_ef_pi2": "ef_pi2",
+        "qubit_ef_pi2": "pi2",
         "ef_int_freq": int(-87.8e6),
         "detuning": 800e3,
     }

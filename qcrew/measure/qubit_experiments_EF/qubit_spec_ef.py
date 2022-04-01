@@ -17,15 +17,15 @@ class QubitSpectroscopyEF(Experiment):
     name = "qubit_spec_ef"
 
     _parameters: ClassVar[set[str]] = Experiment._parameters | {
-        "qubit_op",  # operation used for exciting the qubit
+        "qubit_ef_op",  # operation used for exciting the qubit
         "fit_fn",  # fit function
     }
 
     def __init__(
-        self, qubit_op, qubit_pi_pulse_name, fit_fn="lorentzian", **other_params
+        self, qubit_ef_op, qubit_pi_pulse_name, fit_fn="gaussian", **other_params
     ):
 
-        self.qubit_op = qubit_op
+        self.qubit_ef_op = qubit_ef_op
         self.fit_fn = fit_fn
         self.qubit_pi_pulse_name = qubit_pi_pulse_name
 
@@ -35,14 +35,16 @@ class QubitSpectroscopyEF(Experiment):
         """
         Defines pulse sequence to be played inside the experiment loop
         """
-        qubit, rr = self.modes  # get the modes
+        qubit_ef, qubit, rr = self.modes  # get the modes
 
         qubit.play(self.qubit_pi_pulse_name)  # g->e
-        qua.update_frequency(qubit.name, self.x)  # update to e->f (sweep variable)
-        qubit.play(self.qubit_op)  # e->f
-        qua.update_frequency(qubit.name, qubit.int_freq)  # update to g->e
+        qua.align(qubit.name, qubit_ef.name)
+        qua.update_frequency(qubit_ef.name, self.x)  # update to e->f (sweep variable)
+        qubit_ef.play(self.qubit_ef_op, ampx=1)  # e->f
+        qua.align(qubit.name, qubit_ef.name)
+        # qua.update_frequency(qubit.name, qubit.int_freq)  # update to g->e
         qubit.play(self.qubit_pi_pulse_name)  # g->e
-        qua.align(qubit.name, rr.name)  # wait qubit pulse to end
+        qua.align(qubit.name, qubit_ef.name, rr.name)  # wait qubit pulse to end
         rr.measure((self.I, self.Q))  # measure transmitted signal
         qua.wait(int(self.wait_time // 4), rr.name)  # wait system reset
 
@@ -52,14 +54,16 @@ class QubitSpectroscopyEF(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
+    x_start = -60e6
+    x_stop = 160e6
+    xstep = 0.5e6
 
-    xstep = 0.1e6
     parameters = {
-        "modes": ["QUBIT", "RR"],
-        "reps": 10000,
-        "wait_time": 300000,
-        "x_sweep": (int(-90e6), int(-85e6 + xstep / 2), int(xstep)),
-        "qubit_op": "constant_pulse",
+        "modes": ["QUBIT_EF", "QUBIT", "RR"],
+        "reps": 20000,
+        "wait_time": 80000,
+        "x_sweep": (int(x_start), int(x_stop + xstep / 2), int(xstep)),
+        "qubit_ef_op": "gaussian_pulse",
         "qubit_pi_pulse_name": "pi",
     }
 

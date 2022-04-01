@@ -22,7 +22,7 @@ class CavityT1(Experiment):
         "fit_fn",  # fit function
     }
 
-    def __init__(self, cav_op, qubit_op, fit_fn="exp_decay", **other_params):
+    def __init__(self, cav_op, qubit_op, fit_fn="cohstate_decay", **other_params):
 
         self.cav_op = cav_op
         self.qubit_op = qubit_op
@@ -36,7 +36,7 @@ class CavityT1(Experiment):
         """
         qubit, cav, rr = self.modes  # get the modes
 
-        cav.play(self.cav_op)  # play displacement to cavity
+        cav.play(self.cav_op, ampx = 1.8)  # play displacement to cavity
         qua.wait(self.x, cav.name)  # wait relaxation
         qua.align(cav.name, qubit.name)  # align all modes
         qubit.play(self.qubit_op)  # play qubit pulse
@@ -51,13 +51,17 @@ class CavityT1(Experiment):
 
 if __name__ == "__main__":
 
+    x_start = 40
+    x_stop = 500e3
+    x_step = 5e3
     parameters = {
         "modes": ["QUBIT", "CAV", "RR"],
         "reps": 50000,
-        "wait_time": 600000,
-        "x_sweep": (int(16), int(100000 + 2000 / 2), int(2000)),
-        "qubit_op": "pi",
-        "cav_op": "constant_pulse",
+        "wait_time": 1000000,
+        "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
+        "qubit_op": "pi_selective",
+        "cav_op": "pi",
+        
     }
 
     plot_parameters = {

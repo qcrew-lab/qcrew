@@ -59,15 +59,20 @@ class T2_Echo(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
+    x_start = 10
+    x_stop = 6000
+    x_step = 100
+    detuning = -0.036e6
 
     parameters = {
         "modes": ["QUBIT", "RR"],
-        "reps": 10000,
-        "wait_time": 100000,
-        "x_sweep": (int(16), int(100000 + 2500 / 2), int(2500)),
+        "reps": 30000,
+        "wait_time": 75000,
+        "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
         "qubit_pi2": "pi2",
         "qubit_pi": "pi",
-        "single_shot": True,
+        "single_shot": False,
+        "detuning": int(detuning)
     }
 
     plot_parameters = {

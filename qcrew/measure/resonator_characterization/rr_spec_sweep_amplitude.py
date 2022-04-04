@@ -49,8 +49,8 @@ if __name__ == "__main__":
 
     parameters = {
         "modes": ["RR", "QUBIT"],
-        "reps": 2000,
-        "wait_time": 100000,
+        "reps": 20000,
+        "wait_time": 50000,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
         "y_sweep": ( 0.5,0.7,0.9,1.1),
         #"y_sweep": (0, 0.5 + 0.05/2, 0.05),

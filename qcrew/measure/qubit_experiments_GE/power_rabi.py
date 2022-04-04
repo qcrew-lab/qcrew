@@ -52,8 +52,8 @@ class PowerRabi(Experiment):
 
 if __name__ == "__main__":
 
-    amp_start = -1.2
-    amp_stop =  1.2
+    amp_start = -1.4
+    amp_stop =  1.4
     amp_step = 0.05
 
     parameters = {

@@ -301,18 +301,21 @@ class Experiment(Parametrized):
             reshaped_data = partial_results[tag].reshape(self.buffering)
             independent_data.append(reshaped_data)
 
-        # Phase information useful for troubleshooting and rr spectroscopy
-        # freqs = independent_data[0]
-        # phase = (
-        #    np.arctan(partial_results["Q"] / partial_results["I"])
-        #    - 0 * 2 * np.pi * freqs * 31e-9 * 8
-        # )
-        # reshaped_phase_data = np.average(phase, axis=0).reshape(self.buffering)
+        #### Phase information useful for troubleshooting and rr spectroscopy
+        freqs = independent_data[0]
+        phase = (
+            np.arctan2(partial_results["Q"], partial_results["I"])
+            - 2 * np.pi * freqs * 32e-9 * 8
+        )
+        phase = np.unwrap(phase, discont=np.pi / 10.0)
+
+        phase = phase % (2 * np.pi)
+        reshaped_phase_data = np.average(phase, axis=0).reshape(self.buffering)
         # dependent_data.append(reshaped_phase_data)
 
-        # if an internal sweep is defined in the child experiment class, add its value
-        # as independent variable data. The values are repeated so the dimensions match
-        # the other independent data shapes.
+        ### if an internal sweep is defined in the child experiment class, add its value
+        ### as independent variable data. The values are repeated so the dimensions match
+        ### the other independent data shapes.
 
         try:
             internal_sweep = self.internal_sweep

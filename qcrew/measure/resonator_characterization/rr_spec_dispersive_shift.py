@@ -48,9 +48,9 @@ class RRSpecDispersiveShift(Experiment):
 
 if __name__ == "__main__":
 
-    x_start = -51e6
-    x_stop = -49.5e6
-    x_step = 0.01e6
+    x_start = -52e6
+    x_stop = -48e6
+    x_step = 0.02e6
 
     parameters = {
         "modes": ["RR", "QUBIT"],

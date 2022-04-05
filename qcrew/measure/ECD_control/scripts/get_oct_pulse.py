@@ -18,7 +18,7 @@ OCT_PULSES_PATH = Path.cwd() / "config/oct_pulses"
 if __name__ == "__main__":
 
     # user defined suffix to append to file saving the oct pulse
-    suffix = ""
+    suffix = "_"
 
     # path to the .npz file containing rotation params
     path = OCT_ROTATIONS_PATH / ""

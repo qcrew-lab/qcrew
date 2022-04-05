@@ -18,10 +18,10 @@ OCT_PULSES_PATH = Path.cwd() / "config/oct_pulses"
 if __name__ == "__main__":
 
     # user defined suffix to append to file saving the oct pulse
-    suffix = "_"
+    suffix = ""
 
     # path to the .npz file containing rotation params
-    path = OCT_ROTATIONS_PATH / ""
+    path = OCT_ROTATIONS_PATH / "fock_states/fock_1_F_99.npz"
     betas = np.load(path)["betas"]
     phis = np.load(path)["phis"]
     thetas = np.load(path)["thetas"]
@@ -33,12 +33,12 @@ if __name__ == "__main__":
         "chi_prime_Hz": 1,  # second order dispersive shift in Hz
         "Ks_Hz": 0,  # Kerr correction not yet implemented.
         "epsilon_m_MHz": 400,  # largest oscillator drive amplitude in MHz (max|epsilon|)
-        "unit_amp": 0.01,  # DAC unit amp of gaussian displacement to alpha=1.
+        "unit_amp": 1,  # DAC unit amp of gaussian displacement to alpha=1.
         "sigma": 11,  # oscillator displacement sigma
         "chop": 4,  # oscillator displacement chop (number of stds. to include in gaussian pulse)
     }
     qubit_params = {
-        "unit_amp": 0.5,
+        "unit_amp": 1,
         "sigma": 6,
         "chop": 4,
     }

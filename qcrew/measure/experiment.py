@@ -303,14 +303,14 @@ class Experiment(Parametrized):
 
         #### Phase information useful for troubleshooting and rr spectroscopy
         freqs = independent_data[0]
-        phase = (
-            np.arctan2(partial_results["Q"], partial_results["I"])
-            - 2 * np.pi * freqs * 32e-9 * 8
-        )
-        phase = np.unwrap(phase, discont=np.pi / 10.0)
+        # phase = (
+        #    np.arctan2(partial_results["Q"], partial_results["I"])
+        #    - 2 * np.pi * freqs * 32e-9 * 8
+        # )
+        # phase = np.unwrap(phase, discont=np.pi / 10.0)
 
-        phase = phase % (2 * np.pi)
-        reshaped_phase_data = np.average(phase, axis=0).reshape(self.buffering)
+        # phase = phase % (2 * np.pi)
+        # reshaped_phase_data = np.average(phase, axis=0).reshape(self.buffering)
         # dependent_data.append(reshaped_phase_data)
 
         ### if an internal sweep is defined in the child experiment class, add its value

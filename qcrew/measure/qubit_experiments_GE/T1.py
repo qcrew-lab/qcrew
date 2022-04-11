@@ -60,7 +60,7 @@ if __name__ == "__main__":
         "wait_time": 100000,
         # "x_sweep": (int(16), int(25e3 + 500 / 2), int(500)),
         "x_sweep": (int(amp_start), int(amp_stop + amp_step / 2), int(amp_step)),
-        "qubit_op": "pi",
+        "qubit_op": "pi_selective",
         "single_shot": False,
     }
 

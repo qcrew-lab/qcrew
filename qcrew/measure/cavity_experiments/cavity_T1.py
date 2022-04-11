@@ -59,9 +59,9 @@ if __name__ == "__main__":
         "reps": 4000,
         "wait_time": 100000,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
-        "qubit_op": "pi_selective_2",
-        "cav_op": "pi_1",
-        "fetch_period": 3,
+        "qubit_op": "pi_selective",
+        "cav_op": "cohstate_1",
+        #"fetch_period": 3,
         
     }
 

@@ -36,14 +36,15 @@ class T1EF(Experiment):
         """
         Defines pulse sequence to be played inside the experiment loop
         """
-        qubit,qubit_ef, rr = self.modes  # get the modes
-
+        qubit, qubit_ef, rr = self.modes  # get the modes
+        
         qubit.play(self.qubit_ge_pi)  # g-> e pi
         qua.align(qubit.name, qubit_ef.name)
         qubit_ef.play(self.qubit_ef_pi)  # e-> f pi
+        qua.align(qubit_ef.name, qubit.name)
         qua.wait(self.x, qubit.name)  # wait for partial ef decay
         qubit.play(self.qubit_ge_pi)  # e->g pi
-        qua.align(qubit.name, rr.name)  # wait qubit pulse to end
+        qua.align(qubit.name, rr.name)
         rr.measure((self.I, self.Q))  # measure qubit g population
         qua.wait(int(self.wait_time // 4), rr.name)  # wait system reset
 
@@ -54,17 +55,16 @@ class T1EF(Experiment):
 
 if __name__ == "__main__":
     x_start = 16
-    x_stop = 4e3
-    x_step = 50
+    x_stop = 5e3
+    x_step = 40
 
     parameters = {
         "modes": ["QUBIT","QUBIT_EF","RR"],
-        "reps": 10000,
-        "wait_time": 40000,
+        "reps": 5000,
+        "wait_time": 60000,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
         "qubit_ge_pi": "pi",
         "qubit_ef_pi": "ef_pi",
-        "fetch_period": 3,
     }
 
     plot_parameters = {

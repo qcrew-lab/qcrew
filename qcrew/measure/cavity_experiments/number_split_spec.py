@@ -51,9 +51,9 @@ class NSplitSpectroscopy(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-    x_start = -182e6 #-51e6
-    x_stop = -179e6 #-49.76e6
-    x_step  = 20e3
+    x_start = -54e6 #-51e6
+    x_stop = -48e6 #-49.76e6
+    x_step  = 0.1e6
 
     parameters = {
         "modes": ["QUBIT", "CAV", "RR"],
@@ -61,7 +61,7 @@ if __name__ == "__main__":
         "wait_time": 600000,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
         "qubit_op": "pi_selective",
-        "cav_op": "pi",
+        "cav_op": "cohstate_1",
         "cav_amp": 0,
     }
 

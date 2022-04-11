@@ -58,8 +58,8 @@ if __name__ == "__main__":
         "reps": 10000,
         "wait_time": 100000,
         "x_sweep": (x_start, x_stop + x_step / 2, x_step),
-        "qubit_op": "pi_selective_2",
-        "cav_op": "gaussian_pulse",
+        "qubit_op": "pi_selective",
+        "cav_op": "cohstate_1",
     }
 
     plot_parameters = {

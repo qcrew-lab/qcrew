@@ -58,12 +58,12 @@ class QubitPopulation(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-    amp_start = -1.8
-    amp_stop =  1.8
+    amp_start = -1.5
+    amp_stop =  1.5
     amp_step = 0.05
     parameters = {
         "modes": ["QUBIT", "QUBIT_EF", "RR"],
-        "reps": 10000,
+        "reps": 8000,
         "wait_time": 300000,
         "qubit_ge_pi": "pi",
         "qubit_ef_pi": "ef_pi",

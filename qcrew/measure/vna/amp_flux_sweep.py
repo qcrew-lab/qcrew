@@ -50,12 +50,12 @@ class AmpFluxSweep:
         saver.save_data({"frequency": self.vna.frequencies})  # arg must be a dict
         self.yoko.source = "current"
         self.yoko.level = 0  # set output to nominal value
-        self.yoko.state = "on"
+        self.yoko.state = True
 
         self._run(saver)  # runs fsweep or fpsweep based on sweep initialization
-    
+
         self.yoko.level = 0
-        self.yoko.state = "off"
+        self.yoko.state = False
 
     def _run_fsweep(self, saver) -> None:
         self.yoko.level = self.currents
@@ -91,6 +91,7 @@ class AmpFluxSweep:
                 self.vna.sweep()
                 saver.save_data(self.vna.data, pos=(rep, count))
 
+
 if __name__ == "__main__":
 
     with Stagehand() as stage:
@@ -102,21 +103,21 @@ if __name__ == "__main__":
         # these parameters are set on VNA and do not change during the measurement run
         vna_parameters = {
             # frequency sweep center (Hz)
-            #"fcenter": 6.12725e9,
+            # "fcenter": 6.12725e9,
             # frequency sweep span (Hz)
-            #"fspan": 20e6,
+            # "fspan": 20e6,
             # frequency sweep start value (Hz)
-            "fstart": 4e9,
+            "fstart": 6.546735e9,
             # frequency sweep stop value (Hz)
-            "fstop": 9e9,
+            "fstop": 6.547735e9,
             # IF bandwidth (Hz), [1, 500000]
             "bandwidth": 1e3,
             # number of frequency sweep points, [2, 200001]
-            "sweep_points": 501,
+            "sweep_points": 1001,
             # delay (s) between successive sweep points, [0.0, 100.0]
             "sweep_delay": 1e-3,
             # input powers (port1, port2)
-            "powers": (-30, -30),
+            "powers": (-9, 0),
             # trace data to be displayed and acquired, max traces = 16
             # each tuple in the list is (<S parameter>, <trace format>)
             # valid S parameter keys = ("s11", "s12", "s21", "s22")
@@ -136,7 +137,7 @@ if __name__ == "__main__":
         # these parameters are looped over during the measurement
         measurement_parameters = {
             # Number of sweep averages, must be an integer > 0
-            "repetitions": 10,
+            "repetitions": 50,
             # Input currents from yoko
             # "currents" can be a set {a, b,...}, tuple (st, stop, step), or constant x
             # use set for discrete sweep points a, b, ...
@@ -145,7 +146,7 @@ if __name__ == "__main__":
             # eg 1: currents = (-10e-6, 0e-6, 1e-6) will sweep current from -10uA to 0uA inclusive in steps of 1uA
             # eg 2: currents = {-15e-6, 0e-6, 15e-6} will sweep curent at -15uA, 0uA, and 15uA
             # eg 3: currents = 0 will do a frequency sweep at constant current of 0uA i.e. no current sweep
-            "currents": (-4e-3, 4e-3, 0.1e-3),
+            "currents": (-20e-3, 20e-3, 5e-3),
         }
 
         # create measurement instance with instruments and measurement_parameters
@@ -172,13 +173,16 @@ if __name__ == "__main__":
         # use this code to plot after msmt is done
         import h5py
         import matplotlib.pyplot as plt
+
         file = h5py.File(filepath, "r")
         data = file["data"]
-        s21_phase = data["s21_phase"]
+        s21_mlog = data["s21_mlog"]
         currs = data["current"]
         freqs = data["frequency"]
-        s21_phase_avg = np.mean(s21_phase, axis=0)
+        s21_mlog_avg = np.mean(s21_mlog, axis=0)
         plt.figure(figsize=(12, 8))
-        plt.pcolormesh(currs, freqs, s21_phase_avg.T, cmap="twilight_shifted", shading="auto")
+        plt.pcolormesh(
+            currs, freqs, s21_mlog_avg.T, cmap="twilight_shifted", shading="auto"
+        )
         plt.colorbar()
         plt.show()

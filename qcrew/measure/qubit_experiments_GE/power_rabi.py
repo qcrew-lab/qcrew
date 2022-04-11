@@ -54,7 +54,7 @@ if __name__ == "__main__":
 
     amp_start = -1.80
     amp_stop = 1.80
-    amp_step = 0.1
+    amp_step = 0.05
 
     parameters = {
         "modes": ["QUBIT", "RR"],
@@ -62,7 +62,7 @@ if __name__ == "__main__":
         "wait_time": 600000,
         "x_sweep": (amp_start, amp_stop + amp_step / 2, amp_step),
         "qubit_op": "gaussian_pulse",
-        "single_shot": True,
+        "single_shot": False,
     }
 
     plot_parameters = {

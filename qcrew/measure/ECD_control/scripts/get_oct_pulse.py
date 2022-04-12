@@ -6,14 +6,14 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 
-from ECD_control.ECD_pulse_construction.ECD_pulse_construction import (
+from qcrew.measure.ECD_control.ECD_control.ECD_pulse_construction.ECD_pulse_construction import (
     FakeQubit,
     FakeStorage,
     conditional_displacement_circuit,
 )
 
-OCT_ROTATIONS_PATH = Path.cwd() / "config/oct_rotations"
-OCT_PULSES_PATH = Path.cwd() / "config/oct_pulses"
+OCT_ROTATIONS_PATH = Path(__file__).resolve().parents[4] / "config/oct_rotations"
+OCT_PULSES_PATH = Path(__file__).resolve().parents[4] / "config/oct_pulses"
 
 if __name__ == "__main__":
 
@@ -33,12 +33,12 @@ if __name__ == "__main__":
         "chi_prime_Hz": 1,  # second order dispersive shift in Hz
         "Ks_Hz": 0,  # Kerr correction not yet implemented.
         "epsilon_m_MHz": 400,  # largest oscillator drive amplitude in MHz (max|epsilon|)
-        "unit_amp": 1,  # DAC unit amp of gaussian displacement to alpha=1.
-        "sigma": 11,  # oscillator displacement sigma
+        "unit_amp": 0.01,  # DAC unit amp of gaussian displacement to alpha=1.
+        "sigma": 6,  # oscillator displacement sigma
         "chop": 4,  # oscillator displacement chop (number of stds. to include in gaussian pulse)
     }
     qubit_params = {
-        "unit_amp": 1,
+        "unit_amp": 0.1,
         "sigma": 6,
         "chop": 4,
     }
@@ -77,9 +77,12 @@ if __name__ == "__main__":
     )
 
     # Save file with today's date
+    # save cavity dac pulse and qubit dac pulse separately for now
     date_str = datetime.datetime.now().strftime("%Y%d%m_%H%M%S_oct_pulse")
-    filepath = OCT_PULSES_PATH / date_str / suffix
-    np.savez(filepath, cavity=cavity_dac_pulse, qubit=qubit_dac_pulse)
+    filepath_cavity = OCT_PULSES_PATH / f"{date_str}_cavity_{suffix}"
+    filepath_qubit = OCT_PULSES_PATH / f"{date_str}_qubit_{suffix}"
+    np.savez(filepath_cavity, oct_pulse=cavity_dac_pulse)
+    np.savez(filepath_qubit, oct_pulse=qubit_dac_pulse)
 
     # plotting the pulse
     fig, axs = plt.subplots(2, 1)

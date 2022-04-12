@@ -4,26 +4,25 @@ from pathlib import Path
 
 import numpy as np
 
-from qcrew.control.pulses.pulse import BASE_PULSE_AMP, Pulse
+from qcrew.control.pulses.pulse import Pulse
+
 
 class OptimalControlPulse(Pulse):
-      """ """
-      
-      def __init__(self, path: Path, ampx: float = .2, pad: int = 0) -> None:
     """ """
-        self._path = path
-        self.ampx = ampx
-        self.pad = pad
-            
-        npzfile = np.load(Path(self._path))
-        cavity_pulse = npzfile["cavity"]
-        qubit_pulse = npzfile["qubit"]
-        self.length = len(cavity_pulse)  # both pulses should have same length
 
-    def __call__(
-        self, *, sigma: float, chop: int = None, ampx: float = None, drag: float = None
-    ) -> None:
+    def __init__(self, path: Path, ampx: float = 1.0, pad: int = 0) -> None:
         """ """
-        length = int(sigma * chop) if chop is not None else int(sigma * self.chop)
-        super().__call__(sigma=sigma, chop=chop, ampx=ampx, drag=drag, length=length)
+        self.path = path
+        self.pad = pad
 
+        npzfile = np.load(Path(self.path))
+        self.oct_pulse = npzfile["oct_pulse"]
+
+        super().__init__(length=len(self.oct_pulse), ampx=ampx, integration_weights=None)
+
+    @property
+    def samples(self):
+        """ """
+        i_wave = np.real(self.oct_pulse)
+        q_wave = np.imag(self.oct_pulse)
+        return i_wave, q_wave

@@ -22,7 +22,8 @@ class ECDCalibration(Experiment):
 
     _parameters: ClassVar[set[str]] = Experiment._parameters | {
         "cav_op",  # operation for displacing the cavity
-        "qubit_op",  # operation used for exciting the qubit
+        "qubit_op1",  # operation used for exciting the qubit
+        "qubit_op2",
         "fit_fn",  # fit function
         "delay",  # describe...
     }
@@ -46,8 +47,8 @@ class ECDCalibration(Experiment):
         qubit, cav, rr = self.modes  # get the modes
         qua.reset_frame(cav.name)
 
-        # TODO work in progress
-        qubit.play(self.qubit_op)  # play pi/2 pulse around X
+        
+        qubit.play(self.qubit_op1)  # play pi/2 pulse around X
 
         # start ECD gate
         qua.align(cav.name, qubit.name)  # wait for qubit pulse to end
@@ -63,7 +64,7 @@ class ECDCalibration(Experiment):
         qua.align(qubit.name, cav.name)
 
         qubit.play(
-            self.qubit_op1, phase=0
+            self.qubit_op1, phase=0.0
         )  # play pi/2 pulse around X or Y, to measure either the real or imaginary part of the characteristic function
         qua.align(qubit.name, rr.name)  # align measurement
         rr.measure((self.I, self.Q))  # measure transmitted signal
@@ -77,21 +78,27 @@ class ECDCalibration(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
+    
+    x_start = -2
+    x_stop = 2
+    x_step = 0.05
 
     parameters = {
         "modes": ["QUBIT", "CAV", "RR"],
         "reps": 50000,
         "wait_time": 600000,
-        "fetch_period": 2,  # time between data fetching rounds in sec
-        "delay": 1000,  # pi/chi
-        "x_sweep": (0.2, 1 + 0.05 / 2, 0.05),
+        #"fetch_period": 2,  # time between data fetching rounds in sec
+        "delay": 200,  
+        "x_sweep": (x_start, x_stop + x_step / 2, x_step),
         "qubit_op1": "pi2",
         "qubit_op2": "pi",
-        "cav_op": "constant_pulse",
+        "cav_op": "CD_cali",
+        "fit_fn": "gaussian",
     }
 
     plot_parameters = {
         "xlabel": "X",  # beta of (ECD(beta))
+        
     }
 
     experiment = ECDCalibration(**parameters)

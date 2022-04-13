@@ -38,7 +38,7 @@ class QFunction(Experiment):
         """
         qubit, cav, rr = self.modes  # get the modes
         # qua.reset_frame(cav.name)
-        #cav.play(self.cav_op, phase=-0.25)  # initial state creation
+        cav.play(self.cav_op, phase=0)  # initial state creation
 
         cav.play(self.cav_op, ampx=self.x, phase=0)  # displacement in I direction
         cav.play(self.cav_op, ampx=self.y, phase=0.25)  # displacement in Q direction

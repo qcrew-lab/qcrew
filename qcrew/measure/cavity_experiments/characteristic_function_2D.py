@@ -105,12 +105,12 @@ class CharacteristicFunction(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-    x_start = -1.5 *0.5
-    x_stop =  1.5 *0.5
+    x_start = -1.0
+    x_stop =  1.0
     x_step = 0.05
     
-    y_start = -1.5 * 0.5
-    y_stop =  1.5 * 0.5
+    y_start = -1.0
+    y_stop =  1.0
     y_step = 0.05
 
 
@@ -118,13 +118,13 @@ if __name__ == "__main__":
         "modes": ["QUBIT", "CAV", "RR"],
         "reps": 1000000,
         "wait_time": 100000,
-        "fetch_period": 8,  # time between data fetching rounds in sec
-        "delay": 500,  # wait time between opposite sign displacements
+        "fetch_period": 5,  # time between data fetching rounds in sec
+        "delay": 200,  # wait time between opposite sign displacements
         "x_sweep": (x_start, x_stop + x_step / 2, x_step),  # ampitude sweep of the displacement pulses in the ECD
         "y_sweep": (y_start, y_stop + y_step / 2, y_step),
         "qubit_op1": "pi2",
         "qubit_op2": "pi",
-        "cav_state_op": "cohstate_2",
+        "cav_state_op": "cohstate_1",
         "cav_op": "CD_cali",
         "measure_real": True,  # measure real part of char function if True, imag Part if false
     }
@@ -133,7 +133,7 @@ if __name__ == "__main__":
         "xlabel": "X",  # beta of (ECD(beta))
         "ylabel": "Y",
         "plot_type": "2D",
-                "cmap": "bwr",
+        "cmap": "bwr",
     }
 
     experiment = CharacteristicFunction(**parameters)

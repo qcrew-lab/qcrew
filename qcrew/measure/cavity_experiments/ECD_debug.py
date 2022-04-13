@@ -16,9 +16,9 @@ import numpy as np
 # ---------------------------------- Class -------------------------------------
 
 
-class SqueezingECD(Experiment):
+class ECDDebug(Experiment):
 
-    name = "squeezing_ecd"
+    name = "ecd_debug"
 
     _parameters: ClassVar[set[str]] = Experiment._parameters | {
         "cav_op_ecd",  # fixed displacement.
@@ -29,16 +29,21 @@ class SqueezingECD(Experiment):
         "ecd_amp_scale",  # amp scaling factor for cav_op_ecd pulse
         "fit_fn",  # fit function
         "delay",  # describe...
+        "cav_op_d",
+        "d_amp_scale",
+        
     }
 
     def __init__(
         self,
         cav_op_qfunc,
         cav_op_ecd,
+        cav_op_d,
         qubit_op_qfunc,
         qubit_op1_ecd,
         qubit_op2_ecd,
         ecd_amp_scale,
+        d_amp_scale,
         fit_fn=None,
         delay=4,
         measure_real=True,
@@ -46,6 +51,7 @@ class SqueezingECD(Experiment):
     ):
         self.cav_op_qfunc = cav_op_qfunc
         self.cav_op_ecd = cav_op_ecd
+        self.cav_op_d = cav_op_d
         self.qubit_op_qfunc = qubit_op_qfunc
         self.qubit_op1_ecd = qubit_op1_ecd
         self.qubit_op2_ecd = qubit_op2_ecd
@@ -53,6 +59,7 @@ class SqueezingECD(Experiment):
         self.delay = delay
         self.measure_real = measure_real
         self.ecd_amp_scale = ecd_amp_scale
+        self.d_amp_scale = d_amp_scale
 
         super().__init__(**other_params)  # Passes other parameters to parent
 
@@ -67,21 +74,46 @@ class SqueezingECD(Experiment):
         # Initialize the qubit in a supersposition state
         qubit.play(self.qubit_op1_ecd)
         # ECD Gate
-        for repetitions in range(5):
-            qua.align(cav.name, qubit.name)  # wait for qubit pulse to end
-            cav.play(self.cav_op_ecd, ampx=self.ecd_amp_scale, phase=0)  # First positive displacement
-            qua.wait(int(self.delay // 4), cav.name)  # wait time between opposite sign displacements
-            cav.play(self.cav_op_ecd, ampx=-self.ecd_amp_scale, phase=0)  # First negative displacement
-            qua.align(qubit.name, cav.name)
-            qubit.play(self.qubit_op2_ecd)  # pi pulse to flip the qubit state (echo)
-            qua.align(cav.name, qubit.name)  # wait for qubit pulse to end
-            cav.play(self.cav_op_ecd, ampx=-self.ecd_amp_scale, phase=0)  # Second negative displacement
-            qua.wait(int(self.delay // 4), cav.name)  # wait time between opposite sign displacements
-            cav.play(self.cav_op_ecd, ampx=self.ecd_amp_scale, phase=0)  # Second positive displacement
-            qua.align(qubit.name, cav.name)
-
-        # final pi2 pulse to end the squeezing sequence
+        
+        qua.align(cav.name, qubit.name)  # wait for qubit pulse to end
+        cav.play(self.cav_op_ecd, ampx=self.ecd_amp_scale, phase=0)  # First positive displacement
+        qua.wait(int(self.delay // 4), cav.name)  # wait time between opposite sign displacements
+        cav.play(self.cav_op_ecd, ampx=-self.ecd_amp_scale, phase=0)  # First negative displacement
+        qua.align(qubit.name, cav.name)
+        qubit.play(self.qubit_op2_ecd)  # pi pulse to flip the qubit state (echo)
+        qua.align(cav.name, qubit.name)  # wait for qubit pulse to end
+        cav.play(self.cav_op_ecd, ampx=-self.ecd_amp_scale, phase=0)  # Second negative displacement
+        qua.wait(int(self.delay // 4), cav.name)  # wait time between opposite sign displacements
+        cav.play(self.cav_op_ecd, ampx=self.ecd_amp_scale, phase=0)  # Second positive displacement
+        qua.align(qubit.name, cav.name)
+        
+        # D(a)
+        cav.play(self.cav_op_d, ampx = self.d_amp_scale, phase =0)
+        
+        # ECD Gate back
+        qua.align(cav.name, qubit.name)  # wait for qubit pulse to end
+        cav.play(self.cav_op_ecd, ampx=-1*self.ecd_amp_scale, phase=0)  # First positive displacement
+        qua.wait(int(self.delay // 4), cav.name)  # wait time between opposite sign displacements
+        cav.play(self.cav_op_ecd, ampx=self.ecd_amp_scale, phase=0)  # First negative displacement
+        qua.align(qubit.name, cav.name)
+        qubit.play(self.qubit_op2_ecd)  # pi pulse to flip the qubit state (echo)
+        qua.align(cav.name, qubit.name)  # wait for qubit pulse to end
+        cav.play(self.cav_op_ecd, ampx=self.ecd_amp_scale, phase=0)  # Second negative displacement
+        qua.wait(int(self.delay // 4), cav.name)  # wait time between opposite sign displacements
+        cav.play(self.cav_op_ecd, ampx=-1*self.ecd_amp_scale, phase=0)  # Second positive displacement
+        qua.align(qubit.name, cav.name)
+        
+        # D(-a)
+        cav.play(self.cav_op_d, ampx = -1*self.d_amp_scale, phase =0)
+        
+        # flip qubit back 
+        
+        qua.align(qubit.name, cav.name)
+        
         qubit.play(self.qubit_op1_ecd)
+        
+        qua.align(qubit.name, cav.name)
+
 
         # Measure the created state with the qfunc
         cav.play(self.cav_op_qfunc, ampx=self.x, phase=0)  # displacement in I direction
@@ -97,7 +129,6 @@ class SqueezingECD(Experiment):
 
         self.QUA_stream_results()  # stream variables (I, Q, x, etc)
 
-
 # -------------------------------- Execution -----------------------------------
 if __name__ == "__main__":
     x_start = -1.8
@@ -108,26 +139,29 @@ if __name__ == "__main__":
     y_stop = 1.8
     y_step = 0.1
 
-    ecd_amp_scale = 1
+    ecd_amp_scale = 1.8
+    d_amp_scale = 1
 
     parameters = {
         "modes": ["QUBIT", "CAV", "RR"],
         "reps": 30000,
         "wait_time": 80000,
-        "fetch_period": 5,  # time between data fetching rounds in sec
+        "fetch_period": 6,  # time between data fetching rounds in sec
         "delay": 200,  # wait time between opposite sign displacements
         "ecd_amp_scale": ecd_amp_scale,
+        "d_amp_scale": d_amp_scale,
         "x_sweep": (
             x_start,
             x_stop + x_step / 2,
             x_step,
         ),  # ampitude sweep of the displacement pulses in the ECD
         "y_sweep": (y_start, y_stop + y_step / 2, y_step),
-        "qubit_op1_ecd": "pi2",
+        "qubit_op1_ecd": "pi",
         "qubit_op2_ecd": "pi",
         "qubit_op_qfunc": "pi_selective",
         "cav_op_ecd": "CD_cali",
         "cav_op_qfunc": "cohstate_1",
+        "cav_op_d": "cohstate_1"
     }
 
     plot_parameters = {
@@ -137,7 +171,7 @@ if __name__ == "__main__":
         "cmap": "bwr",
     }
 
-    experiment = SqueezingECD(**parameters)
+    experiment = ECDDebug(**parameters)
     experiment.setup_plot(**plot_parameters)
 
     prof.run(experiment)

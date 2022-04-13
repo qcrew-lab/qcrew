@@ -59,7 +59,7 @@ class CharacteristicFunction(Experiment):
 
         qua.reset_frame(cav.name)
         
-        #cav.play(self.cav_state_op, phase=0.0)  # to create a coherent state
+        cav.play(self.cav_state_op, phase=0.0)  # to create a coherent state
         #qua.align(cav.name, qubit.name)
 
         qubit.play(self.qubit_op1)  # bring qubit into superposition
@@ -93,16 +93,16 @@ class CharacteristicFunction(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-    x_start = -1.5
-    x_stop = 1.5
-    x_step = 0.04
+    x_start = -1.0
+    x_stop = 1.0
+    x_step = 0.05
 
     parameters = {
         "modes": ["QUBIT", "CAV", "RR"],
         "reps": 1000000,
-        "wait_time": 600000,
+        "wait_time": 100000,
         "fetch_period": 2,  # time between data fetching rounds in sec
-        "delay": 500,  # wait time between opposite sign displacements
+        "delay": 200,  # wait time between opposite sign displacements
         "x_sweep": (
             x_start,
             x_stop + x_step / 2,

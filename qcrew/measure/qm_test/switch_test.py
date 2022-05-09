@@ -26,20 +26,20 @@ config = {
                 "lo_frequency": 5e9,
             },
             "intermediate_frequency": -50e6,
-            #"digitalInputs": {
-            #    "input_switch": {
-            #        "port": ("con1", 1),
-            #        "delay": 144,
-            #        "buffer": 0,
-            #    },
-            #},
+            "digitalInputs": {
+                "input_switch": {
+                    "port": ("con1", 1),
+                    "delay": 144,
+                    "buffer": 0,
+                },
+            },
             "operations": {"pulse1": "pulse1"},
         },
         "dummy": {
             "singleInput": {
-                "port": ("con1", 9),
+               "port": ("con1", 9),
             },
-            "intermediate_frequency": 180e6,
+            "intermediate_frequency": 250e6,
             "digitalInputs": {
                 "input_switch": {
                     "port": ("con1", 1),
@@ -53,7 +53,7 @@ config = {
     "pulses": {
         "pulse1": {
             "operation": "control",
-            "length": 10000,
+            "length": 100,
             "waveforms": {
                 "I": "wf_I",
                 "Q": "wf_Q",
@@ -66,10 +66,11 @@ config = {
             "waveforms": {
                 "single": "wf_I",
             },
+            "digital_marker": "digital_waveform_high",
         },
     },
     "waveforms": {
-        "wf_I": {"type": "constant", "sample": 0.2},
+        "wf_I": {"type": "constant", "sample": 0.01},
         "wf_Q": {"type": "constant", "sample": 0.0},
     },
     "digital_waveforms": {
@@ -88,13 +89,11 @@ config = {
 
 with qua.program() as play_constant_pulse:
     x = qua.declare(int)
-    with qua.for_(x, 0, x <= 10000000, x + 1):
-        qua.play("pulse2", "dummy")
+    with qua.for_(x, 0, x <= 100000, x + 1):
+        qua.play("pulse1", "qubit")
+        qua.wait(100000)
 
 qmm = QuantumMachinesManager()
 qm = qmm.open_qm(config)
 job = qm.execute(play_constant_pulse)
 job.result_handles.wait_for_all_values()
-print("done")
-# time.sleep(60)
-# job.halt()

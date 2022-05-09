@@ -103,9 +103,9 @@ if __name__ == "__main__":
             # frequency sweep span (Hz)
             "fspan": 10e6,
             # frequency sweep start value (Hz)
-            #"fstart": 4e9,
+            # "fstart": 4e9,
             # frequency sweep stop value (Hz)
-            #"fstop": 8e9,
+            # "fstop": 8e9,
             # IF bandwidth (Hz), [1, 500000]
             "bandwidth": 1e2,
             # number of frequency sweep points, [2, 200001]
@@ -124,14 +124,14 @@ if __name__ == "__main__":
             ],
             # if true, VNA will display averaged traces on the Shockline app
             # if false, VNA will display the trace of the current run
-            "is_averaging": False,
+            "is_averaging": True,
         }
         vna.configure(**vna_parameters)
 
         # these parameters are looped over during the measurement
         measurement_parameters = {
             # Number of sweep averages, must be an integer > 0
-            "repetitions": 100,
+            "repetitions": 10,
             # Input powers at (<port1>, <port2>) (dBm), range [-30.0, 15.0]
             # <portX> (X=1,2) can be a set {a, b,...}, tuple (st, stop, step), or constant x
             # use set for discrete sweep points a, b, ...
@@ -141,7 +141,7 @@ if __name__ == "__main__":
             # eg 1: powers = ((-30, 15, 5), 0) will sweep port 1 power from -30dBm to 15dBm inclusive in steps of 5dBm with port 2 power remaining constant at 0 dBm
             # eg 2: powers = ({-15, 0, 15}, {-5, 0}) will result in sweep points (-15, -5), (-15, 0), (0, -5), (0, 0), (15, -5), (15, 0)
             # eg 3: powers = (0, 0) will set both port powers to 0, no power sweep happens
-            "powers": ((-30, 15, 5), 0),
+            "powers": ((-30, 10, 5), 0),
         }
 
         # create measurement instance with instruments and measurement_parameters
@@ -151,14 +151,14 @@ if __name__ == "__main__":
         # hdf5 file saved at:
         # {datapath} / {YYYYMMDD} / {HHMMSS}_{measurementname}_{usersuffix}.hdf5
         save_parameters = {
-            "datapath": pathlib.Path(stage.datapath) /"coaxmux",
-            "usersuffix": "7.95GHz",
+            "datapath": pathlib.Path(stage.datapath) / "lion",
+            "usersuffix": "7.455GHz",
             "measurementname": measurement.__class__.__name__.lower(),
             **measurement.dataspec,
         }
 
         # run measurement and save data
-        fcenters = [5.93454e9, 6.12576e9, 7.66412e9, 7.94758e9]
+        fcenters = [7.455e9]
         for fcenter in fcenters:
             vna.fcenter = fcenter
             vna_parameters["fcenter"] = fcenter

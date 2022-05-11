@@ -21,7 +21,7 @@ if __name__ == "__main__":
     suffix = ""
 
     # path to the .npz file containing rotation params
-    path = OCT_ROTATIONS_PATH / "fock_states/fock_1_F_99.npz"
+    path = OCT_ROTATIONS_PATH / "fock_states/fock3.npz"
     betas = np.load(path)["betas"]
     phis = np.load(path)["phis"]
     thetas = np.load(path)["thetas"]
@@ -29,18 +29,18 @@ if __name__ == "__main__":
     # enter your circuit Hamiltonian parameters for each mode
     # here, we have a storage cavity and a qubit
     storage_params = {
-        "chi_kHz": 33,  # dispersive shift in kHz
-        "chi_prime_Hz": 1,  # second order dispersive shift in Hz
+        "chi_kHz": 250,  # dispersive shift in kHz
+        "chi_prime_Hz": 0,  # second order dispersive shift in Hz
         "Ks_Hz": 0,  # Kerr correction not yet implemented.
         "epsilon_m_MHz": 400,  # largest oscillator drive amplitude in MHz (max|epsilon|)
-        "unit_amp": 0.01,  # DAC unit amp of gaussian displacement to alpha=1.
-        "sigma": 6,  # oscillator displacement sigma
-        "chop": 4,  # oscillator displacement chop (number of stds. to include in gaussian pulse)
+        "unit_amp":  0.1349*0.2,  # DAC unit amp of gaussian displacement to alpha=1.
+        "sigma": 16,  # oscillator displacement sigma
+        "chop": 6,  # oscillator displacement chop (number of stds. to include in gaussian pulse)
     }
     qubit_params = {
-        "unit_amp": 0.1,
-        "sigma": 6,
-        "chop": 4,
+        "unit_amp": 1.5846*0.2,
+        "sigma": 40,
+        "chop": 6,
     }
 
     # set the maximum displacement used during the ECD gates

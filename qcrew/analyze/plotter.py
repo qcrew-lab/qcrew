@@ -167,6 +167,7 @@ class Plotter:
         cbar = self.fig.colorbar(im)
         # Set plot parameters
         ax.set_ylabel(self.plot_setup["ylabel"])
+        ax.set_aspect("equal")
         cbar.set_label(self.plot_setup["zlabel"])
 
     def plot_1D(self, x, z, fit_fn, label=None, err=None, color="b"):

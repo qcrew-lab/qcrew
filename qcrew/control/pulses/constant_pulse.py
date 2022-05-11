@@ -29,6 +29,7 @@ class ReadoutPulse(Pulse):
         "const_length",
         "threshold",
         "iw_path",
+        "length",
     }
 
     def __init__(

@@ -36,12 +36,68 @@ class QFunction(Experiment):
         """
         Defines pulse sequence to be played inside the experiment loop
         """
-        qubit, cav, rr = self.modes  # get the modes
-        # qua.reset_frame(cav.name)
-        #cav.play(self.cav_op, phase=-0.25)  # initial state creation
+        qubit, cav, rr = self.modes  # get the mode
+        qua.reset_frame(qubit.name, cav.name)
 
-        cav.play(self.cav_op, ampx=self.x, phase=0)  # displacement in I direction
-        cav.play(self.cav_op, ampx=self.y, phase=0.25)  # displacement in Q direction
+        #cav.play("CD_cali", ampx=1, phase=0)
+
+        qubit.play("pi_test")
+        qua.align(qubit.name, cav.name)
+
+
+        ############## first ECD gate##############
+        cav.play("CD_cali", ampx=1, phase=0)  # First positive displacement
+        qua.wait(
+            int(160 // 4),
+            cav.name,
+            qubit.name,
+        )  # wait time between opposite sign displacements
+        cav.play("CD_cali", ampx=-1, phase=0)  # First negative displacement
+        qua.align(qubit.name, cav.name)
+        qubit.play("pi_test")  # pi pulse to flip the qubit state (echo)
+        qua.align(cav.name, qubit.name)  # wait for qubit pulse to end
+        cav.play("CD_cali", ampx=-1, phase=0)  # Second negative displacement
+        qua.wait(
+            int(160 // 4), cav.name, qubit.name
+        )  # wait time between opposite sign displacements
+        cav.play("CD_cali", ampx=1, phase=0)  # Second positive displacement
+        qua.align(qubit.name, cav.name)
+
+        ############## unconditional disp ##############
+        cav.play("cohstate_1_test", ampx=1, phase=0)
+        qua.align(qubit.name, cav.name)
+
+        ############## reset to initial qubit state ##############
+        qubit.play("pi_test")
+        qua.align(qubit.name, cav.name)
+
+        ############## second ECD gate##############
+        cav.play("CD_cali", ampx=-1, phase=0)  # First positive displacement
+        qua.wait(
+            int(160 // 4),
+            cav.name,
+            qubit.name,
+        )  # wait time between opposite sign displacements
+        cav.play("CD_cali", ampx=1, phase=0)  # First negative displacement
+        qua.align(qubit.name, cav.name)
+        qubit.play("pi_test")  # pi pulse to flip the qubit state (echo)
+        qua.align(cav.name, qubit.name)  # wait for qubit pulse to end
+        cav.play("CD_cali", ampx=1, phase=0)  # Second negative displacement
+        qua.wait(
+            int(160 // 4), cav.name, qubit.name
+        )  # wait time between opposite sign displacements
+        cav.play("CD_cali", ampx=-1, phase=0)  # Second positive displacement
+        qua.align(qubit.name, cav.name)
+
+        ############## unconditional disp ##############
+        cav.play("cohstate_1_test", ampx=-1, phase=0)
+        qua.align(qubit.name, cav.name)
+
+        ############ measurement ################
+        # qubit.play("pi_test")
+        # qua.align(qubit.name, cav.name)
+        cav.play(self.cav_op, ampx=-self.x, phase=0)  # displacement in I direction
+        cav.play(self.cav_op, ampx=-self.y, phase=0.25)  # displacement in Q direction
         qua.align(cav.name, qubit.name)
         qubit.play(self.qubit_op)  # play qubit selective pi-pulse
         # Measure cavity state
@@ -49,7 +105,7 @@ class QFunction(Experiment):
         rr.measure((self.I, self.Q))  # measure transmitted signal
 
         # wait system reset
-        qua.wait(int(self.wait_time // 4), cav.name)
+        qua.wait(int(self.wait_time // 4), cav.name, rr.name, qubit.name)
 
         self.QUA_stream_results()  # stream variables (I, Q, x, etc)
 
@@ -67,8 +123,8 @@ if __name__ == "__main__":
 
     parameters = {
         "modes": ["QUBIT", "CAV", "RR"],
-        "reps": 50000,
-        "wait_time": 100000,
+        "reps": 800,
+        "wait_time": 160000,
         "fetch_period": 2,  # time between data fetching rounds in sec
         "x_sweep": (
             x_start,

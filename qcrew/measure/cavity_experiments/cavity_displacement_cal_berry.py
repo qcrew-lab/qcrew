@@ -64,13 +64,13 @@ class CavityDisplacementCalBerry(Experiment):
         # Do the first ECD gate
         qua.align(cav.name, qubit.name)  # wait for qubit pulse to end
         cav.play(self.cav_disp_ecd, ampx=self.x, phase=0)  # First positive displacement
-        qua.wait(int(self.delay // 4), cav.name)
-        cav.play(self.cav_disp_ecd, ampx=-self.x, phase=0)  # First negative displacement
+        qua.wait(int(self.delay // 4), cav.name, qubit.name)
+        cav.play(self.cav_disp_ecd, ampx=-1*self.x, phase=0)  # First negative displacement
         qua.align(qubit.name, cav.name)
-        qubit.play(self.qubit_op2)  # play pi to flip qubit around X
+        qubit.play('pi')  # play pi to flip qubit around X
         qua.align(cav.name, qubit.name)  # wait for qubit pulse to end
-        cav.play(self.cav_disp_ecd, ampx=-self.x, phase=0)  # Second negative displacement
-        qua.wait(int(self.delay // 4), cav.name)
+        cav.play(self.cav_disp_ecd, ampx=-1*self.x, phase=0)  # Second negative displacement
+        qua.wait(int(self.delay // 4), cav.name, qubit.name)
         cav.play(self.cav_disp_ecd, ampx=self.x, phase=0)  # Second positive displacement
         qua.align(qubit.name, cav.name)
         

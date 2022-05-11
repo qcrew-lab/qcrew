@@ -22,7 +22,8 @@ class ECDCalibration(Experiment):
 
     _parameters: ClassVar[set[str]] = Experiment._parameters | {
         "cav_op",  # operation for displacing the cavity
-        "qubit_op",  # operation used for exciting the qubit
+        "qubit_op1",  # operation used for exciting the qubit
+        "qubit_op2"
         "fit_fn",  # fit function
         "delay",  # describe...
     }

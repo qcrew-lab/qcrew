@@ -21,11 +21,11 @@ def get_sweep():
 if __name__ == "__main__":
 
     with Stagehand() as stage:
-        rr, sa, qubit = stage.RR, stage.SA, stage.QUBIT
-        mode = qubit  # select the mode whose spectrum you want to sweep
+        rr, sa = stage.RR, stage.SA
+        mode = rr  # select the mode whose spectrum you want to sweep
         job = stage.QM.execute(get_qua_program())  # play IF to mode
         sweep_parameters = {  # set sweep parameters
-            "center": mode.lo_freq,
+            "center": 7.456e9,
             "span": 500e6,
             "rbw": Sa124.default_rbw,
             "ref_power": Sa124.default_ref_power,

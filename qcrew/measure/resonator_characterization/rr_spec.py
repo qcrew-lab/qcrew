@@ -44,13 +44,13 @@ class RRSpectroscopy(Experiment):
 
 if __name__ == "__main__":
 
-    x_start = -52e6
-    x_stop = -48e6
-    x_step = 0.04e6
+    x_start = -51e6
+    x_stop = -49e6
+    x_step = 0.025e6
 
     parameters = {
         "modes": ["RR"],
-        "reps": 5000,
+        "reps": 2000,
         "wait_time": 40000,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
     }

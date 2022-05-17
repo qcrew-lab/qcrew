@@ -1,5 +1,6 @@
 """ mixer tuning v5 """
 
+from socket import RDS_RDMA_DONTWAIT
 from qcrew.control.instruments.meta.mixer_tuner import MixerTuner
 from qcrew.control import Stagehand
 
@@ -10,7 +11,7 @@ if __name__ == "__main__":
         # get an already configured qm after making changes to modes
         qm = stage.QM
 
-        mxrtnr = MixerTuner(qubit_ef, sa=sa, qm=qm)
+        mxrtnr = MixerTuner(rr, sa=sa, qm=qm)
         mxrtnr.tune()
 
 

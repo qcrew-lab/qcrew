@@ -24,12 +24,12 @@ import time
 
 if __name__ == "__main__":
 
-    current_start = 5e-3
+    current_start = 10e-3
     current_stop = -10e-3
     current_step = -0.5e-3
     current_sweep = np.arange(current_start, current_stop, current_step)
 
-    qubit_lo_start = 5.4879e9
+    qubit_lo_start = 5.4084e9
     qubit_lo_stop = 4e9
     qubit_lo_step = -200e6
     qubit_lo_sweep = np.arange(qubit_lo_start, qubit_lo_stop, qubit_lo_step)
@@ -62,7 +62,7 @@ if __name__ == "__main__":
 
                 # Find resonator resonant frequency
                 ## Do RR spectroscopy
-                x_start = -56e6
+                x_start = -60e6
                 x_stop = -46e6
                 x_step = 0.05e6
 

@@ -9,7 +9,7 @@ import numpy as np
 def get_qua_program(mode):
     with qua.program() as play_pulse:
         with qua.infinite_loop_():
-            mode.play("constant_pulse")
+            mode.play("constant_cos_pulse")
             qua.wait(200, mode.name)
     return play_pulse
 
@@ -22,4 +22,4 @@ if __name__ == "__main__":
 
         # Execute script
         qm = stage.QM
-        job = stage.QM.execute(get_qua_program(rr))  # play IF to mode
+        job = stage.QM.execute(get_qua_program(qubit))  # play IF to mode

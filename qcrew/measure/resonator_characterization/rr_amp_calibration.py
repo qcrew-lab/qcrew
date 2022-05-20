@@ -51,7 +51,7 @@ if __name__ == "__main__":
         "reps": 10000,
         "wait_time": 300000,
         "qubit_pi_pulse": "pi",
-        "x_sweep": (1, 1.25 + 0.01 / 2, 0.01),
+        "x_sweep": (0, 0.3 + 0.01 / 2, 0.01),
         "y_sweep": (0.0, 1.0),
     }
     plot_parameters = {

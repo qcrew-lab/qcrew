@@ -65,9 +65,8 @@ class T2EF(Experiment):
 if __name__ == "__main__":
 
     x_start = 4
-    x_stop = 5000
-    x_step = 20
-
+    x_stop = 10000
+    x_step = 50
     parameters = {
         "modes": ["QUBIT", "RR", "QUBIT_EF"],
         "reps": 20000,

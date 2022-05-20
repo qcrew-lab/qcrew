@@ -54,8 +54,8 @@ class T1EF(Experiment):
 
 if __name__ == "__main__":
     x_start = 4
-    x_stop = 5000
-    x_step = 20
+    x_stop = 30e3
+    x_step = 300
     
 
     parameters = {

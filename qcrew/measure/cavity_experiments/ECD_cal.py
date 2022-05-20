@@ -22,13 +22,14 @@ class ECDCalibration(Experiment):
 
     _parameters: ClassVar[set[str]] = Experiment._parameters | {
         "cav_op",  # operation for displacing the cavity
-        "qubit_op",  # operation used for exciting the qubit
+        "qubit_op2",  # operation used for exciting the qubit
+        "qubit_op1",  # operation used for exciting the qubit
         "fit_fn",  # fit function
         "delay",  # describe...
     }
 
     def __init__(
-        self, cav_op, qubit_op1, qubit_op2, fit_fn=None, delay=4, **other_params
+        self, cav_op, qubit_op1, qubit_op2, fit_fn="gaussian", delay=4, **other_params
     ):
 
         self.cav_op = cav_op
@@ -47,7 +48,7 @@ class ECDCalibration(Experiment):
         qua.reset_frame(cav.name)
 
         # TODO work in progress
-        qubit.play(self.qubit_op)  # play pi/2 pulse around X
+        qubit.play(self.qubit_op1)  # play pi/2 pulse around X
 
         # start ECD gate
         qua.align(cav.name, qubit.name)  # wait for qubit pulse to end
@@ -80,14 +81,15 @@ if __name__ == "__main__":
 
     parameters = {
         "modes": ["QUBIT", "CAV", "RR"],
-        "reps": 50000,
-        "wait_time": 600000,
+        "reps": 100000,
+        "wait_time": 2000000,
         "fetch_period": 2,  # time between data fetching rounds in sec
-        "delay": 1000,  # pi/chi
-        "x_sweep": (0.2, 1 + 0.05 / 2, 0.05),
-        "qubit_op1": "pi2",
-        "qubit_op2": "pi",
-        "cav_op": "constant_pulse",
+        "delay": 300,  # pi/chi
+        "x_sweep": (-1.9, 1.9 + 0.05 / 2, 0.05),
+        "qubit_op1": "constant_cos_pi2",
+        "qubit_op2": "constant_cos_pi",
+        "cav_op": "ECD_cali",
+        
     }
 
     plot_parameters = {

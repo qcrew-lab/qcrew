@@ -57,7 +57,8 @@ if __name__ == "__main__":
     x_start = 4
     x_stop = 2000
     x_step = 16
-    detuning = 0e6
+    detuning = 0.0e6
+    
 
     parameters = {
         "modes": ["QUBIT", "RR"],

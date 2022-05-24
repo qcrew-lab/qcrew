@@ -37,7 +37,7 @@ class CavitySpectroscopy(Experiment):
         qubit, cav, rr = self.modes  # get the modes
 
         qua.update_frequency(cav.name, self.x)  # update resonator pulse frequency
-        cav.play(self.cav_op, ampx = 0.1)  # play displacement to cavity
+        cav.play(self.cav_op, ampx = 1)  # play displacement to cavity
         qua.align(cav.name, qubit.name)  # align all modes
         qubit.play(self.qubit_op)  # play qubit pulse
         qua.align(qubit.name, rr.name)  # align all modes
@@ -45,15 +45,15 @@ class CavitySpectroscopy(Experiment):
         qua.wait(int(self.wait_time // 4), cav.name)  # wait system reset
 
         self.QUA_stream_results()  # stream variables (I, Q, x, etc)
-
+4
 
 # -------------------------------- Execution -----------------------------------
 
 
 if __name__ == "__main__":
 
-    x_start = -58e6
-    x_stop = -43e6
+    x_start = -80e6
+    x_stop = -20e6
     x_step = 0.1e6
     parameters = {
         "modes": ["QUBIT", "CAV", "RR"],
@@ -61,7 +61,7 @@ if __name__ == "__main__":
         "wait_time": 1000000,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
         "qubit_op": "pi_selective1",
-        "cav_op": "gaussian_pulse",
+        "cav_op": "constant_cos_cohstate_1",
     }
 
     plot_parameters = {

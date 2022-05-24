@@ -46,8 +46,8 @@ class QubitSpectroscopy(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-    x_start = 147e6
-    x_stop = 152e6
+    x_start = 140e6
+    x_stop = 160e6
     x_step = 0.1e6
 
     parameters = {
@@ -55,7 +55,7 @@ if __name__ == "__main__":
         "reps": 200000,
         "wait_time": 80000,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
-        "qubit_op": "pi",
+        "qubit_op": "constant_cos_pi",
     }
 
     plot_parameters = {

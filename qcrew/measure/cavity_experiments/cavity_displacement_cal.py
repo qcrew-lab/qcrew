@@ -50,8 +50,8 @@ class CavityDisplacementCal(Experiment):
 
 if __name__ == "__main__":
     x_start =0.01
-    x_stop = 1.1
-    x_step = 0.01
+    x_stop = 3
+    x_step = 0.05
 
     parameters = {
         "modes": ["QUBIT", "CAV", "RR"],
@@ -59,7 +59,7 @@ if __name__ == "__main__":
         "wait_time": 1000000,
         "x_sweep": (x_start, x_stop + x_step / 2, x_step),
         "qubit_op": "pi_selective1",
-        "cav_op": "gaussian_pulse",
+        "cav_op": "constant_cos_ECD",
     }
 
     plot_parameters = {

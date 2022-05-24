@@ -141,6 +141,7 @@ class Plotter:
             self.plot_setup["title"] + f": {n} repetition{'s' if n > 1 else ''}"
         )
         ax.set_xlabel(self.plot_setup["xlabel"])
+        #ax.set_aspect(aspect="equal")
         self.hdisplay.update(self.fig)
 
     def plot_2D(self, x, y, z):

@@ -51,7 +51,7 @@ class NSplitSpecDispersiveShift(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-    x_start = 149e6
+    x_start = 147e6
     x_stop = 150.5e6
     x_step = 20e3
 

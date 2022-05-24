@@ -88,7 +88,7 @@ if __name__ == "__main__":
         "x_sweep": (-1.9, 1.9 + 0.05 / 2, 0.05),
         "qubit_op1": "constant_cos_pi2",
         "qubit_op2": "constant_cos_pi",
-        "cav_op": "ECD_cali",
+        "cav_op": "constant_cos_ECD",
         
     }
 

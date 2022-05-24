@@ -38,8 +38,10 @@ class QFunction(Experiment):
         """
         qubit, cav, rr = self.modes  # get the modes
         # qua.reset_frame(cav.name)
-        #cav.play(self.cav_op, phase=-0.25)  # initial state creation
+        cav.play(self.cav_op,ampx =1 ,phase=0.25)  # initial state creation
 
+        
+        qua.wait(int(10000 // 4), cav.name)
         cav.play(self.cav_op, ampx=self.x, phase=0)  # displacement in I direction
         cav.play(self.cav_op, ampx=self.y, phase=0.25)  # displacement in Q direction
         qua.align(cav.name, qubit.name)
@@ -68,16 +70,16 @@ if __name__ == "__main__":
     parameters = {
         "modes": ["QUBIT", "CAV", "RR"],
         "reps": 50000,
-        "wait_time": 100000,
-        "fetch_period": 2,  # time between data fetching rounds in sec
+        "wait_time": 2000000,
+        "fetch_period": 6,  # time between data fetching rounds in sec
         "x_sweep": (
             x_start,
             x_stop + x_step / 2,
             x_step,
         ),  # ampitude sweep of the displacement pulses in the ECD
         "y_sweep": (y_start, y_stop + y_step / 2, y_step),
-        "qubit_op": "pi_selective",
-        "cav_op": "cohstate_1",
+        "qubit_op": "pi_selective2",
+        "cav_op": "constant_cos_cohstate_1",
     }
 
     plot_parameters = {

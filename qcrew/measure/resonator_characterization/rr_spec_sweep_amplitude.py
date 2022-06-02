@@ -43,8 +43,8 @@ class RRSpecSweepAmplitude(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-    x_start = -56e6
-    x_stop = -47e6
+    x_start = -52e6
+    x_stop = -48e6
     x_step = 0.1e6
 
     parameters = {

@@ -1,5 +1,6 @@
 """
-A python class describing a T1 measurement using QM.
+A python class describing a readout resonator spectroscopy with readout pulse amplitude
+sweep using QM.
 This class serves as a QUA script generator with user-defined parameters.
 """
 
@@ -10,12 +11,11 @@ from qcrew.measure.experiment import Experiment
 from qm import qua
 
 # ---------------------------------- Class -------------------------------------
-# delete this comment
 
 
-class T1(Experiment):
+class nbar_T1(Experiment):
 
-    name = "T1"
+    name = "nbar_T1"
 
     _parameters: ClassVar[set[str]] = Experiment._parameters | {
         "qubit_op",  # operation used for exciting the qubit
@@ -35,10 +35,14 @@ class T1(Experiment):
         """
         qubit, rr = self.modes  # get the modes
 
+        # (1) Pi-Pulse, (2) new pulse, (3) readout pulse
+
         qubit.play(self.qubit_op)  # play pi qubit pulse
-        qua.wait(self.x, qubit.name)  # wait for partial qubit decay
+        # qua.wait(self.x, qubit.name)  # wait for partial qubit decay
         qua.align(qubit.name, rr.name)  # wait qubit pulse to end
-        rr.measure((self.I, self.Q))  # measure qubit state
+        rr.play("constant_pulse", ampx=self.y, duration=self.x)
+        rr.measure((self.I, self.Q))  # measure transmitted signal
+
         if self.single_shot:  # assign state to G or E
             qua.assign(
                 self.state, qua.Cast.to_fixed(self.I < rr.readout_pulse.threshold)
@@ -51,24 +55,31 @@ class T1(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-    x_start = int(16)
-    x_stop = int(25e3)
-    x_step = int(500)
+
+    x_start = 200
+    x_stop = 35000
+    x_step = 1000
+
+    y_start = 0
+    y_stop = 0.1
+    y_step = 0.005
 
     parameters = {
         "modes": ["QUBIT", "RR"],
-        "reps": 20000,
-        "wait_time": 100000,
+        "reps": 2000,
+        "wait_time": 125000,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
+        "y_sweep": (y_start, y_stop + y_step / 2, y_step),
         "qubit_op": "pi",
         "single_shot": False,
     }
-
     plot_parameters = {
-        "xlabel": "Relaxation time (clock cycles)",
+        "ylabel": " Pulse Amplitude (V)",
+        "xlabel": " Pulse Length (clock cycles)",
+        "plot_type": "2D",
+        # "zlog" : "True"
     }
 
-    experiment = T1(**parameters)
+    experiment = nbar_T1(**parameters)
     experiment.setup_plot(**plot_parameters)
-
     prof.run(experiment)

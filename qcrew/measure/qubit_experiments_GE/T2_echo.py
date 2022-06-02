@@ -47,7 +47,7 @@ class T2_Echo(Experiment):
         qubit.play(self.qubit_pi2)  # play half pi qubit pulse
         qua.align(qubit.name, rr.name)  # wait last qubit pulse to end
         rr.measure((self.I, self.Q))  # measure qubit state
-        if self.single_shot: # assign state to G or E
+        if self.single_shot:  # assign state to G or E
             qua.assign(
                 self.state, qua.Cast.to_fixed(self.I < rr.readout_pulse.threshold)
             )

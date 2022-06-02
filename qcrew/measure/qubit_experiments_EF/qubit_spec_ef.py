@@ -61,6 +61,7 @@ if __name__ == "__main__":
         "x_sweep": (int(x_start), int(x_stop + xstep / 2), int(xstep)),
         "qubit_ef_op": "constant_pulse",
         "qubit_pi_pulse_name": "pi",
+        "fit_fn": None,
     }
 
     plot_parameters = {

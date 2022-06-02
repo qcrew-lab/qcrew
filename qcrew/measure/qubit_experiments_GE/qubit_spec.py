@@ -55,7 +55,8 @@ if __name__ == "__main__":
         "reps": 50000,
         "wait_time": 50000,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
-        "qubit_op": "constant_pulse",
+        "qubit_op": "pi",
+        "fit_fn": None,
     }
 
     plot_parameters = {

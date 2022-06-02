@@ -84,7 +84,7 @@ if __name__ == "__main__":
         "reps": 100000,
         "wait_time": 2000000,
         "fetch_period": 2,  # time between data fetching rounds in sec
-        "delay": 300,  # pi/chi
+        "delay": 200,  # pi/chi
         "x_sweep": (-1.9, 1.9 + 0.05 / 2, 0.05),
         "qubit_op1": "constant_cos_pi2",
         "qubit_op2": "constant_cos_pi",

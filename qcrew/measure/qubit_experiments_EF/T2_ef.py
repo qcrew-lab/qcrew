@@ -19,6 +19,7 @@ class T2EF(Experiment):
     _parameters: ClassVar[set[str]] = Experiment._parameters | {
         "qubit_ge_pi",  # operation used for exciting the qubit from g to e
         "qubit_ef_pi2",  # half-ppi operation between e and f
+        "ef_int_freq",  # intermediate frequency of the ef transition
         "fit_fn",  # fit function
         "detuning",  # qubit pulse detuning
     }
@@ -27,6 +28,7 @@ class T2EF(Experiment):
         self,
         qubit_ge_pi,
         qubit_ef_pi2,
+        ef_int_freq,
         detuning=0,
         fit_fn="exp_decay_sine",
         **other_params
@@ -34,6 +36,7 @@ class T2EF(Experiment):
 
         self.qubit_ge_pi = qubit_ge_pi  # pi pulse g->e
         self.qubit_ef_pi2 = qubit_ef_pi2  # pi/2 pulse e->f
+        self.ef_int_freq = ef_int_freq
         self.fit_fn = fit_fn
         self.detuning = detuning  # frequency detuning of qubit operation
 
@@ -43,15 +46,15 @@ class T2EF(Experiment):
         """
         Defines pulse sequence to be played inside the experiment loop
         """
-        qubit, rr, qubit_ef = self.modes  # get the modes
+        qubit, rr = self.modes  # get the modes
         qubit.play(self.qubit_ge_pi)  # g-> e pi
-        qua.update_frequency(qubit_ef.name, qubit_ef.int_freq + self.detuning)  # detune
-        qua.align( qubit.name,qubit_ef.name)  # wait last qubit pulse to end
-        qubit_ef.play(self.qubit_ef_pi2)  # e-> f half pi
+        qua.update_frequency(qubit.name, self.ef_int_freq + self.detuning)
+
+        qubit.play(self.qubit_ef_pi2)  # e-> f half pi
         qua.wait(self.x, qubit.name)  # wait for partial qubit decay
-        qubit_ef.play(self.qubit_ef_pi2)  # e-> f half pi
-        
-        qua.align( qubit.name,qubit_ef.name)  # wait last qubit pulse to end
+        qubit.play(self.qubit_ef_pi2)  # e-> f half pi
+
+        qua.update_frequency(qubit.name, qubit.int_freq)
         qubit.play(self.qubit_ge_pi)  # e->g pi
         qua.align(qubit.name, rr.name)  # wait last qubit pulse to end
         rr.measure((self.I, self.Q))  # measure qubit state
@@ -66,16 +69,18 @@ if __name__ == "__main__":
 
     x_start = 4
     x_stop = 5000
-    x_step = 20
+    x_step = 50
+    detuning = 300e3
 
     parameters = {
-        "modes": ["QUBIT", "RR", "QUBIT_EF"],
+        "modes": ["QUBIT", "RR"],
         "reps": 20000,
         "wait_time": 100000,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
         "qubit_ge_pi": "pi",
-        "qubit_ef_pi2": "pi2",
-        "detuning": 0e3,
+        "qubit_ef_pi2": "pi2_ef",
+        "ef_int_freq": int(-157.1e6),
+        "detuning": int(detuning),
     }
 
     plot_parameters = {

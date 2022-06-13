@@ -77,7 +77,7 @@ class Experiment(Parametrized):
                     save_all=False,
                 )
             }
-        
+
         if extra_vars is not None:
             self.variables |= extra_vars
 
@@ -120,7 +120,8 @@ class Experiment(Parametrized):
                 indep_tags.append(self.variables[var].tag)
 
         # TODO: implement more than 1 dependent variable (multiple readout)
-        dep_tags = ["state" if self.single_shot else self.Z_AVG_tag]
+        # dep_tags = ["state" if self.single_shot else self.Z_AVG_tag]
+        dep_tags = ["I_AVG"]
 
         return indep_tags, dep_tags
 

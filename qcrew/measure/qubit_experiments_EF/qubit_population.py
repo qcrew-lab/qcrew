@@ -61,12 +61,12 @@ if __name__ == "__main__":
 
     parameters = {
         "modes": ["QUBIT", "QUBIT_EF", "RR"],
-        "reps": 10000,
+        "reps": 5000,
         "wait_time": 300000,
         "qubit_ge_pi": "pi",
         "qubit_ef_pi": "pi",
         "x_sweep": (-1.8, 1.8 + 0.1 / 2, 0.1),
-        "y_sweep": [0.0, 1.0],
+        "y_sweep": [1.0],
     }
 
     plot_parameters = {"xlabel": "Qubit pulse amplitude scaling"}

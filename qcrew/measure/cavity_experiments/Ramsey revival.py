@@ -36,7 +36,7 @@ class Ramseyrevival(Experiment):
         """
         qubit, cav, rr = self.modes  # get the modes
 
-        #cav.play(self.cav_op, ampx=1)  # prepare cavity state
+        cav.play(self.cav_op, ampx=1.0)  # prepare cavity state
         qua.align(cav.name, qubit.name)  # align modes 
         qubit.play(self.qubit_op)  # play qubit pulse
         qua.wait(self.x, qubit.name)
@@ -52,13 +52,13 @@ class Ramseyrevival(Experiment):
 
 if __name__ == "__main__":
     x_start = 4
-    x_stop = 1800
-    x_step = 20
+    x_stop = 1600
+    x_step = 10
 
     parameters = {
         "modes": ["QUBIT", "CAV", "RR"],
         "reps": 4000,
-        "wait_time": 1200000,
+        "wait_time": 2e6,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
         "qubit_op": "constant_cos_pi2",
         "cav_op": "constant_cos_cohstate_1",

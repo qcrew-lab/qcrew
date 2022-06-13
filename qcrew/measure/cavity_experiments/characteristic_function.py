@@ -110,8 +110,8 @@ if __name__ == "__main__":
             x_stop + x_step / 2,
             x_step,
         ),  # ampitude sweep of the displacement pulses in the ECD
-        "qubit_op1": "constant_cos_pi2",
-        "qubit_op2": "constant_cos_pi",
+        "qubit_op1": "pi2",
+        "qubit_op2": "pi",
         "cav_state_op": "cohstate_1",
         "cav_op": "ECD_cali",
         # "ECD_phase": 0

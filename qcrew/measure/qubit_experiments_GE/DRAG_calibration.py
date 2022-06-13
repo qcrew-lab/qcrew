@@ -76,13 +76,13 @@ class DRAGCalibration(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-    x_start = -0.2
-    x_stop = 0.1
-    x_step = 0.01
+    x_start = -0.25
+    x_stop = 0.25
+    x_step = 0.02
 
     parameters = {
         "modes": ["QUBIT", "RR"],
-        "reps": 30000,
+        "reps": 2000,
         "wait_time": 100000,
         "x_sweep": (x_start, x_stop + x_step / 2, x_step),
         "qubit_pi_op": "pi",

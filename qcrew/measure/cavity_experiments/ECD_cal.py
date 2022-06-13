@@ -78,14 +78,17 @@ class ECDCalibration(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
+    x_start = -1.8
+    x_stop = 1.8
+    x_step = 0.05
 
     parameters = {
         "modes": ["QUBIT", "CAV", "RR"],
         "reps": 100000,
-        "wait_time": 2000000,
-        "fetch_period": 2,  # time between data fetching rounds in sec
+        "wait_time": 4000000,
+        "fetch_period": 3,  # time between data fetching rounds in sec
         "delay": 200,  # pi/chi
-        "x_sweep": (-1.9, 1.9 + 0.05 / 2, 0.05),
+        "x_sweep": (x_start, x_stop + x_step / 2, x_step),
         "qubit_op1": "constant_cos_pi2",
         "qubit_op2": "constant_cos_pi",
         "cav_op": "constant_cos_ECD",

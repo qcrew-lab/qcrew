@@ -34,14 +34,18 @@ class CavityDisplacementCal(Experiment):
         """
         Defines pulse sequence to be played inside the experiment loop
         """
-        qubit, cav, rr = self.modes  # get the modes
+        qubit, cav, rr, cav_drive, rr_drive = self.modes  # get the modes
 
         cav.play(self.cav_op, ampx=self.x)  # play displacement to cavity
         qua.align(cav.name, qubit.name)  # align all modes
         qubit.play(self.qubit_op)  # play qubit pulse
         qua.align(qubit.name, rr.name)  # align all modes
         rr.measure((self.I, self.Q))  # measure transmitted signal
-        qua.wait(int(self.wait_time // 4), cav.name)  # wait system reset
+
+        qua.align(cav.name, qubit.name, rr.name, cav_drive.name, rr_drive.name)
+        cav_drive.play("constant_cos", duration=200e3, ampx=1.6)
+        rr_drive.play("constant_cos", duration=200e3, ampx=1.4)
+        qua.wait(int(self.wait_time // 4), cav.name)
 
         self.QUA_stream_results()  # stream variables (I, Q, x, etc)
 
@@ -49,17 +53,18 @@ class CavityDisplacementCal(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-    x_start =0.01
-    x_stop = 3
-    x_step = 0.05
+    x_start = 0.1
+    x_stop = 1.8
+    x_step = 0.01
 
     parameters = {
-        "modes": ["QUBIT", "CAV", "RR"],
+        "modes": ["QUBIT", "CAV", "RR", "CAV_DRIVE", "RR_DRIVE"],
         "reps": 20000,
-        "wait_time": 1000000,
+        "wait_time": 50e3,
         "x_sweep": (x_start, x_stop + x_step / 2, x_step),
-        "qubit_op": "pi_selective1",
-        "cav_op": "constant_cos_ECD",
+        "qubit_op": "pi_selective_1",
+        "cav_op": "gaussian_pulse",
+        # "fetch_period": 2,
     }
 
     plot_parameters = {

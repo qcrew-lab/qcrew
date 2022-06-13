@@ -11,8 +11,8 @@ if __name__ == "__main__":
 
         params = {
             "reps": 20000,
-            "wait_time": 400000,  # ns
-            "qubit_pi_pulse": "pi",  # pulse to excite qubit
+            "wait_time": 80000,  # ns
+            "qubit_pi_pulse": "constant_cos_pi",  # pulse to excite qubit
         }
 
         ro_trainer = ReadoutTrainer(rr, qubit, qm, **params)

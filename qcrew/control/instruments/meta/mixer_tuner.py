@@ -144,6 +144,7 @@ class MixerTuner:
     def _tune_lo_nm(self, mode, center_idx, floor):
         """ """
         logger.info(f"Minimizing {mode} LO leakage...")
+
         def objective_fn(offsets: tuple[float]) -> float:
             i_offset, q_offset, mode_name = offsets[0], offsets[1], mode.name
             self._qm.set_output_dc_offset_by_element(mode_name, "I", i_offset)
@@ -215,8 +216,8 @@ class MixerTuner:
             verbose=verbose,
             plot=plot,
         )
-        m.add_parameter(minimizer.Parameter(p0, value=init0, vrange=range0))
-        m.add_parameter(minimizer.Parameter(p1, value=init1, vrange=range1))
+        m.add_parameter(minimizer.Parameter(p0, value=float(init0), vrange=range0))
+        m.add_parameter(minimizer.Parameter(p1, value=float(init1), vrange=range1))
         m.minimize()
         return m.params
 

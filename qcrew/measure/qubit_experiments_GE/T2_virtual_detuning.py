@@ -43,9 +43,9 @@ class T2(Experiment):
         """
         factor = qua.declare(qua.fixed)
         qua.assign(factor, self.detuning * 4 * 1e-9)
-        
+
         qubit, rr = self.modes  # get the modes
-        qua.reset_frame(qubit.name) 
+        qua.reset_frame(qubit.name)
         qubit.play(self.qubit_op)  # play half pi qubit pulse
         qua.wait(self.x, qubit.name)  # wait for partial qubit decay
         qua.assign(self.phase, qua.Cast.mul_fixed_by_int(factor, self.x))
@@ -66,9 +66,9 @@ class T2(Experiment):
 if __name__ == "__main__":
 
     x_start = 4
-    x_stop = 2000
-    x_step = 16
-    detuning_ = 0e6 # 1.12e6
+    x_stop = 6000
+    x_step = 40
+    detuning_ = 0.4e6  # 1.12e6
 
     parameters = {
         "modes": ["QUBIT", "RR"],

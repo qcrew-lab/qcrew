@@ -13,24 +13,29 @@ from qm import qua
 # ---------------------------------- Class -------------------------------------
 
 
-class CondPowerRabi(Experiment):
+class DDROPRRCal(Experiment):
 
-    name = "conditional_power_rabi"
+    name = "DDROP_rr_cal"
 
     _parameters: ClassVar[set[str]] = Experiment._parameters | {
         "qubit_op",  # operation used for exciting the qubit
         "resonator_op",  # operation used for exciting the RR
         "steady_state_wait",  # Time for resonator to reach steady state
+        "rr_ddrop_freq",
         "fit_fn",  # fit function
     }
 
     def __init__(
-        self, qubit_op, resonator_op, steady_state_wait, fit_fn="sine", **other_params
+        self,
+        rr_ddrop_freq,
+        rr_steady_wait,
+        ddrop_pulse,
+        fit_fn="sine",
+        **other_params
     ):
-
-        self.qubit_op = qubit_op
-        self.resonator_op = resonator_op
-        self.steady_state_wait = steady_state_wait
+        self.rr_ddrop_freq = rr_ddrop_freq
+        self.rr_steady_wait = rr_steady_wait
+        self.ddrop_pulse = ddrop_pulse
         self.fit_fn = fit_fn
 
         super().__init__(**other_params)  # Passes other parameters to parent
@@ -40,12 +45,18 @@ class CondPowerRabi(Experiment):
         Defines pulse sequence to be played inside the experiment loop
         """
         qubit, rr = self.modes  # get the modes
-        rr.play(self.resonator_op, ampx=self.y)  # play a long rr excitation
-        qua.wait(
-            int(self.steady_state_wait // 4), qubit.name
-        )  # wait resonator in steady state
-        qubit.play(self.qubit_op, ampx=self.x)  # play qubit pulse concomitantly
-        qua.align(qubit.name, rr.name)  # wait qubit pulse to end
+
+        # Play RR ddrop pulse
+        qua.update_frequency(rr.name, self.rr_ddrop_freq)
+        rr.play(self.ddrop_pulse, ampx = self.y)
+
+        # Play qubit ddrop pulse
+        qua.wait(int(self.rr_steady_wait // 4), qubit.name)  # wait steady state of rr
+        qubit.play(self.ddrop_pulse, self.x)
+        qua.wait(int(self.rr_steady_wait // 4), qubit.name)  # wait steady state of rr
+        qua.align(qubit.name, rr.name)  # wait pulses to end
+    
+        qua.update_frequency(rr.name, rr.int_freq)
         rr.measure((self.I, self.Q))  # measure qubit state
         qua.wait(int(self.wait_time // 4), rr.name)  # wait system reset
 
@@ -61,19 +72,19 @@ class CondPowerRabi(Experiment):
 
 if __name__ == "__main__":
 
-    amp_start = -1.9
-    amp_stop = 1.9
-    amp_step = 0.05
+    amp_start = -1
+    amp_stop = 0
+    amp_step = 0.001
 
     parameters = {
         "modes": ["QUBIT", "RR"],
         "reps": 50000,
         "wait_time": 100000,
         "x_sweep": (amp_start, amp_stop + amp_step / 2, amp_step),
-        "y_sweep": (0.0, 0.9, 1., 1.1),
-        "qubit_op": "ddrop_pulse",
-        "resonator_op": "ddrop_pulse",
-        "steady_state_wait": 500,
+        "y_sweep": (0.0, 0.5, 1),
+        "ddrop_pulse": "ddrop_pulse",
+        "rr_ddrop_freq": int(-50e6),
+        "rr_steady_wait": 2000,
         "single_shot": False,
     }
 
@@ -82,7 +93,7 @@ if __name__ == "__main__":
         "plot_type": "1D",
     }
 
-    experiment = CondPowerRabi(**parameters)
+    experiment = DDROPRRCal(**parameters)
     experiment.setup_plot(**plot_parameters)
 
     prof.run(experiment)

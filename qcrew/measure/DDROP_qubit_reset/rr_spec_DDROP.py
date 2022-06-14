@@ -1,11 +1,13 @@
 """
-A python class describing a T1 measurement using QM.
+A python class describing a readout resonator spectroscopy with qubit in ground and 
+excited state using QM.
 This class serves as a QUA script generator with user-defined parameters.
 """
 
 from typing import ClassVar
 
 from qcrew.control import professor as prof
+from qcrew.control import Stagehand
 from qcrew.measure.experiment import Experiment
 import qcrew.measure.qua_macros as macros
 from qm import qua
@@ -13,20 +15,23 @@ from qm import qua
 # ---------------------------------- Class -------------------------------------
 
 
-class T1DDROP(Experiment):
+class RRSpecDDROP(Experiment):
 
-    name = "T1_DDROP"
+    name = "rr_spec_DDROP"
 
     _parameters: ClassVar[set[str]] = Experiment._parameters | {
-        "qubit_op",  # operation used for exciting the qubit
         "fit_fn",  # fit function
     }
 
-    def __init__(self, qubit_op, ddrop_params = None, fit_fn="exp_decay", **other_params):
+    def __init__(
+        self,
+        ddrop_params = None,
+        fit_fn=None,
+        **other_params
+    ):
 
-        self.qubit_op = qubit_op  # pi pulse
-        self.fit_fn = fit_fn
         self.ddrop_params = ddrop_params
+        self.fit_fn = fit_fn
 
         super().__init__(**other_params)  # Passes other parameters to parent
 
@@ -34,22 +39,16 @@ class T1DDROP(Experiment):
         """
         Defines pulse sequence to be played inside the experiment loop
         """
-        qubit, rr = self.modes  # get the modes
+        rr, qubit = self.modes  # get the modes
 
         if self.ddrop_params:
             macros.DDROP_reset(qubit, rr, **self.ddrop_params)
             # Use qubit_ef if also resetting F state
             # macros.DDROP_reset(qubit, rr, **self.ddrop_params, qubit_ef = qubit_ef)
 
-        qubit.play(self.qubit_op)  # play pi qubit pulse
-        qua.wait(self.x, qubit.name)  # wait for partial qubit decay
-        qua.align(qubit.name, rr.name)  # wait qubit pulse to end
-        rr.measure((self.I, self.Q))  # measure qubit state
-
-        if self.single_shot:  # assign state to G or E
-            qua.assign(
-                self.state, qua.Cast.to_fixed(self.I < rr.readout_pulse.threshold)
-            )
+        qua.update_frequency(rr.name, self.x)  # update resonator pulse frequency
+        rr.measure((self.I, self.Q))  # measure transmitted signal
+        qua.wait(int(self.wait_time // 4), rr.name)  # wait system reset
 
         self.QUA_stream_results()  # stream variables (I, Q, x, etc)
 
@@ -57,21 +56,22 @@ class T1DDROP(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-    x_start = 4
-    x_stop = 30e3
-    x_step = 300
+
+    x_start = -55e6
+    x_stop = -47e6
+    x_step = 0.1e6
 
     parameters = {
-        "modes": ["QUBIT", "RR"],
-        "reps": 20000,
+        "modes": ["RR", "QUBIT", "QUBIT_EF"],
+        "reps": 5000,
         "wait_time": 100000,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
-        "qubit_op": "pi",
-        "single_shot": False,
+        "y_sweep": (0.0, 1.0),
+        "plot_quad": "Z_AVG",
     }
 
     plot_parameters = {
-        "xlabel": "Relaxation time (clock cycles)",
+        "xlabel": "Resonator pulse frequency (Hz)",
     }
     
     ddrop_params = {
@@ -80,7 +80,8 @@ if __name__ == "__main__":
         "ddrop_pulse": "ddrop_pulse",        # name of all ddrop pulses
     }
 
-    experiment = T1DDROP(ddrop_params = ddrop_params, **parameters)
+
+    experiment = RRSpecDDROP(ddrop_params=ddrop_params,**parameters)
     experiment.setup_plot(**plot_parameters)
 
     prof.run(experiment)

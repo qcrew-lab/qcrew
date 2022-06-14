@@ -1,0 +1,399 @@
+#include "pycugrape.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <thrust/complex.h>
+#include <math.h>
+typedef thrust::complex<R> C;
+
+#define idxctrls(t, nctrl) ((nctrl) + NCTRLS*(t) )
+const int ctrls_size = NCTRLS*PLEN;
+{% for dim in tot_dims %}
+#define idxstates{{loop.index0}}(ct, nstate, t, nrow, ri) ((ri) + 2*((nrow) + {{dim}}*((t) + (PLEN+1)*((nstate) + NSTATE*(ct)))))
+#define psi_out{{loop.index0}}(t, ri) states[idxstates{{loop.index0}}(ct, nstate, t, nrow, ri)]
+#define psi_out_ct{{loop.index0}}(t, ri) states[idxstates{{loop.index0}}(1-(ct), nstate, PLEN-(t), nrow, ri)]
+{% endfor %}
+
+#define gpuErrchk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
+inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort = true)
+{
+    if (code != cudaSuccess)
+    {
+        fprintf(stderr, "GPUassert: %s %s %d\n", cudaGetErrorString(code), file, line);
+        if (abort) exit(code);
+    }
+}
+
+
+__device__ double atomicAddD(double* address, double val)
+{
+    unsigned long long int* address_as_ull =
+                              (unsigned long long int*)address;
+    unsigned long long int old = *address_as_ull, assumed;
+
+    do {
+        assumed = old;
+        old = atomicCAS(address_as_ull, assumed,
+                        __double_as_longlong(val +
+                               __longlong_as_double(assumed)));
+
+    // Note: uses integer comparison to avoid hang in case of NaN (since NaN != NaN)
+    } while (assumed != old);
+
+    return __longlong_as_double(old);
+}
+
+R *ctrls_d; // [PLEN][NCTRLS];
+
+{% for mode_dims in mode_dims_variants %}
+{% set nvar = loop.index0%}
+{% set dim = tot_dims[nvar] %}
+
+R *states_d{{nvar}};
+R *ovlp_r_d{{nvar}};
+R *ovlp_i_d{{nvar}};
+R *d_ovlps_r_d{{nvar}};
+R *d_ovlps_i_d{{nvar}};
+
+{% for ct in ('noct', 'withct') %}
+__global__
+void prop_state_kernel{{nvar}}_{{ct}}(R *ctrls, R *states)
+{
+    {% if ct == 'noct' %}
+    const unsigned int ct = 0;
+    {% else %}
+    const unsigned int ct = 1;
+    {% endif %}
+    const unsigned int nstate = blockIdx.y;
+    const unsigned int nrow = threadIdx.x;
+    __shared__ C s_psik[2][{{dim}}];
+    __syncthreads();
+    const short s = ct ? -1 : 1;
+
+    int nrow_cur = nrow;
+{% for mdim in mode_dims %}
+    const int i_dst{{loop.index0}} = nrow_cur % {{mdim}};
+    nrow_cur /= {{mdim}};
+{% endfor %}
+
+    /* R psi_out_v = psi_out(0, ri); */
+    R psi_out_v_r = psi_out{{nvar}}(0, 0);
+    R psi_out_v_i = psi_out{{nvar}}(0, 1);
+    for (int t = 1; t <= PLEN; t++) {
+        int ctrl_t = ct ? (PLEN - t) : (t-1);
+        int idx = 0;
+        s_psik[0][nrow] = C::complex(psi_out_v_r, psi_out_v_i);
+
+        for (int k = 1; k <= TAYLOR_ORDER; k++) {
+            // psi_k -> (pf*H)psi_k
+            // psi_out -> psi_out + (pf*H)psi_k
+            __syncthreads();
+
+            // TODO: Parallelize this
+            R cpf, pf;
+            C ppf, t_ppf, H_psi_k_sum;
+            int i_src, src_row, valid;
+            H_psi_k_sum = 0;
+            {% for H_terms in Hcs[ct] %}
+                {% if loop.index0 == 0 %}
+                    cpf = 1.0 / k;
+                {% else %}
+                    cpf = ctrls[idxctrls(ctrl_t, {{loop.index0 - 1}})] / k;
+                {% endif %}
+                {% for term in H_terms %}
+                    valid = 1;
+                    {# pf = C::complex({{coefs[term].real}}, {{coefs[term].imag}}); #}
+                    src_row = 0;
+                    t_ppf = 0;
+                    {% for poly_term in term[1] %}
+                        ppf = C::complex({{poly_term[0].real}}, {{poly_term[0].imag}});
+                        {% for mode_order in poly_term[1] %}
+                            {% if mode_order != 0 %}
+                            {% set mn = loop.index0 %}
+                            ppf *= i_dst{{mn}} {% for _ in range(mode_order-1) -%} * i_dst{{mn}} {%- endfor %};
+                            {% endif %}
+                        {% endfor %}
+                        t_ppf += ppf;
+                    {% endfor %}
+                    pf = 1;
+                    {% for mdiff in term[0]|reverse %}
+                        {% set mn = n_modes - loop.index %}
+                        i_src = i_dst{{mn}} - {{mdiff}};
+                        src_row = src_row * {{mode_dims[mn]}} + i_src;
+                        {% if mdiff > 0 %}
+                            valid = valid && (i_src >= 0);
+                            {% for diff in range(mdiff) %}
+                                pf *= sqrt((R) (i_src + {{diff+1}}));
+                            {% endfor %}
+                        {% elif mdiff < 0 %}
+                            valid = valid && (i_src < {{mode_dims[mn]}});
+                            {% for diff in range(-mdiff) %}
+                                pf *= sqrt((R) (i_src - {{diff}}));
+                            {% endfor %}
+                        {% endif %}
+                    {% endfor %}
+                    src_row *= valid;
+                    pf = valid ? pf : 0.0;
+                    H_psi_k_sum += (s * cpf * pf) * t_ppf * s_psik[idx][src_row];
+                {% endfor %}
+            {% endfor %}
+            s_psik[1-idx][nrow] = H_psi_k_sum;
+            psi_out_v_r += H_psi_k_sum.real();
+            psi_out_v_i += H_psi_k_sum.imag();
+
+            // swap psi_k and psi_k_next
+            idx = 1 - idx;
+        }
+
+        psi_out{{nvar}}(t, 0) = psi_out_v_r;
+        psi_out{{nvar}}(t, 1) = psi_out_v_i;
+    }
+}
+{% endfor  %}
+
+__global__
+void ovlps_grad_kernel{{nvar}}(R *ctrls, R *states, R *ovlp_r, R *ovlp_i, R *d_ovlps_r, R *d_ovlps_i)
+{
+    const unsigned int ct = 0;
+    const unsigned int t = blockIdx.x;
+    const unsigned int nstate = blockIdx.y;
+    const unsigned int d_nc = blockIdx.z;
+    const unsigned int nrow = threadIdx.x;
+
+    int s = ct ? -1 : 1;
+
+    int nrow_cur = nrow;
+{% for mdim in mode_dims %}
+    const int i_dst{{loop.index0}} = nrow_cur % {{mdim}};
+    nrow_cur /= {{mdim}};
+{% endfor %}
+
+    C psi_out_v = C::complex(psi_out{{nvar}}(t, 0), psi_out{{nvar}}(t, 1));
+    C d_psi_out_v = C::complex(0, 0);
+    {% if use_double_buffer[nvar] %}
+        __shared__ C s_psik[2][{{dim}}];
+        __shared__ C s_d_psik[2][{{dim}}];
+        __syncthreads();
+        int idx = 0;
+        s_psik[0][nrow] = psi_out_v;
+        s_d_psik[0][nrow] = d_psi_out_v;
+        {% set s_psik="s_psik[idx]" %}
+        {% set s_psik_next="s_psik[1-idx]" %}
+        {% set s_d_psik="s_d_psik[idx]" %}
+        {% set s_d_psik_next="s_d_psik[1-idx]" %}
+    {% else %}
+        __shared__ C s_psik[{{dim}}];
+        __shared__ C s_d_psik[{{dim}}];
+        s_psik[nrow] = psi_out_v;
+        s_d_psik[nrow] = d_psi_out_v;
+        __syncthreads();
+        {% set s_psik="s_psik" %}
+        {% set s_psik_next="s_psik" %}
+        {% set s_d_psik="s_d_psik" %}
+        {% set s_d_psik_next="s_d_psik" %}
+    {% endif %}
+
+    for (int k = 1; k <= TAYLOR_ORDER; k++) {
+        // psi_k -> (pf*H)psi_k
+        // psi_out -> psi_out + (pf*H)psi_k
+        __syncthreads();
+
+        R cpf, pf;
+        C ppf, t_ppf, H_psi_k_sum, d_H_psi_k_sum;
+        int i_src, src_row, valid;
+        H_psi_k_sum = 0;
+        d_H_psi_k_sum = 0;
+        {% for H_terms in Hcs['noct'] %}
+            {% set nc = loop.index0  %}
+            {% if nc == 0 %}
+                cpf = 1.0;
+            {% else %}
+                cpf = ctrls[idxctrls(t, {{nc - 1}})];
+            {% endif %}
+            {% for term in H_terms %}
+                valid = 1;
+                {# pf = C::complex({{coefs[term].real}}, {{coefs[term].imag}}); #}
+                src_row = 0;
+                t_ppf = 0;
+                {% for poly_term in term[1] %}
+                    ppf = C::complex({{poly_term[0].real}}, {{poly_term[0].imag}});
+                    {% for mode_order in poly_term[1] %}
+                        {% if mode_order != 0 %}
+                        {% set mn = loop.index0 %}
+                        ppf *= i_dst{{mn}} {% for _ in range(mode_order-1) -%} * i_dst{{mn}} {%- endfor %};
+                        {% endif %}
+                    {% endfor %}
+                    t_ppf += ppf;
+                {% endfor %}
+                pf = 1.0 / k;
+                {% for mdiff in term[0]|reverse %}
+                    {% set mn = n_modes - loop.index %}
+                    i_src = i_dst{{mn}} - {{mdiff}};
+                    src_row = src_row * {{mode_dims[mn]}} + i_src;
+                    {% if mdiff > 0 %}
+                        valid = valid && (i_src >= 0);
+                        {% for diff in range(mdiff) %}
+                            pf *= sqrt((R) (i_src + {{diff+1}}));
+                        {% endfor %}
+                    {% elif mdiff < 0 %}
+                        valid = valid && (i_src < {{mode_dims[mn]}});
+                        {% for diff in range(-mdiff) %}
+                            pf *= sqrt((R) (i_src - {{diff}}));
+                        {% endfor %}
+                    {% endif %}
+                {% endfor %}
+                src_row *= valid;
+                pf = valid ? pf : 0.0;
+                H_psi_k_sum += (s * cpf * pf) * t_ppf * {{s_psik}}[src_row];
+                d_H_psi_k_sum += (s * cpf * pf) * t_ppf * {{s_d_psik}}[src_row];
+                if (d_nc == {{nc - 1}})
+                    d_H_psi_k_sum += (s * pf) * t_ppf * {{s_psik}}[src_row];
+            {% endfor %}
+        {% endfor %}
+        {% if not(use_double_buffer[nvar]) %}
+        __syncthreads();
+        {% endif %}
+
+        {{s_psik_next}}[nrow] = H_psi_k_sum;
+        {{s_d_psik_next}}[nrow] = d_H_psi_k_sum;
+
+        {% if use_double_buffer[nvar] %}
+        // swap psi_k and psi_k_next
+        idx = 1 - idx;
+        {% endif %}
+
+        psi_out_v += H_psi_k_sum;
+        d_psi_out_v += d_H_psi_k_sum;
+    }
+
+    // reuse shared memory for calculation of overlaps
+    // - for conjugate
+    {{s_psik}}[nrow] = C::complex(psi_out_ct{{nvar}}(t+1, 0), -psi_out_ct{{nvar}}(t+1, 1)) * psi_out_v;
+    {{s_d_psik}}[nrow] = C::complex(psi_out_ct{{nvar}}(t+1, 0), -psi_out_ct{{nvar}}(t+1, 1)) * d_psi_out_v;
+    __syncthreads();
+    {% set nrem = tot_dims[nvar] %}
+    {% for i in range(n_add_steps[nvar]) %}
+        {% set n_adds = nrem//2 %}
+        {% set nrem = n_adds + nrem%2 %}
+        if (nrow < {{n_adds}}) {
+            {{s_psik}}[nrow] += {{s_psik}}[nrow + {{nrem}}];
+            {{s_d_psik}}[nrow] += {{s_d_psik}}[nrow + {{nrem}}];
+        }
+        __syncthreads();
+    {% endfor %}
+    {% if double %}
+    {% set atomicAdd="atomicAddD" %}
+    {% else %}
+    {% set atomicAdd="atomicAdd" %}
+    {% endif %}
+
+    if (nrow == 0) {
+        if ((t == 0) && (d_nc == 0)) {
+            {{atomicAdd}}(ovlp_r, {{s_psik}}[0].real());
+            {{atomicAdd}}(ovlp_i, {{s_psik}}[0].imag());
+        }
+        {{atomicAdd}}(d_ovlps_r + d_nc + NCTRLS*t, {{s_d_psik}}[0].real());
+        {{atomicAdd}}(d_ovlps_i + d_nc + NCTRLS*t, {{s_d_psik}}[0].imag());
+    }
+}
+
+{% endfor %}
+
+
+void grape_step(R *ctrls, R *ovlp_r, R *ovlp_i, R *d_ovlp_r, R *d_ovlp_i)
+{
+    gpuErrchk(cudaMemcpy(ctrls_d, ctrls, NCTRLS*PLEN*sizeof(R), cudaMemcpyHostToDevice));
+{% for tot_dim in tot_dims %}
+    cudaStream_t stream{{loop.index0}};
+    cudaStreamCreate(&stream{{loop.index0}});
+{% endfor %}
+    dim3 blocks(1, NSTATE, 1);
+    dim3 blocks_ovlp(PLEN, NSTATE, NCTRLS);
+{% for tot_dim in tot_dims %}
+{% set nvar = loop.index0 %}
+    cudaMemsetAsync(ovlp_r_d{{nvar}}, 0, sizeof(R), stream{{nvar}});
+    cudaMemsetAsync(ovlp_i_d{{nvar}}, 0, sizeof(R), stream{{nvar}});
+    cudaMemsetAsync(d_ovlps_r_d{{nvar}}, 0, ctrls_size*sizeof(R), stream{{nvar}});
+    cudaMemsetAsync(d_ovlps_i_d{{nvar}}, 0, ctrls_size*sizeof(R), stream{{nvar}});
+{% endfor %}
+{% for tot_dim in tot_dims %}
+{% set nvar = loop.index0 %}
+    dim3 threads{{nvar}}({{tot_dim}}, 1, 1);
+    prop_state_kernel{{nvar}}_noct<<<blocks, threads{{nvar}}, 0, stream{{nvar}}>>>(ctrls_d, states_d{{nvar}});
+    prop_state_kernel{{nvar}}_withct<<<blocks, threads{{nvar}}, 0, stream{{nvar}}>>>(ctrls_d, states_d{{nvar}});
+    ovlps_grad_kernel{{nvar}}<<<blocks_ovlp, threads{{nvar}}, 0, stream{{nvar}}>>>(
+        ctrls_d, states_d{{nvar}}, ovlp_r_d{{nvar}}, ovlp_i_d{{loop.index0}},
+        d_ovlps_r_d{{nvar}}, d_ovlps_i_d{{nvar}}
+    );
+{% endfor %}
+{% for tot_dim in tot_dims %}
+{% set nvar = loop.index0 %}
+    cudaMemcpyAsync(d_ovlp_r + {{nvar}}*ctrls_size, d_ovlps_r_d{{nvar}}, ctrls_size*sizeof(R),
+                    cudaMemcpyDeviceToHost, stream{{nvar}});
+    cudaMemcpyAsync(d_ovlp_i + {{nvar}}*ctrls_size, d_ovlps_i_d{{nvar}}, ctrls_size*sizeof(R),
+                    cudaMemcpyDeviceToHost, stream{{nvar}});
+    cudaMemcpyAsync(ovlp_r + {{nvar}}, ovlp_r_d{{nvar}}, sizeof(R), cudaMemcpyDeviceToHost, stream{{nvar}});
+    cudaMemcpyAsync(ovlp_i + {{nvar}}, ovlp_i_d{{nvar}}, sizeof(R), cudaMemcpyDeviceToHost, stream{{nvar}});
+{% endfor %}
+    cudaDeviceSynchronize(); gpuErrchk(cudaGetLastError());
+{% for tot_dim in tot_dims %}
+    cudaStreamDestroy(stream{{loop.index0}});
+{% endfor %}
+}
+
+void init_gpu_memory()
+{
+    cudaDeviceSetSharedMemConfig(cudaSharedMemBankSizeEightByte);
+    gpuErrchk(cudaMalloc(&ctrls_d, ctrls_size * sizeof(R)));
+
+    int states_size;
+    {% for dim in tot_dims %}
+    {% set nvar=loop.index0 %}
+    states_size = 2*NSTATE*(PLEN+1)*{{dim}}*2;
+    gpuErrchk(cudaMalloc(&states_d{{nvar}}, states_size * sizeof(R)));
+    gpuErrchk(cudaMemset(states_d{{nvar}}, 0, states_size*sizeof(R)));
+
+    gpuErrchk(cudaMalloc(&ovlp_r_d{{nvar}}, sizeof(R)));
+    gpuErrchk(cudaMalloc(&ovlp_i_d{{nvar}}, sizeof(R)));
+
+    gpuErrchk(cudaMalloc(&d_ovlps_r_d{{nvar}}, ctrls_size * sizeof(R)));
+    gpuErrchk(cudaMemset(d_ovlps_r_d{{nvar}}, 0, ctrls_size*sizeof(R)));
+    gpuErrchk(cudaMalloc(&d_ovlps_i_d{{nvar}}, ctrls_size * sizeof(R)));
+    gpuErrchk(cudaMemset(d_ovlps_i_d{{nvar}}, 0, ctrls_size*sizeof(R)));
+    {% endfor %}
+}
+
+void load_states(int nvar, R *psi0, R *psif)
+{
+    int states_size;
+    switch (nvar) {
+    {% for dim in tot_dims %}
+        case {{loop.index0}}:
+            states_size = 2*NSTATE*(PLEN+1)*{{dim}}*2;
+            gpuErrchk(cudaMemset(states_d{{loop.index0}}, 0, states_size*sizeof(R)));
+            for (int i = 0; i < NSTATE; i++) {
+                gpuErrchk(cudaMemcpy(
+                    states_d{{loop.index0}} + idxstates{{loop.index0}}(0, i, 0, 0, 0),
+                    psi0 + (2*i*{{dim}}), 2*{{dim}}*sizeof(R), cudaMemcpyHostToDevice)
+                );
+                gpuErrchk(cudaMemcpy(
+                    states_d{{loop.index0}} + idxstates{{loop.index0}}(1, i, 0, 0, 0),
+                    psif + (2*i*{{dim}}), 2*{{dim}}*sizeof(R), cudaMemcpyHostToDevice)
+                );
+            }
+            break;
+    {% endfor %}
+    }
+}
+
+void get_states(int nvar, R *states)
+{
+    int states_size;
+    switch (nvar) {
+    {% for dim in tot_dims %}
+        case {{loop.index0}}:
+            states_size = 2*NSTATE*(PLEN+1)*{{dim}}*2;
+            gpuErrchk(cudaMemcpy(states, states_d{{ loop.index0 }}, states_size*sizeof(R), cudaMemcpyDeviceToHost));
+            break;
+    {% endfor %}
+    }
+}

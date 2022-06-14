@@ -5,16 +5,16 @@ import qutip
 
 q_dim = 3
 c_dim = 8
-pulse_len = 400
+pulse_len = 1200
 dt = 2
 outdir = "20220614_test"
 
 # In GHZ
 ### A params
 if 1:
-    anharm = -0.250
+    anharm = -0.195
     kerr_b = 0
-    chi_bq = -3.2e-3
+    chi_bq = -3.2e-4
 
     q_drive = QD = 2 * np.pi * 0.1
     c2_drive = CD = 2 * np.pi * 0.1

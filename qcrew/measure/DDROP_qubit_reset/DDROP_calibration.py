@@ -49,20 +49,21 @@ class DDROP(Experiment):
         """
         Defines pulse sequence to be played inside the experiment loop
         """
-        qubit, rr = self.modes  # get the modes
-        qubit.play(self.qubit_pi)  # prepare qubit in excited state
-        qua.align(qubit.name, rr.name)  # wait qubit pulse to end
+        qubit, qubit_ef, rr = self.modes  # get the modes
+        # qubit.play(self.qubit_pi)  # prepare qubit in excited state
+        qua.align(qubit.name, qubit_ef.name, rr.name)  # wait qubit pulse to end
         qua.update_frequency(rr.name, self.rr_ddrop_freq)
         rr.play(self.rr_ddrop)  # play rr ddrop excitation
         qua.wait(
-            int(self.steady_state_wait // 4), qubit.name
+            int(self.steady_state_wait // 4), qubit.name, qubit_ef.name
         )  # wait resonator in steady state
-        qubit.play(self.qubit_ddrop, ampx=self.y)  # play qubit ddrop excitation
+        qubit.play(self.qubit_ddrop)  # play qubit ddrop excitation
+        qubit_ef.play(self.qubit_ddrop, ampx=self.x)  # play qubit ddrop excitation
         qua.wait(
-            int(self.steady_state_wait // 4), qubit.name
+            int(self.steady_state_wait // 4), qubit.name, qubit_ef.name
         )  # wait resonator in steady state
-        qua.align(qubit.name, rr.name)  # wait qubit pulse to end
-        qua.update_frequency(rr.name, self.x)
+        qua.align(qubit.name, qubit_ef.name, rr.name)  # wait qubit pulse to end
+        qua.update_frequency(rr.name, rr.int_freq)
         rr.measure((self.I, self.Q))  # measure qubit state
         qua.wait(int(self.wait_time // 4), rr.name)  # wait system reset
 
@@ -79,20 +80,19 @@ class DDROP(Experiment):
 if __name__ == "__main__":
 
     amp_start = 0.0
-    amp_stop = 1.85
-    amp_step = 0.5
+    amp_stop = 1.2
+    amp_step = 0.01
 
     parameters = {
-        "modes": ["QUBIT", "RR"],
+        "modes": ["QUBIT", "QUBIT_EF", "RR"],
         "reps": 50000,
-        "wait_time": 500,
-        "x_sweep": (int(-53e6), int(-49e6 + 0.1e6 / 2), int(0.1e6)),
-        "y_sweep": (0., 1.0, 1.9),
-        "qubit_pi": "pi",
+        "wait_time": 100000,
+        "x_sweep": (amp_start, amp_stop + amp_step / 2, amp_step),
+        "qubit_pi": "constant_cos_pi",
         "qubit_ddrop": "ddrop_pulse",
         "rr_ddrop": "ddrop_pulse",
-        "rr_ddrop_freq": int(-49.7e6),
-        "steady_state_wait": 500,
+        "rr_ddrop_freq": int(-50.4e6),
+        "steady_state_wait": 2000,
         "single_shot": False,
     }
 

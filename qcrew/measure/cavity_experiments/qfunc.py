@@ -38,11 +38,10 @@ class QFunction(Experiment):
         """
         qubit, cav, rr, cav_drive, rr_drive = self.modes  # get the modes
         qua.reset_frame(cav.name)
-        # cav.play(self.cav_op, phase=0)  # initial state creation
+        cav.play(self.cav_op, phase=0)  # initial state creation
         qua.align(qubit.name, cav.name)  # align measurement
-        # qubit.play("constant_cos_pi2")
-        # qua.wait(int(16), cav.name, qubit.name)
-        # qua.wait(int(360), cav.name, qubit.name)
+        # qubit.play("constant_cos_pi")
+        # qua.wait(int(348), cav.name, qubit.name)
         cav.play(self.cav_op, ampx=self.x, phase=0)  # displacement in I direction
         cav.play(self.cav_op, ampx=self.y, phase=0.25)  # displacement in Q direction
         qua.align(cav.name, qubit.name)

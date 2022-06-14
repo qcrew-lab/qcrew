@@ -33,12 +33,12 @@ class QubitSpectroscopyEF(Experiment):
         """
         Defines pulse sequence to be played inside the experiment loop
         """
-        qubit, rr = self.modes  # get the modes
+        qubit, qubit_ef, rr = self.modes  # get the modes
 
         qubit.play(self.qubit_pi_pulse_name)  # g->e
         qua.align(qubit.name, qubit_ef.name)
         qua.update_frequency(qubit_ef.name, self.x)  # update to e->f (sweep variable)
-        qubit_ef.play(self.qubit_ef_op, ampx=0.5)  # e->f
+        qubit_ef.play(self.qubit_ef_op)  # e->f
         qua.align(qubit.name, qubit_ef.name)
         # qua.update_frequency(qubit.name, qubit.int_freq)  # update to g->e
         qubit.play(self.qubit_pi_pulse_name)  # g->e
@@ -52,12 +52,12 @@ class QubitSpectroscopyEF(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-    x_start = -85e6
-    x_stop = -60e6
-    xstep = 0.2e6
+    x_start = -76e6
+    x_stop = -75.5e6
+    xstep = 0.02e6
 
     parameters = {
-        "modes": ["QUBIT", "RR"],
+        "modes": ["QUBIT", "QUBIT_EF", "RR"],
         "reps": 20000,
         "wait_time": 100000,
         "x_sweep": (int(x_start), int(x_stop + xstep / 2), int(xstep)),

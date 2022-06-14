@@ -21,15 +21,22 @@ class CondPowerRabi(Experiment):
         "qubit_op",  # operation used for exciting the qubit
         "resonator_op",  # operation used for exciting the RR
         "steady_state_wait",  # Time for resonator to reach steady state
+        "rr_ddrop_freq",
         "fit_fn",  # fit function
     }
 
     def __init__(
-        self, qubit_op, resonator_op, steady_state_wait, fit_fn="sine", **other_params
+        self,
+        qubit_op,
+        resonator_op,
+        steady_state_wait,
+        rr_ddrop_freq,
+        fit_fn="sine",
+        **other_params
     ):
-
         self.qubit_op = qubit_op
         self.resonator_op = resonator_op
+        self.rr_ddrop_freq = rr_ddrop_freq
         self.steady_state_wait = steady_state_wait
         self.fit_fn = fit_fn
 
@@ -40,12 +47,14 @@ class CondPowerRabi(Experiment):
         Defines pulse sequence to be played inside the experiment loop
         """
         qubit, rr = self.modes  # get the modes
+        qua.update_frequency(rr.name, self.rr_ddrop_freq)
         rr.play(self.resonator_op, ampx=self.y)  # play a long rr excitation
         qua.wait(
             int(self.steady_state_wait // 4), qubit.name
         )  # wait resonator in steady state
         qubit.play(self.qubit_op, ampx=self.x)  # play qubit pulse concomitantly
         qua.align(qubit.name, rr.name)  # wait qubit pulse to end
+        qua.update_frequency(rr.name, rr.int_freq)
         rr.measure((self.I, self.Q))  # measure qubit state
         qua.wait(int(self.wait_time // 4), rr.name)  # wait system reset
 
@@ -61,20 +70,21 @@ class CondPowerRabi(Experiment):
 
 if __name__ == "__main__":
 
-    amp_start = -1.9
-    amp_stop = 1.9
-    amp_step = 0.05
+    amp_start = -1
+    amp_stop = 0
+    amp_step = 0.001
 
     parameters = {
         "modes": ["QUBIT", "RR"],
         "reps": 50000,
         "wait_time": 100000,
         "x_sweep": (amp_start, amp_stop + amp_step / 2, amp_step),
-        "y_sweep": (0.0, 0.9, 1., 1.1),
+        "y_sweep": (0.0, 0.02, 0.08),
         "qubit_op": "ddrop_pulse",
         "resonator_op": "ddrop_pulse",
-        "steady_state_wait": 500,
-        "single_shot": False,
+        "rr_ddrop_freq": int(-50.4e6),
+        "steady_state_wait": 2000,
+        "single_shot": True,
     }
 
     plot_parameters = {

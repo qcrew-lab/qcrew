@@ -1,5 +1,5 @@
 """
-A python class describing a T2 measurement using QM.
+A python class describing a T1 measurement using QM.
 This class serves as a QUA script generator with user-defined parameters.
 """
 
@@ -12,21 +12,31 @@ from qm import qua
 # ---------------------------------- Class -------------------------------------
 
 
-class T2(Experiment):
+class QPPumpingT2(Experiment):
 
-    name = "T2"
+    name = "quasiparticle_pumping_T2"
 
     _parameters: ClassVar[set[str]] = Experiment._parameters | {
-        "qubit_op",  # operation used for exciting the qubit
+        "qubit_pi_op",  # pi operation used quasiparticle pumping
+        "qubit_pi2_op",  # pi2 operation used for the T2 experiment
         "fit_fn",  # fit function
-        "detuning",  # qubit pulse detuning
     }
 
-    def __init__(self, qubit_op, detuning=0, fit_fn="exp_decay_sine", **other_params):
+    def __init__(
+        self,
+        qubit_pi_op,
+        qubit_pi2_op,
+        dT,
+        detuning=0,
+        fit_fn="exp_decay_sine",
+        **other_params
+    ):
 
-        self.qubit_op = qubit_op  # half pi pulse
-        self.fit_fn = fit_fn
+        self.qubit_pi_op = qubit_pi_op  # pi pulse
+        self.qubit_pi2_op = qubit_pi2_op  # pi pulse
+        self.dT = dT  # time between pulses in the pumping sequence
         self.detuning = detuning  # frequency detuning of qubit operation
+        self.fit_fn = fit_fn
 
         super().__init__(**other_params)  # Passes other parameters to parent
 
@@ -35,11 +45,22 @@ class T2(Experiment):
         Defines pulse sequence to be played inside the experiment loop
         """
         qubit, rr = self.modes  # get the modes
+
+        # quasiparticle pumping sequence
+        k = qua.declare(int)
+        with qua.for_(var=k, init=0, cond=k < self.y, update=k + 1):
+            qua.wait(
+                int(self.dT // 4), qubit.name
+            )  # wait for qubit to interact with QPs
+            qubit.play(self.qubit_pi_op)  # excite the qubit with a pi pulse
+
+        qua.wait(int(self.dT // 4), qubit.name)  # wait for qubit to interact with QPs
         qua.update_frequency(qubit.name, qubit.int_freq + self.detuning)  # detune
-        qubit.play(self.qubit_op)  # play half pi qubit pulse
+        qubit.play(self.qubit_pi2_op)  # play half pi qubit pulse
         qua.wait(self.x, qubit.name)  # wait for partial qubit decay
-        qubit.play(self.qubit_op)  # play half pi qubit pulse
-        qua.align(qubit.name, rr.name)  # wait last qubit pulse to end
+        qubit.play(self.qubit_pi2_op)  # play half pi qubit pulse
+
+        qua.align(qubit.name, rr.name)  # wait qubit pulse to end
         rr.measure((self.I, self.Q))  # measure qubit state
         if self.single_shot:  # assign state to G or E
             qua.assign(
@@ -54,29 +75,27 @@ class T2(Experiment):
 
 if __name__ == "__main__":
     x_start = 10
-    x_stop = 14000
-    x_step = 200
-
-    x_start = 4
-    x_stop = 6000
-    x_step = 40
-    detuning = 400e3
-
+    x_stop = 12000
+    x_step = 150
+    detuning = 200e3
     parameters = {
         "modes": ["QUBIT", "RR"],
-        "reps": 8000,
-        "wait_time": 100000,
+        "reps": 20000,
+        "wait_time": 1500000,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
-        "qubit_op": "constant_cos_pi2",
-        "detuning": int(detuning),
+        "y_sweep": (0, 6),
+        "qubit_pi_op": "pi",
+        "qubit_pi2_op": "pi2",
+        "detuning": detuning,
+        "dT": 50000,
         "single_shot": False,
     }
 
     plot_parameters = {
-        "xlabel": "Relaxation time (clock cycles)",
+        "xlabel": "Number of pi pulses",
     }
 
-    experiment = T2(**parameters)
+    experiment = QPPumpingT2(**parameters)
     experiment.setup_plot(**plot_parameters)
 
     prof.run(experiment)

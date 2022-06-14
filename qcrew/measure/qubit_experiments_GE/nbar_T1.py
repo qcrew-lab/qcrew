@@ -1,5 +1,6 @@
 """
-A python class describing a T2 measurement using QM.
+A python class describing a readout resonator spectroscopy with readout pulse amplitude
+sweep using QM.
 This class serves as a QUA script generator with user-defined parameters.
 """
 
@@ -12,21 +13,19 @@ from qm import qua
 # ---------------------------------- Class -------------------------------------
 
 
-class T2(Experiment):
+class nbar_T1(Experiment):
 
-    name = "T2"
+    name = "nbar_T1"
 
     _parameters: ClassVar[set[str]] = Experiment._parameters | {
         "qubit_op",  # operation used for exciting the qubit
         "fit_fn",  # fit function
-        "detuning",  # qubit pulse detuning
     }
 
-    def __init__(self, qubit_op, detuning=0, fit_fn="exp_decay_sine", **other_params):
+    def __init__(self, qubit_op, fit_fn="exp_decay", **other_params):
 
-        self.qubit_op = qubit_op  # half pi pulse
+        self.qubit_op = qubit_op  # pi pulse
         self.fit_fn = fit_fn
-        self.detuning = detuning  # frequency detuning of qubit operation
 
         super().__init__(**other_params)  # Passes other parameters to parent
 
@@ -35,12 +34,15 @@ class T2(Experiment):
         Defines pulse sequence to be played inside the experiment loop
         """
         qubit, rr = self.modes  # get the modes
-        qua.update_frequency(qubit.name, qubit.int_freq + self.detuning)  # detune
-        qubit.play(self.qubit_op)  # play half pi qubit pulse
-        qua.wait(self.x, qubit.name)  # wait for partial qubit decay
-        qubit.play(self.qubit_op)  # play half pi qubit pulse
-        qua.align(qubit.name, rr.name)  # wait last qubit pulse to end
-        rr.measure((self.I, self.Q))  # measure qubit state
+
+        # (1) Pi-Pulse, (2) new pulse, (3) readout pulse
+
+        qubit.play(self.qubit_op)  # play pi qubit pulse
+        # qua.wait(self.x, qubit.name)  # wait for partial qubit decay
+        qua.align(qubit.name, rr.name)  # wait qubit pulse to end
+        rr.play("constant_pulse", ampx=self.y, duration=self.x)
+        rr.measure((self.I, self.Q))  # measure transmitted signal
+
         if self.single_shot:  # assign state to G or E
             qua.assign(
                 self.state, qua.Cast.to_fixed(self.I < rr.readout_pulse.threshold)
@@ -53,30 +55,31 @@ class T2(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-    x_start = 10
-    x_stop = 14000
-    x_step = 200
 
-    x_start = 4
-    x_stop = 6000
-    x_step = 40
-    detuning = 400e3
+    x_start = 200
+    x_stop = 35000
+    x_step = 1000
+
+    y_start = 0
+    y_stop = 0.1
+    y_step = 0.005
 
     parameters = {
         "modes": ["QUBIT", "RR"],
-        "reps": 8000,
-        "wait_time": 100000,
+        "reps": 2000,
+        "wait_time": 125000,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
-        "qubit_op": "constant_cos_pi2",
-        "detuning": int(detuning),
+        "y_sweep": (y_start, y_stop + y_step / 2, y_step),
+        "qubit_op": "pi",
         "single_shot": False,
     }
-
     plot_parameters = {
-        "xlabel": "Relaxation time (clock cycles)",
+        "ylabel": " Pulse Amplitude (V)",
+        "xlabel": " Pulse Length (clock cycles)",
+        "plot_type": "2D",
+        # "zlog" : "True"
     }
 
-    experiment = T2(**parameters)
+    experiment = nbar_T1(**parameters)
     experiment.setup_plot(**plot_parameters)
-
     prof.run(experiment)

@@ -1,4 +1,5 @@
 # general packages
+from fileinput import filename
 from qcrew.helpers.parametrizer import Parametrized
 from qcrew.helpers import logger
 import qcrew.measure.qua_macros as macros
@@ -97,11 +98,32 @@ class Experiment(Parametrized):
             self.variables[v].tag for v in ["x", "y"] if self.variables[v].tag
         ]
 
+        # filename and path where data is saved
+        self._filename = None
+
         # parameters to be used by the plotter. Updated in self.setup_plot method.
         self.plot_setup = dict()
         self.setup_plot(**self.plot_setup)
 
         logger.info(f"Created {type(self).__name__}")
+
+    @property
+    def filename(self):
+        # Return filename where experiment data is saved
+        return self._filename
+
+    @filename.setter
+    def filename(self, f):
+        # Set filename where experiment data is saved
+        # Set plot_setup["title"] as filename + experiment name if no other title is
+        # set.
+
+        self._filename = f
+
+        if not self.plot_setup["title"]:
+            self.plot_setup["title"] = self._filename + "\n" + self.name
+
+        return
 
     @property
     def mode_names(self):
@@ -156,10 +178,13 @@ class Experiment(Parametrized):
 
         """
 
+        # title is updated later with the filename, experiment name and number of
+        # repetitions
         if not title:
-            title = self.name
+            title = ""
+
         if not zlabel:
-            zlabel = "<Z>" if self.single_shot else "Signal (a.u.)"
+            zlabel = "P1" if self.single_shot else "Signal (a.u.)"
         if not zlimits:
             zlimits = (-0.05, 1.05) if self.single_shot and not zlog else None
 

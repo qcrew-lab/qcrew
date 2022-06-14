@@ -19,15 +19,17 @@ class T1EF(Experiment):
     _parameters: ClassVar[set[str]] = Experiment._parameters | {
         "qubit_ge_pi",  # operation used for exciting the qubit from g to e
         "qubit_ef_pi",  # operation used for exciting the qubit from e to f
+        "ef_int_freq",  # intermediate frequency of the ef transition
         "fit_fn",  # fit function
     }
 
     def __init__(
-        self, qubit_ge_pi, qubit_ef_pi, fit_fn="exp_decay", **other_params
+        self, qubit_ge_pi, qubit_ef_pi, ef_int_freq, fit_fn="exp_decay", **other_params
     ):
 
         self.qubit_ge_pi = qubit_ge_pi  # pi pulse
         self.qubit_ef_pi = qubit_ef_pi  # pi pulse
+        self.ef_int_freq = ef_int_freq  # pi pulse
         self.fit_fn = fit_fn
 
         super().__init__(**other_params)  # Passes other parameters to parent
@@ -36,12 +38,13 @@ class T1EF(Experiment):
         """
         Defines pulse sequence to be played inside the experiment loop
         """
-        qubit,qubit_ef, rr = self.modes  # get the modes
+        qubit, rr = self.modes  # get the modes
 
         qubit.play(self.qubit_ge_pi)  # g-> e pi
-        qua.align(qubit.name, qubit_ef.name)
-        qubit_ef.play(self.qubit_ef_pi)  # e-> f pi
+        qua.update_frequency(qubit.name, self.ef_int_freq)
+        qubit.play(self.qubit_ef_pi)  # e-> f pi
         qua.wait(self.x, qubit.name)  # wait for partial ef decay
+        qua.update_frequency(qubit.name, qubit.int_freq)
         qubit.play(self.qubit_ge_pi)  # e->g pi
         qua.align(qubit.name, rr.name)  # wait qubit pulse to end
         rr.measure((self.I, self.Q))  # measure qubit g population
@@ -53,18 +56,20 @@ class T1EF(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
+
     x_start = 4
     x_stop = 30e3
     x_step = 300
     
 
     parameters = {
-        "modes": ["QUBIT","QUBIT_EF",  "RR"],
+        "modes": ["QUBIT", "RR"],
         "reps": 20000,
-        "wait_time": 150000,
+        "wait_time": 100000,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
         "qubit_ge_pi": "pi",
-        "qubit_ef_pi": "pi",
+        "qubit_ef_pi": "pi_ef",
+        "ef_int_freq": int(-157.1e6),
     }
 
     plot_parameters = {

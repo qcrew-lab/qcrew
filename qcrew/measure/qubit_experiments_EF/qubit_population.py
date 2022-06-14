@@ -24,12 +24,13 @@ class QubitPopulation(Experiment):
     }
 
     def __init__(
-        self, qubit_ge_pi, qubit_ef_pi, fit_fn="sine", **other_params
+        self, qubit_ge_pi, qubit_ef_pi, ef_int_freq, fit_fn="sine", **other_params
     ):
 
         self.qubit_ge_pi = qubit_ge_pi
         self.fit_fn = fit_fn
         self.qubit_ef_pi = qubit_ef_pi
+        self.ef_int_freq = ef_int_freq
 
         super().__init__(**other_params)  # Passes other parameters to parent
 
@@ -37,13 +38,14 @@ class QubitPopulation(Experiment):
         """
         Defines pulse sequence to be played inside the experiment loop
         """
-        qubit, qubit_ef, rr = self.modes  # get the modes
+        qubit, rr = self.modes  # get the modes
 
         qubit.play(self.qubit_ge_pi, ampx=self.y)
-        qua.align(qubit.name, qubit_ef.name)
-        qubit_ef.play(self.qubit_ef_pi, ampx=self.x)  # e-> f
-        qua.align(qubit.name, qubit_ef.name)
+        qua.update_frequency(qubit.name, self.ef_int_freq)
+        qubit.play(self.qubit_ef_pi, ampx=self.x)  # e-> f
+        qua.update_frequency(qubit.name, qubit.int_freq)
         qubit.play(self.qubit_ge_pi)  # e-> f
+
         qua.align(qubit.name, rr.name)  # wait qubit pulse to end
         rr.measure((self.I, self.Q))  # measure qubit state
         if self.single_shot:
@@ -59,6 +61,10 @@ class QubitPopulation(Experiment):
 
 if __name__ == "__main__":
 
+    amp_start = -1.9
+    amp_stop = 1.9
+    amp_step = 0.05
+
     parameters = {
         "modes": ["QUBIT", "QUBIT_EF", "RR"],
         "reps": 5000,
@@ -69,7 +75,9 @@ if __name__ == "__main__":
         "y_sweep": [1.0],
     }
 
-    plot_parameters = {"xlabel": "Qubit pulse amplitude scaling"}
+    plot_parameters = {
+        "xlabel": "Qubit pulse amplitude scaling",
+    }
 
     experiment = QubitPopulation(**parameters)
     experiment.setup_plot(**plot_parameters)

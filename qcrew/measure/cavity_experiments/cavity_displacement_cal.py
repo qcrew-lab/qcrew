@@ -47,7 +47,11 @@ class CavityDisplacementCal(Experiment):
         rr_drive.play("constant_cos", duration=200e3, ampx=1.4)
         qua.wait(int(self.wait_time // 4), cav.name)
 
-        self.QUA_stream_results()  # stream variables (I, Q, x, etc)
+        if self.single_shot:  # assign state to G or E
+            qua.assign(
+                self.state, qua.Cast.to_fixed(self.I < rr.readout_pulse.threshold)
+            )
+ # stream variables (I, Q, x, etc)
 
 
 # -------------------------------- Execution -----------------------------------
@@ -63,8 +67,9 @@ if __name__ == "__main__":
         "wait_time": 50e3,
         "x_sweep": (x_start, x_stop + x_step / 2, x_step),
         "qubit_op": "pi_selective_1",
-        "cav_op": "gaussian_pulse",
+        "cav_op": "constant_cos_ECD",
         # "fetch_period": 2,
+        "single_shot": True,
     }
 
     plot_parameters = {

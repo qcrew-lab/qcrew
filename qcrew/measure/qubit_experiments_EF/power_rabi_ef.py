@@ -18,18 +18,15 @@ class PowerRabiEF(Experiment):
     name = "power_rabi_ef"
 
     _parameters: ClassVar[set[str]] = Experiment._parameters | {
-        "qubit_op",  # operation used for exciting the qubit
+        "qubit_ef_op",  # operation used for exciting the qubit
         "fit_fn",  # fit function
     }
 
-    def __init__(
-        self, qubit_op, qubit_pi_pulse_name, ef_int_freq, fit_fn="sine", **other_params
-    ):
+    def __init__(self, qubit_ef_op, qubit_pi_pulse_name, fit_fn="sine", **other_params):
 
-        self.qubit_op = qubit_op
+        self.qubit_ef_op = qubit_ef_op
         self.fit_fn = fit_fn
         self.qubit_pi_pulse_name = qubit_pi_pulse_name
-        self.ef_int_freq = ef_int_freq
 
         super().__init__(**other_params)  # Passes other parameters to parent
 
@@ -37,11 +34,12 @@ class PowerRabiEF(Experiment):
         """
         Defines pulse sequence to be played inside the experiment loop
         """
-        qubit, rr = self.modes  # get the modes
+        qubit, qubit_ef, rr = self.modes  # get the modes
 
         qubit.play(self.qubit_pi_pulse_name)  # g-> e
-        qua.update_frequency(qubit.name, self.ef_int_freq)
-        qubit.play(self.qubit_op, ampx=self.x)  # e-> f
+        qua.align(qubit.name, qubit_ef.name)
+        qubit_ef.play(self.qubit_ef_op, ampx=self.x)  # e-> f
+        qua.align(qubit.name, qubit_ef.name)
         qua.update_frequency(qubit.name, qubit.int_freq)
         qubit.play(self.qubit_pi_pulse_name)  # e->g
         qua.align(qubit.name, rr.name)  # wait qubit pulse to end
@@ -54,18 +52,17 @@ class PowerRabiEF(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-    amp_start = -2
-    amp_stop = 2
-    amp_step = 0.05
+    amp_start = -1.5
+    amp_stop = 1.5
+    amp_step = 0.01
 
     parameters = {
-        "modes": ["QUBIT", "RR", "QUBIT_EF"],
+        "modes": ["QUBIT", "QUBIT_EF", "RR"],
         "reps": 3000,
         "wait_time": 100000,
-        "ef_int_freq": int(-157.1e6),
         "qubit_pi_pulse_name": "pi",
         "x_sweep": (amp_start, amp_stop + amp_step / 2, amp_step),
-        "qubit_op": "pi_ef",
+        "qubit_ef_op": "ddrop_pulse",
     }
 
     plot_parameters = {

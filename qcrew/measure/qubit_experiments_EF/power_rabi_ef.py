@@ -34,14 +34,15 @@ class PowerRabiEF(Experiment):
         """
         Defines pulse sequence to be played inside the experiment loop
         """
-        qubit, rr, qubit_ef = self.modes  # get the modes
+        qubit, qubit_ef, rr = self.modes  # get the modes
 
         qubit.play(self.qubit_pi_pulse_name)  # g-> e
         qua.align(qubit.name, qubit_ef.name)
         qubit_ef.play(self.qubit_ef_op, ampx=self.x)  # e-> f
         qua.align(qubit.name, qubit_ef.name)
+        qua.update_frequency(qubit.name, qubit.int_freq)
         qubit.play(self.qubit_pi_pulse_name)  # e->g
-        qua.align(qubit.name, qubit_ef.name, rr.name)  # wait qubit pulse to end
+        qua.align(qubit.name, rr.name)  # wait qubit pulse to end
         rr.measure((self.I, self.Q))  # measure qubit state
         qua.wait(int(self.wait_time // 4), rr.name)  # wait system reset
 
@@ -53,15 +54,15 @@ class PowerRabiEF(Experiment):
 if __name__ == "__main__":
     amp_start = -1.5
     amp_stop = 1.5
-    amp_step = 0.05
+    amp_step = 0.01
 
     parameters = {
-        "modes": ["QUBIT", "RR", "QUBIT_EF"],
-        "reps": 20000,
+        "modes": ["QUBIT", "QUBIT_EF", "RR"],
+        "reps": 3000,
         "wait_time": 100000,
         "qubit_pi_pulse_name": "pi",
         "x_sweep": (amp_start, amp_stop + amp_step / 2, amp_step),
-        "qubit_ef_op": "pi",
+        "qubit_ef_op": "ddrop_pulse",
     }
 
     plot_parameters = {

@@ -182,6 +182,9 @@ def process_Z_values(I_stream, Q_stream, buffer_len=1):
     
     # to live plot latest average
     (I_avg * I_avg + Q_avg * Q_avg).save("Z_AVG")
+    # Also save I_avg and Q_avg
+    I_avg.save("I_AVG")
+    Q_avg.save("Q_AVG")
 
 
 def QUA_loop(qua_function, sweep_variables):

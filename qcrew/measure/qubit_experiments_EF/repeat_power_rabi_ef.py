@@ -66,12 +66,12 @@ if __name__ == "__main__":
 
     parameters = {
         "modes": ["QUBIT", "RR"],
-        "reps": 10000,
-        "wait_time": 300000,
-        "x_sweep": (-1.8, 1.8 + 0.01 / 2, 0.01),
-        "ef_int_freq": -87.7e6,
+        "reps": 20000,
+        "wait_time": 100000,
+        "x_sweep": (-1.9, 1.9 + 0.05 / 2, 0.05),
+        "ef_int_freq": int(-157.1e6),
         "qubit_ge_pi": "pi",
-        "qubit_ef_op": "gaussian_pulse",
+        "qubit_ef_op": "pi2_ef",
         "pulse_number": 2,
     }
 

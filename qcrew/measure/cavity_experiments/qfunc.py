@@ -24,7 +24,7 @@ class QFunction(Experiment):
         "fit_fn",  # fit function
     }
 
-    def __init__(self, cav_op, qubit_op, fit_fn=None, **other_params):
+    def __init__(self, cav_op, qubit_op, fit_fn="gaussian", **other_params):
 
         self.cav_op = cav_op
         self.qubit_op = qubit_op
@@ -36,6 +36,7 @@ class QFunction(Experiment):
         """
         Defines pulse sequence to be played inside the experiment loop
         """
+<<<<<<< HEAD
         qubit, cav, rr = self.modes  # get the mode
         qua.reset_frame(qubit.name, cav.name)
 
@@ -98,14 +99,37 @@ class QFunction(Experiment):
         # qua.align(qubit.name, cav.name)
         cav.play(self.cav_op, ampx=-self.x, phase=0)  # displacement in I direction
         cav.play(self.cav_op, ampx=-self.y, phase=0.25)  # displacement in Q direction
+=======
+        qubit, cav, rr, cav_drive, rr_drive = self.modes  # get the modes
+        qua.reset_frame(cav.name)
+        cav.play(self.cav_op, phase=0)  # initial state creation
+        qua.align(qubit.name, cav.name)  # align measurement
+        # qubit.play("constant_cos_pi")
+        # qua.wait(int(348), cav.name, qubit.name)
+        cav.play(self.cav_op, ampx=self.x, phase=0)  # displacement in I direction
+        cav.play(self.cav_op, ampx=self.y, phase=0.25)  # displacement in Q direction
+>>>>>>> de6211f2e29d356d80f941276b1d45a86e3df7be
         qua.align(cav.name, qubit.name)
+        # qubit.play("constant_cos_pi2")
         qubit.play(self.qubit_op)  # play qubit selective pi-pulse
         # Measure cavity state
         qua.align(qubit.name, rr.name)  # align measurement
         rr.measure((self.I, self.Q))  # measure transmitted signal
 
         # wait system reset
+<<<<<<< HEAD
         qua.wait(int(self.wait_time // 4), cav.name, rr.name, qubit.name)
+=======
+        qua.align(cav.name, qubit.name, rr.name, cav_drive.name, rr_drive.name)
+        cav_drive.play("constant_cos", duration=200e3, ampx=1.6)
+        rr_drive.play("constant_cos", duration=200e3, ampx=1.4)
+        qua.wait(int(self.wait_time // 4), cav.name)
+>>>>>>> de6211f2e29d356d80f941276b1d45a86e3df7be
+
+        if self.single_shot:  # assign state to G or E
+            qua.assign(
+                self.state, qua.Cast.to_fixed(self.I < rr.readout_pulse.threshold)
+            )
 
         self.QUA_stream_results()  # stream variables (I, Q, x, etc)
 
@@ -113,27 +137,35 @@ class QFunction(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-    x_start = -1.5
+    x_start = -1.5  # 1.5
     x_stop = 1.5
-    x_step = 0.1
+    x_step = 0.075
 
     y_start = -1.5
     y_stop = 1.5
-    y_step = 0.1
+    y_step = 0.075
 
     parameters = {
+<<<<<<< HEAD
         "modes": ["QUBIT", "CAV", "RR"],
         "reps": 800,
         "wait_time": 160000,
         "fetch_period": 2,  # time between data fetching rounds in sec
+=======
+        "modes": ["QUBIT", "CAV", "RR", "CAV_DRIVE", "RR_DRIVE"],
+        "reps": 500,
+        "wait_time": 50e3,
+        "fetch_period": 4,  # time between data fetching rounds in sec
+>>>>>>> de6211f2e29d356d80f941276b1d45a86e3df7be
         "x_sweep": (
             x_start,
             x_stop + x_step / 2,
             x_step,
         ),  # ampitude sweep of the displacement pulses in the ECD
         "y_sweep": (y_start, y_stop + y_step / 2, y_step),
-        "qubit_op": "pi_selective",
-        "cav_op": "cohstate_1",
+        "qubit_op": "pi_selective_1",
+        "cav_op": "constant_cos_cohstate_1",
+        "single_shot": True,
     }
 
     plot_parameters = {

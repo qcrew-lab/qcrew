@@ -22,14 +22,19 @@ class ECDCalibration(Experiment):
 
     _parameters: ClassVar[set[str]] = Experiment._parameters | {
         "cav_op",  # operation for displacing the cavity
+<<<<<<< HEAD
         "qubit_op1",  # operation used for exciting the qubit
         "qubit_op2"
+=======
+        "qubit_op2",  # operation used for exciting the qubit
+        "qubit_op1",  # operation used for exciting the qubit
+>>>>>>> de6211f2e29d356d80f941276b1d45a86e3df7be
         "fit_fn",  # fit function
         "delay",  # describe...
     }
 
     def __init__(
-        self, cav_op, qubit_op1, qubit_op2, fit_fn=None, delay=4, **other_params
+        self, cav_op, qubit_op1, qubit_op2, fit_fn="gaussian", delay=4, **other_params
     ):
 
         self.cav_op = cav_op
@@ -48,7 +53,7 @@ class ECDCalibration(Experiment):
         qua.reset_frame(cav.name)
 
         # TODO work in progress
-        qubit.play(self.qubit_op)  # play pi/2 pulse around X
+        qubit.play(self.qubit_op1)  # play pi/2 pulse around X
 
         # start ECD gate
         qua.align(cav.name, qubit.name)  # wait for qubit pulse to end
@@ -78,17 +83,21 @@ class ECDCalibration(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
+    x_start = -1.8
+    x_stop = 1.8
+    x_step = 0.05
 
     parameters = {
         "modes": ["QUBIT", "CAV", "RR"],
-        "reps": 50000,
-        "wait_time": 600000,
-        "fetch_period": 2,  # time between data fetching rounds in sec
-        "delay": 1000,  # pi/chi
-        "x_sweep": (0.2, 1 + 0.05 / 2, 0.05),
-        "qubit_op1": "pi2",
-        "qubit_op2": "pi",
-        "cav_op": "constant_pulse",
+        "reps": 100000,
+        "wait_time": 4000000,
+        "fetch_period": 3,  # time between data fetching rounds in sec
+        "delay": 200,  # pi/chi
+        "x_sweep": (x_start, x_stop + x_step / 2, x_step),
+        "qubit_op1": "constant_cos_pi2",
+        "qubit_op2": "constant_cos_pi",
+        "cav_op": "constant_cos_ECD",
+        
     }
 
     plot_parameters = {

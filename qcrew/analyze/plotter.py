@@ -45,7 +45,10 @@ class Plotter:
         plt.rcParams["axes.labelsize"] = 12
         plt.rcParams["legend.fontsize"] = 12
 
-        self.fig = plt.figure()
+        # If another figure has already been plotted, retrieve it and erase content
+        self.fig = plt.gcf()
+        self.fig.clear()
+
         self.hdisplay = display.display(self.fig, display_id=True)
 
     def fit(self, xs, ys, fit_fn) -> tuple:

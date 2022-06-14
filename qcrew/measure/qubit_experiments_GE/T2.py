@@ -53,18 +53,27 @@ class T2(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-
     x_start = 10
+<<<<<<< HEAD
     x_stop = 6000
     x_step = 30
     detuning = 500e3
+=======
+    x_stop = 14000
+    x_step = 200
+
+    x_start = 4
+    x_stop = 6000
+    x_step = 40
+    detuning = 400e3
+>>>>>>> de6211f2e29d356d80f941276b1d45a86e3df7be
 
     parameters = {
         "modes": ["QUBIT", "RR"],
-        "reps": 20000,
+        "reps": 8000,
         "wait_time": 100000,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
-        "qubit_op": "pi2",
+        "qubit_op": "constant_cos_pi2",
         "detuning": int(detuning),
         "single_shot": False,
     }

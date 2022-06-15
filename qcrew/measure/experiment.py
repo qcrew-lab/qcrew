@@ -34,6 +34,8 @@ class Experiment(Parametrized):
         y_sweep=None,
         fetch_period=1,
         single_shot=False,
+        plot_quad=None,
+        extra_vars: dict[str, macros.ExpVariable] = None,
     ):
 
         # List of modes used in the experiment. String values will be replaced by
@@ -50,7 +52,12 @@ class Experiment(Parametrized):
         # Sweep configurations
         self.sweep_config = {"n": (0, self.reps, 1), "x": x_sweep, "y": y_sweep}
         self.buffering = tuple()  # defined in _configure_sweeps
+
+        # Is single-shot being used?
         self.single_shot = single_shot
+
+        # Should plot quadratures instead of Z_AVG?
+        self.plot_quad = plot_quad
 
         # ExpVariable definitions. This list is updated in _configure_sweeps and after
         # stream and variable declaration.
@@ -78,6 +85,8 @@ class Experiment(Parametrized):
                 )
             }
 
+        if extra_vars is not None:
+            self.variables |= extra_vars
         # Extra memory tags for saving server-side stream operation results
         self.Z_SQ_RAW_tag = "Z_SQ_RAW"
         self.Z_SQ_RAW_AVG_tag = "Z_SQ_RAW_AVG"
@@ -138,7 +147,13 @@ class Experiment(Parametrized):
                 indep_tags.append(self.variables[var].tag)
 
         # TODO: implement more than 1 dependent variable (multiple readout)
-        dep_tags = ["state" if self.single_shot else self.Z_AVG_tag]
+        if self.plot_quad:
+            dep_tags = [self.plot_quad]
+
+        elif self.single_shot:
+            dep_tags = ["state"]
+        else:
+            dep_tags = [self.Z_AVG_tag]
 
         return indep_tags, dep_tags
 

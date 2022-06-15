@@ -6,6 +6,7 @@ from scipy import signal
 import qcrew.control.modes as qcm
 import qcrew.control.pulses as qcp
 from qcrew.analyze import fit
+import qcrew.measure.qua_macros as macros
 
 # from qcrew.control.pulses import integration_weights
 from qcrew.helpers import logger
@@ -52,6 +53,9 @@ class ReadoutTrainer(Parametrized):
         self.wait_time = wait_time
         self.qubit_pi_pulse = qubit_pi_pulse
         self.ddrop_params = ddrop_params
+        # complement the ddrop params dictionary
+        if "qubit_ef_mode" not in self.ddrop_params.keys():
+            self.ddrop_params["qubit_ef_mode"] = None
         self.weights_file_path = weights_file_path
 
         logger.info(f"Initialized ReadoutTrainer with {self._rr} and {self._qubit}")
@@ -138,14 +142,14 @@ class ReadoutTrainer(Parametrized):
             with qua.for_(n, 0, n < reps, n + 1):
 
                 if self.ddrop_params:
-                    self._macro_DDROP_reset()
+                    macros.DDROP_reset(self._qubit, self._rr, **self.ddrop_params, qubit_ef = self.ddrop_params["qubit_ef_mode"])
 
                 qua.measure(readout_pulse, self._rr.name, adc)
                 qua.wait(wait_time, self._rr.name)
                 # qua.reset_phase(self._rr.name)
 
                 if self.ddrop_params:
-                    self._macro_DDROP_reset()
+                    macros.DDROP_reset(self._qubit, self._rr, **self.ddrop_params, qubit_ef = self.ddrop_params["qubit_ef_mode"])
 
                 if excite_qubit:
                     qua.align(self._rr.name, self._qubit.name)
@@ -338,7 +342,7 @@ class ReadoutTrainer(Parametrized):
             with qua.for_(n, 0, n < reps, n + 1):
 
                 if self.ddrop_params:
-                    self._macro_DDROP_reset()
+                    macros.DDROP_reset(self._qubit, self._rr, **self.ddrop_params, qubit_ef = self.ddrop_params["qubit_ef_mode"])
 
                 if excite_qubit:
                     qua.align(self._rr.name, self._qubit.name)
@@ -366,29 +370,3 @@ class ReadoutTrainer(Parametrized):
         print("State prepared in |e>")
         print(f"   Measured in |e>: {pee}%")
         print(f"   Measured in |g>: {peg}%")
-
-    def _macro_DDROP_reset(self):
-
-        rr_ddrop_freq = self.ddrop_params["rr_ddrop_freq"]
-        rr_ddrop = self.ddrop_params["rr_ddrop"]
-        qubit_ddrop = self.ddrop_params["qubit_ddrop"]
-        steady_state_wait = self.ddrop_params["steady_state_wait"]
-        qubit_ef = self.ddrop_params["qubit_ef_mode"]
-
-        qua.align(
-            self._qubit.name, self._rr.name, qubit_ef.name
-        )  # wait qubit pulse to end
-        qua.update_frequency(self._rr.name, rr_ddrop_freq)
-        self._rr.play(rr_ddrop)  # play rr ddrop excitation
-        qua.wait(
-            int(steady_state_wait // 4), self._qubit.name, qubit_ef.name
-        )  # wait resonator in steady state
-        self._qubit.play(qubit_ddrop)  # play qubit ddrop excitation
-        qubit_ef.play("ddrop_pulse")  # play qubit ddrop excitation
-        qua.wait(
-            int(steady_state_wait // 4), self._qubit.name, qubit_ef.name
-        )  # wait resonator in steady state
-        qua.align(
-            self._qubit.name, self._rr.name, qubit_ef.name
-        )  # wait qubit pulse to end
-        qua.update_frequency(self._rr.name, self._rr.int_freq)

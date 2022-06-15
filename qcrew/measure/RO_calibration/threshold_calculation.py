@@ -17,10 +17,9 @@ if __name__ == "__main__":
 
         ddrop_params = {
             "rr_ddrop_freq": int(-50.4e6),
-            "rr_ddrop": "ddrop_pulse",
-            "qubit_ddrop": "ddrop_pulse",
+            "rr_steady_wait": 2000,
+            "ddrop_pulse": "ddrop_pulse",
             "qubit_ef_mode": stage.QUBIT_EF,
-            "steady_state_wait": 2000,
         }
 
         ro_trainer = ReadoutTrainer(rr, qubit, qm, ddrop_params=ddrop_params, **params)

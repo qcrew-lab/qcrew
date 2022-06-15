@@ -53,10 +53,12 @@ class ReadoutTrainer(Parametrized):
         self.wait_time = wait_time
         self.qubit_pi_pulse = qubit_pi_pulse
         self.ddrop_params = ddrop_params
-        # complement the ddrop params dictionary
-        if "qubit_ef_mode" not in self.ddrop_params.keys():
-            self.ddrop_params["qubit_ef_mode"] = None
         self.weights_file_path = weights_file_path
+        # get qubit ef mode from ddrop params dictionary
+        self._qubit_ef = None
+        if "qubit_ef_mode" in self.ddrop_params.keys():
+            self._qubit_ef = self.ddrop_params["qubit_ef_mode"]
+            self.ddrop_params["qubit_ef_mode"]
 
         logger.info(f"Initialized ReadoutTrainer with {self._rr} and {self._qubit}")
 
@@ -142,14 +144,14 @@ class ReadoutTrainer(Parametrized):
             with qua.for_(n, 0, n < reps, n + 1):
 
                 if self.ddrop_params:
-                    macros.DDROP_reset(self._qubit, self._rr, **self.ddrop_params, qubit_ef = self.ddrop_params["qubit_ef_mode"])
+                    macros.DDROP_reset(self._qubit, self._rr, **self.ddrop_params, qubit_ef = self._qubit_ef)
 
                 qua.measure(readout_pulse, self._rr.name, adc)
                 qua.wait(wait_time, self._rr.name)
                 # qua.reset_phase(self._rr.name)
 
                 if self.ddrop_params:
-                    macros.DDROP_reset(self._qubit, self._rr, **self.ddrop_params, qubit_ef = self.ddrop_params["qubit_ef_mode"])
+                    macros.DDROP_reset(self._qubit, self._rr, **self.ddrop_params, qubit_ef = self._qubit_ef)
 
                 if excite_qubit:
                     qua.align(self._rr.name, self._qubit.name)
@@ -342,7 +344,7 @@ class ReadoutTrainer(Parametrized):
             with qua.for_(n, 0, n < reps, n + 1):
 
                 if self.ddrop_params:
-                    macros.DDROP_reset(self._qubit, self._rr, **self.ddrop_params, qubit_ef = self.ddrop_params["qubit_ef_mode"])
+                    macros.DDROP_reset(self._qubit, self._rr, **self.ddrop_params, qubit_ef = self._qubit_ef)
 
                 if excite_qubit:
                     qua.align(self._rr.name, self._qubit.name)

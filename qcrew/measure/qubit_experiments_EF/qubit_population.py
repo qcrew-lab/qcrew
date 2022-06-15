@@ -38,13 +38,13 @@ class QubitPopulation(Experiment):
         """
         Defines pulse sequence to be played inside the experiment loop
         """
-        qubit, rr = self.modes  # get the modes
+        qubit, qubit_ef, rr = self.modes  # get the modes
 
-        qubit.play(self.qubit_ge_pi, ampx=self.y)
-        qua.update_frequency(qubit.name, self.ef_int_freq)
-        qubit.play(self.qubit_ef_pi, ampx=self.x)  # e-> f
-        qua.update_frequency(qubit.name, qubit.int_freq)
-        qubit.play(self.qubit_ge_pi)  # e-> f
+        qubit.play(self.qubit_ge_pi, ampx=self.y) # g->e
+        qua.align(qubit.name, qubit_ef.name)
+        qubit_ef.play(self.qubit_ef_pi, ampx=self.x)  # e-> f
+        qua.align(qubit.name, qubit_ef.name)
+        qubit.play(self.qubit_ge_pi)  # e->g
 
         qua.align(qubit.name, rr.name)  # wait qubit pulse to end
         rr.measure((self.I, self.Q))  # measure qubit state
@@ -72,7 +72,7 @@ if __name__ == "__main__":
         "qubit_ge_pi": "pi",
         "qubit_ef_pi": "pi",
         "x_sweep": (-1.8, 1.8 + 0.1 / 2, 0.1),
-        "y_sweep": [1.0],
+        "y_sweep": [0.0, 1.0],
     }
 
     plot_parameters = {

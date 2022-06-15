@@ -18,6 +18,7 @@ class QubitSpectroscopyEF(Experiment):
 
     _parameters: ClassVar[set[str]] = Experiment._parameters | {
         "qubit_ef_op",  # operation used for exciting the qubit
+        "qubit_ge_pi",
         "fit_fn",  # fit function
     }
 
@@ -37,12 +38,12 @@ class QubitSpectroscopyEF(Experiment):
 
         qubit.play(self.qubit_pi_pulse_name)  # g->e
         qua.align(qubit.name, qubit_ef.name)
-        qua.update_frequency(qubit_ef.name, self.x)  # update to e->f (sweep variable)
+        qua.update_frequency(qubit_ef.name, self.x)  # sweep e->f frequency
         qubit_ef.play(self.qubit_ef_op)  # e->f
         qua.align(qubit.name, qubit_ef.name)
-        # qua.update_frequency(qubit.name, qubit.int_freq)  # update to g->e
         qubit.play(self.qubit_pi_pulse_name)  # g->e
         qua.align(qubit.name, rr.name)  # wait qubit pulse to end
+
         rr.measure((self.I, self.Q))  # measure transmitted signal
         qua.wait(int(self.wait_time // 4), rr.name)  # wait system reset
 
@@ -60,9 +61,9 @@ if __name__ == "__main__":
         "modes": ["QUBIT", "QUBIT_EF", "RR"],
         "reps": 20000,
         "wait_time": 100000,
-        "x_sweep": (int(x_start), int(x_stop + xstep / 2), int(xstep)),
+        "qubit_ge_pi": "pi",
         "qubit_ef_op": "constant_pulse",
-        "qubit_pi_pulse_name": "pi",
+        "x_sweep": (int(x_start), int(x_stop + xstep / 2), int(xstep)),
     }
 
     plot_parameters = {

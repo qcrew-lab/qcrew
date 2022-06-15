@@ -40,7 +40,7 @@ class ReadoutTrainer(Parametrized):
         reps,
         wait_time,
         qubit_pi_pulse,
-        ddrop_params=None,
+        ddrop_params={},
         weights_file_path=None,
     ):
         """ """
@@ -58,7 +58,7 @@ class ReadoutTrainer(Parametrized):
         self._qubit_ef = None
         if "qubit_ef_mode" in self.ddrop_params.keys():
             self._qubit_ef = self.ddrop_params["qubit_ef_mode"]
-            self.ddrop_params["qubit_ef_mode"]
+            del self.ddrop_params["qubit_ef_mode"]
 
         logger.info(f"Initialized ReadoutTrainer with {self._rr} and {self._qubit}")
 
@@ -147,7 +147,7 @@ class ReadoutTrainer(Parametrized):
                     macros.DDROP_reset(self._qubit, self._rr, **self.ddrop_params, qubit_ef = self._qubit_ef)
 
                 qua.measure(readout_pulse, self._rr.name, adc)
-                qua.wait(wait_time, self._rr.name)
+                qua.wait(wait_time)
                 # qua.reset_phase(self._rr.name)
 
                 if self.ddrop_params:
@@ -159,7 +159,7 @@ class ReadoutTrainer(Parametrized):
                     qua.align(self._rr.name, self._qubit.name)
 
                 qua.measure(readout_pulse, self._rr.name, adc)
-                qua.wait(wait_time, self._rr.name)
+                qua.wait(wait_time)
 
             with qua.stream_processing():
                 # streams for envelope calculation

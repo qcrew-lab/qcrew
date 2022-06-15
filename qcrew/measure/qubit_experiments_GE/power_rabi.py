@@ -7,6 +7,7 @@ from typing import ClassVar
 
 from qcrew.control import professor as prof
 from qcrew.measure.experiment import Experiment
+import qcrew.measure.qua_macros as macros
 from qm import qua
 
 
@@ -22,10 +23,11 @@ class PowerRabi(Experiment):
         "fit_fn",  # fit function
     }
 
-    def __init__(self, qubit_op, fit_fn="sine", **other_params):
+    def __init__(self, qubit_op, ddrop_params=None, fit_fn="sine", **other_params):
 
         self.qubit_op = qubit_op
         self.fit_fn = fit_fn
+        self.ddrop_params = ddrop_params
 
         super().__init__(**other_params)  # Passes other parameters to parent
 
@@ -33,7 +35,12 @@ class PowerRabi(Experiment):
         """
         Defines pulse sequence to be played inside the experiment loop
         """
-        qubit, rr = self.modes  # get the modes
+        qubit, rr, qubit_ef = self.modes  # get the modes
+
+        if self.ddrop_params:
+            # macros.DDROP_reset(qubit, rr, **self.ddrop_params)
+            # Use qubit_ef if also resetting F state
+            macros.DDROP_reset(qubit, rr, **self.ddrop_params, qubit_ef=qubit_ef)
 
         qubit.play(self.qubit_op, ampx=self.x)  # play qubit pulse
 
@@ -57,19 +64,25 @@ if __name__ == "__main__":
     amp_stop = 1.5
     amp_step = 0.05
     parameters = {
-        "modes": ["QUBIT", "RR"],
+        "modes": ["QUBIT", "RR", "QUBIT_EF"],
         "reps": 10000,
-        "wait_time": 200000,
+        "wait_time": 2000,
         "x_sweep": (amp_start, amp_stop + amp_step / 2, amp_step),
-        "qubit_op": "constant_cos_pi2",
-        "single_shot": False,
+        "qubit_op": "constant_cos_pi",
+        "single_shot": True,
     }
 
     plot_parameters = {
         "xlabel": "Qubit pulse amplitude scaling",
     }
 
-    experiment = PowerRabi(**parameters)
+    ddrop_params = {
+        "rr_ddrop_freq": int(-50e6),  # RR IF when playing the RR DDROP pulse
+        "rr_steady_wait": 2000,  # in nanoseconds
+        "ddrop_pulse": "ddrop_pulse",  # name of all ddrop pulses
+    }
+
+    experiment = PowerRabi(ddrop_params=ddrop_params, **parameters)
     experiment.setup_plot(**plot_parameters)
 
     prof.run(experiment)

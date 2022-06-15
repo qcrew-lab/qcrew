@@ -22,7 +22,7 @@ class T1DDROP(Experiment):
         "fit_fn",  # fit function
     }
 
-    def __init__(self, qubit_op, ddrop_params = None, fit_fn="exp_decay", **other_params):
+    def __init__(self, qubit_op, ddrop_params=None, fit_fn="exp_decay", **other_params):
 
         self.qubit_op = qubit_op  # pi pulse
         self.fit_fn = fit_fn
@@ -45,6 +45,7 @@ class T1DDROP(Experiment):
         qua.wait(self.x, qubit.name)  # wait for partial qubit decay
         qua.align(qubit.name, rr.name)  # wait qubit pulse to end
         rr.measure((self.I, self.Q))  # measure qubit state
+        qua.wait(int(self.wait_time // 4), rr.name)  # wait system reset
 
         if self.single_shot:  # assign state to G or E
             qua.assign(
@@ -73,14 +74,14 @@ if __name__ == "__main__":
     plot_parameters = {
         "xlabel": "Relaxation time (clock cycles)",
     }
-    
+
     ddrop_params = {
-        "rr_ddrop_freq": int(-50e6),         # RR IF when playing the RR DDROP pulse
-        "rr_steady_wait": 2000,              # in nanoseconds
-        "ddrop_pulse": "ddrop_pulse",        # name of all ddrop pulses
+        "rr_ddrop_freq": int(-50e6),  # RR IF when playing the RR DDROP pulse
+        "rr_steady_wait": 2000,  # in nanoseconds
+        "ddrop_pulse": "ddrop_pulse",  # name of all ddrop pulses
     }
 
-    experiment = T1DDROP(ddrop_params = ddrop_params, **parameters)
+    experiment = T1DDROP(ddrop_params=ddrop_params, **parameters)
     experiment.setup_plot(**plot_parameters)
 
     prof.run(experiment)

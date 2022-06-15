@@ -51,7 +51,10 @@ class CavityDisplacementCal(Experiment):
             qua.assign(
                 self.state, qua.Cast.to_fixed(self.I < rr.readout_pulse.threshold)
             )
- # stream variables (I, Q, x, etc)
+        self.QUA_stream_results()  # stream variables (I, Q, x, etc)
+
+
+# stream variables (I, Q, x, etc)
 
 
 # -------------------------------- Execution -----------------------------------

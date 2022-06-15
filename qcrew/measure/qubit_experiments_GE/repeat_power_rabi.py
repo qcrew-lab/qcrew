@@ -57,8 +57,8 @@ if __name__ == "__main__":
         "modes": ["QUBIT", "RR"],
         "reps": 5000,
         "wait_time": 100000,
-        "x_sweep": (-1.8, 1.8 + 0.05 / 2, 0.05),
-        "qubit_op": "gaussian_pulse",
+        "x_sweep": (-1.6, 1.6 + 0.05 / 2, 0.05),
+        "qubit_op": "pi",
         "pulse_number": 2,
         "single_shot": False,
     }

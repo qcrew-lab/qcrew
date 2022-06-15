@@ -55,18 +55,21 @@ class PowerRabiEF(Experiment):
 
 if __name__ == "__main__":
 
-    amp_start = -1.9
-    amp_stop = 1.9
+    amp_start = -1.8
+    amp_stop = 1.8
     amp_step = 0.05
 
     parameters = {
         "modes": ["QUBIT", "RR"],
-        "reps": 20000,
-        "wait_time": 100000,
-        "ef_int_freq": int(-157.1e6),
+        "reps": 10000,
+        "wait_time": 50000,
+        "ef_int_freq": int(
+            -57e6
+        ),  # We are only loading the mode QUBIT, not the mode QUBIT_EF, so we have to specify the EF_int frequency manually
         "qubit_pi_pulse_name": "pi",
         "x_sweep": (amp_start, amp_stop + amp_step / 2, amp_step),
         "qubit_op": "pi_ef",
+        "plot_quad": "I_AVG",
     }
 
     plot_parameters = {

@@ -13,35 +13,32 @@ from qm import qua
 # ---------------------------------- Class -------------------------------------
 
 
-class DDROP(Experiment):
+class PowerRabiDDROP(Experiment):
 
-    name = "DDROP_calibration"
+    name = "power_rabi_DDROP"
 
     _parameters: ClassVar[set[str]] = Experiment._parameters | {
-        "qubit_pi",  # qubit pi operation
-        "qubit_ddrop",  # qubit pulse used in ddrop algorithm
-        "rr_ddrop",  # rr pulse used in ddrop algorithm
-        "steady_state_wait",  # Time for resonator to reach steady state
+        "qubit_op",  # operation used for exciting the qubit
         "fit_fn",  # fit function
     }
 
     def __init__(
         self,
-        qubit_pi,
+        qubit_op,
         qubit_ddrop,
         rr_ddrop,
         steady_state_wait,
         rr_ddrop_freq,
-        fit_fn=None,
+        fit_fn="sine",
         **other_params
     ):
 
-        self.qubit_pi = qubit_pi
+        self.qubit_op = qubit_op
+        self.fit_fn = fit_fn
         self.qubit_ddrop = qubit_ddrop
         self.rr_ddrop = rr_ddrop
         self.steady_state_wait = steady_state_wait
         self.rr_ddrop_freq = rr_ddrop_freq
-        self.fit_fn = fit_fn
 
         super().__init__(**other_params)  # Passes other parameters to parent
 
@@ -51,19 +48,16 @@ class DDROP(Experiment):
         """
         qubit, rr = self.modes  # get the modes
 
-        qubit.play(self.qubit_pi)  # prepare qubit in excited state
+        qua.update_frequency(rr.name, self.rr_ddrop_freq)
+        rr.play(self.rr_ddrop, ampx=1)  # play rr ddrop excitation
+        qua.wait(int(self.steady_state_wait // 4), qubit.name)  # wait rr reset
+        qubit.play(self.qubit_ddrop, ampx=1)  # play qubit ddrop excitation
+        qua.wait(int(self.steady_state_wait // 4), qubit.name)  # wait rr reset
         qua.align(qubit.name, rr.name)  # wait qubit pulse to end
 
-        rr.play(self.rr_ddrop)  # play rr ddrop excitation
-        qua.wait(
-            int(self.steady_state_wait // 4), qubit.name
-        )  # wait resonator in steady state
-        qubit.play(self.qubit_ddrop, ampx=self.x)  # play qubit ddrop excitation
-        qua.wait(
-            int(self.steady_state_wait // 4), qubit.name
-        )  # wait resonator in steady state
+        qubit.play(self.qubit_op, ampx=self.x)  # play qubit pulse
         qua.align(qubit.name, rr.name)  # wait qubit pulse to end
-
+        qua.update_frequency(rr.name, rr.int_freq)
         rr.measure((self.I, self.Q))  # measure qubit state
         qua.wait(int(self.wait_time // 4), rr.name)  # wait system reset
 
@@ -79,25 +73,32 @@ class DDROP(Experiment):
 
 if __name__ == "__main__":
 
+    amp_start = -1.8
+    amp_stop = 1.8
+    amp_step = 0.05
+
     parameters = {
         "modes": ["QUBIT", "RR"],
-        "reps": 50000,
-        "wait_time": 50000,
-        "x_sweep": (0.0, 1.9, 0.05),
-        "qubit_pi": "pi",
+        "reps": 200000,
+        "wait_time": 2000,
+        "x_sweep": (amp_start, amp_stop + amp_step / 2, amp_step),
+        "qubit_op": "pi_selective3",
+        
         "qubit_ddrop": "ddrop_pulse",
         "rr_ddrop": "ddrop_pulse",
         "rr_ddrop_freq": int(-50e6),
-        "steady_state_wait": 500,
-        "single_shot": False,
+        "steady_state_wait": 2000,
+        
+        # "single_shot": True,
+        "plot_quad": "I_AVG",
     }
 
     plot_parameters = {
         "xlabel": "Qubit pulse amplitude scaling",
-        "plot_type": "1D",
+        # "zlimits": (0.35, 0.5)
     }
 
-    experiment = DDROP(**parameters)
+    experiment = PowerRabiDDROP(**parameters)
     experiment.setup_plot(**plot_parameters)
 
     prof.run(experiment)

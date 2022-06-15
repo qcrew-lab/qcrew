@@ -179,9 +179,11 @@ def process_Z_values(I_stream, Q_stream, buffer_len=1):
     # we need these two streams to calculate  std err in a single pass
     (I_raw * I_raw + Q_raw * Q_raw).save_all("Z_SQ_RAW")
     (I_raw * I_raw + Q_raw * Q_raw).average().save_all("Z_SQ_RAW_AVG")
-    
+
     # to live plot latest average
     (I_avg * I_avg + Q_avg * Q_avg).save("Z_AVG")
+    I_avg.save("I_AVG")
+    Q_avg.save("Q_AVG")
 
 
 def QUA_loop(qua_function, sweep_variables):

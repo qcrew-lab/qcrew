@@ -46,6 +46,9 @@ class CondPowerRabi(Experiment):
         )  # wait resonator in steady state
         qubit.play(self.qubit_op, ampx=self.x)  # play qubit pulse concomitantly
         qua.align(qubit.name, rr.name)  # wait qubit pulse to end
+        qua.wait(
+            int(self.steady_state_wait // 4), rr.name
+        )  # wait resonator in steady state
         rr.measure((self.I, self.Q))  # measure qubit state
         qua.wait(int(self.wait_time // 4), rr.name)  # wait system reset
 
@@ -61,20 +64,21 @@ class CondPowerRabi(Experiment):
 
 if __name__ == "__main__":
 
-    amp_start = -1.9
-    amp_stop = 1.9
-    amp_step = 0.05
+    amp_start = -1.5
+    amp_stop = 1.5
+    amp_step = 0.015
 
     parameters = {
         "modes": ["QUBIT", "RR"],
         "reps": 50000,
-        "wait_time": 100000,
+        "wait_time": 50000,
         "x_sweep": (amp_start, amp_stop + amp_step / 2, amp_step),
-        "y_sweep": (0.0, 0.9, 1., 1.1),
+        "y_sweep": (0.0, 1.0),
         "qubit_op": "ddrop_pulse",
         "resonator_op": "ddrop_pulse",
         "steady_state_wait": 500,
         "single_shot": False,
+        "plot_quad": "I_AVG",
     }
 
     plot_parameters = {

@@ -21,15 +21,24 @@ class T1DDROP(Experiment):
         "fit_fn",  # fit function
     }
 
-    def __init__(self, qubit_op, fit_fn="exp_decay", **other_params):
+    def __init__(
+        self,
+        qubit_op,
+        qubit_ddrop,
+        rr_ddrop,
+        steady_state_wait,
+        rr_ddrop_freq,
+        fit_fn="exp_decay",
+        **other_params
+    ):
 
         self.qubit_op = qubit_op  # pi pulse
         self.fit_fn = fit_fn
 
-        self.steady_state_wait = 500
-        self.rr_ddrop_freq = int(-49.7e6)
-        self.qubit_ddrop = "ddrop_pulse"
-        self.rr_ddrop = "ddrop_pulse"
+        self.qubit_ddrop = qubit_ddrop
+        self.rr_ddrop = rr_ddrop
+        self.steady_state_wait = steady_state_wait
+        self.rr_ddrop_freq = rr_ddrop_freq
 
         super().__init__(**other_params)  # Passes other parameters to parent
 
@@ -39,23 +48,22 @@ class T1DDROP(Experiment):
         """
         qubit, rr = self.modes  # get the modes
 
+        qua.update_frequency(rr.name, self.rr_ddrop_freq)
+        rr.play(self.rr_ddrop, ampx=1)  # play rr ddrop excitation
+        qua.wait(int(self.steady_state_wait // 4), qubit.name)  # wait rr reset
+        qubit.play(self.qubit_ddrop, ampx=1)  # play qubit ddrop excitation
+        qua.wait(int(self.steady_state_wait // 4), qubit.name)  # wait rr reset
+        qua.align(qubit.name, rr.name)  # wait qubit pulse to end
+
         qubit.play(self.qubit_op)  # play pi qubit pulse
         qua.wait(self.x, qubit.name)  # wait for partial qubit decay
         qua.align(qubit.name, rr.name)  # wait qubit pulse to end
+        qua.update_frequency(rr.name, rr.int_freq)
         rr.measure((self.I, self.Q))  # measure qubit state
         if self.single_shot:  # assign state to G or E
             qua.assign(
                 self.state, qua.Cast.to_fixed(self.I < rr.readout_pulse.threshold)
             )
-
-        # qua.wait(int(self.steady_state_wait // 4), qubit.name)  # wait rr reset
-        # qua.align(qubit.name, rr.name)  # wait qubit pulse to end
-        # qua.update_frequency(rr.name, self.rr_ddrop_freq)
-        # rr.play(self.rr_ddrop)  # play rr ddrop excitation
-        # qua.wait(int(self.steady_state_wait // 4), qubit.name)  # wait rr reset
-        # qubit.play(self.qubit_ddrop)  # play qubit ddrop excitation
-
-        # qua.update_frequency(rr.name, rr.int_freq)
 
         self.QUA_stream_results()  # stream variables (I, Q, x, etc)
 
@@ -64,16 +72,21 @@ class T1DDROP(Experiment):
 
 if __name__ == "__main__":
     x_start = 4
-    x_stop = 30e3
+    x_stop = 25e3
     x_step = 300
 
     parameters = {
         "modes": ["QUBIT", "RR"],
-        "reps": 20000,
-        "wait_time": 100000,
+        "reps": 200000,
+        "wait_time": 2000,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
-        "qubit_op": "pi",
+        "qubit_op": "pi_selective3",
+        "qubit_ddrop": "ddrop_pulse",
+        "rr_ddrop": "ddrop_pulse",
+        "rr_ddrop_freq": int(-50e6),
+        "steady_state_wait": 2000,
         "single_shot": False,
+        "plot_quad": "I_AVG",
     }
 
     plot_parameters = {

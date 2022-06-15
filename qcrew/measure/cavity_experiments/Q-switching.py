@@ -1,11 +1,9 @@
 """
-A python class describing a photon-number split spectroscopy sweeping the number of 
-photons in the cavity using QM.
+A python class describing a cavity Q-switching experiment using QM.
 This class serves as a QUA script generator with user-defined parameters.
 """
 
 from typing import ClassVar
-
 from qcrew.control import professor as prof
 from qcrew.measure.experiment import Experiment
 from qm import qua
@@ -13,9 +11,9 @@ from qm import qua
 # ---------------------------------- Class -------------------------------------
 
 
-class NSplitSpecDispersiveShift(Experiment):
+class Qswitching(Experiment):
 
-    name = "number_split_spec_dispersive_shift"
+    name = "Q_switching"
 
     _parameters: ClassVar[set[str]] = Experiment._parameters | {
         "cav_op",  # operation for displacing the cavity
@@ -23,11 +21,13 @@ class NSplitSpecDispersiveShift(Experiment):
         "fit_fn",  # fit function
     }
 
-    def __init__(self, qubit_op, cav_op, fit_fn=None, **other_params):
+    def __init__(self, cav_op, qubit_op, drive1_op, drive2_op, fit_fn="cohstate_decay", **other_params):
 
-        self.qubit_op = qubit_op
         self.cav_op = cav_op
+        self.qubit_op = qubit_op
         self.fit_fn = fit_fn
+        self.drive1_op = drive1_op
+        self.drive2_op = drive2_op
 
         super().__init__(**other_params)  # Passes other parameters to parent
 
@@ -37,11 +37,14 @@ class NSplitSpecDispersiveShift(Experiment):
         """
         qubit, cav, rr = self.modes  # get the modes
 
-        qua.update_frequency(qubit.name, self.x)  # update qubit pulse frequency
-        cav.play(self.cav_op, ampx=self.y)  # prepare cavity state
-        qua.align(cav.name, qubit.name)  # align modes
+        cav.play(self.cav_op, ampx = 1.8)  # play displacement to cavity
+        qua.align(cav.name, qubit.name)  # align all modes
+        cav.play(self.drive1_op, length = self.x, ampx = 1.8)  # play drive1 to cavity
+        qua.update_frequency(rr.name, self.y)  # update resonator pulse frequency
+        rr.play(self.drive2_op, ampx = 1.8)  # play drive2 to cavity
+        qua.align(cav.name, rr.name)  # align all modes
         qubit.play(self.qubit_op)  # play qubit pulse
-        qua.align(qubit.name, rr.name)  # align modes
+        qua.align(qubit.name, rr.name)  # align all modes
         rr.measure((self.I, self.Q))  # measure transmitted signal
         qua.wait(int(self.wait_time // 4), cav.name)  # wait system reset
 
@@ -51,30 +54,30 @@ class NSplitSpecDispersiveShift(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-    x_start = 124e6
-    x_stop = 144e6
-    x_step = 0.1e6
 
+    x_start = 16
+    x_stop = 100e3
+    x_step = 1e3
     parameters = {
         "modes": ["QUBIT", "CAV", "RR"],
-        "reps": 40000,
-        "wait_time": 1500000,
+        "reps": 20000,
+        "wait_time": 10e6,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
-        # "y_sweep": [1.0],
-        "y_sweep": [0.0, 1.0, 1.4],
-        "qubit_op": "pi_selective4",
+        "y_sweep": (int(y_start), int(y_stop + y_step / 2), int(y_step)),
+        "qubit_op": "pi_selective3",
         "cav_op": "cohstate_1",
-        "plot_quad": "I_AVG",
-        "fetch_period": 2,
+        "drive1_op": "constant_pulse",
+        "cav_op": "cohstate_1",
+        "drive2_op": "constant_pulse",
+        "cav_op": "cohstate_1",
+        
     }
 
     plot_parameters = {
-        "xlabel": "Qubit pulse frequency (Hz)",
-        "trace_labels": ["<n> = 0", "<n> = 1", "<n> = 2" ],
-        # "trace_labels": ["<n> = 1"],
+        "xlabel": "Cavity relaxation time (clock cycles)",
     }
 
-    experiment = NSplitSpecDispersiveShift(**parameters)
+    experiment = Qswitching(**parameters)
     experiment.setup_plot(**plot_parameters)
 
     prof.run(experiment)

@@ -53,14 +53,14 @@ class T2(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-    x_start = 10
-    x_stop = 14000
-    x_step = 200
+    # x_start = 10
+    # x_stop = 14000
+    # x_step = 200
 
-    x_start = 10
-    x_stop = 2500
-    x_step = 30
-    detuning = 0.5e6
+    x_start = 2
+    x_stop = 1000
+    x_step = 5
+    detuning = 0e6
 
     parameters = {
         "modes": ["QUBIT", "RR"],
@@ -70,6 +70,7 @@ if __name__ == "__main__":
         "qubit_op": "pi2",
         "detuning": int(detuning),
         "single_shot": False,
+        "plot_quad": "I_AVG",
     }
 
     plot_parameters = {

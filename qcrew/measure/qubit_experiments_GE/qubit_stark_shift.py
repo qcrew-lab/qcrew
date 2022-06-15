@@ -25,19 +25,20 @@ class StarkShift(Experiment):
 
         self.qubit_op = qubit_op
         self.fit_fn = fit_fn
-
         super().__init__(**other_params)  # Passes other parameters to parent
 
     def QUA_play_pulse_sequence(self):
         """
         Defines pulse sequence to be played inside the experiment loop
         """
-        qubit, rr, qubit_drive = self.modes  # get the modes
+        qubit, rr, cav, rr_drive = self.modes  # get the modes
 
         qua.update_frequency(qubit.name, self.x)  # update qubit pulse frequency
-        qubit_drive.play("constant_pulse", ampx=self.y)  # Play continuous pump
+        rr_drive.play("constant_pulse", ampx=self.y)  # Play continuous pump
+        qua.wait(int(50 // 4))  # wait system reset
         qubit.play(self.qubit_op)  # play qubit pi pulse
-        qua.align(qubit.name, qubit_drive.name, rr.name)  # wait qubit pulse to end
+        qua.align(qubit.name, rr.name, rr_drive.name)
+        qua.wait(int(16 // 4), rr.name)  # wait system reset
         rr.measure((self.I, self.Q))  # measure transmitted signal
         qua.wait(int(self.wait_time // 4), rr.name)  # wait system reset
 
@@ -51,11 +52,15 @@ if __name__ == "__main__":
     amp_stop = 1.0
     amp_step = 0.02
 
+    freq_start = 100e6
+    freq_stop = 180e6
+    freq_step = 1e6
+
     parameters = {
-        "modes": ["QUBIT", "RR", "QUBIT_DRIVE"],
+        "modes": ["QUBIT", "RR", "CAV", "RR_DRIVE"],
         "reps": 10000,
-        "wait_time": 300000,
-        "x_sweep": (int(-80e6), int(-47e6 + 0.4e6 / 2), int(0.4e6)),
+        "wait_time": 50000,
+        "x_sweep": (int(freq_start), int(freq_stop + freq_step / 2), int(freq_step)),
         "qubit_op": "pi",
         "fetch_period": 6,
         "y_sweep": (amp_start, amp_stop + amp_step / 2, amp_step),

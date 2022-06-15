@@ -15,7 +15,7 @@ from qm import qua
 
 class QubitPopulation(Experiment):
 
-    name = "qubit_population"
+    name = "qubit_population_DDROP"
 
     _parameters: ClassVar[set[str]] = Experiment._parameters | {
         "qubit_ge_pi",
@@ -24,12 +24,25 @@ class QubitPopulation(Experiment):
     }
 
     def __init__(
-        self, qubit_ge_pi, qubit_ef_pi, ef_int_freq, fit_fn="sine", **other_params
+        self,
+        qubit_ge_pi,
+        qubit_ef_pi,
+        qubit_ddrop,
+        rr_ddrop,
+        steady_state_wait,
+        rr_ddrop_freq,
+        ef_int_freq,
+        fit_fn="sine",
+        **other_params
     ):
 
         self.qubit_ge_pi = qubit_ge_pi
         self.fit_fn = fit_fn
         self.qubit_ef_pi = qubit_ef_pi
+        self.qubit_ddrop = qubit_ddrop
+        self.rr_ddrop = rr_ddrop
+        self.steady_state_wait = steady_state_wait
+        self.rr_ddrop_freq = rr_ddrop_freq
         self.ef_int_freq = ef_int_freq
 
         super().__init__(**other_params)  # Passes other parameters to parent
@@ -40,6 +53,12 @@ class QubitPopulation(Experiment):
         """
         qubit, rr = self.modes  # get the modes
 
+        qua.update_frequency(rr.name, self.rr_ddrop_freq)
+        rr.play(self.rr_ddrop)  # play rr ddrop excitation
+        qua.wait(int(self.steady_state_wait // 4), qubit.name)  # wait rr reset
+        qubit.play(self.qubit_ddrop)  # play qubit ddrop excitation
+        qua.wait(int(self.steady_state_wait // 4), qubit.name)  # wait rr reset
+
         qubit.play(self.qubit_ge_pi, ampx=self.y)
         qua.update_frequency(qubit.name, self.ef_int_freq)
         qubit.play(self.qubit_ef_pi, ampx=self.x)  # e-> f
@@ -47,6 +66,7 @@ class QubitPopulation(Experiment):
         qubit.play(self.qubit_ge_pi)  # e-> g
 
         qua.align(qubit.name, rr.name)  # wait qubit pulse to end
+        qua.update_frequency(rr.name, rr.int_freq)  # update resonator pulse frequency
         rr.measure((self.I, self.Q))  # measure qubit state
         if self.single_shot:
             qua.assign(
@@ -67,13 +87,17 @@ if __name__ == "__main__":
 
     parameters = {
         "modes": ["QUBIT", "RR"],
-        "reps": 40000,
-        "wait_time": 50000,
+        "reps": 200000,
+        "wait_time": 2000,
         "ef_int_freq": int(-57e6),
         "qubit_ge_pi": "pi",
         "qubit_ef_pi": "pi_ef",
         "x_sweep": (amp_start, amp_stop + amp_step / 2, amp_step),
         "y_sweep": [0.0, 1.0],
+        "qubit_ddrop": "ddrop_pulse",
+        "rr_ddrop": "ddrop_pulse",
+        "rr_ddrop_freq": int(-50e6),
+        "steady_state_wait": 1000,
         "single_shot": False,
         "plot_quad": "I_AVG",
     }

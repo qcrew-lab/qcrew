@@ -49,16 +49,17 @@ class RRSpecDispersiveShift(Experiment):
 if __name__ == "__main__":
 
     x_start = -54e6
-    x_stop = -48e6
+    x_stop = -47e6
     x_step = 0.1e6
 
     parameters = {
         "modes": ["RR", "QUBIT"],
-        "reps": 50000,
-        "wait_time": 100000,
+        "reps": 5000,
+        "wait_time": 50000,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
         "y_sweep": [0.0, 1.0],
         "qubit_op": "pi",
+        "plot_quad": "Z_AVG",
     }
 
     plot_parameters = {

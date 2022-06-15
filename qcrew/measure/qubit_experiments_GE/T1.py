@@ -52,16 +52,17 @@ class T1(Experiment):
 
 if __name__ == "__main__":
     x_start = int(16)
-    x_stop = int(25e3)
-    x_step = int(500)
+    x_stop = int(15e3)
+    x_step = int(50)
 
     parameters = {
         "modes": ["QUBIT", "RR"],
-        "reps": 20000,
+        "reps": 10000,
         "wait_time": 100000,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
         "qubit_op": "pi",
         "single_shot": False,
+        "plot_quad": "Q_AVG"
     }
 
     plot_parameters = {

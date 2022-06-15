@@ -5,7 +5,7 @@ from qcrew.control import Stagehand
 from qm import qua
 import numpy as np
 
-reps = 20000
+reps = 50000
 
 
 def get_qua_program(rr):
@@ -48,6 +48,6 @@ if __name__ == "__main__":
 
         axes[0].plot(results / 2 ** 12)
         axes[1].plot(freqs[5:] / 1e6, amps[5:])
-
+    
         # Retrieving and plotting FFT data.
         plt.show()

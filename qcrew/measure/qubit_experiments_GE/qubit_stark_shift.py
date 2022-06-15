@@ -49,7 +49,7 @@ class StarkShift(Experiment):
 
 if __name__ == "__main__":
     amp_start = 0
-    amp_stop = 1.0
+    amp_stop = 1.4
     amp_step = 0.02
 
     freq_start = 100e6

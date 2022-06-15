@@ -105,13 +105,13 @@ class CharacteristicFunction(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-    x_start = -1.5 *0.5
-    x_stop =  1.5 *0.5
-    x_step = 0.05
+    x_start = -0.5
+    x_stop =  0.5
+    x_step = 0.02
     
-    y_start = -1.5 * 0.5
-    y_stop =  1.5 * 0.5
-    y_step = 0.05
+    y_start = -0.5
+    y_stop =  0.5
+    y_step = 0.02
 
 
     parameters = {
@@ -122,10 +122,10 @@ if __name__ == "__main__":
         "delay": 500,  # wait time between opposite sign displacements
         "x_sweep": (x_start, x_stop + x_step / 2, x_step),  # ampitude sweep of the displacement pulses in the ECD
         "y_sweep": (y_start, y_stop + y_step / 2, y_step),
-        "qubit_op1": "pi2",
-        "qubit_op2": "pi",
-        "cav_state_op": "cohstate_2",
-        "cav_op": "CD_cali",
+        "qubit_op1": "constant_cos_pi2",
+        "qubit_op2": "constant_cos_pi",
+        "cav_state_op": "cohstate_1",
+        "cav_op": "ECD_cali",
         "measure_real": True,  # measure real part of char function if True, imag Part if false
     }
 

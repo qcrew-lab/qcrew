@@ -64,10 +64,10 @@ if __name__ == "__main__":
 
     parameters = {
         "modes": ["QUBIT", "RR"],
-        "reps": 20000,
+        "reps": 8000,
         "wait_time": 100000,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
-        "qubit_op": "pi2",
+        "qubit_op": "constant_cos_pi2",
         "detuning": int(detuning),
         "single_shot": False,
         "plot_quad": "I_AVG",

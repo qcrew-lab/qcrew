@@ -81,8 +81,42 @@ class SqueezingECD(Experiment):
         cav.play(self.cav_op_ecd, ampx=self.ecd_amp_scale, phase=0)  # Second positive displacement
         qua.align(qubit.name, cav.name)
         
+        #pi2 pulse to end the squeezing sequence
+        qubit.play(self.qubit_op1_ecd,)
+        
+        
+        # secondECD Gate
+        qua.align(cav.name, qubit.name)  # wait for qubit pulse to end
+        cav.play(self.cav_op_ecd, ampx=self.ecd_amp_scale, phase=0)  # First positive displacement
+        qua.wait(int(self.delay // 4), cav.name) # wait time between opposite sign displacements
+        cav.play(self.cav_op_ecd, ampx=-self.ecd_amp_scale, phase=0)  # First negative displacement
+        qua.align(qubit.name, cav.name)
+        qubit.play(self.qubit_op2_ecd)  # pi pulse to flip the qubit state (echo)
+        qua.align(cav.name, qubit.name)  # wait for qubit pulse to end
+        cav.play(self.cav_op_ecd, ampx=-self.ecd_amp_scale, phase=0)  # Second negative displacement
+        qua.wait(int(self.delay // 4), cav.name) # wait time between opposite sign displacements
+        cav.play(self.cav_op_ecd, ampx=self.ecd_amp_scale, phase=0)  # Second positive displacement
+        qua.align(qubit.name, cav.name)
+        
         # final pi2 pulse to end the squeezing sequence
         qubit.play(self.qubit_op1_ecd)
+        
+          # secondECD Gate
+        qua.align(cav.name, qubit.name)  # wait for qubit pulse to end
+        cav.play(self.cav_op_ecd, ampx=self.ecd_amp_scale, phase=0)  # First positive displacement
+        qua.wait(int(self.delay // 4), cav.name) # wait time between opposite sign displacements
+        cav.play(self.cav_op_ecd, ampx=-self.ecd_amp_scale, phase=0)  # First negative displacement
+        qua.align(qubit.name, cav.name)
+        qubit.play(self.qubit_op2_ecd)  # pi pulse to flip the qubit state (echo)
+        qua.align(cav.name, qubit.name)  # wait for qubit pulse to end
+        cav.play(self.cav_op_ecd, ampx=-self.ecd_amp_scale, phase=0)  # Second negative displacement
+        qua.wait(int(self.delay // 4), cav.name) # wait time between opposite sign displacements
+        cav.play(self.cav_op_ecd, ampx=self.ecd_amp_scale, phase=0)  # Second positive displacement
+        qua.align(qubit.name, cav.name)
+        
+        # final pi2 pulse to end the squeezing sequence
+        qubit.play(self.qubit_op1_ecd)
+        
         
         
         # Measure the created state with the qfunc
@@ -109,23 +143,23 @@ for i in [0.125, 0.25, 0.75, 1.5, 2]:
         y_stop = 1.4
         y_step = 0.1
         
-        ecd_amp_scale = i
-        print(ecd_amp_scale)
+        ecd_amp_scale = 1
+        
 
         parameters = {
             "modes": ["QUBIT", "CAV", "RR"],
             "reps": 30000,
-            "wait_time": 100000,
+            "wait_time": 3000000,
             "fetch_period": 8,  # time between data fetching rounds in sec
-            "delay": 500,  # wait time between opposite sign displacements
+            "delay": 200,  # wait time between opposite sign displacements
             "ecd_amp_scale" : ecd_amp_scale,
             "x_sweep": (x_start, x_stop + x_step / 2, x_step),  # ampitude sweep of the displacement pulses in the ECD
             "y_sweep": (y_start, y_stop + y_step / 2, y_step),
-            "qubit_op1_ecd": "pi2",
-            "qubit_op2_ecd": "pi", 
-            "qubit_op_qfunc": "pi_selective",
-            "cav_op_ecd": "CD_cali",
-            "cav_op_qfunc": "cohstate_1",
+            "qubit_op1_ecd": "constant_cos_pi2",
+            "qubit_op2_ecd": "constant_cos_pi", 
+            "qubit_op_qfunc": "pi_selective1",
+            "cav_op_ecd": "constant_cos_ECD",
+            "cav_op_qfunc": "constant_pulse",
         
         }
 

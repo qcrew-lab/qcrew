@@ -169,7 +169,7 @@ class Mode(Parametrized, Yamlizable):
         """ """
         return self._ports["I"] is not None and self._ports["Q"] is not None
 
-    def play(self, key: str, ampx=1.0, phase=0.0, **kwargs) -> None:
+    def play(self, key: str, ampx=1.0, phase=None, **kwargs) -> None:
         """ """
         if key not in self._operations:
             logger.error(f"No operation named {key} defined for {self}")
@@ -183,11 +183,11 @@ class Mode(Parametrized, Yamlizable):
         except TypeError:
             num_ampxs = 1
 
-        if phase:
+        if phase is not None:
             qua.frame_rotation_2pi(phase, self.name)
         if num_ampxs == 1:
             qua.play(key * qua.amp(ampx), self.name, **kwargs)
         else:
             qua.play(key * qua.amp(*ampx), self.name, **kwargs)
-        if phase:
+        if phase is not None:
             qua.frame_rotation_2pi(-phase, self.name)

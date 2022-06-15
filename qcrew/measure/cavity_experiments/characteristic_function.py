@@ -59,10 +59,12 @@ class CharacteristicFunction(Experiment):
 
         qua.reset_frame(cav.name)
         
-        #cav.play(self.cav_state_op, phase=0.0)  # to create a coherent state
-        #qua.align(cav.name, qubit.name)
+        cav.play(self.cav_state_op, phase=0.0)  # to create a coherent state
+        qua.align(cav.name, qubit.name)
 
         qubit.play(self.qubit_op1)  # bring qubit into superposition
+        
+
 
         # start ECD gate
         qua.align(cav.name, qubit.name)  # wait for qubit pulse to end
@@ -100,7 +102,7 @@ if __name__ == "__main__":
     parameters = {
         "modes": ["QUBIT", "CAV", "RR"],
         "reps": 1000000,
-        "wait_time": 600000,
+        "wait_time": 2000000,
         "fetch_period": 2,  # time between data fetching rounds in sec
         "delay": 500,  # wait time between opposite sign displacements
         "x_sweep": (
@@ -111,7 +113,7 @@ if __name__ == "__main__":
         "qubit_op1": "pi2",
         "qubit_op2": "pi",
         "cav_state_op": "cohstate_1",
-        "cav_op": "CD_cali",
+        "cav_op": "ECD_cali",
         # "ECD_phase": 0
         "measure_real": True,  # measure real part of char function if True, imag Part if false
     }

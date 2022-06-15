@@ -35,6 +35,7 @@ class Experiment(Parametrized):
         fetch_period=1,
         single_shot=False,
         plot_quad=None,
+        extra_vars: dict[str, macros.ExpVariable] = None,
     ):
 
         # List of modes used in the experiment. String values will be replaced by
@@ -84,6 +85,8 @@ class Experiment(Parametrized):
                 )
             }
 
+        if extra_vars is not None:
+            self.variables |= extra_vars
         # Extra memory tags for saving server-side stream operation results
         self.Z_SQ_RAW_tag = "Z_SQ_RAW"
         self.Z_SQ_RAW_AVG_tag = "Z_SQ_RAW_AVG"

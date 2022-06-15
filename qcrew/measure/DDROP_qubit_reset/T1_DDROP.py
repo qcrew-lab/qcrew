@@ -7,6 +7,7 @@ from typing import ClassVar
 
 from qcrew.control import professor as prof
 from qcrew.measure.experiment import Experiment
+import qcrew.measure.qua_macros as macros
 from qm import qua
 
 # ---------------------------------- Class -------------------------------------
@@ -21,24 +22,11 @@ class T1DDROP(Experiment):
         "fit_fn",  # fit function
     }
 
-    def __init__(
-        self,
-        qubit_op,
-        qubit_ddrop,
-        rr_ddrop,
-        steady_state_wait,
-        rr_ddrop_freq,
-        fit_fn="exp_decay",
-        **other_params
-    ):
+    def __init__(self, qubit_op, ddrop_params = None, fit_fn="exp_decay", **other_params):
 
         self.qubit_op = qubit_op  # pi pulse
         self.fit_fn = fit_fn
-
-        self.qubit_ddrop = qubit_ddrop
-        self.rr_ddrop = rr_ddrop
-        self.steady_state_wait = steady_state_wait
-        self.rr_ddrop_freq = rr_ddrop_freq
+        self.ddrop_params = ddrop_params
 
         super().__init__(**other_params)  # Passes other parameters to parent
 
@@ -48,18 +36,17 @@ class T1DDROP(Experiment):
         """
         qubit, rr = self.modes  # get the modes
 
-        qua.update_frequency(rr.name, self.rr_ddrop_freq)
-        rr.play(self.rr_ddrop, ampx=1)  # play rr ddrop excitation
-        qua.wait(int(self.steady_state_wait // 4), qubit.name)  # wait rr reset
-        qubit.play(self.qubit_ddrop, ampx=1)  # play qubit ddrop excitation
-        qua.wait(int(self.steady_state_wait // 4), qubit.name)  # wait rr reset
-        qua.align(qubit.name, rr.name)  # wait qubit pulse to end
+        if self.ddrop_params:
+            macros.DDROP_reset(qubit, rr, **self.ddrop_params)
+            # Use qubit_ef if also resetting F state
+            # macros.DDROP_reset(qubit, rr, **self.ddrop_params, qubit_ef = qubit_ef)
 
         qubit.play(self.qubit_op)  # play pi qubit pulse
         qua.wait(self.x, qubit.name)  # wait for partial qubit decay
         qua.align(qubit.name, rr.name)  # wait qubit pulse to end
         qua.update_frequency(rr.name, rr.int_freq)
         rr.measure((self.I, self.Q))  # measure qubit state
+
         if self.single_shot:  # assign state to G or E
             qua.assign(
                 self.state, qua.Cast.to_fixed(self.I < rr.readout_pulse.threshold)
@@ -92,8 +79,14 @@ if __name__ == "__main__":
     plot_parameters = {
         "xlabel": "Relaxation time (clock cycles)",
     }
+    
+    ddrop_params = {
+        "rr_ddrop_freq": int(-50e6),         # RR IF when playing the RR DDROP pulse
+        "rr_steady_wait": 2000,              # in nanoseconds
+        "ddrop_pulse": "ddrop_pulse",        # name of all ddrop pulses
+    }
 
-    experiment = T1DDROP(**parameters)
+    experiment = T1DDROP(ddrop_params = ddrop_params, **parameters)
     experiment.setup_plot(**plot_parameters)
 
     prof.run(experiment)

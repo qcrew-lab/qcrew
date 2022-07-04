@@ -50,12 +50,12 @@ class CavitySpectroscopy(Experiment):
         """
         qubit, cav, rr = self.modes  # get the modes
         
-        qua.update_frequency(rr.name, self.rr_ddrop_freq)
-        rr.play(self.rr_ddrop, ampx=0)  # play rr ddrop excitation
-        qua.wait(int(self.steady_state_wait // 4), qubit.name)  # wait rr reset
-        qubit.play(self.qubit_ddrop, ampx=0)  # play qubit ddrop excitation
-        qua.wait(int(self.steady_state_wait // 4), qubit.name)  # wait rr reset
-        qua.align(qubit.name, rr.name, cav.name)  # wait qubit pulse to end
+        # qua.update_frequency(rr.name, self.rr_ddrop_freq)
+        # rr.play(self.rr_ddrop, ampx=0)  # play rr ddrop excitation
+        # qua.wait(int(self.steady_state_wait // 4), qubit.name)  # wait rr reset
+        # qubit.play(self.qubit_ddrop, ampx=0)  # play qubit ddrop excitation
+        # qua.wait(int(self.steady_state_wait // 4), qubit.name)  # wait rr reset
+        # qua.align(qubit.name, rr.name, cav.name)  # wait qubit pulse to end
         
         qua.update_frequency(cav.name, self.x)  # update resonator pulse frequency
         cav.play(self.cav_op, ampx=1)  # play displacement to cavity
@@ -73,21 +73,21 @@ class CavitySpectroscopy(Experiment):
 
 if __name__ == "__main__":
 
-    x_start = -60e6
-    x_stop = -57e6
-    x_step = 0.05e6
+    x_start = -55e6
+    x_stop = -40e6
+    x_step = 0.1e6
     parameters = {
         "modes": ["QUBIT", "CAV", "RR"],
         "reps": 10000,
         "wait_time": 1000000,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
-        "qubit_op": "pi",
+        "qubit_op": "pi_selective3",
         "cav_op": "gaussian_pulse",
         "qubit_ddrop": "ddrop_pulse",
         "rr_ddrop": "ddrop_pulse",
         "rr_ddrop_freq": int(-50e6),
         "steady_state_wait": 2000,
-        "plot_quad": "Z_AVG",
+        "plot_quad": "I_AVG",
     }
 
     plot_parameters = {

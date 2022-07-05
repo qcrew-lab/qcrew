@@ -64,6 +64,7 @@ if __name__ == "__main__":
         "x_sweep": (amp_start, amp_stop + amp_step / 2, amp_step),
         "qubit_op": "pi",
         "single_shot": False,
+        "plot_quad": 'Z_AVG'
     }
 
     plot_parameters = {

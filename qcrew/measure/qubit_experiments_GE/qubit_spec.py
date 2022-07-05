@@ -25,7 +25,6 @@ class QubitSpectroscopy(Experiment):
 
         self.qubit_op = qubit_op
         self.fit_fn = fit_fn
-
         super().__init__(**other_params)  # Passes other parameters to parent
 
     def QUA_play_pulse_sequence(self):
@@ -33,7 +32,6 @@ class QubitSpectroscopy(Experiment):
         Defines pulse sequence to be played inside the experiment loop
         """
         qubit, rr = self.modes  # get the modes
-
         qua.update_frequency(qubit.name, self.x)  # update resonator pulse frequency
         qubit.play(self.qubit_op, ampx = 1)  # play qubit pulse
         qua.align(qubit.name, rr.name)  # wait qubit pulse to end 
@@ -46,16 +44,29 @@ class QubitSpectroscopy(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
+<<<<<<< HEAD
     x_start = -55e6
     x_stop = -45e6
+=======
+    x_start = 145e6
+    x_stop = 155e6
+>>>>>>> 808c4791f8f0c77ac8b3efbb3a9e36909a4ecc93
     x_step = 0.05e6
 
     parameters = {
         "modes": ["QUBIT", "RR"],
         "reps": 10000,
+<<<<<<< HEAD
         "wait_time": 400000,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
         "qubit_op": "pi",
+=======
+        "wait_time": 50000,
+        "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
+        "qubit_op": "pi_selective1",
+        "fit_fn": None,
+        "plot_quad": "I_AVG",
+>>>>>>> 808c4791f8f0c77ac8b3efbb3a9e36909a4ecc93
     }
 
     plot_parameters = {

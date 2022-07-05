@@ -53,9 +53,10 @@ class PowerRabi(Experiment):
 
 if __name__ == "__main__":
 
-    amp_start = -1.5
-    amp_stop = 1.5
+    amp_start = -1.8
+    amp_stop = 1.8
     amp_step = 0.05
+
     parameters = {
         "modes": ["QUBIT", "RR"],
         "reps": 10000,
@@ -67,6 +68,7 @@ if __name__ == "__main__":
 
     plot_parameters = {
         "xlabel": "Qubit pulse amplitude scaling",
+        # "zlimits": (0.35, 0.5)
     }
 
     experiment = PowerRabi(**parameters)

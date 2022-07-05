@@ -1,10 +1,9 @@
 """
-A python class describing a cavity T1 experiment using QM.
+A python class describing a cavity Q-switching experiment using QM.
 This class serves as a QUA script generator with user-defined parameters.
 """
 
 from typing import ClassVar
-
 from qcrew.control import professor as prof
 from qcrew.measure.experiment import Experiment
 from qm import qua
@@ -12,9 +11,9 @@ from qm import qua
 # ---------------------------------- Class -------------------------------------
 
 
-class CavityT1(Experiment):
+class Qswitching(Experiment):
 
-    name = "cavity_T1"
+    name = "Q_switching"
 
     _parameters: ClassVar[set[str]] = Experiment._parameters | {
         "cav_op",  # operation for displacing the cavity
@@ -22,11 +21,13 @@ class CavityT1(Experiment):
         "fit_fn",  # fit function
     }
 
-    def __init__(self, cav_op, qubit_op, fit_fn="cohstate_decay", **other_params):
+    def __init__(self, cav_op, qubit_op, drive1_op, drive2_op, fit_fn="cohstate_decay", **other_params):
 
         self.cav_op = cav_op
         self.qubit_op = qubit_op
         self.fit_fn = fit_fn
+        self.drive1_op = drive1_op
+        self.drive2_op = drive2_op
 
         super().__init__(**other_params)  # Passes other parameters to parent
 
@@ -36,9 +37,12 @@ class CavityT1(Experiment):
         """
         qubit, cav, rr = self.modes  # get the modes
 
-        cav.play(self.cav_op, ampx=1.4)  # play displacement to cavity
-        qua.wait(self.x, cav.name)  # wait relaxation
+        cav.play(self.cav_op, ampx = 1.8)  # play displacement to cavity
         qua.align(cav.name, qubit.name)  # align all modes
+        cav.play(self.drive1_op, length = self.x, ampx = 1.8)  # play drive1 to cavity
+        qua.update_frequency(rr.name, self.y)  # update resonator pulse frequency
+        rr.play(self.drive2_op, ampx = 1.8)  # play drive2 to cavity
+        qua.align(cav.name, rr.name)  # align all modes
         qubit.play(self.qubit_op)  # play qubit pulse
         qua.align(qubit.name, rr.name)  # align all modes
         rr.measure((self.I, self.Q))  # measure transmitted signal
@@ -51,18 +55,21 @@ class CavityT1(Experiment):
 
 if __name__ == "__main__":
 
-    x_start = 100
-    x_stop = 200e3
+    x_start = 16
+    x_stop = 100e3
     x_step = 1e3
     parameters = {
         "modes": ["QUBIT", "CAV", "RR"],
         "reps": 20000,
-        "wait_time": 2000000,
+        "wait_time": 10e6,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
+        "y_sweep": (int(y_start), int(y_stop + y_step / 2), int(y_step)),
         "qubit_op": "pi_selective3",
         "cav_op": "cohstate_1",
-        "plot_quad": "I_AVG",
-        "fetch_period": 4,
+        "drive1_op": "constant_pulse",
+        "cav_op": "cohstate_1",
+        "drive2_op": "constant_pulse",
+        "cav_op": "cohstate_1",
         
     }
 
@@ -70,7 +77,7 @@ if __name__ == "__main__":
         "xlabel": "Cavity relaxation time (clock cycles)",
     }
 
-    experiment = CavityT1(**parameters)
+    experiment = Qswitching(**parameters)
     experiment.setup_plot(**plot_parameters)
 
     prof.run(experiment)

@@ -44,7 +44,7 @@ class QubitPopulation(Experiment):
         qua.update_frequency(qubit.name, self.ef_int_freq)
         qubit.play(self.qubit_ef_pi, ampx=self.x)  # e-> f
         qua.update_frequency(qubit.name, qubit.int_freq)
-        qubit.play(self.qubit_ge_pi)  # e-> f
+        qubit.play(self.qubit_ge_pi)  # e-> g
 
         qua.align(qubit.name, rr.name)  # wait qubit pulse to end
         rr.measure((self.I, self.Q))  # measure qubit state
@@ -61,18 +61,21 @@ class QubitPopulation(Experiment):
 
 if __name__ == "__main__":
 
-    amp_start = -1.9
-    amp_stop = 1.9
+    amp_start = -1.8
+    amp_stop = 1.8
     amp_step = 0.05
 
     parameters = {
-        "modes": ["QUBIT", "QUBIT_EF", "RR"],
-        "reps": 5000,
-        "wait_time": 300000,
+        "modes": ["QUBIT", "RR"],
+        "reps": 40000,
+        "wait_time": 50000,
+        "ef_int_freq": int(-57e6),
         "qubit_ge_pi": "pi",
-        "qubit_ef_pi": "pi",
-        "x_sweep": (-1.8, 1.8 + 0.1 / 2, 0.1),
-        "y_sweep": [1.0],
+        "qubit_ef_pi": "pi_ef",
+        "x_sweep": (amp_start, amp_stop + amp_step / 2, amp_step),
+        "y_sweep": [0.0, 1.0],
+        "single_shot": False,
+        "plot_quad": "I_AVG",
     }
 
     plot_parameters = {

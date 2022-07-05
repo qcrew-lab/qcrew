@@ -58,18 +58,18 @@ class T1EF(Experiment):
 if __name__ == "__main__":
 
     x_start = 4
-    x_stop = 30e3
-    x_step = 300
-    
+    x_stop = 3000
+    x_step = 50
 
     parameters = {
         "modes": ["QUBIT", "RR"],
-        "reps": 20000,
+        "reps": 40000,
         "wait_time": 100000,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
         "qubit_ge_pi": "pi",
-        "qubit_ef_pi": "pi_ef",
-        "ef_int_freq": int(-157.1e6),
+        "qubit_ef_pi": "pi_ef_selective1",
+        "ef_int_freq": int(-57e6),
+        "plot_quad": "I_AVG",
     }
 
     plot_parameters = {

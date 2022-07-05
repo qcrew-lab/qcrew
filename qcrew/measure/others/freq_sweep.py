@@ -31,7 +31,7 @@ if __name__ == "__main__":
             stage.RR,
         )
 
-        mode = qubit  # select the mode whose spectrum you want to sweep
+        mode = rr  # select the mode whose spectrum you want to sweep
 
         sweep_parameters = {  # set sweep parameters
             "center": mode.lo_freq,

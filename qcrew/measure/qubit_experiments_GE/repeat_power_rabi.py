@@ -53,17 +53,17 @@ class RepPowerRabi(Experiment):
 
 if __name__ == "__main__":
     
-    amp_start = -1.05
-    amp_stop = 1.05
+    amp_start = -1.5
+    amp_stop = 1.5
     amp_step = 0.05
 
 
     parameters = {
         "modes": ["QUBIT", "RR"],
-        "reps": 5000,
-        "wait_time": 300000,
+        "reps": 10000,
+        "wait_time": 400000,
         "x_sweep": (amp_start, amp_stop + amp_step / 2, amp_step),
-        "qubit_op": "constant_cos_pi2",
+        "qubit_op": "pi2",
         "pulse_number": 2,
         "single_shot": False,
     }

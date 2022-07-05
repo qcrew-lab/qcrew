@@ -52,12 +52,12 @@ class T1(Experiment):
 
 if __name__ == "__main__":
     x_start = 4
-    x_stop = 25e3
-    x_step = 300
+    x_stop = 100000
+    x_step = 400
     parameters = {
         "modes": ["QUBIT", "RR"],
-        "reps": 20000,
-        "wait_time": 100000,
+        "reps": 25000,
+        "wait_time": 400000,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
         "qubit_op": "pi",
         "single_shot": False,

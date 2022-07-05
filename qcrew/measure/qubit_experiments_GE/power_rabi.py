@@ -59,9 +59,9 @@ if __name__ == "__main__":
     parameters = {
         "modes": ["QUBIT", "RR"],
         "reps": 10000,
-        "wait_time": 200000,
+        "wait_time": 320000,
         "x_sweep": (amp_start, amp_stop + amp_step / 2, amp_step),
-        "qubit_op": "constant_cos_pi2",
+        "qubit_op": "pi",
         "single_shot": False,
     }
 

@@ -66,6 +66,7 @@ if __name__ == "__main__":
         "qubit_op": "pi2",
         "pulse_number": 2,
         "single_shot": False,
+        "plot_quad": 'I_AVG'
     }
 
     plot_parameters = {

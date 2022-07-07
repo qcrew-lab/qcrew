@@ -44,9 +44,9 @@ class RRSpectroscopy(Experiment):
 
 if __name__ == "__main__":
 
-    x_start = -51e6
-    x_stop = -49e6
-    x_step = 0.2e6
+    x_start = -52e6
+    x_stop = -48e6
+    x_step = 0.05e6
 
     parameters = {
         "modes": ["RR"],

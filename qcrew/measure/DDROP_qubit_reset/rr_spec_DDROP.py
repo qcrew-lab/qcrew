@@ -23,12 +23,7 @@ class RRSpecDDROP(Experiment):
         "fit_fn",  # fit function
     }
 
-    def __init__(
-        self,
-        ddrop_params = None,
-        fit_fn=None,
-        **other_params
-    ):
+    def __init__(self, ddrop_params=None, fit_fn=None, **other_params):
 
         self.ddrop_params = ddrop_params
         self.fit_fn = fit_fn
@@ -39,12 +34,13 @@ class RRSpecDDROP(Experiment):
         """
         Defines pulse sequence to be played inside the experiment loop
         """
-        rr, qubit = self.modes  # get the modes
+        rr, qubit, qubit_ef = self.modes  # get the modes
 
-        if self.ddrop_params:
+        #if self.ddrop_params:
+        with qua.if_(self.y):
             macros.DDROP_reset(qubit, rr, **self.ddrop_params)
             # Use qubit_ef if also resetting F state
-            # macros.DDROP_reset(qubit, rr, **self.ddrop_params, qubit_ef = qubit_ef)
+            #macros.DDROP_reset(qubit, rr, **self.ddrop_params, qubit_ef=qubit_ef)
 
         qua.update_frequency(rr.name, self.x)  # update resonator pulse frequency
         rr.measure((self.I, self.Q))  # measure transmitted signal
@@ -64,24 +60,23 @@ if __name__ == "__main__":
     parameters = {
         "modes": ["RR", "QUBIT", "QUBIT_EF"],
         "reps": 5000,
-        "wait_time": 100000,
+        "wait_time": 325000,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
-        "y_sweep": (0.0, 1.0),
+        "y_sweep": (False, True),
         "plot_quad": "Z_AVG",
     }
 
     plot_parameters = {
         "xlabel": "Resonator pulse frequency (Hz)",
     }
-    
+
     ddrop_params = {
-        "rr_ddrop_freq": int(-50e6),         # RR IF when playing the RR DDROP pulse
-        "rr_steady_wait": 2000,              # in nanoseconds
-        "ddrop_pulse": "ddrop_pulse",        # name of all ddrop pulses
+        "rr_ddrop_freq": int(-50.4e6),  # RR IF when playing the RR DDROP pulse
+        "rr_steady_wait": 1000,  # in nanoseconds
+        "ddrop_pulse": "ddrop_pulse",  # name of all ddrop pulses
     }
 
-
-    experiment = RRSpecDDROP(ddrop_params=ddrop_params,**parameters)
+    experiment = RRSpecDDROP(ddrop_params=ddrop_params, **parameters)
     experiment.setup_plot(**plot_parameters)
 
     prof.run(experiment)

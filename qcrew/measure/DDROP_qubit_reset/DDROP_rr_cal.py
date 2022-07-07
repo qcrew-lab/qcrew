@@ -72,17 +72,17 @@ if __name__ == "__main__":
 
     amp_start = -1
     amp_stop = 0
-    amp_step = 0.01
+    amp_step = 0.02
 
     parameters = {
         "modes": ["QUBIT", "RR"],
-        "reps": 50000,
-        "wait_time": 50000,
+        "reps": 10000,
+        "wait_time": 325000,
         "x_sweep": (amp_start, amp_stop + amp_step / 2, amp_step),
-        "y_sweep": (0.0, 0.5, 1),
+        "y_sweep": (0, 1.0),
         "ddrop_pulse": "ddrop_pulse",
-        "rr_ddrop_freq": int(-50e6),
-        "rr_steady_wait": 2000,
+        "rr_ddrop_freq": int(-50.3e6),
+        "rr_steady_wait": 1000,
         "single_shot": False,
         "plot_quad": "I_AVG",
     }

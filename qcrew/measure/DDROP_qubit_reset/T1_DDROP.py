@@ -34,12 +34,12 @@ class T1DDROP(Experiment):
         """
         Defines pulse sequence to be played inside the experiment loop
         """
-        qubit, rr = self.modes  # get the modes
+        qubit, rr, qubit_ef = self.modes  # get the modes
 
         if self.ddrop_params:
-            macros.DDROP_reset(qubit, rr, **self.ddrop_params)
+            # macros.DDROP_reset(qubit, rr, **self.ddrop_params)
             # Use qubit_ef if also resetting F state
-            # macros.DDROP_reset(qubit, rr, **self.ddrop_params, qubit_ef = qubit_ef)
+            macros.DDROP_reset(qubit, rr, **self.ddrop_params, qubit_ef=qubit_ef)
 
         qubit.play(self.qubit_op)  # play pi qubit pulse
         qua.wait(self.x, qubit.name)  # wait for partial qubit decay
@@ -63,12 +63,12 @@ if __name__ == "__main__":
     x_step = 300
 
     parameters = {
-        "modes": ["QUBIT", "RR"],
+        "modes": ["QUBIT", "RR", "QUBIT_EF"],
         "reps": 20000,
-        "wait_time": 100000,
+        "wait_time": 2000,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
         "qubit_op": "pi",
-        "single_shot": False,
+        "single_shot": True,
     }
 
     plot_parameters = {

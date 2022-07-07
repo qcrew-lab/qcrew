@@ -54,18 +54,19 @@ class NSplitSpectroscopy(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-    x_start = 119e6
-    x_stop = 120.5e6
+    x_start = 123.5e6
+    x_stop = 126.5e6
     x_step = 0.01e6
 
     parameters = {
         "modes": ["QUBIT", "CAV", "RR", "CAV_DRIVE", "RR_DRIVE"],
         "reps": 4000,
-        "wait_time": 50e3,
+        "wait_time": 200e3,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
-        "qubit_op": "pi_selective_2",
+        "qubit_op": "pi_selective_1",
         "cav_op": "constant_cos_cohstate_1",
         "cav_amp": 1,
+        "plot_quad": "I_AVG"
     }
 
     plot_parameters = {

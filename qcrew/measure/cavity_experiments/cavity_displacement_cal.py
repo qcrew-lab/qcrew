@@ -67,12 +67,13 @@ if __name__ == "__main__":
     parameters = {
         "modes": ["QUBIT", "CAV", "RR", "CAV_DRIVE", "RR_DRIVE"],
         "reps": 20000,
-        "wait_time": 50e3,
+        "wait_time": 4000000,
         "x_sweep": (x_start, x_stop + x_step / 2, x_step),
         "qubit_op": "pi_selective_1",
-        "cav_op": "constant_cos_ECD",
-        # "fetch_period": 2,
-        "single_shot": True,
+        "cav_op": "constant_cos_cohstate_1",
+        "fetch_period": 2,
+        "single_shot": False,
+        "plot_quad": "I_AVG",
     }
 
     plot_parameters = {

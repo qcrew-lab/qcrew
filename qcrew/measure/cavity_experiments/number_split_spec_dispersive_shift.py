@@ -51,19 +51,20 @@ class NSplitSpecDispersiveShift(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-    x_start = 116e6
-    x_stop = 122e6
-    x_step = 0.02e6
+    x_start = 123.5e6
+    x_stop = 126.5e6
+    x_step = 0.01e6
 
     parameters = {
         "modes": ["QUBIT", "CAV", "RR"],
-        "reps": 20000,
-        "wait_time": 3000000,
+        "reps": 4000,
+        "wait_time": 4000000,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
-        "y_sweep": [1.4],
+        "y_sweep": [0, 1.41],
         "qubit_op": "pi_selective_1",
-        "cav_op": "cohstate_1",
-        "fetch_period": 3,
+        "cav_op": "constant_cos_cohstate_1",
+        "fetch_period": 2,
+        "plot_quad": "I_AVG",
     }
 
     plot_parameters = {

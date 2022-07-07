@@ -92,6 +92,7 @@ if __name__ == "__main__":
         "qubit_op1": "constant_cos_pi2",
         "qubit_op2": "constant_cos_pi",
         "cav_op": "constant_cos_ECD",
+        "plot_quad": "I_AVG"
         
     }
 

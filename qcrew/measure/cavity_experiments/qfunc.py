@@ -8,6 +8,7 @@ from typing import ClassVar
 from qcrew.control import professor as prof
 from qcrew.measure.experiment import Experiment
 from qm import qua
+import qcrew.measure.qua_macros as macros
 import numpy as np
 
 
@@ -24,11 +25,14 @@ class QFunction(Experiment):
         "fit_fn",  # fit function
     }
 
-    def __init__(self, cav_op, qubit_op, fit_fn="gaussian", **other_params):
+    def __init__(
+        self, cav_op, qubit_op, ddrop_params=None, fit_fn="gaussian", **other_params
+    ):
 
         self.cav_op = cav_op
         self.qubit_op = qubit_op
         self.fit_fn = fit_fn
+        self.ddrop_params = ddrop_params
 
         super().__init__(**other_params)  # Passes other parameters to parent
 
@@ -36,33 +40,45 @@ class QFunction(Experiment):
         """
         Defines pulse sequence to be played inside the experiment loop
         """
-        qubit, cav, rr, cav_drive, rr_drive = self.modes  # get the modes
+        (
+            qubit,
+            cav,
+            rr,
+            qubit_ef,
+            cav_drive,
+            rr_drive,
+        ) = self.modes  # get the modes
+        # cav_drive,
+        if self.ddrop_params:
+            macros.DDROP_reset(qubit, rr, **self.ddrop_params)
+            # Use qubit_ef if also resetting F state
+            # macros.DDROP_reset(qubit, rr, **self.ddrop_params, qubit_ef=qubit_ef)
+
         qua.reset_frame(cav.name)
-        cav.play(self.cav_op, phase=0)  # initial state creation
+        qua.align()
+        # cav.play(self.cav_op, phase=0)  # initial state creation
         qua.align(qubit.name, cav.name)  # align measurement
-        # qubit.play("constant_cos_pi")
-        # qua.wait(int(348), cav.name, qubit.name)
         cav.play(self.cav_op, ampx=self.x, phase=0)  # displacement in I direction
         cav.play(self.cav_op, ampx=self.y, phase=0.25)  # displacement in Q direction
         qua.align(cav.name, qubit.name)
-        # qubit.play("constant_cos_pi2")
+
         qubit.play(self.qubit_op)  # play qubit selective pi-pulse
         # Measure cavity state
         qua.align(qubit.name, rr.name)  # align measurement
         rr.measure((self.I, self.Q))  # measure transmitted signal
 
+        # qua.align()
         # wait system reset
-        qua.align(cav.name, qubit.name, rr.name, cav_drive.name, rr_drive.name)
-        cav_drive.play("constant_cos", duration=200e3, ampx=1.6)
-        rr_drive.play("constant_cos", duration=200e3, ampx=1.4)
-        qua.wait(int(self.wait_time // 4), cav.name)
+        # cav_drive.play("constant_cos", duration=200e3, ampx=1.6)
+        # rr_drive.play("constant_cos", duration=200e3, ampx=1.4)
+        qua.wait(int(self.wait_time // 4))
 
         if self.single_shot:  # assign state to G or E
             qua.assign(
                 self.state, qua.Cast.to_fixed(self.I < rr.readout_pulse.threshold)
             )
 
-        self.QUA_stream_results()  # stream variables (I, Q, x, etc)
+        self.QUA_stream_results()
 
 
 # -------------------------------- Execution -----------------------------------
@@ -70,17 +86,24 @@ class QFunction(Experiment):
 if __name__ == "__main__":
     x_start = -1.5  # 1.5
     x_stop = 1.5
-    x_step = 0.075
+    x_step = 0.1
 
     y_start = -1.5
     y_stop = 1.5
-    y_step = 0.075
+    y_step = 0.1
 
     parameters = {
-        "modes": ["QUBIT", "CAV", "RR", "CAV_DRIVE", "RR_DRIVE"],
+        "modes": [
+            "QUBIT",
+            "CAV",
+            "RR",
+            "QUBIT_EF",
+            "CAV_DRIVE",
+            "RR_DRIVE",
+        ],
         "reps": 500,
-        "wait_time": 50e3,
-        "fetch_period": 4,  # time between data fetching rounds in sec
+        "wait_time": 3e6,
+        "fetch_period": 10,  # time between data fetching rounds in sec
         "x_sweep": (
             x_start,
             x_stop + x_step / 2,
@@ -88,8 +111,8 @@ if __name__ == "__main__":
         ),  # ampitude sweep of the displacement pulses in the ECD
         "y_sweep": (y_start, y_stop + y_step / 2, y_step),
         "qubit_op": "pi_selective_1",
-        "cav_op": "constant_cos_cohstate_1",
-        "single_shot": True,
+        "cav_op": "constant_cos_ECD_test",
+        "single_shot": False,
     }
 
     plot_parameters = {
@@ -100,7 +123,12 @@ if __name__ == "__main__":
         "cmap": "bwr",
     }
 
-    experiment = QFunction(**parameters)
+    ddrop_params = {
+        "rr_ddrop_freq": int(-50.4e6),  # RR IF when playing the RR DDROP pulse
+        "rr_steady_wait": 2000,  # in nanoseconds
+        "ddrop_pulse": "ddrop_pulse",  # name of all ddrop pulses
+    }
+    experiment = QFunction(ddrop_params=None, **parameters)
     experiment.setup_plot(**plot_parameters)
 
     prof.run(experiment)

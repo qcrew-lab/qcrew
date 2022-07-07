@@ -36,7 +36,7 @@ class CavityT1(Experiment):
         """
         qubit, cav, rr = self.modes  # get the modes
 
-        cav.play(self.cav_op, ampx=1.4)  # play displacement to cavity
+        cav.play(self.cav_op, ampx=1)  # play displacement to cavity
         qua.wait(self.x, cav.name)  # wait relaxation
         qua.align(cav.name, qubit.name)  # align all modes
         qubit.play(self.qubit_op)  # play qubit pulse
@@ -51,17 +51,18 @@ class CavityT1(Experiment):
 
 if __name__ == "__main__":
 
-    x_start = 10e3
+    x_start = 0.1e3
     x_stop = 2000e3
-    x_step = 20e3
+    x_step = 40e3
     parameters = {
         "modes": ["QUBIT", "CAV", "RR"],
-        "reps": 50000,
+        "reps": 2000,
         "wait_time": 4000000,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
-        "qubit_op": "pi_selective_2",
+        "qubit_op": "pi_selective_1",
         "cav_op": "constant_cos_cohstate_1",
-        "fetch_period": 10,
+        "fetch_period": 3,
+        "plot_quad": "I_AVG"
     }
 
     plot_parameters = {

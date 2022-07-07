@@ -60,6 +60,9 @@ class QubitPopulation(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
+    _ef_int_freq = -70.6e6
+    
+    
 
     amp_start = -1.9
     amp_stop = 1.9
@@ -73,6 +76,8 @@ if __name__ == "__main__":
         "qubit_ef_pi": "pi",
         "x_sweep": (-1.8, 1.8 + 0.1 / 2, 0.1),
         "y_sweep": [0.0, 1.0],
+        "ef_int_freq": _ef_int_freq,
+        "plot_quad": "I_AVG",
     }
 
     plot_parameters = {

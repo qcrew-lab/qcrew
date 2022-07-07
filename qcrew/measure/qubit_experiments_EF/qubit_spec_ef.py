@@ -22,11 +22,11 @@ class QubitSpectroscopyEF(Experiment):
         "fit_fn",  # fit function
     }
 
-    def __init__(self, qubit_ef_op, qubit_pi_pulse_name, fit_fn=None, **other_params):
+    def __init__(self, qubit_ef_op, qubit_ge_pi, fit_fn=None, **other_params):
 
         self.qubit_ef_op = qubit_ef_op
         self.fit_fn = fit_fn
-        self.qubit_pi_pulse_name = qubit_pi_pulse_name
+        self.qubit_ge_pi = qubit_ge_pi
 
         super().__init__(**other_params)  # Passes other parameters to parent
 
@@ -36,12 +36,12 @@ class QubitSpectroscopyEF(Experiment):
         """
         qubit, qubit_ef, rr = self.modes  # get the modes
 
-        qubit.play(self.qubit_pi_pulse_name)  # g->e
+        qubit.play(self.qubit_ge_pi)  # g->e
         qua.align(qubit.name, qubit_ef.name)
         qua.update_frequency(qubit_ef.name, self.x)  # sweep e->f frequency
-        qubit_ef.play(self.qubit_ef_op)  # e->f
+        qubit_ef.play(self.qubit_ef_op, ampx = 0.1)  # e->f
         qua.align(qubit.name, qubit_ef.name)
-        qubit.play(self.qubit_pi_pulse_name)  # g->e
+        qubit.play(self.qubit_ge_pi)  # g->e
         qua.align(qubit.name, rr.name)  # wait qubit pulse to end
 
         rr.measure((self.I, self.Q))  # measure transmitted signal
@@ -53,17 +53,18 @@ class QubitSpectroscopyEF(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-    x_start = -76e6
-    x_stop = -75.5e6
-    xstep = 0.02e6
+    x_start = -72e6
+    x_stop = -69e6
+    xstep = 0.05e6
 
     parameters = {
         "modes": ["QUBIT", "QUBIT_EF", "RR"],
-        "reps": 20000,
+        "reps": 5000,
         "wait_time": 100000,
         "qubit_ge_pi": "pi",
         "qubit_ef_op": "constant_pulse",
         "x_sweep": (int(x_start), int(x_stop + xstep / 2), int(xstep)),
+        "plot_quad": "I_AVG"
     }
 
     plot_parameters = {

@@ -144,14 +144,24 @@ class ReadoutTrainer(Parametrized):
             with qua.for_(n, 0, n < reps, n + 1):
 
                 if self.ddrop_params:
-                    macros.DDROP_reset(self._qubit, self._rr, **self.ddrop_params, qubit_ef = self._qubit_ef)
+                    macros.DDROP_reset(
+                        self._qubit,
+                        self._rr,
+                        **self.ddrop_params,
+                        qubit_ef=self._qubit_ef,
+                    )
 
                 qua.measure(readout_pulse, self._rr.name, adc)
                 qua.wait(wait_time)
                 # qua.reset_phase(self._rr.name)
 
                 if self.ddrop_params:
-                    macros.DDROP_reset(self._qubit, self._rr, **self.ddrop_params, qubit_ef = self._qubit_ef)
+                    macros.DDROP_reset(
+                        self._qubit,
+                        self._rr,
+                        **self.ddrop_params,
+                        qubit_ef=self._qubit_ef,
+                    )
 
                 if excite_qubit:
                     qua.align(self._rr.name, self._qubit.name)
@@ -344,7 +354,12 @@ class ReadoutTrainer(Parametrized):
             with qua.for_(n, 0, n < reps, n + 1):
 
                 if self.ddrop_params:
-                    macros.DDROP_reset(self._qubit, self._rr, **self.ddrop_params, qubit_ef = self._qubit_ef)
+                    macros.DDROP_reset(
+                        self._qubit,
+                        self._rr,
+                        **self.ddrop_params,
+                        qubit_ef=self._qubit_ef,
+                    )
 
                 if excite_qubit:
                     qua.align(self._rr.name, self._qubit.name)

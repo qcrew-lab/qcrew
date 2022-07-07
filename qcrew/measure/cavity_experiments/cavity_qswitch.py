@@ -41,7 +41,7 @@ class Cavity_Qswitch(Experiment):
         qua.wait(int(8), cav.name, qubit.name, rr.name, cav_drive.name, rr_drive.name)
         qua.align(cav.name, qubit.name, rr.name, cav_drive.name, rr_drive.name)
         cav_drive.play("constant_cos", duration=200e3, ampx=1.6)
-        rr_drive.play("constant_cos", duration=200e3, ampx=1.3)
+        rr_drive.play("constant_cos", duration=200e3, ampx=1.4)
         qua.align(cav.name, qubit.name, rr.name, cav_drive.name, rr_drive.name)
         qubit.play(self.qubit_op)  # play qubit pulse
         qua.align(cav.name, qubit.name, rr.name, cav_drive.name, rr_drive.name)
@@ -57,9 +57,9 @@ class Cavity_Qswitch(Experiment):
 
 if __name__ == "__main__":
 
-    drive_freq_start = -67e6
-    drive_freq_stop = -64e6
-    drive_freq_step = 0.05e6
+    drive_freq_start = -65.8e6
+    drive_freq_stop = -64.5e6
+    drive_freq_step = 0.01e6
 
     plen_start = 50e3  # clock cycle
     plen_stop = 1e6
@@ -68,7 +68,7 @@ if __name__ == "__main__":
     parameters = {
         "modes": ["QUBIT", "CAV", "RR", "CAV_DRIVE", "RR_DRIVE"],
         "reps": 500,
-        "wait_time": 0.5e6,
+        "wait_time": 50e3,
         "x_sweep": (
             int(drive_freq_start),
             int(drive_freq_stop + drive_freq_step / 2),
@@ -76,7 +76,7 @@ if __name__ == "__main__":
         ),
         # "x_sweep": (int(plen_start), int(plen_stop + plen_step / 2), int(plen_step)),
         "qubit_op": "pi_selective_1",
-        "cav_op": "constant_cos_cohstate_1",
+        "cav_op": "constant_cos_cohstate",
         "fetch_period": 3,
     }
 

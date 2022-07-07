@@ -53,14 +53,10 @@ class T2(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-    x_start = 10
-    x_stop = 14000
-    x_step = 200
-
     x_start = 4
-    x_stop = 6000
+    x_stop = 5000
     x_step = 40
-    detuning = 400e3
+    detuning = 0 # 400e3
 
     parameters = {
         "modes": ["QUBIT", "RR"],
@@ -69,7 +65,7 @@ if __name__ == "__main__":
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
         "qubit_op": "constant_cos_pi2",
         "detuning": int(detuning),
-        "single_shot": False,
+        "single_shot": True,
     }
 
     plot_parameters = {

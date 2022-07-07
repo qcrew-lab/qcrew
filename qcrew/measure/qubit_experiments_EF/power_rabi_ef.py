@@ -62,8 +62,9 @@ if __name__ == "__main__":
         "reps": 3000,
         "wait_time": 100000,
         "qubit_ge_pi": "pi",
-        "qubit_ef_op": "gaussian_pulse",
+        "qubit_ef_op": "pi",
         "x_sweep": (amp_start, amp_stop + amp_step / 2, amp_step),
+        "plot_quad": "I_AVG"
     }
 
     plot_parameters = {

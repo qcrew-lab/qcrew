@@ -261,6 +261,7 @@ def DDROP_reset(qubit, rr, rr_ddrop_freq, rr_steady_wait, ddrop_pulse, qubit_ef=
     rr.play(ddrop_pulse)
 
     if qubit_ef:
+        print("HERE!!")
         # Play QUBIT and QUBIT_EF DDROP
         qua.wait(
             int(rr_steady_wait // 4), qubit.name, qubit_ef.name

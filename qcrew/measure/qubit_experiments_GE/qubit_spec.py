@@ -44,16 +44,17 @@ class QubitSpectroscopy(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-    x_start = -60e6
-    x_stop = -40e6
-    x_step = 0.1e6
+    x_start = 90e6
+    x_stop = 110e6
+    x_step = 0.2e6
 
     parameters = {
         "modes": ["QUBIT", "RR"],
         "reps": 10000,
-        "wait_time": 400000,
+        "wait_time": 325000,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
         "qubit_op": "pi_selective",
+        "plot_quad": "I_AVG",
     }
 
     plot_parameters = {

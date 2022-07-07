@@ -10,18 +10,19 @@ if __name__ == "__main__":
 
     with Stagehand() as stage:
 
-        sa, qubit, rr = (
+        sa, qubit, rr, qubit_ef = (
             stage.SA,
             stage.QUBIT,
             stage.RR,
+            stage.QUBIT_EF
         )
         qm = stage.QM
         mixer_tuner = MixerTuner(sa, qm)
 
         # this is the mode whose mixer's LO or SB leakage you are tuning
-        mode = qubit
-        mode.lo_freq = 4.887e9
-        mode.int_freq = -50e6
+        mode = qubit_ef
+        #mode.lo_freq = 4.887e9
+        #mode.int_freq = -50e6
 
         # minimize LO leakage
 
@@ -41,11 +42,7 @@ if __name__ == "__main__":
             "plot": False,
         }
 
-<<<<<<< HEAD
         #mixer_tuner.tune_lo(mode=mode, method="BF", **bf_params_lo)
-=======
-        # mixer_tuner.tune_lo(mode=mode, method="BF", **bf_params_lo)
->>>>>>> 808c4791f8f0c77ac8b3efbb3a9e36909a4ecc93
 
         # user Nelder-Mead (NM) minimizer
         mixer_tuner.tune_lo(mode=mode, method="NM")
@@ -68,11 +65,7 @@ if __name__ == "__main__":
             "plot": False,
         }
 
-<<<<<<< HEAD
         #mixer_tuner.tune_sb(mode=mode, method="BF", **bf_params_lo)
-=======
-        mixer_tuner.tune_sb(mode=mode, method="NM", **bf_params_lo)
->>>>>>> 808c4791f8f0c77ac8b3efbb3a9e36909a4ecc93
 
         # user Nelder-Mead (NM) minimizer
         mixer_tuner.tune_sb(mode=mode, method="NM")

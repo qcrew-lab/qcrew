@@ -25,17 +25,18 @@ def get_sweep(mode, sa, qm, **sweep_params):
 if __name__ == "__main__":
 
     with Stagehand() as stage:
-        sa, qubit, rr = (
+        sa, qubit, rr, qubit_ef = (
             stage.SA,
             stage.QUBIT,
             stage.RR,
+            stage.QUBIT_EF
         )
 
-        mode = rr  # select the mode whose spectrum you want to sweep
+        mode = qubit_ef  # select the mode whose spectrum you want to sweep
 
         sweep_parameters = {  # set sweep parameters
             "center": mode.lo_freq,
-            "span": 200e6,
+            "span": 400e6,
             "rbw": Sa124.default_rbw,
             "ref_power": Sa124.default_ref_power,
         }

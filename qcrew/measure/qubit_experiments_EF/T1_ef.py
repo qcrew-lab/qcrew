@@ -19,17 +19,15 @@ class T1EF(Experiment):
     _parameters: ClassVar[set[str]] = Experiment._parameters | {
         "qubit_ge_pi",  # operation used for exciting the qubit from g to e
         "qubit_ef_pi",  # operation used for exciting the qubit from e to f
-        "ef_int_freq",  # intermediate frequency of the ef transition
         "fit_fn",  # fit function
     }
 
     def __init__(
-        self, qubit_ge_pi, qubit_ef_pi, ef_int_freq, fit_fn="exp_decay", **other_params
+        self, qubit_ge_pi, qubit_ef_pi, fit_fn="exp_decay", **other_params
     ):
 
         self.qubit_ge_pi = qubit_ge_pi  # pi pulse
         self.qubit_ef_pi = qubit_ef_pi  # pi pulse
-        self.ef_int_freq = ef_int_freq  # pi pulse
         self.fit_fn = fit_fn
 
         super().__init__(**other_params)  # Passes other parameters to parent
@@ -38,13 +36,13 @@ class T1EF(Experiment):
         """
         Defines pulse sequence to be played inside the experiment loop
         """
-        qubit, rr = self.modes  # get the modes
+        qubit, rr, qubit_ef = self.modes  # get the modes
 
         qubit.play(self.qubit_ge_pi)  # g-> e pi
-        qua.update_frequency(qubit.name, self.ef_int_freq)
-        qubit.play(self.qubit_ef_pi)  # e-> f pi
+        qua.align(qubit.name, qubit_ef.name)
+        qubit_ef.play(self.qubit_ef_pi)  # e-> f pi
         qua.wait(self.x, qubit.name)  # wait for partial ef decay
-        qua.update_frequency(qubit.name, qubit.int_freq)
+        qua.align(qubit.name, qubit_ef.name)
         qubit.play(self.qubit_ge_pi)  # e->g pi
         qua.align(qubit.name, rr.name)  # wait qubit pulse to end
         rr.measure((self.I, self.Q))  # measure qubit g population
@@ -58,17 +56,16 @@ class T1EF(Experiment):
 if __name__ == "__main__":
 
     x_start = 4
-    x_stop = 3000
-    x_step = 50
+    x_stop = 30000
+    x_step = 100
 
     parameters = {
-        "modes": ["QUBIT", "RR"],
-        "reps": 40000,
-        "wait_time": 100000,
-        "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
+        "modes": ["QUBIT", "RR", "QUBIT_EF"],
+        "reps": 5000,
+        "wait_time": 325000,
         "qubit_ge_pi": "pi",
-        "qubit_ef_pi": "pi_ef_selective1",
-        "ef_int_freq": int(-57e6),
+        "qubit_ef_pi": "pi",
+        "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
         "plot_quad": "I_AVG",
     }
 
@@ -80,3 +77,4 @@ if __name__ == "__main__":
     experiment.setup_plot(**plot_parameters)
 
     prof.run(experiment)
+

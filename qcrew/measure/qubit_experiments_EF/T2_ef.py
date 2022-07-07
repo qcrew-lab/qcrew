@@ -19,16 +19,14 @@ class T2EF(Experiment):
     _parameters: ClassVar[set[str]] = Experiment._parameters | {
         "qubit_ge_pi",  # operation used for exciting the qubit from g to e
         "qubit_ef_pi2",  # half-ppi operation between e and f
-        "ef_int_freq",  # intermediate frequency of the ef transition
-        "fit_fn",  # fit function
         "detuning",  # qubit pulse detuning
+        "fit_fn",  # fit function
     }
 
     def __init__(
         self,
         qubit_ge_pi,
         qubit_ef_pi2,
-        ef_int_freq,
         detuning=0,
         fit_fn="exp_decay_sine",
         **other_params
@@ -36,9 +34,8 @@ class T2EF(Experiment):
 
         self.qubit_ge_pi = qubit_ge_pi  # pi pulse g->e
         self.qubit_ef_pi2 = qubit_ef_pi2  # pi/2 pulse e->f
-        self.ef_int_freq = ef_int_freq
-        self.fit_fn = fit_fn
         self.detuning = detuning  # frequency detuning of qubit operation
+        self.fit_fn = fit_fn
 
         super().__init__(**other_params)  # Passes other parameters to parent
 
@@ -46,15 +43,16 @@ class T2EF(Experiment):
         """
         Defines pulse sequence to be played inside the experiment loop
         """
-        qubit, rr = self.modes  # get the modes
+        qubit, rr, qubit_ef = self.modes  # get the modes
         qubit.play(self.qubit_ge_pi)  # g-> e pi
-        qua.update_frequency(qubit.name, self.ef_int_freq + self.detuning)
 
-        qubit.play(self.qubit_ef_pi2)  # e-> f half pi
+        qua.align(qubit.name, qubit_ef.name)
+        qua.update_frequency(qubit_ef.name, qubit_ef.int_freq + self.detuning)
+        qubit_ef.play(self.qubit_ef_pi2)  # e-> f half pi
         qua.wait(self.x, qubit.name)  # wait for partial qubit decay
-        qubit.play(self.qubit_ef_pi2)  # e-> f half pi
+        qubit_ef.play(self.qubit_ef_pi2)  # e-> f half pi
+        qua.align(qubit.name, qubit_ef.name)
 
-        qua.update_frequency(qubit.name, qubit.int_freq)
         qubit.play(self.qubit_ge_pi)  # e->g pi
         qua.align(qubit.name, rr.name)  # wait last qubit pulse to end
         rr.measure((self.I, self.Q))  # measure qubit state
@@ -68,19 +66,19 @@ class T2EF(Experiment):
 if __name__ == "__main__":
 
     x_start = 4
-    x_stop = 800
-    x_step = 4
-    detuning = 00e3
+    x_stop = 30000
+    x_step = 100
+    detuning_ = 0.5e6
 
     parameters = {
-        "modes": ["QUBIT", "RR"],
-        "reps": 20000,
-        "wait_time": 50000,
-        "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
+        "modes": ["QUBIT", "RR", "QUBIT_EF"],
+        "reps": 5000,
+        "wait_time": 325000,
         "qubit_ge_pi": "pi",
-        "qubit_ef_pi2": "pi2_ef",
-        "ef_int_freq": int(95.9e6),
-        "detuning": int(detuning),
+        "qubit_ef_pi2": "pi2",
+        "detuning": int(detuning_),
+        "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
+        "plot_quad": "I_AVG",
     }
 
     plot_parameters = {

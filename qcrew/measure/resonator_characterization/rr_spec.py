@@ -44,16 +44,16 @@ class RRSpectroscopy(Experiment):
 
 if __name__ == "__main__":
 
-    x_start = -200e6#
-    x_stop = -10e6#
-    x_step = 1e6
+    x_start = -54e6#
+    x_stop = -46e6#
+    x_step = 0.05e6
 
     parameters = {
         "modes": ["RR"],
         "reps": 5000,
         "wait_time": 10000,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
-        "plot_quad": "Z_AVG"
+        #"plot_quad": "Z_AVG"
     }
 
     plot_parameters = {

@@ -69,9 +69,9 @@ if __name__ == "__main__":
         "reps": 10000,
         "wait_time":80000, # 2000, 
         "x_sweep": (amp_start, amp_stop + amp_step / 2, amp_step),
-        "qubit_op": "pi2",
+        "qubit_op": "pi",
         "single_shot": False,
-        "plot_quad": 'I_AVG',
+        #"plot_quad": 'I_AVG',
     }
 
     plot_parameters = {

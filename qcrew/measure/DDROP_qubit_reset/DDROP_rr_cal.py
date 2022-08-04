@@ -18,20 +18,14 @@ class DDROPRRCal(Experiment):
     name = "DDROP_rr_cal"
 
     _parameters: ClassVar[set[str]] = Experiment._parameters | {
-        "qubit_op",  # operation used for exciting the qubit
-        "resonator_op",  # operation used for exciting the RR
-        "steady_state_wait",  # Time for resonator to reach steady state
         "rr_ddrop_freq",
+        "rr_steady_wait",  # Time for resonator to reach steady state
+        "ddrop_pulse",  # qubit and rr pulse names used in ddrop algorithm
         "fit_fn",  # fit function
     }
 
     def __init__(
-        self,
-        rr_ddrop_freq,
-        rr_steady_wait,
-        ddrop_pulse,
-        fit_fn="sine",
-        **other_params
+        self, rr_ddrop_freq, rr_steady_wait, ddrop_pulse, fit_fn="sine", **other_params
     ):
         self.rr_ddrop_freq = rr_ddrop_freq
         self.rr_steady_wait = rr_steady_wait
@@ -48,14 +42,14 @@ class DDROPRRCal(Experiment):
 
         # Play RR ddrop pulse
         qua.update_frequency(rr.name, self.rr_ddrop_freq)
-        rr.play(self.ddrop_pulse, ampx = self.y)
+        rr.play(self.ddrop_pulse, ampx=self.y)
 
         # Play qubit ddrop pulse
         qua.wait(int(self.rr_steady_wait // 4), qubit.name)  # wait steady state of rr
         qubit.play(self.ddrop_pulse, self.x)
         qua.wait(int(self.rr_steady_wait // 4), qubit.name)  # wait steady state of rr
         qua.align(qubit.name, rr.name)  # wait pulses to end
-    
+
         qua.update_frequency(rr.name, rr.int_freq)
         rr.measure((self.I, self.Q))  # measure qubit state
         qua.wait(int(self.wait_time // 4), rr.name)  # wait system reset
@@ -74,18 +68,23 @@ if __name__ == "__main__":
 
     amp_start = -1
     amp_stop = 0
-    amp_step = 0.001
+    amp_step = 0.01
 
     parameters = {
         "modes": ["QUBIT", "RR"],
         "reps": 50000,
         "wait_time": 100000,
         "x_sweep": (amp_start, amp_stop + amp_step / 2, amp_step),
-        "y_sweep": (0.0, 0.5, 1),
+        "y_sweep": (
+            0.2,
+            0.3,
+            0.4,
+        ),
         "ddrop_pulse": "ddrop_pulse",
-        "rr_ddrop_freq": int(-50e6),
+        "rr_ddrop_freq": int(-50.13e6),
         "rr_steady_wait": 2000,
         "single_shot": False,
+        "plot_quad": "I_AVG",
     }
 
     plot_parameters = {

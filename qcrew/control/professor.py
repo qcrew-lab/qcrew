@@ -67,7 +67,12 @@ def run_with_stage(experiment, stage):
 
             #######            CALCULATE RUNNING MEAN STANDARD ERROR         #######
 
-            stderr = experiment.estimate_sd(stats, partial_results, num_results, stderr)
+            if experiment.plot_setup["plot_err"] == True:
+                stderr = experiment.estimate_sd(
+                    stats, partial_results, num_results, stderr
+                )
+            else:
+                stderr = ([],)
 
             #############            LIVE PLOT AVAILABLE RESULTS         ###########
 

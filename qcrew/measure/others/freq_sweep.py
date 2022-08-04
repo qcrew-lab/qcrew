@@ -15,7 +15,7 @@ def get_qua_program(mode):
 
 
 def get_sweep(mode, sa, qm, **sweep_params):
-    job = qm.execute(get_qua_program(mode))  # play IF to mode
+    job = qm.execute(get_qua_program(mode))  # play IFS to mode
     freqs, amps = sa.sweep(**sweep_params)  # get, plot, show sweep
     plt.plot(freqs, amps)
     plt.show()
@@ -37,7 +37,7 @@ if __name__ == "__main__":
         # rr.int_freq = -50e6
         # rr.lo_freq = 7.5e9
 
-        mode = qubit  # select the mode whose spectrum you want to sweep
+        mode = cav  # select the mode whose spectrum you want to sweep
 
         sweep_parameters = {  # set sweep parameters
             "center": mode.lo_freq,

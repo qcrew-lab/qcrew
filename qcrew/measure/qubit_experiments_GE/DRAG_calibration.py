@@ -89,6 +89,7 @@ if __name__ == "__main__":
         "qubit_pi2_op": "pi2",
         "single_shot": False,
         #"fetch_period": 3,
+        "plot_quad": "I_AVG"
     }
 
     plot_parameters = {

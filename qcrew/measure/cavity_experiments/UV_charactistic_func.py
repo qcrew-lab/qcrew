@@ -16,16 +16,15 @@ import numpy as np
 # ---------------------------------- Class -------------------------------------
 
 
-class ECDDebug(Experiment):
+class UVcharacteristicfunc(Experiment):
 
-    name = "ecd_debug"
+    name = "UV_characteristic_func"
 
     _parameters: ClassVar[set[str]] = Experiment._parameters | {
         "cav_op_ecd",  # fixed displacement.
-        "cav_op_qfunc",  # displacement with varying amp to sweep phase space
         "qubit_op1_ecd",  # pi2 pulse
         "qubit_op2_ecd",  # pi pulse
-        "qubit_op_qfunc",  # conditional pi pulse
+        "qubit_pi_selective",  # conditional pi pulse
         "ecd_amp_scale",  # amp scaling factor for cav_op_ecd pulse
         "fit_fn",  # fit function
         "delay",  # describe...
@@ -35,23 +34,23 @@ class ECDDebug(Experiment):
 
     def __init__(
         self,
-        cav_op_qfunc,
         cav_op_ecd,
         cav_op_d,
-        qubit_op_qfunc,
+        qubit_pi_selective,
         qubit_op1_ecd,
         qubit_op2_ecd,
         ecd_amp_scale,
+        cav_op_ecd_test,
         d_amp_scale,
         fit_fn=None,
         delay=4,
         measure_real=True,
         **other_params
     ):
-        self.cav_op_qfunc = cav_op_qfunc
         self.cav_op_ecd = cav_op_ecd
+        self.cav_op_ecd_test = cav_op_ecd_test
         self.cav_op_d = cav_op_d
-        self.qubit_op_qfunc = qubit_op_qfunc
+        self.qubit_pi_selective = qubit_pi_selective
         self.qubit_op1_ecd = qubit_op1_ecd
         self.qubit_op2_ecd = qubit_op2_ecd
         self.fit_fn = fit_fn
@@ -68,69 +67,69 @@ class ECDDebug(Experiment):
         """
         qubit, cav, rr, cav_drive, rr_drive = self.modes  # get the modes
 
-        # one iteration of the squeezing protcol
-        qua.reset_frame(cav.name)
+        qua.reset_frame(cav.name, qubit.name)
+        ## first UV
+        qua.align()
 
         if 1:
             # first U
             ## U = R_pi/2 - ECD - R_-pi/2
             # Initialize the qubit in a supersposition state
-
+            qua.align()
             # R_pi/2
-            qubit.play(self.qubit_op1_ecd, phase=0)
+            qubit.play(self.qubit_op1_ecd, phase=0.0)
 
             # ECD Gate
             qua.align(cav.name, qubit.name)  # wait for qubit pulse to end
             cav.play(
-                self.cav_op_ecd, ampx=self.ecd_amp_scale, phase=0
+                self.cav_op_ecd_test, ampx=self.ecd_amp_scale, phase=0
             )  # First positive displacement
             qua.wait(
                 int(self.delay // 4), cav.name, qubit.name
             )  # wait time between opposite sign displacements
             cav.play(
-                self.cav_op_ecd, ampx=-self.ecd_amp_scale, phase=0
+                self.cav_op_ecd_test, ampx=-self.ecd_amp_scale, phase=0
             )  # First negative displacement
             qua.align(qubit.name, cav.name)
             qubit.play(
-                self.qubit_op2_ecd, phase=0
+                self.qubit_op2_ecd, phase=1
             )  # pi pulse to flip the qubit state (echo)
             qua.align(cav.name, qubit.name)  # wait for qubit pulse to end
             cav.play(
-                self.cav_op_ecd, ampx=-self.ecd_amp_scale, phase=0
+                self.cav_op_ecd_test, ampx=-self.ecd_amp_scale, phase=0
             )  # Second negative displacement
             qua.wait(
                 int(self.delay // 4), cav.name, qubit.name
             )  # wait time between opposite sign displacements
             cav.play(
-                self.cav_op_ecd, ampx=self.ecd_amp_scale, phase=0
+                self.cav_op_ecd_test, ampx=self.ecd_amp_scale, phase=0
             )  # Second positive displacement
 
             qua.align(qubit.name, cav.name)
 
             # R_-pi/2
-            # qubit.play(self.qubit_op1_ecd, phase = 0.5)
-            # qua.align(qubit.name, cav.name)
+            qubit.play(self.qubit_op1_ecd, phase=0.5)
 
-            # recentering displacement
-            # cav.play(self.cav_op_ecd, ampx=-0.05, phase=0)
-            # cav.play(self.cav_op_ecd, ampx=-0.3, phase=0.25)
+            # qua.align()
+            # # recentering displacement
+            # cav.play(self.cav_op_ecd, ampx=-0.1451, phase=0)
 
-        if 0:
+        if 1:
             ## V = R_pi/2 - ECD - R_-pi/2 Second V
-
+            qua.align()
             # R_pi/2
             qubit.play(self.qubit_op1_ecd, phase=0.25)
 
             # ECD Gate
             qua.align(cav.name, qubit.name)  # wait for qubit pulse to end
             cav.play(
-                self.cav_op_ecd, ampx=self.ecd_amp_scale, phase=0.25
+                self.cav_op_ecd_test, ampx=self.ecd_amp_scale, phase=0.25
             )  # First positive displacement
             qua.wait(
                 int(self.delay // 4), cav.name, qubit.name
             )  # wait time between opposite sign displacements
             cav.play(
-                self.cav_op_ecd, ampx=-self.ecd_amp_scale, phase=0.25
+                self.cav_op_ecd_test, ampx=-self.ecd_amp_scale, phase=0.25
             )  # First negative displacement
             qua.align(qubit.name, cav.name)
             qubit.play(
@@ -138,76 +137,103 @@ class ECDDebug(Experiment):
             )  # pi pulse to flip the qubit state (echo)
             qua.align(cav.name, qubit.name)  # wait for qubit pulse to end
             cav.play(
-                self.cav_op_ecd, ampx=-self.ecd_amp_scale, phase=0.25
+                self.cav_op_ecd_test, ampx=-self.ecd_amp_scale, phase=0.25
             )  # Second negative displacement
             qua.wait(
                 int(self.delay // 4), cav.name, qubit.name
             )  # wait time between opposite sign displacements
             cav.play(
-                self.cav_op_ecd, ampx=self.ecd_amp_scale, phase=0.25
+                self.cav_op_ecd_test, ampx=self.ecd_amp_scale, phase=0.25
             )  # Second positive displacement
-
+            qua.align()
             # R_-pi/2
             qubit.play(self.qubit_op1_ecd, phase=0.75)
             qua.align(qubit.name, cav.name)
 
             # recentering negative displacement
-            cav.play(self.cav_op_ecd, ampx=-0.182, phase=0)
-            cav.play(self.cav_op_ecd, ampx=0.1873, phase=0.25)
+            #cav.play(self.cav_op_ecd, ampx=0.14, phase=0.0)
+        
 
-            qua.align(qubit.name, cav.name)
+    
 
-        # qua.wait(int(2000// 4), cav.name)
+        ######################  Measure the created state with charactristic function  #####################
 
-        # Measure the created state with the qfunc
-        cav.play(self.cav_op_qfunc, ampx=self.x, phase=0)  # displacement in I direction
-        cav.play(
-            self.cav_op_qfunc, ampx=self.y, phase=0.25
-        )  # displacement in Q direction
+        # bring qubit into superposition
         qua.align(cav.name, qubit.name)
-        qubit.play(self.qubit_op_qfunc)  # play qubit selective pi-pulse
+        qubit.play(self.qubit_op1_ecd)
+        # start ECD gate
+        qua.align(cav.name, qubit.name)  # wait for qubit pulse to end
+        cav.play(self.cav_op_ecd, ampx=self.x, phase=0.0)  # First positive displacement
+        cav.play(self.cav_op_ecd, ampx=self.y, phase=0.25)
+
+        qua.wait(int(self.delay // 4), cav.name)
+        cav.play(
+            self.cav_op_ecd, ampx=-self.x, phase=0.0
+        )  # First negative displacement
+        cav.play(self.cav_op_ecd, ampx=-self.y, phase=0.25)
+
+        qua.align(qubit.name, cav.name)
+        qubit.play(self.qubit_op2_ecd)  # play pi to flip qubit around X
+
+        qua.align(cav.name, qubit.name)  # wait for qubit pulse to end
+        cav.play(
+            self.cav_op_ecd, ampx=-self.x, phase=0.0
+        )  # Second negative displacement
+        cav.play(self.cav_op_ecd, ampx=-self.y, phase=0.25)
+
+        qua.wait(int(self.delay // 4), cav.name)
+        cav.play(
+            self.cav_op_ecd, ampx=self.x, phase=0.0
+        )  # Second positive displacement
+        cav.play(self.cav_op_ecd, ampx=self.y, phase=0.25)
+
+        qua.align(qubit.name, cav.name)
+
+        qubit.play(
+            self.qubit_op1_ecd, phase=0.0 if self.measure_real else 0.25
+        )  # play pi/2 pulse around X or SY, to measure either the real or imaginary part of the characteristic function
+
         # Measure cavity state
         qua.align(qubit.name, rr.name)  # align measurement
         rr.measure((self.I, self.Q))  # measure transmitted signal
-
-        # wait system reset
-        qua.align(cav.name, qubit.name, rr.name, cav_drive.name, rr_drive.name)
-        # cav_drive.play("constant_cos", duration=200e3, ampx=1.6)
-        # rr_drive.play("constant_cos", duration=200e3, ampx=1.4)
         qua.wait(int(self.wait_time // 4), cav.name)
-
         self.QUA_stream_results()  # stream variables (I, Q, x, etc)
 
 
 # -------------------------------- Execution -----------------------------------
 if __name__ == "__main__":
-    x_start = -1.6
-    x_stop = 1.6
-    x_step = 0.1
+    x_start = -1.0
+    x_stop = 1.0
+    x_step = 0.05
 
-    y_start = -1.6
-    y_stop = 1.6
-    y_step = 0.1
+    y_start = -1.0
+    y_stop = 1.0
+    y_step = 0.05
 
-    ecd_amp_scale = 1
-    d_amp_scale = 0.5
+    ecd_amp_scale = 1  #  the scale of constant_cos_ECD in ECD gate
+    d_amp_scale = 1
 
     parameters = {
         "modes": ["QUBIT", "CAV", "RR", "CAV_DRIVE", "RR_DRIVE"],
         "reps": 500,
-        "wait_time": 3e6,  # 50e3,
-        "fetch_period": 8,  # time between data fetching rounds in sec
-        "delay": 100,  # 100# wait time between opposite sign displacements
+        "wait_time": 2.5e6,  # 50e3,
+        "fetch_period": 6,  # time between data fetching rounds in sec
+        "delay": 100,  # 160,  # 100# wait time between opposite sign displacements
         "ecd_amp_scale": ecd_amp_scale,
         "d_amp_scale": d_amp_scale,
-        "x_sweep": (x_start, x_stop + x_step / 2, x_step),
+        "x_sweep": (
+            x_start,
+            x_stop + x_step / 2,
+            x_step,
+        ),  # ampitude sweep of the displacement pulses in the ECD
         "y_sweep": (y_start, y_stop + y_step / 2, y_step),
         "qubit_op1_ecd": "constant_cos_pi2",
         "qubit_op2_ecd": "constant_cos_pi",
-        "qubit_op_qfunc": "pi_selective_1",
+        "qubit_pi_selective": "pi_selective_1",
         "cav_op_ecd": "constant_cos_ECD",
-        "cav_op_qfunc": "constant_cos_cohstate_1",
+        "cav_op_ecd_test": "constant_cos_ECD_test",
         "cav_op_d": "constant_cos_cohstate_1",
+        "measure_real": True,
         "plot_quad": "I_AVG",
     }
 
@@ -216,9 +242,10 @@ if __name__ == "__main__":
         "ylabel": "Y",
         "plot_type": "2D",
         "cmap": "bwr",
+        "plot_err": False,
     }
 
-    experiment = ECDDebug(**parameters)
+    experiment = UVcharacteristicfunc(**parameters)
     experiment.setup_plot(**plot_parameters)
 
     prof.run(experiment)

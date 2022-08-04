@@ -3,6 +3,7 @@ A python class describing a qubit spectroscopy using QM.
 This class serves as a QUA script generator with user-defined parameters.
 """
 
+from pyexpat.model import XML_CTYPE_SEQ
 from typing import ClassVar
 
 from qcrew.control import professor as prof
@@ -32,10 +33,12 @@ class StarkShift(Experiment):
         """
         Defines pulse sequence to be played inside the experiment loop
         """
-        qubit, cav, rr, cav_drive, rr_drive = self.modes  # get the modes
+        qubit, cav, rr, cav_drive, rr_drive, cav_drive2 = self.modes  # get the modes
 
         qua.update_frequency(qubit.name, self.x)  # update qubit pulse frequency
-        cav_drive.play("constant_cos", ampx=self.y)  # Play continuous pump
+        # cav_drive.play("constant_pulse", ampx=self.y)  # Play continuous pump
+        rr_drive.play("gaussian_pulse", ampx=self.y)
+        #cav_drive2.play("gaussian_pulse", duration = 750, ampx=self.y) # the duration is same as pi_selective pulse
         qubit.play(self.qubit_op)  # play qubit pi pulse
         qua.align(
             qubit.name, cav_drive.name, rr.name, rr_drive.name
@@ -49,18 +52,25 @@ class StarkShift(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
+
+    x_start = 48e6
+    x_stop = 51e6
+    x_step = 0.02e6
+    
+
     amp_start = 0
     amp_stop = 1.4
     amp_step = 0.02
 
     parameters = {
-        "modes": ["QUBIT", "CAV", "RR", "CAV_DRIVE", "RR_DRIVE"],
+        "modes": ["QUBIT", "CAV", "RR", "CAV_DRIVE", "RR_DRIVE", "CAV_DRIVE2"],
         "reps": 10000,
-        "wait_time": 400000,
-        "x_sweep": (int(117e6), int(121e6 + 0.1e6 / 2), int(0.1e6)),
+        "wait_time": 80e3,  # 4000000,
+        "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
         "qubit_op": "pi_selective_1",
-        "fetch_period": 4,
+        "fetch_period": 5,
         "y_sweep": (amp_start, amp_stop + amp_step / 2, amp_step),
+        # "plot_quad": "I_AVG"
     }
 
     plot_parameters = {

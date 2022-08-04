@@ -17,19 +17,19 @@ if __name__ == "__main__":
         file_path = Path("C:/Users/qcrew/Desktop/qcrew/qcrew/config/weights") / date_str
 
         params = {
-            "reps": 100000,
-            "wait_time": 100000,  # ns
-            "qubit_pi_pulse": "pi",#"constant_cos_pi",  # pulse to excite qubit
+            "reps": 20000,
+            "wait_time": 80000,  # ns
+            "qubit_pi_pulse": "constant_cos_pi",  # "constant_cos_pi",  # pulse to excite qubit
             "weights_file_path": file_path,
         }
 
-        ddrop_params = {
-            "rr_ddrop_freq": int(-50e6),
-            "rr_steady_wait": 2000,
-            "ddrop_pulse": "ddrop_pulse",
-            "qubit_ef_mode": stage.QUBIT_EF,
-        }
-        #ro_trainer = ReadoutTrainer(rr, qubit, qm, ddrop_params=ddrop_params, **params)
+        # ddrop_params = {
+        #     "rr_ddrop_freq": int(-49.8e6),
+        #     "rr_steady_wait": 2000,
+        #     "ddrop_pulse": "ddrop_pulse",
+        #    # "qubit_ef_mode": stage.QUBIT_EF,
+        # }
+        # ro_trainer = ReadoutTrainer(rr, qubit, qm, ddrop_params=ddrop_params, **params)
         ro_trainer = ReadoutTrainer(rr, qubit, qm, **params)
         ro_trainer.train_weights()
 

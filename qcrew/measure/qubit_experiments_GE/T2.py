@@ -54,7 +54,7 @@ class T2(Experiment):
 
 if __name__ == "__main__":
     x_start = 4
-    x_stop = 5000
+    x_stop = 8000
     x_step = 40
     detuning = 0 # 400e3
 
@@ -65,7 +65,8 @@ if __name__ == "__main__":
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
         "qubit_op": "constant_cos_pi2",
         "detuning": int(detuning),
-        "single_shot": True,
+        "plot_quad": "I_AVG"
+        #"single_shot": True,
     }
 
     plot_parameters = {

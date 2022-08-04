@@ -56,7 +56,7 @@ class QFunction(Experiment):
 
         qua.reset_frame(cav.name)
         qua.align()
-        # cav.play(self.cav_op, phase=0)  # initial state creation
+        cav.play(self.cav_op, phase=0)  # initial state creation
         qua.align(qubit.name, cav.name)  # align measurement
         cav.play(self.cav_op, ampx=self.x, phase=0)  # displacement in I direction
         cav.play(self.cav_op, ampx=self.y, phase=0.25)  # displacement in Q direction
@@ -102,7 +102,7 @@ if __name__ == "__main__":
             "RR_DRIVE",
         ],
         "reps": 500,
-        "wait_time": 3e6,
+        "wait_time": 3.5e6,
         "fetch_period": 10,  # time between data fetching rounds in sec
         "x_sweep": (
             x_start,
@@ -111,7 +111,7 @@ if __name__ == "__main__":
         ),  # ampitude sweep of the displacement pulses in the ECD
         "y_sweep": (y_start, y_stop + y_step / 2, y_step),
         "qubit_op": "pi_selective_1",
-        "cav_op": "constant_cos_ECD_test",
+        "cav_op": "constant_cos_ECD",
         "single_shot": False,
     }
 

@@ -38,9 +38,9 @@ class RRSpecDDROP(Experiment):
 
         #if self.ddrop_params:
         with qua.if_(self.y):
-            # macros.DDROP_reset(qubit, rr, **self.ddrop_params)
+            macros.DDROP_reset(qubit, rr, **self.ddrop_params)
             # Use qubit_ef if also resetting F state
-            macros.DDROP_reset(qubit, rr, **self.ddrop_params, qubit_ef=qubit_ef)
+            # macros.DDROP_reset(qubit, rr, **self.ddrop_params, qubit_ef=qubit_ef)
 
         qua.update_frequency(rr.name, self.x)  # update resonator pulse frequency
         rr.measure((self.I, self.Q))  # measure transmitted signal

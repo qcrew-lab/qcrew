@@ -50,12 +50,12 @@ class AmpFluxSweep:
         saver.save_data({"frequency": self.vna.frequencies})  # arg must be a dict
         self.yoko.source = "current"
         self.yoko.level = 0  # set output to nominal value
-        self.yoko.state = "on"
+        self.yoko.state = True
 
         self._run(saver)  # runs fsweep or fpsweep based on sweep initialization
     
         self.yoko.level = 0
-        self.yoko.state = "off"
+        self.yoko.state = False
 
     def _run_fsweep(self, saver) -> None:
         self.yoko.level = self.currents
@@ -102,21 +102,22 @@ if __name__ == "__main__":
         # these parameters are set on VNA and do not change during the measurement run
         vna_parameters = {
             # frequency sweep center (Hz)
+            
             #"fcenter": 6.12725e9,
             # frequency sweep span (Hz)
             #"fspan": 20e6,
             # frequency sweep start value (Hz)
-            "fstart": 4e9,
+            "fstart": 5e9,
             # frequency sweep stop value (Hz)
             "fstop": 9e9,
             # IF bandwidth (Hz), [1, 500000]
             "bandwidth": 1e3,
             # number of frequency sweep points, [2, 200001]
-            "sweep_points": 501,
+            "sweep_points": 1001,
             # delay (s) between successive sweep points, [0.0, 100.0]
             "sweep_delay": 1e-3,
             # input powers (port1, port2)
-            "powers": (-30, -30),
+            "powers": (-20, -20),
             # trace data to be displayed and acquired, max traces = 16
             # each tuple in the list is (<S parameter>, <trace format>)
             # valid S parameter keys = ("s11", "s12", "s21", "s22")
@@ -136,7 +137,7 @@ if __name__ == "__main__":
         # these parameters are looped over during the measurement
         measurement_parameters = {
             # Number of sweep averages, must be an integer > 0
-            "repetitions": 10,
+            "repetitions": 2,
             # Input currents from yoko
             # "currents" can be a set {a, b,...}, tuple (st, stop, step), or constant x
             # use set for discrete sweep points a, b, ...
@@ -145,7 +146,7 @@ if __name__ == "__main__":
             # eg 1: currents = (-10e-6, 0e-6, 1e-6) will sweep current from -10uA to 0uA inclusive in steps of 1uA
             # eg 2: currents = {-15e-6, 0e-6, 15e-6} will sweep curent at -15uA, 0uA, and 15uA
             # eg 3: currents = 0 will do a frequency sweep at constant current of 0uA i.e. no current sweep
-            "currents": (-4e-3, 4e-3, 0.1e-3),
+            "currents": (-5e-3, 5e-3, 0.05e-3),
         }
 
         # create measurement instance with instruments and measurement_parameters
@@ -154,7 +155,7 @@ if __name__ == "__main__":
         # hdf5 file saved at:
         # {datapath} / {YYYYMMDD} / {HHMMSS}_{measurementname}_{usersuffix}.hdf5
         save_parameters = {
-            "datapath": pathlib.Path(stage.datapath) / "djext",
+            "datapath": pathlib.Path(stage.datapath) / "Aquarius",
             "usersuffix": "",
             "measurementname": measurement.__class__.__name__.lower(),
             **measurement.dataspec,

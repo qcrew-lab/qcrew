@@ -55,7 +55,7 @@ class PowerRabiEF(Experiment):
 if __name__ == "__main__":
     amp_start = -1.5
     amp_stop = 1.5
-    amp_step = 0.01
+    amp_step = 0.05
 
     parameters = {
         "modes": ["QUBIT", "QUBIT_EF", "RR"],
@@ -64,7 +64,7 @@ if __name__ == "__main__":
         "qubit_ge_pi": "pi",
         "qubit_ef_op": "pi",
         "x_sweep": (amp_start, amp_stop + amp_step / 2, amp_step),
-        "plot_quad": "I_AVG"
+        #"plot_quad": "I_AVG"
     }
 
     plot_parameters = {

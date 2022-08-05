@@ -101,13 +101,10 @@ if __name__ == "__main__":
         vna.connect()
 
         # the routine below can handle multiple measurement runs at once
-        fcenterlist = [6.496196e9] #[6.2035056e9, 4.67654e9, 6.644832e9]
-        fspanlist = [2e6] #[10e6, 5e6, 5e6]
-        powerspeclist = [
-            ({-30.0, -10.0}, -30),
-            #({-20.0, -10.0}, 0),
-            #({0.0, 10.0, -10.0}, 0),
-        ]
+        fcenterlist = [3.49036e9, 3.49036e9, 3.49036e9]
+        fspanlist = [25e6, 25e6, 25e6]
+        powerspeclist = [(-10, 0), (-20, 0), (-30, 0)]
+        repetitionlist = [30, 50, 100]
 
         num_runs = len(fcenterlist)
         for idx in range(num_runs):
@@ -122,9 +119,9 @@ if __name__ == "__main__":
                 # frequency sweep stop value (Hz)
                 # "fstop": 8e9,
                 # IF bandwidth (Hz), [1, 500000]
-                "bandwidth": 1e3,
+                "bandwidth": 1e2,
                 # number of frequency sweep points, [2, 200001]
-                "sweep_points": 1001,
+                "sweep_points": 2501,
                 # delay (s) between successive sweep points, [0.0, 100.0]
                 "sweep_delay": 1e-3,
                 # trace data to be displayed and acquired, max traces = 16
@@ -141,7 +138,7 @@ if __name__ == "__main__":
             # these parameters are looped over during the measurement
             measurement_parameters = {
                 # Number of sweep averages, must be an integer > 0
-                "repetitions": 50,
+                "repetitions": repetitionlist[idx],
                 # Input powers at (<port1>, <port2>) (dBm), range [-30.0, 15.0]
                 # <portX> (X=1,2) can be a set {a, b,...}, tuple (st, stop, step), or constant x
                 # use set for discrete sweep points a, b, ...
@@ -154,7 +151,7 @@ if __name__ == "__main__":
                 "powers": powerspeclist[idx],
                 # total physical attenuation added to VNA ports, if any
                 # (port_1_attenuation, port_2_attenuation) in dB
-                "attenuation": (0.0, 0),
+                "attenuation": (20, 0),
             }
 
             # create measurement instance with instruments and measurement_parameters
@@ -164,8 +161,8 @@ if __name__ == "__main__":
             # hdf5 file saved at:
             # {datapath} / {YYYYMMDD} / {HHMMSS}_{measurementname}_{usersuffix}.hdf5
             save_parameters = {
-                "datapath": pathlib.Path(stage.datapath) / "jonny",
-                "usersuffix": f"{fcenterlist[idx]:.3}"[:4] + "GHz",
+                "datapath": pathlib.Path(stage.datapath) / "coaxline_ta-a1-13",
+                "usersuffix": f"_{idx}",
                 "measurementname": measurement.__class__.__name__.lower(),
                 **measurement.dataspec,
             }

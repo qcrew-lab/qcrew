@@ -65,13 +65,13 @@ class RepPowerRabiEf(Experiment):
 if __name__ == "__main__":
 
     parameters = {
-        "modes": ["QUBIT", "RR"],
+        "modes": ["QUBIT_ALPHA", "RR"],
         "reps": 20000,
         "wait_time": 100000,
         "x_sweep": (-1.9, 1.9 + 0.05 / 2, 0.05),
-        "ef_int_freq": int(-157.1e6),
+        "ef_int_freq": int(-186.5e6),
         "qubit_ge_pi": "pi",
-        "qubit_ef_op": "pi2_ef",
+        "qubit_ef_op": "gaussian_pulse",
         "pulse_number": 2,
     }
 

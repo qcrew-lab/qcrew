@@ -14,7 +14,7 @@ from qcrew.analyze.plotter import Plotter
 from qcrew.analyze import stats
 from qcrew.analyze import fit
 
-from qcrew.measure.qubit_experiments_GE.T2 import T2
+from qcrew.measure.qubit_experiments_GE.T2_dont_use import T2
 
 import numpy as np
 import time

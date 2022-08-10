@@ -54,8 +54,8 @@ if __name__ == "__main__":
     #betas = np.load(path)["betas"]
     #phis = np.load(path)["phis"]
     #thetas = np.load(path)["thetas"]
-
-    # load directly from optimizer
+    
+    # load directly from optimizer 
     betas = best_circuit['betas']
     phis = best_circuit['phis']
     thetas = best_circuit['thetas']

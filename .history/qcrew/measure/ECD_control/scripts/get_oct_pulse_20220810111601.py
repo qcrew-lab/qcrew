@@ -5,76 +5,42 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
-import qutip as qt
 
 from qcrew.measure.ECD_control.ECD_control.ECD_pulse_construction.ECD_pulse_construction import (
     FakeQubit,
     FakeStorage,
     conditional_displacement_circuit,
 )
-from qcrew.measure.ECD_control.ECD_control.ECD_optimization.batch_optimizer import (
-    BatchOptimizer
-)
 
-#OCT_ROTATIONS_PATH = Path(__file__).resolve().parents[4] / "config/oct_rotations"
+OCT_ROTATIONS_PATH = Path(__file__).resolve().parents[4] / "config/oct_rotations"
 OCT_PULSES_PATH = Path(__file__).resolve().parents[4] / "config/oct_pulses"
 
 if __name__ == "__main__":
 
-    # input target state and size of hilbert space to optimise
-    Nc = 80
-    Nq = 2
-    alpha = 1.5
-    psi_t = qt.tensor(qt.fock(Nq, 0), (qt.coherent(
-        Nc, alpha)+qt.coherent(Nc, -alpha)).unit())
-
-    opt_params = {
-        'N_blocks': 4,
-        'N_multistart': 200,
-        'epochs': 100,
-        'epoch_size': 10,
-        'learning_rate': 0.02,
-        'term_fid': 0.999,
-        'dfid_stop': 1e-2,
-        'beta_scale': 3.0,
-        'initial_states': [qt.tensor(qt.fock(Nq, 0), qt.fock(Nc, 0))],
-        'target_states': [psi_t],
-        'name': 'identity',
-        'filename': None,
-    }
-    opt = BatchOptimizer(**opt_params)
-    opt.optimize()
-    best_circuit = opt.best_circuit()
-
     # user defined suffix to append to file saving the oct pulse
     suffix = ""
 
-    # path to the .npz file containing rotation params or directly from simulator
-    #path = OCT_ROTATIONS_PATH / "fock_states/fock3.npz"
-    #betas = np.load(path)["betas"]
-    #phis = np.load(path)["phis"]
-    #thetas = np.load(path)["thetas"]
-
-    # load directly from optimizer
-    betas = best_circuit['betas']
-    phis = best_circuit['phis']
-    thetas = best_circuit['thetas']
+    # path to the .npz file containing rotation params
+    path = OCT_ROTATIONS_PATH / "fock_states/fock3.npz"
+    betas = np.load(path)["betas"]
+    phis = np.load(path)["phis"]
+    thetas = np.load(path)["thetas"]
 
     # enter your circuit Hamiltonian parameters for each mode
     # here, we have a storage cavity and a qubit
-    pulse_shape = "Cosine"
     storage_params = {
-        "chi_kHz": 250,
-        "unit_amp":  0.1349*0.2,
-        "sigma": 16,
-        "chop": 6,
-        "pulse_shape": pulse_shape,
+        "chi_kHz": 250,  # dispersive shift in kHz
+        "chi_prime_Hz": 0,  # second order dispersive shift in Hz
+        "Ks_Hz": 0,  # Kerr correction not yet implemented.
+        "epsilon_m_MHz": 400,  # largest oscillator drive amplitude in MHz (max|epsilon|)
+        "unit_amp":  0.1349*0.2,  # DAC unit amp of gaussian displacement to alpha=1.
+        "sigma": 16,  # oscillator displacement sigma
+        "chop": 6,  # oscillator displacement chop (number of stds. to include in gaussian pulse)
     }
     qubit_params = {
         "unit_amp": 1.5846*0.2,
         "sigma": 40,
         "chop": 6,
-        "pulse_shape": pulse_shape,
     }
 
     # set the maximum displacement used during the ECD gates
@@ -99,7 +65,6 @@ if __name__ == "__main__":
         qubit,
         alpha_CD,
         buffer_time=buffer_time,
-        pulse_shape=pulse_shape,
         kerr_correction=False,
         chi_prime_correction=True,
         final_disp=True,

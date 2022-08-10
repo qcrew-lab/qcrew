@@ -15,9 +15,12 @@ from qcrew.measure.ECD_control.ECD_control.ECD_pulse_construction.ECD_pulse_cons
 from qcrew.measure.ECD_control.ECD_control.ECD_optimization.batch_optimizer import (
     BatchOptimizer
 )
+from qcrew.measure.ECD_control.ECD_control.ECD_optimization.optimization_analysis import (
+    OptimizationAnalysis, OptimizationSweepsAnalysis
+)
 
 #OCT_ROTATIONS_PATH = Path(__file__).resolve().parents[4] / "config/oct_rotations"
-OCT_PULSES_PATH = Path(__file__).resolve().parents[4] / "config/oct_pulses"
+#OCT_PULSES_PATH = Path(__file__).resolve().parents[4] / "config/oct_pulses"
 
 if __name__ == "__main__":
 
@@ -29,17 +32,20 @@ if __name__ == "__main__":
         Nc, alpha)+qt.coherent(Nc, -alpha)).unit())
 
     opt_params = {
-        'N_blocks': 4,
+        'N_blocks': 4,  # circuit depth
+        # Batch size (number of circuit optimizations to run in parallel)
         'N_multistart': 200,
-        'epochs': 100,
-        'epoch_size': 10,
-        'learning_rate': 0.02,
-        'term_fid': 0.999,
-        'dfid_stop': 1e-2,
-        'beta_scale': 3.0,
+        'epochs': 100,  # number of epochs before termination
+        'epoch_size': 10,  # number of adam steps per epoch
+        'learning_rate': 0.02,  # adam learning rate
+        'term_fid': 0.999,  # terminal fidelitiy
+        'dfid_stop': 1e-2,  # stop if dfid between two epochs is smaller than this number
+        'beta_scale': 3.0,  # maximum |beta| for random initialization
+        # qubit tensor oscillator, start in |g> |0>
         'initial_states': [qt.tensor(qt.fock(Nq, 0), qt.fock(Nc, 0))],
-        'target_states': [psi_t],
-        'name': 'identity',
+        'target_states': [psi_t],  # end in |g> or |e> |target>.
+        'name': 'identity',  # name for printing and saving
+        # if no filename specified, results will be saved in this folder under 'name.h5'
         'filename': None,
     }
     opt = BatchOptimizer(**opt_params)
@@ -51,30 +57,28 @@ if __name__ == "__main__":
 
     # path to the .npz file containing rotation params or directly from simulator
     #path = OCT_ROTATIONS_PATH / "fock_states/fock3.npz"
-    #betas = np.load(path)["betas"]
-    #phis = np.load(path)["phis"]
-    #thetas = np.load(path)["thetas"]
-
-    # load directly from optimizer
     betas = best_circuit['betas']
     phis = best_circuit['phis']
     thetas = best_circuit['thetas']
 
     # enter your circuit Hamiltonian parameters for each mode
     # here, we have a storage cavity and a qubit
-    pulse_shape = "Cosine"
     storage_params = {
-        "chi_kHz": 250,
+        "chi_kHz": 250,  # dispersive shift in kHz
+        "chi_prime_Hz": 0,  # second order dispersive shift in Hz
+        "Ks_Hz": 0,  # Kerr correction not yet implemented.
+        # largest oscillator drive amplitude in MHz (max|epsilon|)
+        "epsilon_m_MHz": 400,
+        # DAC unit amp of gaussian displacement to alpha=1.
         "unit_amp":  0.1349*0.2,
-        "sigma": 16,
+        "sigma": 16,  # oscillator displacement sigma
+        # oscillator displacement chop (number of stds. to include in gaussian pulse)
         "chop": 6,
-        "pulse_shape": pulse_shape,
     }
     qubit_params = {
         "unit_amp": 1.5846*0.2,
         "sigma": 40,
         "chop": 6,
-        "pulse_shape": pulse_shape,
     }
 
     # set the maximum displacement used during the ECD gates
@@ -99,7 +103,6 @@ if __name__ == "__main__":
         qubit,
         alpha_CD,
         buffer_time=buffer_time,
-        pulse_shape=pulse_shape,
         kerr_correction=False,
         chi_prime_correction=True,
         final_disp=True,

@@ -62,19 +62,16 @@ if __name__ == "__main__":
 
     # enter your circuit Hamiltonian parameters for each mode
     # here, we have a storage cavity and a qubit
-    pulse_shape = "Cosine"
     storage_params = {
         "chi_kHz": 250,
         "unit_amp":  0.1349*0.2,
         "sigma": 16,
         "chop": 6,
-        "pulse_shape": pulse_shape,
     }
     qubit_params = {
         "unit_amp": 1.5846*0.2,
         "sigma": 40,
         "chop": 6,
-        "pulse_shape": pulse_shape,
     }
 
     # set the maximum displacement used during the ECD gates
@@ -99,7 +96,6 @@ if __name__ == "__main__":
         qubit,
         alpha_CD,
         buffer_time=buffer_time,
-        pulse_shape=pulse_shape,
         kerr_correction=False,
         chi_prime_correction=True,
         final_disp=True,

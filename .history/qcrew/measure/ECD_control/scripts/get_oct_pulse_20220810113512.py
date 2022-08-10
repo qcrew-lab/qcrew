@@ -99,7 +99,6 @@ if __name__ == "__main__":
         qubit,
         alpha_CD,
         buffer_time=buffer_time,
-        pulse_shape=pulse_shape,
         kerr_correction=False,
         chi_prime_correction=True,
         final_disp=True,

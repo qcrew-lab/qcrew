@@ -76,8 +76,8 @@ class DRAGCalibration(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-    x_start = -1
-    x_stop = 1
+    x_start = -0.25
+    x_stop = 0.25
     x_step = 0.02
 
     parameters = {
@@ -89,6 +89,7 @@ if __name__ == "__main__":
         "qubit_pi2_op": "pi2",
         "single_shot": False,
         "fetch_period": 3,
+        "plot_quad": "I_AVG"
     }
 
     plot_parameters = {

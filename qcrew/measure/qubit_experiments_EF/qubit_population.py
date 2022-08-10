@@ -39,11 +39,12 @@ class QubitPopulation(Experiment):
         """
         qubit, qubit_ef, rr = self.modes  # get the modes
 
-        qubit.play(self.qubit_ge_pi, ampx=self.y)
+        qubit.play(self.qubit_ge_pi, ampx=self.y) # g->e
         qua.align(qubit.name, qubit_ef.name)
         qubit_ef.play(self.qubit_ef_pi, ampx=self.x)  # e-> f
         qua.align(qubit.name, qubit_ef.name)
-        qubit.play(self.qubit_ge_pi)  # e-> f
+        qubit.play(self.qubit_ge_pi)  # e->g
+
         qua.align(qubit.name, rr.name)  # wait qubit pulse to end
         rr.measure((self.I, self.Q))  # measure qubit state
         if self.single_shot:
@@ -58,18 +59,28 @@ class QubitPopulation(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
+    # _ef_int_freq = -70.6e6
+    
+    
+
+    amp_start = -1.9
+    amp_stop = 1.9
+    amp_step = 0.05
 
     parameters = {
         "modes": ["QUBIT", "QUBIT_EF", "RR"],
-        "reps": 10000,
+        "reps": 5000,
         "wait_time": 300000,
-        "qubit_ge_pi": "pi",
+        "qubit_ge_pi": "constant_cos_pi",
         "qubit_ef_pi": "pi",
-        "x_sweep": (-1.8, 1.8 + 0.1 / 2, 0.1),
+        "x_sweep": (amp_start, amp_stop + amp_step / 2, amp_step),
         "y_sweep": [0.0, 1.0],
+        "plot_quad": "I_AVG",
     }
 
-    plot_parameters = {"xlabel": "Qubit pulse amplitude scaling"}
+    plot_parameters = {
+        "xlabel": "Qubit pulse amplitude scaling",
+    }
 
     experiment = QubitPopulation(**parameters)
     experiment.setup_plot(**plot_parameters)

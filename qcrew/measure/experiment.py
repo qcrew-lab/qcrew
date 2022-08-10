@@ -1,4 +1,5 @@
 # general packages
+from fileinput import filename
 from qcrew.helpers.parametrizer import Parametrized
 from qcrew.helpers import logger
 import qcrew.measure.qua_macros as macros
@@ -33,6 +34,8 @@ class Experiment(Parametrized):
         y_sweep=None,
         fetch_period=1,
         single_shot=False,
+        plot_quad=None,
+        extra_vars: dict[str, macros.ExpVariable] = None,
     ):
 
         # List of modes used in the experiment. String values will be replaced by
@@ -49,7 +52,12 @@ class Experiment(Parametrized):
         # Sweep configurations
         self.sweep_config = {"n": (0, self.reps, 1), "x": x_sweep, "y": y_sweep}
         self.buffering = tuple()  # defined in _configure_sweeps
+
+        # Is single-shot being used?
         self.single_shot = single_shot
+
+        # Should plot quadratures instead of Z_AVG?
+        self.plot_quad = plot_quad
 
         # ExpVariable definitions. This list is updated in _configure_sweeps and after
         # stream and variable declaration.
@@ -77,6 +85,8 @@ class Experiment(Parametrized):
                 )
             }
 
+        if extra_vars is not None:
+            self.variables |= extra_vars
         # Extra memory tags for saving server-side stream operation results
         self.Z_SQ_RAW_tag = "Z_SQ_RAW"
         self.Z_SQ_RAW_AVG_tag = "Z_SQ_RAW_AVG"
@@ -93,11 +103,32 @@ class Experiment(Parametrized):
             self.variables[v].tag for v in ["x", "y"] if self.variables[v].tag
         ]
 
+        # filename and path where data is saved
+        self._filename = None
+
         # parameters to be used by the plotter. Updated in self.setup_plot method.
         self.plot_setup = dict()
         self.setup_plot(**self.plot_setup)
 
         logger.info(f"Created {type(self).__name__}")
+
+    @property
+    def filename(self):
+        # Return filename where experiment data is saved
+        return self._filename
+
+    @filename.setter
+    def filename(self, f):
+        # Set filename where experiment data is saved
+        # Set plot_setup["title"] as filename + experiment name if no other title is
+        # set.
+
+        self._filename = f
+
+        if not self.plot_setup["title"]:
+            self.plot_setup["title"] = self._filename + "\n" + self.name
+
+        return
 
     @property
     def mode_names(self):
@@ -116,7 +147,13 @@ class Experiment(Parametrized):
                 indep_tags.append(self.variables[var].tag)
 
         # TODO: implement more than 1 dependent variable (multiple readout)
-        dep_tags = ["state" if self.single_shot else self.Z_AVG_tag]
+        if self.plot_quad:
+            dep_tags = [self.plot_quad]
+
+        elif self.single_shot:
+            dep_tags = ["state"]
+        else:
+            dep_tags = [self.Z_AVG_tag]
 
         return indep_tags, dep_tags
 
@@ -128,7 +165,7 @@ class Experiment(Parametrized):
         trace_labels=[],
         title=None,
         plot_type="1D",
-        err=True,
+        plot_err=True,
         cmap="viridis",
         zlimits=None,
         zlog=False,
@@ -151,10 +188,13 @@ class Experiment(Parametrized):
 
         """
 
+        # title is updated later with the filename, experiment name and number of
+        # repetitions
         if not title:
-            title = self.name
+            title = ""
+
         if not zlabel:
-            zlabel = "<Z>" if self.single_shot else "Signal (a.u.)"
+            zlabel = "P1" if self.single_shot else "Signal (a.u.)"
         if not zlimits:
             zlimits = (-0.05, 1.05) if self.single_shot and not zlog else None
 
@@ -165,7 +205,7 @@ class Experiment(Parametrized):
             "trace_labels": trace_labels,
             "title": title,
             "plot_type": plot_type,
-            "plot_err": err,
+            "plot_err": plot_err,
             "cmap": cmap,
             "zlimits": zlimits,
             "zlog": zlog,
@@ -301,18 +341,24 @@ class Experiment(Parametrized):
             reshaped_data = partial_results[tag].reshape(self.buffering)
             independent_data.append(reshaped_data)
 
-        # Phase information useful for troubleshooting and rr spectroscopy
-        # freqs = independent_data[0]
-        # phase = (
-        #    np.arctan(partial_results["Q"] / partial_results["I"])
-        #    - 0 * 2 * np.pi * freqs * 31e-9 * 8
-        # )
-        # reshaped_phase_data = np.average(phase, axis=0).reshape(self.buffering)
-        # dependent_data.append(reshaped_phase_data)
+        if 0:
+            # Phase information useful for troubleshooting and rr spectroscopy
+            freqs = independent_data[0]
+            # phase = (
+            #     np.arctan(partial_results["Q"] / partial_results["I"])
+            #     - 2 * np.pi * freqs * 31e-9 * 8
+            # )
+            phase = (
+                np.angle(partial_results["Q"] + 1j * partial_results["I"])
+                - 2 * np.pi * freqs * 32e-9 * 8
+            )
 
-        # if an internal sweep is defined in the child experiment class, add its value
-        # as independent variable data. The values are repeated so the dimensions match
-        # the other independent data shapes.
+            reshaped_phase_data = np.average(phase, axis=0).reshape(self.buffering)
+            dependent_data.append(reshaped_phase_data)
+
+            # if an internal sweep is defined in the child experiment class, add its value
+            # as independent variable data. The values are repeated so the dimensions match
+            # the other independent data shapes.
 
         try:
             internal_sweep = self.internal_sweep
@@ -327,16 +373,19 @@ class Experiment(Parametrized):
             pass
 
         # Estimate standard error
-        if self.single_shot:
+        if self.single_shot and self.plot_setup["plot_err"]:
             # Variance of the binomial variable assuming our estimate for probabilities
             # are accurate.
             error_data = np.sqrt(
                 dependent_data[0] * (1 - dependent_data[0]) / num_results
             )
 
-        else:
+        elif self.plot_setup["plot_err"]:
             # Retrieve and reshape standard error estimation
             error_data = stderr[0].reshape(self.buffering)
+
+        else:
+            error_data = None
 
         plotter.live_plot(
             independent_data,

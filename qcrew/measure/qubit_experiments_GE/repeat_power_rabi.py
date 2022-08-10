@@ -7,7 +7,7 @@ from typing import ClassVar
 
 from qcrew.control import professor as prof
 from qcrew.measure.experiment import Experiment
-from qm import qua
+from qm import qua 
 
 # ---------------------------------- Class -------------------------------------
 
@@ -40,11 +40,11 @@ class RepPowerRabi(Experiment):
             qubit.play(self.qubit_op, ampx=self.x)
         qua.align(qubit.name, rr.name)  # wait qubit pulse to end
         rr.measure((self.I, self.Q))  # measure qubit state
+        qua.wait(int(self.wait_time // 4), rr.name)  # wait system reset
         if self.single_shot:  # assign state to G or E
             qua.assign(
                 self.state, qua.Cast.to_fixed(self.I < rr.readout_pulse.threshold)
             )
-        qua.wait(int(self.wait_time // 4), rr.name)  # wait system reset
 
         self.QUA_stream_results()  # stream variables (I, Q, x, etc)
 
@@ -52,13 +52,25 @@ class RepPowerRabi(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
+    
+    amp_start = -1.05
+    amp_stop = 1.05
+    amp_step = 0.05
+
 
     parameters = {
         "modes": ["QUBIT", "RR"],
+<<<<<<< HEAD
         "reps": 10000,
         "wait_time": 40000,
         "x_sweep": (-1.8, 1.8 + 0.05 / 2, 0.05),
         "qubit_op": "gaussian_pulse",
+=======
+        "reps": 5000,
+        "wait_time": 300000,
+        "x_sweep": (amp_start, amp_stop + amp_step / 2, amp_step),
+        "qubit_op": "constant_cos_pi2",
+>>>>>>> de6211f2e29d356d80f941276b1d45a86e3df7be
         "pulse_number": 2,
         "single_shot": False,
     }

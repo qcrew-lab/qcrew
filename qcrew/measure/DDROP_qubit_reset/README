@@ -1,0 +1,56 @@
+The objective of DDROP is to actively reset the qubit to ground state. It can speed up experiments if the lifetime is too long
+or remove undesirable excited state population.
+
+DDROP uses pulses in multiple transitions at the same time: at least in a qubit and the respective readout resonator. Might also use
+a pulse in the EF transition of the same drive, in case the F population is also high. 
+
+##### DDROP sequence
+
+The DDROP sequence is
+    0. Update the RR pulse frequency
+    1. Play the RR ddrop_pulse
+    2. Wait for a time rr_steady_wait while the RR is reaching a stable population
+    3. Play the qubit ddrop_pulse. It should be overlapping the RR ddrop pulse. Also play a ddrop pulse to
+       the EF transition if applicable.
+    4. All ddrop pulses end at the same time. Then wait for rr_steady_wait again
+    5. Start experiment
+
+For this to work, the RR ddrop pulse should have a length equal to the qubit ddrop pulse + rr_steady_wait.
+The qubit and qubit_ef ddrop pulses have the same length.
+
+##### Calibrating the DDROP pulses
+
+Start with a guess for the RR ddrop pulse. A reasonable length is between 2-6 us. A reasonable amplitude
+is the same as the readout amplitude. Do an RR spectroscopy using the ddrop pulse as a readout to check
+which frequency to use as rr_ddrop_frequency. Might be different than the readout frequency. Aim for the
+low-power regime. The decay time of the resonator obtained in TOF can give a hint for rr_steady_wait.
+
+Then we have to find the RR ddrop pulse amplitude that is strong enough to stop rabi oscillations in the qubit.
+For that we use the script DDROP_rr_cal. Remember to get rr_ddrop_frequency again if the amplitude
+changes. 
+
+Then we find the amplitude of the qubit ddrop pulse that brings the state closer to the ground state after
+being excited by a pi pulse. For that we use DDROP_qubit_cal.
+
+If necessary, after fixing the qubit ddrop pulse one can calibrate a qubit_ef ddrop analogously in the script
+DDROP_qubit_ef_cal.
+
+Remember to keep all pulse amplitudes to a minimum to prevent distortions.
+
+##### Using the DDROP reset
+
+The DDROP macro is defined in qua_macros.py. It takes the following parameters
+qubit -> stage.QUBIT
+rr -> stage.RR  
+ddrop_params = {
+    "rr_ddrop_freq": int(-50e6),         # resonant frequency of the RR when playing the RR DDROP pulse
+    "rr_steady_wait": 2000,              # in nanoseconds
+    "ddrop_pulse": "ddrop_pulse",        # name of all ddrop pulses
+}
+qubit_ef -> stage.QUBIT_EF               (optional, default to None)
+
+We'll assume every pulse has the same name as defined in "ddrop_pulse". 
+This should be defined in their respective modes.
+
+The script rr_spec_DDROP can be used to check whether the DDROP pulses make any difference in RR spec 
+The script T1_DDROP is an example of how to include this reset in normal experiments.

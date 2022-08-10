@@ -21,7 +21,7 @@ class RRSpectroscopy(Experiment):
         "fit_fn",  # fit function
     }
 
-    def __init__(self, fit_fn="lorentzian", **other_params):
+    def __init__(self, fit_fn=None, **other_params):
 
         self.fit_fn = fit_fn
 
@@ -31,9 +31,11 @@ class RRSpectroscopy(Experiment):
         """
         Defines pulse sequence to be played inside the experiment loop
         """
-        (rr,) = self.modes  # get the modes
+        (rr, qubit) = self.modes  # get the modes
 
         qua.update_frequency(rr.name, self.x)  # update resonator pulse frequency
+        # qubit.play("constant_cos_pi", ampx=1)  # play qubit pulse
+        # qua.align()  # wait qubit pulse to end
         rr.measure((self.I, self.Q))  # measure transmitted signal
         qua.wait(int(self.wait_time // 4), rr.name)  # wait system reset
 
@@ -44,15 +46,19 @@ class RRSpectroscopy(Experiment):
 
 if __name__ == "__main__":
 
-    x_start = -53e6
-    x_stop = -47e6
-    x_step = 0.1e6
+    x_start = -64e6  #
+    x_stop = -36e6  #
+    x_step = 0.5e6
+    # x_start = -51e6  #
+    # x_stop = -49e6  #
+    # x_step = 0.02e6
 
     parameters = {
-        "modes": ["RR"],
-        "reps": 50000,
-        "wait_time": 40000,
+        "modes": ["RR", "QUBIT"],
+        "reps": 5000,
+        "wait_time": 20000,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
+        "plot_quad": "Z_AVG",
     }
 
     plot_parameters = {

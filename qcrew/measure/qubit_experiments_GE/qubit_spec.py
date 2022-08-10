@@ -32,7 +32,7 @@ class QubitSpectroscopy(Experiment):
         """
         Defines pulse sequence to be played inside the experiment loop
         """
-        qubit, rr = self.modes  # get the modes
+        qubit, rr, cav = self.modes  # get the modes
 
         qua.update_frequency(qubit.name, self.x)  # update resonator pulse frequency
         qubit.play(self.qubit_op, ampx=1)  # play qubit pulse
@@ -50,11 +50,13 @@ if __name__ == "__main__":
     x_stop = 52e6
     x_step = 0.01e6
     parameters = {
-        "modes": ["QUBIT", "RR"],
-        "reps": 30000,
-        "wait_time": 400000,
+        "modes": ["QUBIT", "RR", "CAV"],
+        "reps": 10000,
+        "wait_time": 80e3,  # 80000,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
         "qubit_op": "pi_selective",
+        "plot_quad": "I_AVG",
+        "fetch_period": 2,
     }
 
     plot_parameters = {

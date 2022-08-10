@@ -4,10 +4,13 @@ This class serves as a QUA script generator with user-defined parameters.
 """
 
 from typing import ClassVar
+from re import X
+from typing import ClassVar
 
 from qcrew.control import professor as prof
 from qcrew.measure.experiment import Experiment
 from qm import qua
+import qcrew.measure.qua_macros as macros
 
 # ---------------------------------- Class -------------------------------------
 
@@ -39,15 +42,20 @@ class T2_Echo(Experiment):
         Defines pulse sequence to be played inside the experiment loop
         """
         qubit, rr = self.modes  # get the modes
-        qua.update_frequency(qubit.name, qubit.int_freq + self.detuning)  # detune
+        factor = qua.declare(qua.fixed)
+        qua.assign(factor, self.detuning * 4 * 1e-9)
+
+        qua.reset_frame(qubit.name)
+        qua.align()
         qubit.play(self.qubit_pi2)  # play half pi qubit pulse
         qua.wait(self.x / 2, qubit.name)  # wait for partial qubit decay
         qubit.play(self.qubit_pi)  # play pi qubit pulse
         qua.wait(self.x / 2, qubit.name)  # wait for partial qubit decay
-        qubit.play(self.qubit_pi2)  # play half pi qubit pulse
-        qua.align(qubit.name, rr.name)  # wait last qubit pulse to end
+        qua.assign(self.phase, qua.Cast.mul_fixed_by_int(factor, self.x))
+        qubit.play(self.qubit_pi2, phase=self.phase)  # play half pi qubit pulse
+        qua.align()  # wait last qubit pulse to end
         rr.measure((self.I, self.Q))  # measure qubit state
-        if self.single_shot: # assign state to G or E
+        if self.single_shot:  # assign state to G or E
             qua.assign(
                 self.state, qua.Cast.to_fixed(self.I < rr.readout_pulse.threshold)
             )
@@ -59,20 +67,32 @@ class T2_Echo(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-    x_start = 10
-    x_stop = 6000
-    x_step = 100
-    detuning = -0.036e6
-
+    x_start = 4
+    x_stop = 8000
+    x_step = 160
+    detuning = 200e3
+    
+    
     parameters = {
         "modes": ["QUBIT", "RR"],
         "reps": 30000,
-        "wait_time": 75000,
+        "wait_time": 80000,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
-        "qubit_pi2": "pi2",
-        "qubit_pi": "pi",
+        "qubit_pi2": "constant_cos_pi2",
+        "qubit_pi": "constant_cos_pi",
         "single_shot": False,
-        "detuning": int(detuning)
+        "detuning": int(detuning),
+        "extra_vars": {
+            "phase": macros.ExpVariable(
+                var_type=qua.fixed,
+                tag="phase",
+                average=True,
+                buffer=True,
+                save_all=True,
+            )
+        },
+        "single_shot": False,
+        "plot_quad": "I_AVG"
     }
 
     plot_parameters = {

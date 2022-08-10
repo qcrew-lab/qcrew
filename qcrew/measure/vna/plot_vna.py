@@ -3,14 +3,14 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 filepath = (
-    "C:/Users/qcrew/Desktop/qcrew/data/jonny/20220131/155337_vnasweep_4.5111GHz.hdf5"
+    "C:/Users/qcrew/Desktop/qcrew/data/Aquarius/20220726/190311_ampfluxsweep_.hdf5"
 )
 file = h5py.File(filepath, "r")
 data = file["data"]
-s21_mlog = data["s21_mlog"]
+s21_phase = data["s21_phase"]
 freqs = data["frequency"]
-s21_mlog_avg = np.mean(s21_mlog, axis=0)
+s21_phase_avg = np.mean(s21_phase, axis=0)
 plt.figure(figsize=(12, 8))
-plt.plot(np.array(freqs), s21_mlog_avg[0])
+plt.plot(np.array(freqs), s21_phase_avg[0])
 plt.legend()
 plt.show()

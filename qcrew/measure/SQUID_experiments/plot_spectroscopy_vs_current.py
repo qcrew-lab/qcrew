@@ -8,8 +8,13 @@ def read_results(filepath):
     data = h5py.File(filepath, "r")["data"]
     freqs_total = np.array([])  # total list of frequencies LO+IF
     spec_per_current = {}  # one spectroscopy data per current bias value
+<<<<<<< HEAD
     for indx in range(len(data.keys())):
         experiment = "exp_" + str(indx +1)
+=======
+
+    for experiment in data.keys():
+>>>>>>> de6211f2e29d356d80f941276b1d45a86e3df7be
         # if experiment == "exp_99":
         #    continue
         # Each experiment has one qubit_lo and current bias associated with it
@@ -22,7 +27,13 @@ def read_results(filepath):
         spec_per_current[current]["Z_AVG"] += (z_avg,)
         spec_per_current[current]["freqs"] += (freqs,)
     # Get freqs_total
+<<<<<<< HEAD
     for current in spec_per_current.keys():
+=======
+    current_list = list(spec_per_current.keys())
+    current_list.sort()
+    for current in current_list:
+>>>>>>> de6211f2e29d356d80f941276b1d45a86e3df7be
         freqs = np.concatenate(spec_per_current[current]["freqs"])
         if len(freqs) > len(freqs_total):
             # update freqs_total
@@ -30,7 +41,11 @@ def read_results(filepath):
     # build z_matrix
     z_matrix = []
     currents_total = []
+<<<<<<< HEAD
     for current in spec_per_current.keys():
+=======
+    for current in current_list:
+>>>>>>> de6211f2e29d356d80f941276b1d45a86e3df7be
         freqs = np.concatenate(spec_per_current[current]["freqs"])
         if len(freqs) == len(freqs_total):
             z_avg = np.concatenate(spec_per_current[current]["Z_AVG"])
@@ -46,7 +61,11 @@ def read_results(filepath):
     return freqs_total, currents_total, np.array(z_matrix)
 
 
+<<<<<<< HEAD
 filepath_list = "C:/Users/qcrew/Desktop/qcrew/data/jonny/20220412/172914_jonny_qubit_spec_current_sweep.h5"  # 234732_cc2_qubit_spec_current_sweep.h5"#
+=======
+filepath_list = "C:/Users/qcrew/Desktop/qcrew/data/cc1_nusquid/20220511/165834_cc1_qubit_spec_current_sweep.h5"  # 234732_cc2_qubit_spec_current_sweep.h5"#
+>>>>>>> de6211f2e29d356d80f941276b1d45a86e3df7be
 freqs, currents_1, z_matrix_1 = read_results(filepath_list)
 
 # currents = np.concatenate((np.array(currents_1), currents_2, currents_3), axis=0)

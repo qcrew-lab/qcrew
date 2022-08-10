@@ -24,6 +24,7 @@ import time
 
 if __name__ == "__main__":
 
+<<<<<<< HEAD
     current_start = 20e-3
     current_stop = -20e-3
     current_step = -0.5e-3
@@ -31,6 +32,15 @@ if __name__ == "__main__":
 
     qubit_lo_start = 4.7963e9
     qubit_lo_stop = 4.7962e9
+=======
+    current_start = 10e-3
+    current_stop = -10e-3
+    current_step = -0.5e-3
+    current_sweep = np.arange(current_start, current_stop, current_step)
+
+    qubit_lo_start = 5.4084e9
+    qubit_lo_stop = 4e9
+>>>>>>> de6211f2e29d356d80f941276b1d45a86e3df7be
     qubit_lo_step = -200e6
     qubit_lo_sweep = np.arange(qubit_lo_start, qubit_lo_stop, qubit_lo_step)
 
@@ -60,10 +70,16 @@ if __name__ == "__main__":
                 yoko.level = current  # set output to nominal value
                 yoko.state = True
 
+<<<<<<< HEAD
                 """                
                 # Find resonator resonant frequency
                 ## Do RR spectroscopy
                 x_start = -56e6
+=======
+                # Find resonator resonant frequency
+                ## Do RR spectroscopy
+                x_start = -60e6
+>>>>>>> de6211f2e29d356d80f941276b1d45a86e3df7be
                 x_stop = -46e6
                 x_step = 0.05e6
 
@@ -90,7 +106,11 @@ if __name__ == "__main__":
                 qm = stage.QM
                 qm_job = qm.execute(qua_program)
                 fetcher = QMResultFetcher(handle=qm_job.result_handles)
+<<<<<<< HEAD
                 
+=======
+
+>>>>>>> de6211f2e29d356d80f941276b1d45a86e3df7be
                 while fetcher.is_fetching:
                     # Fetch partial results
                     partial_results = fetcher.fetch()
@@ -119,7 +139,10 @@ if __name__ == "__main__":
                 rr_if = frequencies[np.argmin(z_avg)]
 
                 stage.RR.int_freq = float(rr_if)  # update RR IF
+<<<<<<< HEAD
                 """
+=======
+>>>>>>> de6211f2e29d356d80f941276b1d45a86e3df7be
 
                 # proceed with qubit spectroscopy
                 for qubit_lo in qubit_lo_sweep:
@@ -127,14 +150,23 @@ if __name__ == "__main__":
                     ## Change qubit LO
                     stage.QUBIT.lo_freq = qubit_lo
 
+<<<<<<< HEAD
                     x_start = -100e6
+=======
+                    x_start = -200e6
+>>>>>>> de6211f2e29d356d80f941276b1d45a86e3df7be
                     x_stop = 0e6
                     x_step = 0.5e6
 
                     qubit_spec_parameters = {
                         "modes": [stage.QUBIT, stage.RR],
+<<<<<<< HEAD
                         "reps": 2000,
                         "wait_time": 40000,
+=======
+                        "reps": 500,
+                        "wait_time": 50000,
+>>>>>>> de6211f2e29d356d80f941276b1d45a86e3df7be
                         "x_sweep": (
                             int(x_start),
                             int(x_stop + x_step / 2),

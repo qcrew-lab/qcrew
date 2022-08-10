@@ -22,14 +22,19 @@ class ECDCalibration(Experiment):
 
     _parameters: ClassVar[set[str]] = Experiment._parameters | {
         "cav_op",  # operation for displacing the cavity
+<<<<<<< HEAD
         "qubit_op1",  # operation used for exciting the qubit
         "qubit_op2"
+=======
+        "qubit_op2",  # operation used for exciting the qubit
+        "qubit_op1",  # operation used for exciting the qubit
+>>>>>>> de6211f2e29d356d80f941276b1d45a86e3df7be
         "fit_fn",  # fit function
         "delay",  # describe...
     }
 
     def __init__(
-        self, cav_op, qubit_op1, qubit_op2, fit_fn=None, delay=4, **other_params
+        self, cav_op, qubit_op1, qubit_op2, fit_fn="gaussian", delay=4, **other_params
     ):
 
         self.cav_op = cav_op
@@ -45,32 +50,33 @@ class ECDCalibration(Experiment):
         Defines pulse sequence to be played inside the experiment loop
         """
         qubit, cav, rr = self.modes  # get the modes
+        
         qua.reset_frame(cav.name)
 
-        # TODO work in progress
-        qubit.play(self.qubit_op)  # play pi/2 pulse around X
+        qubit.play(self.qubit_op1)  # play pi/2 pulse around X
 
         # start ECD gate
-        qua.align(cav.name, qubit.name)  # wait for qubit pulse to end
+        qua.align()  # wait for qubit pulse to end
         cav.play(self.cav_op, ampx=self.x, phase=0)  # First positive displacement
         qua.wait(int(self.delay // 4), cav.name)
         cav.play(self.cav_op, ampx=-self.x, phase=0)  # First negative displacement
-        qua.align(qubit.name, cav.name)
+        qua.align()
         qubit.play(self.qubit_op2)  # play pi to flip qubit around X
-        qua.align(cav.name, qubit.name)  # wait for qubit pulse to end
+        qua.align()  # wait for qubit pulse to end
         cav.play(self.cav_op, ampx=-self.x, phase=0)  # Second negative displacement
         qua.wait(int(self.delay // 4), cav.name)
         cav.play(self.cav_op, ampx=self.x, phase=0)  # Second positive displacement
-        qua.align(qubit.name, cav.name)
+        qua.align()
 
         qubit.play(
-            self.qubit_op1, phase=0
+            self.qubit_op1,
+            phase=0,
         )  # play pi/2 pulse around X or Y, to measure either the real or imaginary part of the characteristic function
-        qua.align(qubit.name, rr.name)  # align measurement
-        rr.measure((self.I, self.Q))  # measure transmitted signal
+        qua.align()  # align measurement
+        rr.measure((self.I, self.Q))
 
         # wait system reset
-        qua.wait(int(self.wait_time // 4), cav.name)
+        qua.wait(int(self.wait_time // 4))
 
         self.QUA_stream_results()  # stream variables (I, Q, x, etc)
 
@@ -78,17 +84,21 @@ class ECDCalibration(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
+    x_start = -1.8
+    x_stop = 1.8
+    x_step = 0.1
 
     parameters = {
         "modes": ["QUBIT", "CAV", "RR"],
-        "reps": 50000,
-        "wait_time": 600000,
-        "fetch_period": 2,  # time between data fetching rounds in sec
-        "delay": 1000,  # pi/chi
-        "x_sweep": (0.2, 1 + 0.05 / 2, 0.05),
-        "qubit_op1": "pi2",
-        "qubit_op2": "pi",
-        "cav_op": "constant_pulse",
+        "reps": 10000,
+        "wait_time": 3.5e6,
+        "fetch_period": 3,  # time between data fetching rounds in sec
+        "delay": 100,  # pi/chi
+        "x_sweep": (x_start, x_stop + x_step / 2, x_step),
+        "qubit_op1": "constant_cos_pi2",
+        "qubit_op2": "constant_cos_pi",
+        "cav_op": "constant_cos_ECD_state_u",
+        "plot_quad": "I_AVG",
     }
 
     plot_parameters = {

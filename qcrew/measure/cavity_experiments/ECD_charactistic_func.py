@@ -69,17 +69,17 @@ class ECDcharacteristicfunc(Experiment):
 
         qua.reset_frame(cav.name)
 
-        if 0:
+        if 1:
 
-            cav.play("constant_cos_cohstate_2", phase=0)
+            cav.play("constant_cos_cohstate_1", phase=0)
             qua.align(cav.name, qubit.name)
-            qubit.play(self.qubit_op2_ecd, phase=0)
-            qua.wait(int(1200 // 4), cav.name, qubit.name)  # 5us
-            qua.align(cav.name, qubit.name)
-            qubit.play(self.qubit_op2_ecd, phase=0)
+            # qubit.play(self.qubit_op2_ecd, phase=0)
+            # qua.wait(int(1200 // 4), cav.name, qubit.name)  # 5us
+            # qua.align(cav.name, qubit.name)
+            # qubit.play(self.qubit_op2_ecd, phase=0)
 
         ######################    pi/ - ECD - pi ######################
-        if 1:
+        if 0:
             #  cav.play(self.cav_op_ecd, ampx=1, phase=0)
             #  cav.play(self.cav_op_ecd, ampx=-1, phase=0)
 
@@ -194,12 +194,12 @@ class ECDcharacteristicfunc(Experiment):
 
 # -------------------------------- Execution -----------------------------------
 if __name__ == "__main__":
-    x_start = -1.0
-    x_stop = 1.0
+    x_start = -1.5
+    x_stop = 1.5
     x_step = 0.05
 
-    y_start = -1.0
-    y_stop = 1.0
+    y_start = -1.5
+    y_stop = 1.5
     y_step = 0.05
 
     ecd_amp_scale = 1  #  the scale of constant_cos_ECD in ECD gate
@@ -207,9 +207,9 @@ if __name__ == "__main__":
 
     parameters = {
         "modes": ["QUBIT", "CAV", "RR", "CAV_DRIVE", "RR_DRIVE"],
-        "reps": 500,
+        "reps": 100,
         "wait_time": 2.5e6,  # 50e3,
-        "fetch_period": 6,  # time between data fetching rounds in sec
+        "fetch_period": 5,  # time between data fetching rounds in sec
         "delay": 100,  # 160,  # 100# wait time between opposite sign displacements
         "ecd_amp_scale": ecd_amp_scale,
         "d_amp_scale": d_amp_scale,

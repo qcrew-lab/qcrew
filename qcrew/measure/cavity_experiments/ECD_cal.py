@@ -92,7 +92,7 @@ if __name__ == "__main__":
         "x_sweep": (x_start, x_stop + x_step / 2, x_step),
         "qubit_op1": "constant_cos_pi2",
         "qubit_op2": "constant_cos_pi",
-        "cav_op": "constant_cos_ECD",
+        "cav_op": "constant_cos_ECD_state_u",
         "plot_quad": "I_AVG",
     }
 

@@ -58,36 +58,36 @@ class CharacteristicFunction(Experiment):
         qubit, cav, rr = self.modes  # get the modes
 
         qua.reset_frame(cav.name)
-        
-        cav.play(self.cav_state_op, phase=0.25)  # t o create a coherent state
+
+        cav.play(self.cav_state_op, phase=0.0)  # t o create a coherent state
         qua.align(cav.name, qubit.name)
 
         qubit.play(self.qubit_op1)  # bring qubit into superposition
-        
+
         # start ECD gate
         qua.align(cav.name, qubit.name)  # wait for qubit pulse to end
         cav.play(self.cav_op, ampx=self.x, phase=0)  # First positive displacement
         cav.play(self.cav_op, ampx=self.y, phase=0.25)
-        
-       # qua.reset_frame(cav.name)
+
+        # qua.reset_frame(cav.name)
         qua.wait(int(self.delay // 4), cav.name)
         cav.play(self.cav_op, ampx=-self.x, phase=0)  # First negative displacement
         cav.play(self.cav_op, ampx=-self.y, phase=0.25)
-        
-        #qua.reset_frame(cav.name)
+
+        # qua.reset_frame(cav.name)
         qua.align(qubit.name, cav.name)
         qubit.play(self.qubit_op2)  # play pi to flip qubit around X
-        
+
         qua.align(cav.name, qubit.name)  # wait for qubit pulse to end
         cav.play(self.cav_op, ampx=-self.x, phase=0)  # Second negative displacement
         cav.play(self.cav_op, ampx=-self.y, phase=0.25)
-        
-        #qua.reset_frame(cav.name)
+
+        # qua.reset_frame(cav.name)
         qua.wait(int(self.delay // 4), cav.name)
         cav.play(self.cav_op, ampx=self.x, phase=0)  # Second positive displacement
         cav.play(self.cav_op, ampx=self.y, phase=0.25)
-        
-        #qua.reset_frame(cav.name)  
+
+        # qua.reset_frame(cav.name)
         qua.align(qubit.name, cav.name)
 
         qubit.play(
@@ -107,13 +107,12 @@ class CharacteristicFunction(Experiment):
 
 if __name__ == "__main__":
     x_start = -1.5
-    x_stop =  1.5
+    x_stop = 1.5
     x_step = 0.1
-    
-    y_start = -1.5
-    y_stop =  1.5
-    y_step = 0.1
 
+    y_start = -1.5
+    y_stop = 1.5
+    y_step = 0.1
 
     parameters = {
         "modes": ["QUBIT", "CAV", "RR"],
@@ -121,14 +120,18 @@ if __name__ == "__main__":
         "wait_time": 2.5e6,
         "fetch_period": 10,  # time between data fetching rounds in sec
         "delay": 600,  # wait time between opposite sign displacements
-        "x_sweep": (x_start, x_stop + x_step / 2, x_step),  # ampitude sweep of the displacement pulses in the ECD
+        "x_sweep": (
+            x_start,
+            x_stop + x_step / 2,
+            x_step,
+        ),  # ampitude sweep of the displacement pulses in the ECD
         "y_sweep": (y_start, y_stop + y_step / 2, y_step),
         "qubit_op1": "constant_cos_pi2",
         "qubit_op2": "constant_cos_pi",
         "cav_state_op": "constant_cos_cohstate_1",
         "cav_op": "constant_cos_ECD",
         "measure_real": True,  # measure real part of char function if True, imag Part if false
-        "plot_quad": "I_AVG"
+        "plot_quad": "I_AVG",
     }
 
     plot_parameters = {

@@ -27,6 +27,7 @@ class CavityDisplacementCalBerry(Experiment):
         "delay",  # describe...
         "measure_real",
         "ecd_amp_scale",
+        "d_amp_scale",
     }
 
     def __init__(
@@ -36,6 +37,7 @@ class CavityDisplacementCalBerry(Experiment):
         qubit_op1,
         qubit_op2,
         ecd_amp_scale,
+        d_amp_scale,
         fit_fn="sine",
         delay=4,
         measure_real=True,
@@ -49,6 +51,7 @@ class CavityDisplacementCalBerry(Experiment):
         self.delay = delay
         self.measure_real = measure_real
         self.ecd_amp_scale = ecd_amp_scale
+        self.d_amp_scale = d_amp_scale
 
         super().__init__(**other_params)  # Passes other parameters to parent
 
@@ -57,8 +60,8 @@ class CavityDisplacementCalBerry(Experiment):
         Defines pulse sequence to be played inside the experiment loop
         """
         qubit, cav, rr = self.modes  # get the modes
-        
-        if 0: # sweep D(a)
+
+        if 1:  # sweep D(a)
 
             qua.reset_frame(cav.name)
 
@@ -91,8 +94,8 @@ class CavityDisplacementCalBerry(Experiment):
 
             # Do the first displacement
             qua.align(qubit.name, cav.name)
-            cav.play(self.cav_disp, ampx=self.x, phase=0.0)
-
+            cav.play(self.cav_disp, ampx=self.x * self.d_amp_scale, phase=0.0)
+ 
             # Do the second ECD gate
             qua.align(cav.name, qubit.name)  # wait for qubit pulse to end
             cav.play(
@@ -119,10 +122,9 @@ class CavityDisplacementCalBerry(Experiment):
 
             # Do the second displacement
             qua.align(qubit.name, cav.name)
-            cav.play(self.cav_disp, ampx=-self.x, phase=0)
-            
-        
-        if 1: # sweep ECD(b) by sweepin its alphas
+            cav.play(self.cav_disp, ampx=-self.x * self.d_amp_scale, phase=0)
+
+        if 0:  # sweep ECD(b) by sweepin its alphas
 
             qua.reset_frame(cav.name)
 
@@ -184,8 +186,6 @@ class CavityDisplacementCalBerry(Experiment):
             # Do the second displacement
             qua.align(qubit.name, cav.name)
             cav.play(self.cav_disp, ampx=-1, phase=0)
-        
-        
 
         # prepare sigmax measurement
         qua.align(qubit.name, cav.name)
@@ -204,18 +204,20 @@ class CavityDisplacementCalBerry(Experiment):
 
 if __name__ == "__main__":
     x_start = 0
-    x_stop = 1.0
-    x_step = 0.05
+    x_stop = 1.9
+    x_step = 0.1
 
     ecd_amp_scale = 1
-    
+    d_amp_scale = 1
+
     parameters = {
         "modes": ["QUBIT", "CAV", "RR"],
-        "reps": 20000,
+        "reps": 10000,
         "wait_time": 3e6,
         "fetch_period": 2,  # time between data fetching rounds in sec
         "delay": 100,  # wait time between opposite sign displacements
         "ecd_amp_scale": ecd_amp_scale,
+        "d_amp_scale": d_amp_scale,
         "x_sweep": (
             x_start,
             x_stop + x_step / 2,
@@ -224,7 +226,7 @@ if __name__ == "__main__":
         "qubit_op1": "constant_cos_pi2",
         "qubit_op2": "constant_cos_pi",
         "cav_disp": "constant_cos_cohstate_1",
-        "cav_disp_ecd": "constant_cos_ECD_test",
+        "cav_disp_ecd": "constant_cos_ECD",
         # "ECD_phase": 0
         "measure_real": True,  # measure real part of char function if True, imag Part if false
         "plot_quad": "I_AVG",

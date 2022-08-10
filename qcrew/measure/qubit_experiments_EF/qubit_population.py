@@ -24,13 +24,12 @@ class QubitPopulation(Experiment):
     }
 
     def __init__(
-        self, qubit_ge_pi, qubit_ef_pi, ef_int_freq, fit_fn="sine", **other_params
+        self, qubit_ge_pi, qubit_ef_pi, fit_fn="sine", **other_params
     ):
 
         self.qubit_ge_pi = qubit_ge_pi
         self.fit_fn = fit_fn
         self.qubit_ef_pi = qubit_ef_pi
-        self.ef_int_freq = ef_int_freq
 
         super().__init__(**other_params)  # Passes other parameters to parent
 
@@ -60,7 +59,7 @@ class QubitPopulation(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-    _ef_int_freq = -70.6e6
+    # _ef_int_freq = -70.6e6
     
     
 
@@ -72,12 +71,11 @@ if __name__ == "__main__":
         "modes": ["QUBIT", "QUBIT_EF", "RR"],
         "reps": 5000,
         "wait_time": 300000,
-        "qubit_ge_pi": "pi",
+        "qubit_ge_pi": "constant_cos_pi",
         "qubit_ef_pi": "pi",
-        "x_sweep": (-1.8, 1.8 + 0.1 / 2, 0.1),
+        "x_sweep": (amp_start, amp_stop + amp_step / 2, amp_step),
         "y_sweep": [0.0, 1.0],
-        "ef_int_freq": _ef_int_freq,
-        #"plot_quad": "I_AVG",
+        "plot_quad": "I_AVG",
     }
 
     plot_parameters = {

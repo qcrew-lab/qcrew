@@ -73,7 +73,7 @@ if __name__ == "__main__":
         "reps": 20000,
         "wait_time": 100000,
         "qubit_ge_pi": "pi",
-        "qubit_ef_pi2": "pi2_ef",
+        "qubit_ef_pi2": "pi2",
         "detuning": int(0e3),
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
     }

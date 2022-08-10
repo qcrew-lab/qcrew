@@ -73,10 +73,10 @@ if __name__ == "__main__":
         # "modes": ["QUBIT", "CAV", "RR"],
         "modes": ["QUBIT", "CAV", "RR", "CAV_DRIVE2", "RR_DRIVE"],
         "reps": 5000,
-        "wait_time": 2.5e6,
+        "wait_time": 5e6,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
         "qubit_op": "pi_selective_1",
-        "cav_op": "constant_cos_cohstate_1",
+        "cav_op": "constant_cos_cohstate_1_test",
         "fetch_period": 15,
         "plot_quad": "I_AVG",
     }

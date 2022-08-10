@@ -18,7 +18,7 @@ if __name__ == "__main__":
 
         params = {
             "reps": 20000,
-            "wait_time": 80000,  # ns
+            "wait_time": 100000,  # ns
             "qubit_pi_pulse": "constant_cos_pi",  # "constant_cos_pi",  # pulse to excite qubit
             "weights_file_path": file_path,
         }

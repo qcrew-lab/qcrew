@@ -64,7 +64,7 @@ if __name__ == "__main__":
         "qubit_ge_pi": "pi",
         "qubit_ef_op": "constant_pulse",
         "x_sweep": (int(x_start), int(x_stop + xstep / 2), int(xstep)),
-        #"plot_quad": "I_AVG"
+        "plot_quad": "I_AVG"
     }
 
     plot_parameters = {

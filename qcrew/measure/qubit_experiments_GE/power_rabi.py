@@ -45,6 +45,7 @@ class PowerRabi(Experiment):
         qua.align()
 
         qubit.play(self.qubit_op, ampx=self.x, phase=0)  # if checking a pi2 pulse
+        qubit.play(self.qubit_op, ampx=self.x, phase=0)  # if checking a pi2 pulse
         qua.align(qubit.name, rr.name)  # wait qubit pulse to end
         rr.measure((self.I, self.Q))  # measure qubit state
         qua.wait(int(self.wait_time // 4))  # wait system reset
@@ -69,7 +70,7 @@ if __name__ == "__main__":
         "reps": 5000,
         "wait_time": 100000,  # 2000,
         "x_sweep": (amp_start, amp_stop + amp_step / 2, amp_step),
-        "qubit_op": "constant_cos_pi",
+        "qubit_op": "pi",
         "single_shot": True,
         # "plot_quad": "I_AVG",
     }

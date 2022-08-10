@@ -14,15 +14,16 @@ from qcrew.control import Stagehand
 
 class oct_exp(Experiment):
     name = "oct_exp"
+    delay = 100
 
     _parameters: ClassVar[set[str]] = Experiment._parameters | {
-        "qubit_op",  # operation used for exciting the qubit
+        # "qubit_op",  # operation used for exciting the qubit
         "fit_fn",  # fit function
     }
 
-    def __init__(self, qubit_op, fit_fn="sine", **other_params):
+    def __init__(self, fit_fn="sine", **other_params):
 
-        self.qubit_op = qubit_op
+        # self.qubit_op = qubit_op
         self.fit_fn = fit_fn
 
         super().__init__(**other_params)  # Passes other parameters to parent
@@ -32,82 +33,95 @@ class oct_exp(Experiment):
         qubit, rr, cav = self.modes
 
         qua.reset_frame(qubit.name, cav.name)
-        qubit.play("oct_pulse", ampx=self.x)
-        cav.play("oct_pulse")
+        qubit.play("oct_pulse", self.x)
+        # cav.play("oct_pulse")
         qua.align()
         # qubit.play(self.qubit_op)
         # qua.align()
-        # rr.measure((self.I, self.Q))  # measure qubit state
-        # qua.wait(int(self.wait_time // 4))  # wait system reset
+        rr.measure((self.I, self.Q))  # measure qubit state
+        qua.wait(int(self.wait_time // 4))  # wait system reset
 
-        #### measure characteristic function
-        qua.align(cav.name, qubit.name)
-        qubit.play('constant_cos_pi2')
-        # start ECD gate
-        qua.align(cav.name, qubit.name)  # wait for qubit pulse to end
-        cav.play("constant_cos_ECD", ampx=self.x, phase=0.0)  # First positive displacement
-        cav.play("constant_cos_ECD", ampx=self.y, phase=0.25)
+        # #### measure characteristic function
+        # qua.align(cav.name, qubit.name)
+        # qubit.play("constant_cos_pi2")
+        # # start ECD gate
+        # qua.align(cav.name, qubit.name)  # wait for qubit pulse to end
+        # cav.play(
+        #     "constant_cos_ECD", ampx=self.x, phase=0.0
+        # )  # First positive displacement
+        # cav.play("constant_cos_ECD", ampx=self.y, phase=0.25)
 
-        qua.wait(int(self.delay // 4), cav.name)
-        cav.play(
-            "constant_cos_ECD", ampx=-self.x, phase=0.0
-        )  # First negative displacement
-        cav.play("constant_cos_ECD", ampx=-self.y, phase=0.25)
+        # qua.wait(int(self.delay // 4), cav.name)
+        # cav.play(
+        #     "constant_cos_ECD", ampx=-1 * self.x, phase=0.0
+        # )  # First negative displacement
+        # cav.play("constant_cos_ECD", ampx=-1 * self.y, phase=0.25)
 
-        qua.align(qubit.name, cav.name)
-        qubit.play("constant_cos_pi")  # play pi to flip qubit around X
+        # qua.align(qubit.name, cav.name)
+        # qubit.play("constant_cos_pi")  # play pi to flip qubit around X
 
-        qua.align(cav.name, qubit.name)  # wait for qubit pulse to end
-        cav.play(
-            "constant_cos_ECD", ampx=-self.x, phase=0.0
-        )  # Second negative displacement
-        cav.play("constant_cos_ECD", ampx=-self.y, phase=0.25)
+        # qua.align(cav.name, qubit.name)  # wait for qubit pulse to end
+        # cav.play(
+        #     "constant_cos_ECD", ampx=-self.x, phase=0.0
+        # )  # Second negative displacement
+        # cav.play("constant_cos_ECD", ampx=-self.y, phase=0.25)
 
-        qua.wait(int(self.delay // 4), cav.name)
-        cav.play(
-            "constant_cos_ECD", ampx=self.x, phase=0.0
-        )  # Second positive displacement
-        cav.play("constant_cos_ECD", ampx=self.y, phase=0.25)
+        # qua.wait(int(self.delay // 4), cav.name)
+        # cav.play(
+        #     "constant_cos_ECD", ampx=self.x, phase=0.0
+        # )  # Second positive displacement
+        # cav.play("constant_cos_ECD", ampx=self.y, phase=0.25)
 
-        qua.align(qubit.name, cav.name)
+        # qua.align(qubit.name, cav.name)
 
-        qubit.play(
-            "constant_cos_pi2", phase=0.0 if True else 0.25
-        )  # play pi/2 pulse around X or SY, to measure either the real or imaginary part of the characteristic function
+        # qubit.play(
+        #     "constant_cos_pi2", phase=0.0
+        # )  # play pi/2 pulse around X or SY, to measure either the real or imaginary part of the characteristic function
 
         # Measure cavity state
         qua.align(qubit.name, rr.name)  # align measurement
         rr.measure((self.I, self.Q))  # measure transmitted signal
         qua.wait(int(self.wait_time // 4), cav.name)
         self.QUA_stream_results()  # stream variables (I, Q, x, etc)
-        if self.single_shot:  # assign state to G or E
-            qua.assign(
-                self.state, qua.Cast.to_fixed(self.I < rr.readout_pulse.threshold)
-            )
-
-        self.QUA_stream_results()  # stream variables (I, Q, x, etc)
-        # return play_constant_pulse
 
 
 if __name__ == "__main__":
 
-    amp_start = -1.5
-    amp_stop = 1.5
-    amp_step = 0.05
+    x_start = -1.5
+    x_stop = 1.5
+    x_step = 0.075
+
+    y_start = -1.5
+    y_stop = 1.5
+    y_step = 0.075
+
+    # amp_start = -1.5
+    # amp_stop = 1.5
+    # amp_step = 0.1
     parameters = {
         "modes": ["QUBIT", "RR", "CAV"],
         "reps": 5000,
         "wait_time": 4e6,  # 2000,
-        "x_sweep": (amp_start, amp_stop + amp_step / 2, amp_step),
-        "qubit_op": "pi_selective_1",
-        "single_shot": True,
-        # "plot_quad": "I_AVG",
+        "x_sweep": (
+            x_start,
+            x_stop + x_step / 2,
+            x_step,
+        ),  # ampitude sweep of the displacement pulses in the ECD
+        # "y_sweep": (y_start, y_stop + y_step / 2, y_step),
+        # "qubit_op": "pi_selective_1",
+        "fetch_period": 3,  # time between data fetching rounds in sec
+        # "single_shot": True,
+        # "measure_real": True,
+        "plot_quad": "I_AVG",
     }
 
     plot_parameters = {
-        "xlabel": "Qubit pulse amplitude scaling",
+        "xlabel": "X",  # beta of (ECD(beta))
+        "ylabel": "Y",
+        "plot_type": "2D",
+        "cmap": "bwr",
+        "plot_err": False,
     }
-
     # experiment = PowerRabi(**parameters, ddrop_params=ddrop_params)
     experiment = oct_exp(**parameters)
     experiment.setup_plot(**plot_parameters)

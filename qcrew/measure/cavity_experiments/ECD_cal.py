@@ -50,32 +50,33 @@ class ECDCalibration(Experiment):
         Defines pulse sequence to be played inside the experiment loop
         """
         qubit, cav, rr = self.modes  # get the modes
+        
         qua.reset_frame(cav.name)
 
-        # TODO work in progress
         qubit.play(self.qubit_op1)  # play pi/2 pulse around X
 
         # start ECD gate
-        qua.align(cav.name, qubit.name)  # wait for qubit pulse to end
+        qua.align()  # wait for qubit pulse to end
         cav.play(self.cav_op, ampx=self.x, phase=0)  # First positive displacement
         qua.wait(int(self.delay // 4), cav.name)
         cav.play(self.cav_op, ampx=-self.x, phase=0)  # First negative displacement
-        qua.align(qubit.name, cav.name)
+        qua.align()
         qubit.play(self.qubit_op2)  # play pi to flip qubit around X
-        qua.align(cav.name, qubit.name)  # wait for qubit pulse to end
+        qua.align()  # wait for qubit pulse to end
         cav.play(self.cav_op, ampx=-self.x, phase=0)  # Second negative displacement
         qua.wait(int(self.delay // 4), cav.name)
         cav.play(self.cav_op, ampx=self.x, phase=0)  # Second positive displacement
-        qua.align(qubit.name, cav.name)
+        qua.align()
 
         qubit.play(
-            self.qubit_op1, phase=0
+            self.qubit_op1,
+            phase=0,
         )  # play pi/2 pulse around X or Y, to measure either the real or imaginary part of the characteristic function
-        qua.align(qubit.name, rr.name)  # align measurement
-        rr.measure((self.I, self.Q))  # measure transmitted signal
+        qua.align()  # align measurement
+        rr.measure((self.I, self.Q))
 
         # wait system reset
-        qua.wait(int(self.wait_time // 4), cav.name)
+        qua.wait(int(self.wait_time // 4))
 
         self.QUA_stream_results()  # stream variables (I, Q, x, etc)
 
@@ -85,19 +86,19 @@ class ECDCalibration(Experiment):
 if __name__ == "__main__":
     x_start = -1.8
     x_stop = 1.8
-    x_step = 0.05
+    x_step = 0.1
 
     parameters = {
         "modes": ["QUBIT", "CAV", "RR"],
-        "reps": 100000,
-        "wait_time": 4000000,
+        "reps": 10000,
+        "wait_time": 3.5e6,
         "fetch_period": 3,  # time between data fetching rounds in sec
-        "delay": 200,  # pi/chi
+        "delay": 100,  # pi/chi
         "x_sweep": (x_start, x_stop + x_step / 2, x_step),
         "qubit_op1": "constant_cos_pi2",
         "qubit_op2": "constant_cos_pi",
-        "cav_op": "constant_cos_ECD",
-        
+        "cav_op": "constant_cos_ECD_state_u",
+        "plot_quad": "I_AVG",
     }
 
     plot_parameters = {

@@ -32,11 +32,11 @@ class QubitSpectroscopy(Experiment):
         """
         Defines pulse sequence to be played inside the experiment loop
         """
-        qubit, rr = self.modes  # get the modes
+        qubit, rr, cav = self.modes  # get the modes
 
         qua.update_frequency(qubit.name, self.x)  # update resonator pulse frequency
-        qubit.play(self.qubit_op, ampx = 1)  # play qubit pulse
-        qua.align(qubit.name, rr.name)  # wait qubit pulse to end 
+        qubit.play(self.qubit_op, ampx=1)  # play qubit pulse
+        qua.align(qubit.name, rr.name)  # wait qubit pulse to end
         rr.measure((self.I, self.Q))  # measure transmitted signal
         qua.wait(int(self.wait_time // 4), rr.name)  # wait system reset
 
@@ -46,26 +46,17 @@ class QubitSpectroscopy(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-<<<<<<< HEAD
     x_start = 48e6
     x_stop = 52e6
     x_step = 0.01e6
-=======
-    x_start = 118e6
-    x_stop = 122e6
-    x_step = 0.1e6
-
->>>>>>> de6211f2e29d356d80f941276b1d45a86e3df7be
     parameters = {
-        "modes": ["QUBIT", "RR"],
-        "reps": 200000,
-        "wait_time": 80000,
+        "modes": ["QUBIT", "RR", "CAV"],
+        "reps": 10000,
+        "wait_time": 80e3,  # 80000,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
-<<<<<<< HEAD
         "qubit_op": "pi_selective",
-=======
-        "qubit_op": "pi_selective_1",
->>>>>>> de6211f2e29d356d80f941276b1d45a86e3df7be
+        "plot_quad": "I_AVG",
+        "fetch_period": 2,
     }
 
     plot_parameters = {

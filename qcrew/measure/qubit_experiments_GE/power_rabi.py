@@ -7,6 +7,7 @@ from typing import ClassVar
 
 from qcrew.control import professor as prof
 from qcrew.measure.experiment import Experiment
+import qcrew.measure.qua_macros as macros
 from qm import qua
 
 
@@ -22,10 +23,11 @@ class PowerRabi(Experiment):
         "fit_fn",  # fit function
     }
 
-    def __init__(self, qubit_op, fit_fn="sine", **other_params):
+    def __init__(self, qubit_op, ddrop_params=None, fit_fn="sine", **other_params):
 
         self.qubit_op = qubit_op
         self.fit_fn = fit_fn
+        self.ddrop_params = ddrop_params
 
         super().__init__(**other_params)  # Passes other parameters to parent
 
@@ -33,17 +35,22 @@ class PowerRabi(Experiment):
         """
         Defines pulse sequence to be played inside the experiment loop
         """
-        qubit, rr = self.modes  # get the modes
+        qubit, rr, qubit_ef = self.modes  # get the modes
 
         qubit.play(self.qubit_op, ampx=self.x)  # play qubit pulse
-<<<<<<< HEAD
-        #qubit.play(self.qubit_op, ampx=self.x)  # play qubit pulse
-=======
 
->>>>>>> de6211f2e29d356d80f941276b1d45a86e3df7be
+        if self.ddrop_params:
+            macros.DDROP_reset(qubit, rr, **self.ddrop_params)
+            # Use qubit_ef if also resetting F state
+            # macros.DDROP_reset(qubit, rr, **self.ddrop_params, qubit_ef=qubit_ef)
+
+        qua.align()
+
+
+        qubit.play(self.qubit_op, ampx=self.x, phase=0) # if checking a pi2 pulse
         qua.align(qubit.name, rr.name)  # wait qubit pulse to end
         rr.measure((self.I, self.Q))  # measure qubit state
-        qua.wait(int(self.wait_time // 4), rr.name)  # wait system reset
+        qua.wait(int(self.wait_time // 4))  # wait system reset
 
         if self.single_shot:  # assign state to G or E
             qua.assign(
@@ -57,32 +64,30 @@ class PowerRabi(Experiment):
 
 if __name__ == "__main__":
 
-<<<<<<< HEAD
-    amp_start = -1.3
-    amp_stop = 1.3
-=======
     amp_start = -1.5
     amp_stop = 1.5
->>>>>>> de6211f2e29d356d80f941276b1d45a86e3df7be
     amp_step = 0.05
     parameters = {
-        "modes": ["QUBIT", "RR"],
-        "reps": 10000,
-        "wait_time": 200000,
+        "modes": ["QUBIT", "RR", "QUBIT_EF"],
+        "reps": 5000,
+        "wait_time": 100000,  # 2000,
         "x_sweep": (amp_start, amp_stop + amp_step / 2, amp_step),
-<<<<<<< HEAD
-        "qubit_op": "pi_test",
-        "single_shot": False,
-=======
         "qubit_op": "constant_cos_pi2",
         "single_shot": True,
->>>>>>> de6211f2e29d356d80f941276b1d45a86e3df7be
+        # "plot_quad": "I_AVG",
     }
 
     plot_parameters = {
         "xlabel": "Qubit pulse amplitude scaling",
     }
 
+    ddrop_params = {
+        "rr_ddrop_freq": int(-49.8e6),  # RR IF when playing the RR DDROP pulse
+        "rr_steady_wait": 2000,  # in nanoseconds
+        "ddrop_pulse": "ddrop_pulse",  # name of all ddrop pulses
+    }
+
+    # experiment = PowerRabi(**parameters, ddrop_params=ddrop_params)
     experiment = PowerRabi(**parameters)
     experiment.setup_plot(**plot_parameters)
 

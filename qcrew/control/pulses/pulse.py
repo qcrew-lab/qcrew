@@ -73,3 +73,42 @@ class Pulse(Parametrized, Yamlizable):
     def type_(self) -> str:
         """ """
         return "measurement" if self.is_readout_pulse else "control"
+
+
+class IQPulse(Pulse):
+    """ """
+
+    _parameters: ClassVar[set[str]] = Pulse._parameters | {
+        "i_wave",
+        "q_wave",
+    }
+
+    def __init__(self, i_wave, q_wave, ampx: float = 1.0, pad: int = 0) -> None:
+        """ """
+        self.i_wave, self.q_wave = "NA", "NA"  # to avoid yamlizing np arrays
+        self.iwave, self.qwave = i_wave, q_wave  # underscore omitted on purpose
+
+        self.pad = pad
+        
+        if len(i_wave) != len(q_wave):
+            raise ValueError("i_wave and q_wave must be of same length")
+
+        length = len(i_wave)
+        if length % 4 != 0:
+            self.pad = 4 - length % 4
+            length += self.pad
+
+        super().__init__(length=length, ampx=ampx, integration_weights=None)
+
+    @property
+    def samples(self):
+        """ """
+        i_wave = np.real(self.iwave)
+        q_wave = np.imag(self.qwave)
+
+        if self.pad != 0:
+            pad_zeros = np.zeros(self.pad)
+            i_wave = np.concatenate((i_wave, pad_zeros), axis=0)
+            q_wave = np.concatenate((q_wave, pad_zeros), axis=0)
+
+        return i_wave, q_wave

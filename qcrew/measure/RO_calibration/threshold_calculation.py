@@ -15,15 +15,15 @@ if __name__ == "__main__":
             "qubit_pi_pulse": "constant_cos_pi",  # pulse to excite qubit
         }
 
-        ddrop_params = {
-            "rr_ddrop_freq": int(-50.4e6),
-            "rr_ddrop": "ddrop_pulse",
-            "qubit_ddrop": "ddrop_pulse",
-            "qubit_ef_mode": stage.QUBIT_EF,
-            "steady_state_wait": 2000,
-        }
+        # ddrop_params = {
+        #     "rr_ddrop_freq": int(-50.4e6),
+        #     "rr_steady_wait": 2000,
+        #     "ddrop_pulse": "ddrop_pulse",
+        #     "qubit_ef_mode": stage.QUBIT_EF,
+        # }
 
-        ro_trainer = ReadoutTrainer(rr, qubit, qm, ddrop_params=ddrop_params, **params)
+        # ro_trainer = ReadoutTrainer(rr, qubit, qm, ddrop_params=ddrop_params, **params)
+        ro_trainer = ReadoutTrainer(rr, qubit, qm, **params)
         threshold, data = ro_trainer.calculate_threshold()
 
         ## Save data

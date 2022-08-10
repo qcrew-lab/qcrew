@@ -19,14 +19,15 @@ class PowerRabiEF(Experiment):
 
     _parameters: ClassVar[set[str]] = Experiment._parameters | {
         "qubit_ef_op",  # operation used for exciting the qubit
+        "qubit_ge_pi",
         "fit_fn",  # fit function
     }
 
-    def __init__(self, qubit_ef_op, qubit_pi_pulse_name, fit_fn="sine", **other_params):
+    def __init__(self, qubit_ef_op, qubit_ge_pi, fit_fn="sine", **other_params):
 
         self.qubit_ef_op = qubit_ef_op
+        self.qubit_ge_pi = qubit_ge_pi
         self.fit_fn = fit_fn
-        self.qubit_pi_pulse_name = qubit_pi_pulse_name
 
         super().__init__(**other_params)  # Passes other parameters to parent
 
@@ -36,13 +37,13 @@ class PowerRabiEF(Experiment):
         """
         qubit, qubit_ef, rr = self.modes  # get the modes
 
-        qubit.play(self.qubit_pi_pulse_name)  # g-> e
+        qubit.play(self.qubit_ge_pi)  # g-> e
         qua.align(qubit.name, qubit_ef.name)
         qubit_ef.play(self.qubit_ef_op, ampx=self.x)  # e-> f
         qua.align(qubit.name, qubit_ef.name)
-        qua.update_frequency(qubit.name, qubit.int_freq)
-        qubit.play(self.qubit_pi_pulse_name)  # e->g
+        qubit.play(self.qubit_ge_pi)  # e->g
         qua.align(qubit.name, rr.name)  # wait qubit pulse to end
+        
         rr.measure((self.I, self.Q))  # measure qubit state
         qua.wait(int(self.wait_time // 4), rr.name)  # wait system reset
 
@@ -52,17 +53,18 @@ class PowerRabiEF(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-    amp_start = -1.5
-    amp_stop = 1.5
-    amp_step = 0.01
+    amp_start = -1.6
+    amp_stop = 1.6
+    amp_step = 0.05
 
     parameters = {
         "modes": ["QUBIT", "QUBIT_EF", "RR"],
-        "reps": 3000,
+        "reps": 5000,
         "wait_time": 100000,
-        "qubit_pi_pulse_name": "pi",
+        "qubit_ge_pi": "constant_cos_pi",
+        "qubit_ef_op": "pi",
         "x_sweep": (amp_start, amp_stop + amp_step / 2, amp_step),
-        "qubit_ef_op": "ddrop_pulse",
+        "plot_quad": "I_AVG"
     }
 
     plot_parameters = {

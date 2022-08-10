@@ -24,13 +24,12 @@ class QubitPopulation(Experiment):
     }
 
     def __init__(
-        self, qubit_ge_pi, qubit_ef_pi, ef_int_freq, fit_fn="sine", **other_params
+        self, qubit_ge_pi, qubit_ef_pi, fit_fn="sine", **other_params
     ):
 
         self.qubit_ge_pi = qubit_ge_pi
         self.fit_fn = fit_fn
         self.qubit_ef_pi = qubit_ef_pi
-        self.ef_int_freq = ef_int_freq
 
         super().__init__(**other_params)  # Passes other parameters to parent
 
@@ -38,13 +37,13 @@ class QubitPopulation(Experiment):
         """
         Defines pulse sequence to be played inside the experiment loop
         """
-        qubit, rr = self.modes  # get the modes
+        qubit, qubit_ef, rr = self.modes  # get the modes
 
-        qubit.play(self.qubit_ge_pi, ampx=self.y)
-        qua.update_frequency(qubit.name, self.ef_int_freq)
-        qubit.play(self.qubit_ef_pi, ampx=self.x)  # e-> f
-        qua.update_frequency(qubit.name, qubit.int_freq)
-        qubit.play(self.qubit_ge_pi)  # e-> f
+        qubit.play(self.qubit_ge_pi, ampx=self.y) # g->e
+        qua.align(qubit.name, qubit_ef.name)
+        qubit_ef.play(self.qubit_ef_pi, ampx=self.x)  # e-> f
+        qua.align(qubit.name, qubit_ef.name)
+        qubit.play(self.qubit_ge_pi)  # e->g
 
         qua.align(qubit.name, rr.name)  # wait qubit pulse to end
         rr.measure((self.I, self.Q))  # measure qubit state
@@ -60,6 +59,9 @@ class QubitPopulation(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
+    # _ef_int_freq = -70.6e6
+    
+    
 
     amp_start = -1.9
     amp_stop = 1.9
@@ -69,10 +71,11 @@ if __name__ == "__main__":
         "modes": ["QUBIT", "QUBIT_EF", "RR"],
         "reps": 5000,
         "wait_time": 300000,
-        "qubit_ge_pi": "pi",
+        "qubit_ge_pi": "constant_cos_pi",
         "qubit_ef_pi": "pi",
-        "x_sweep": (-1.8, 1.8 + 0.1 / 2, 0.1),
-        "y_sweep": [1.0],
+        "x_sweep": (amp_start, amp_stop + amp_step / 2, amp_step),
+        "y_sweep": [0.0, 1.0],
+        "plot_quad": "I_AVG",
     }
 
     plot_parameters = {

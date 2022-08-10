@@ -43,38 +43,37 @@ class CavityDisplacementCal(Experiment):
         rr.measure((self.I, self.Q))  # measure transmitted signal
 
         qua.align(cav.name, qubit.name, rr.name, cav_drive.name, rr_drive.name)
-        cav_drive.play("constant_cos", duration=200e3, ampx=1.6)
-        rr_drive.play("constant_cos", duration=200e3, ampx=1.4)
+        # cav_drive.play("constant_cos", duration=200e3, ampx=1.6)
+        # rr_drive.play("constant_cos", duration=200e3, ampx=1.4)
         qua.wait(int(self.wait_time // 4), cav.name)
 
         if self.single_shot:  # assign state to G or E
             qua.assign(
                 self.state, qua.Cast.to_fixed(self.I < rr.readout_pulse.threshold)
             )
- # stream variables (I, Q, x, etc)
+        self.QUA_stream_results()  # stream variables (I, Q, x, etc)
+
+
+# stream variables (I, Q, x, etc)
 
 
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
     x_start = 0.1
-    x_stop = 1.8
-    x_step = 0.01
+    x_stop = 2
+    x_step = 0.02
 
     parameters = {
         "modes": ["QUBIT", "CAV", "RR", "CAV_DRIVE", "RR_DRIVE"],
-        "reps": 20000,
-        "wait_time": 50e3,
+        "reps": 5000,
+        "wait_time": 3e6,
         "x_sweep": (x_start, x_stop + x_step / 2, x_step),
-<<<<<<< HEAD
-        "qubit_op": "pi_selective",
-        "cav_op": "cohstate_1_test",
-=======
         "qubit_op": "pi_selective_1",
-        "cav_op": "constant_cos_ECD",
-        # "fetch_period": 2,
-        "single_shot": True,
->>>>>>> de6211f2e29d356d80f941276b1d45a86e3df7be
+        "cav_op": "constant_cos_cohstate_1",
+        "fetch_period": 2,
+        "single_shot": False,
+        "plot_quad": "I_AVG",
     }
 
     plot_parameters = {

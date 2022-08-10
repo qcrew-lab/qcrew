@@ -64,8 +64,6 @@ class CharacteristicFunction(Experiment):
 
         qubit.play(self.qubit_op1)  # bring qubit into superposition
         
-
-
         # start ECD gate
         qua.align(cav.name, qubit.name)  # wait for qubit pulse to end
         cav.play(self.cav_op, ampx=self.x, phase=0)  # First positive displacement
@@ -101,21 +99,21 @@ if __name__ == "__main__":
 
     parameters = {
         "modes": ["QUBIT", "CAV", "RR"],
-        "reps": 1000000,
-        "wait_time": 2000000,
+        "reps": 2000,
+        "wait_time": 2.5e6,
         "fetch_period": 2,  # time between data fetching rounds in sec
-        "delay": 500,  # wait time between opposite sign displacements
+        "delay": 600,  # wait time between opposite sign displacements
         "x_sweep": (
             x_start,
             x_stop + x_step / 2,
             x_step,
         ),  # ampitude sweep of the displacement pulses in the ECD
-        "qubit_op1": "pi2",
-        "qubit_op2": "pi",
-        "cav_state_op": "cohstate_1",
-        "cav_op": "ECD_cali",
-        # "ECD_phase": 0
-        "measure_real": True,  # measure real part of char function if True, imag Part if false
+        "qubit_op1": "constant_cos_pi2",
+        "qubit_op2": "constant_cos_pi",
+        "cav_state_op": "constant_cos_cohstate_1",
+        "cav_op": "constant_cos_ECD",
+        "measure_real": False, #True,  # measure real part of char function if True, imag Part if false
+        "plot_quad": "I_AVG"
     }
 
     plot_parameters = {

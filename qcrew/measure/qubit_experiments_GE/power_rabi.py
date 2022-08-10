@@ -37,8 +37,6 @@ class PowerRabi(Experiment):
         """
         qubit, rr, qubit_ef = self.modes  # get the modes
 
-        qubit.play(self.qubit_op, ampx=self.x)  # play qubit pulse
-
         if self.ddrop_params:
             macros.DDROP_reset(qubit, rr, **self.ddrop_params)
             # Use qubit_ef if also resetting F state
@@ -46,8 +44,7 @@ class PowerRabi(Experiment):
 
         qua.align()
 
-
-        qubit.play(self.qubit_op, ampx=self.x, phase=0) # if checking a pi2 pulse
+        qubit.play(self.qubit_op, ampx=self.x, phase=0)  # if checking a pi2 pulse
         qua.align(qubit.name, rr.name)  # wait qubit pulse to end
         rr.measure((self.I, self.Q))  # measure qubit state
         qua.wait(int(self.wait_time // 4))  # wait system reset
@@ -72,7 +69,7 @@ if __name__ == "__main__":
         "reps": 5000,
         "wait_time": 100000,  # 2000,
         "x_sweep": (amp_start, amp_stop + amp_step / 2, amp_step),
-        "qubit_op": "constant_cos_pi2",
+        "qubit_op": "constant_cos_pi",
         "single_shot": True,
         # "plot_quad": "I_AVG",
     }

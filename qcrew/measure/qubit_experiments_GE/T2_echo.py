@@ -8,6 +8,7 @@ from typing import ClassVar
 from qcrew.control import professor as prof
 from qcrew.measure.experiment import Experiment
 from qm import qua
+import qcrew.measure.qua_macros as macros
 
 # ---------------------------------- Class -------------------------------------
 
@@ -38,13 +39,18 @@ class T2_Echo(Experiment):
         """
         Defines pulse sequence to be played inside the experiment loop
         """
+        factor = qua.declare(qua.fixed)
+        qua.assign(factor, self.detuning * 4 * 1e-9)
+
         qubit, rr = self.modes  # get the modes
-        qua.update_frequency(qubit.name, qubit.int_freq + self.detuning)  # detune
+        qua.reset_frame(qubit.name)
+        # qua.update_frequency(qubit.name, qubit.int_freq + self.detuning)  # detune
         qubit.play(self.qubit_pi2)  # play half pi qubit pulse
         qua.wait(self.x / 2, qubit.name)  # wait for partial qubit decay
         qubit.play(self.qubit_pi)  # play pi qubit pulse
         qua.wait(self.x / 2, qubit.name)  # wait for partial qubit decay
-        qubit.play(self.qubit_pi2)  # play half pi qubit pulse
+        qua.assign(self.phase, qua.Cast.mul_fixed_by_int(factor, self.x))
+        qubit.play(self.qubit_pi2, phase=self.phase)  # play half pi qubit pulse
         qua.align(qubit.name, rr.name)  # wait last qubit pulse to end
         rr.measure((self.I, self.Q))  # measure qubit state
         if self.single_shot:  # assign state to G or E
@@ -60,19 +66,28 @@ class T2_Echo(Experiment):
 
 if __name__ == "__main__":
     x_start = 10
-    x_stop = 50000
+    x_stop = 20000
     x_step = 200
-    detuning = 0e6
+    detuning = 200e3
 
     parameters = {
         "modes": ["QUBIT", "RR"],
-        "reps": 30000,
-        "wait_time": 200000,
+        "reps": 5000,
+        "wait_time": 40e3,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
         "qubit_pi2": "pi2",
         "qubit_pi": "pi",
         "single_shot": False,
-        "detuning": int(detuning)
+        "detuning": int(detuning),
+        "extra_vars": {
+            "phase": macros.ExpVariable(
+                var_type=qua.fixed,
+                tag="phase",
+                average=True,
+                buffer=True,
+                save_all=True,
+            )
+        },
     }
 
     plot_parameters = {

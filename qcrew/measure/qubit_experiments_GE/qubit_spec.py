@@ -25,7 +25,6 @@ class QubitSpectroscopy(Experiment):
 
         self.qubit_op = qubit_op
         self.fit_fn = fit_fn
-
         super().__init__(**other_params)  # Passes other parameters to parent
 
     def QUA_play_pulse_sequence(self):
@@ -33,7 +32,6 @@ class QubitSpectroscopy(Experiment):
         Defines pulse sequence to be played inside the experiment loop
         """
         qubit, rr = self.modes  # get the modes
-
         qua.update_frequency(qubit.name, self.x)  # update resonator pulse frequency
         qubit.play(self.qubit_op, ampx=1)  # play qubit pulse
         qua.align(qubit.name, rr.name)  # wait qubit pulse to end

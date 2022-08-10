@@ -31,8 +31,6 @@ if __name__ == "__main__":
             stage.QUBIT,
             stage.RR,
         )
-        # rr.int_freq = -50e6
-        # rr.lo_freq = 7.5e9
 
         mode = qubit  # select the mode whose spectrum you want to sweep
 

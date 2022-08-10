@@ -20,9 +20,7 @@ class T2EchoEF(Experiment):
         "qubit_ge_pi",  # operation used for exciting the qubit from g to e
         "qubit_ef_pi2",  # half-ppi operation between e and f
         "qubit_ef_pi",
-        "ef_int_freq",  # intermediate frequency of the ef transition
         "fit_fn",  # fit function
-        "detuning",  # qubit pulse detuning
     }
 
     def __init__(
@@ -30,8 +28,6 @@ class T2EchoEF(Experiment):
         qubit_ge_pi,
         qubit_ef_pi2,
         qubit_ef_pi,
-        ef_int_freq,
-        detuning=0,
         fit_fn="exp_decay_sine",
         **other_params
     ):
@@ -39,9 +35,7 @@ class T2EchoEF(Experiment):
         self.qubit_ge_pi = qubit_ge_pi  # pi pulse g->e
         self.qubit_ef_pi2 = qubit_ef_pi2  # pi/2 pulse e->f
         self.qubit_ef_pi = qubit_ef_pi
-        self.ef_int_freq = ef_int_freq
         self.fit_fn = fit_fn
-        self.detuning = detuning  # frequency detuning of qubit operation
 
         super().__init__(**other_params)  # Passes other parameters to parent
 
@@ -49,17 +43,17 @@ class T2EchoEF(Experiment):
         """
         Defines pulse sequence to be played inside the experiment loop
         """
-        qubit, rr = self.modes  # get the modes
+        qubit, qubit_ef, rr = self.modes  # get the modes
         qubit.play(self.qubit_ge_pi)  # g-> e pi
-        qua.update_frequency(qubit.name, self.ef_int_freq)
 
-        qubit.play(self.qubit_ef_pi2)  # e-> f half pi
-        qua.wait(self.x / 2, qubit.name)  # wait for partial qubit decay
-        qubit.play(self.qubit_ef_pi)
-        qua.wait(self.x / 2, qubit.name)
-        qubit.play(self.qubit_ef_pi2)  # e-> f half pi
+        qua.align(qubit.name, qubit_ef.name)
+        qubit_ef.play(self.qubit_ef_pi2)  # e-> f half pi
+        qua.wait(self.x / 2, qubit_ef.name)  # wait for partial qubit decay
+        qubit_ef.play(self.qubit_ef_pi)
+        qua.wait(self.x / 2, qubit_ef.name)
+        qubit_ef.play(self.qubit_ef_pi2)  # e-> f half pi
+        qua.align(qubit.name, qubit_ef.name)
 
-        qua.update_frequency(qubit.name, qubit.int_freq)
         qubit.play(self.qubit_ge_pi)  # e->g pi
         qua.align(qubit.name, rr.name)  # wait last qubit pulse to end
         rr.measure((self.I, self.Q))  # measure qubit state
@@ -73,14 +67,13 @@ class T2EchoEF(Experiment):
 if __name__ == "__main__":
 
     parameters = {
-        "modes": ["QUBIT", "RR"],
+        "modes": ["QUBIT", "QUBIT_EF", "RR"],
         "reps": 20000,
-        "wait_time": 200000,
-        "x_sweep": (int(16), int(16e3 + 100 / 2), int(100)),
+        "wait_time": 325000,
         "qubit_ge_pi": "pi",
-        "qubit_ef_pi2": "ef_pi2",
-        "qubit_ef_pi": "ef_pi",
-        "ef_int_freq": int(-63.85e6),
+        "qubit_ef_pi2": "pi2",
+        "qubit_ef_pi": "pi",
+        "x_sweep": (int(16), int(16e3 + 100 / 2), int(100)),
     }
 
     plot_parameters = {

@@ -44,6 +44,7 @@ class T1DDROP(Experiment):
         qubit.play(self.qubit_op)  # play pi qubit pulse
         qua.wait(self.x, qubit.name)  # wait for partial qubit decay
         qua.align(qubit.name, rr.name)  # wait qubit pulse to end
+        qua.update_frequency(rr.name, rr.int_freq)
         rr.measure((self.I, self.Q))  # measure qubit state
 
         if self.single_shot:  # assign state to G or E
@@ -58,16 +59,21 @@ class T1DDROP(Experiment):
 
 if __name__ == "__main__":
     x_start = 4
-    x_stop = 30e3
+    x_stop = 25e3
     x_step = 300
 
     parameters = {
         "modes": ["QUBIT", "RR"],
-        "reps": 20000,
-        "wait_time": 100000,
+        "reps": 200000,
+        "wait_time": 2000,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
-        "qubit_op": "pi",
+        "qubit_op": "pi_selective3",
+        "qubit_ddrop": "ddrop_pulse",
+        "rr_ddrop": "ddrop_pulse",
+        "rr_ddrop_freq": int(-50e6),
+        "steady_state_wait": 2000,
         "single_shot": False,
+        "plot_quad": "I_AVG",
     }
 
     plot_parameters = {

@@ -252,3 +252,29 @@ def QUA_loop(qua_function, sweep_variables):
             with qua.for_each_(v1.var, v1.sweep):
                 with qua.for_each_(v2.var, v2.sweep):
                     qua_function()
+
+def DDROP_reset(qubit, rr, rr_ddrop_freq, rr_steady_wait, ddrop_pulse, qubit_ef=None):
+
+    # Play RR ddrop
+    qua.update_frequency(rr.name, rr_ddrop_freq)
+    rr.play(ddrop_pulse)
+
+    if qubit_ef:
+        print("HERE!!")
+        # Play QUBIT and QUBIT_EF DDROP
+        qua.wait(
+            int(rr_steady_wait // 4), qubit.name, qubit_ef.name
+        )  # wait resonator reset
+        qubit.play(ddrop_pulse)  # play qubit ddrop
+        qubit_ef.play(ddrop_pulse)  # play qubit ef ddrop
+        qua.wait(int(rr_steady_wait // 4), qubit.name, qubit_ef.name)  # wait rr reset
+        qua.align(qubit.name, rr.name, qubit_ef.name)  # wait pulses to end
+    else:
+        # Play QUBIT DDROP
+        qua.wait(int(rr_steady_wait // 4), qubit.name)  # wait rr reset
+        qubit.play(ddrop_pulse)  # play qubit ddrop
+        qua.wait(int(rr_steady_wait // 4), qubit.name)  # wait rr reset
+        qua.align(qubit.name, rr.name)  # wait pulses to end
+
+    # Reset RR frequency
+    qua.update_frequency(rr.name, rr.int_freq)

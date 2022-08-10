@@ -155,6 +155,9 @@ class Experiment(Parametrized):
         else:
             dep_tags = [self.Z_AVG_tag]
 
+        # dep_tags = ["state" if self.single_shot else self.Z_AVG_tag]
+        # dep_tags = ["I_AVG"]  # toggle here if you want to just look at one quadrature
+        # dep_tags = []
         return indep_tags, dep_tags
 
     def setup_plot(

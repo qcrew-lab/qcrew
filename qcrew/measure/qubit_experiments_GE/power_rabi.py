@@ -69,6 +69,7 @@ if __name__ == "__main__":
 
     plot_parameters = {
         "xlabel": "Qubit pulse amplitude scaling",
+        # "zlimits": (0.35, 0.5)
     }
 
     experiment = PowerRabi(**parameters)

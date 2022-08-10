@@ -1,6 +1,6 @@
 """
-A python class describing a readout resonator spectroscopy with qubit in ground and 
-excited state using QM.
+A python class describing a photon-number split spectroscopy sweeping the number of 
+photons in the cavity using QM.
 This class serves as a QUA script generator with user-defined parameters.
 """
 
@@ -16,16 +16,16 @@ from qm import qua
 
 class RRSpecDispersiveShift(Experiment):
 
-    name = "rr_spec_dispersive_shift"
+    name = "shift_rr_cavity"
 
     _parameters: ClassVar[set[str]] = Experiment._parameters | {
         "fit_fn",  # fit function
     }
 
-    def __init__(self, qubit_op, fit_fn=None, **other_params):
+    def __init__(self, cav_op, fit_fn=None, **other_params):
 
         self.fit_fn = fit_fn
-        self.qubit_op = qubit_op
+        self.cav_op = cav_op
 
         super().__init__(**other_params)  # Passes other parameters to parent
 
@@ -33,11 +33,11 @@ class RRSpecDispersiveShift(Experiment):
         """
         Defines pulse sequence to be played inside the experiment loop
         """
-        (rr, qubit) = self.modes  # get the modes
+        (rr, cav) = self.modes  # get the modes
 
         qua.update_frequency(rr.name, self.x)  # update resonator pulse frequency
-        qubit.play(self.qubit_op, ampx=self.y)
-        qua.align(rr.name, qubit.name)
+        cav.play(self.cav_op, ampx=self.y)
+        qua.align(rr.name, cav.name)
         rr.measure((self.I, self.Q))  # measure transmitted signal
         qua.wait(int(self.wait_time // 4), rr.name)  # wait system reset
 
@@ -48,25 +48,26 @@ class RRSpecDispersiveShift(Experiment):
 
 if __name__ == "__main__":
 
-    x_start = -50.5e6
-    x_stop = -49.5e6
-    x_step = 0.05e6
+    x_start = -52e6
+    x_stop = -49e6
+    x_step = 0.02e6
 
     parameters = {
-        "modes": ["RR", "QUBIT"],
-        "reps": 5000,
-        "wait_time": 320000,
+        "modes": ["RR", "CAV"],
+        "reps": 50000,
+        "wait_time": 1000000,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
-        "y_sweep": [0.0, 1.0],
-        "qubit_op": "pi",
-        "plot_quad": "Z_AVG",
+        "y_sweep": [0.0, 1.0, 1.41],
+        "cav_op": "cohstate_1",
     }
 
     plot_parameters = {
         "xlabel": "Resonator pulse frequency (Hz)",
+        "trace_labels": ["<n> = 0", "<n> = 1", "<n> = 2"],
     }
 
     experiment = RRSpecDispersiveShift(**parameters)
     experiment.setup_plot(**plot_parameters)
 
     prof.run(experiment)
+

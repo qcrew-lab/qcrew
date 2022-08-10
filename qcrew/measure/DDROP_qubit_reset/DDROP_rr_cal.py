@@ -18,9 +18,7 @@ class DDROPRRCal(Experiment):
     name = "DDROP_rr_cal"
 
     _parameters: ClassVar[set[str]] = Experiment._parameters | {
-        "qubit_op",  # operation used for exciting the qubit
-        "resonator_op",  # operation used for exciting the RR
-        "steady_state_wait",  # Time for resonator to reach steady state
+        "rr_steady_wait",  # Time for resonator to reach steady state
         "rr_ddrop_freq",
         "fit_fn",  # fit function
     }
@@ -74,18 +72,19 @@ if __name__ == "__main__":
 
     amp_start = -1
     amp_stop = 0
-    amp_step = 0.001
+    amp_step = 0.02
 
     parameters = {
         "modes": ["QUBIT", "RR"],
-        "reps": 50000,
-        "wait_time": 100000,
+        "reps": 10000,
+        "wait_time": 325000,
         "x_sweep": (amp_start, amp_stop + amp_step / 2, amp_step),
-        "y_sweep": (0.0, 0.5, 1),
+        "y_sweep": (0, 1.0),
         "ddrop_pulse": "ddrop_pulse",
-        "rr_ddrop_freq": int(-50e6),
-        "rr_steady_wait": 2000,
+        "rr_ddrop_freq": int(-50.3e6),
+        "rr_steady_wait": 1000,
         "single_shot": False,
+        "plot_quad": "I_AVG",
     }
 
     plot_parameters = {

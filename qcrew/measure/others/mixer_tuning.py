@@ -50,9 +50,9 @@ if __name__ == "__main__":
         # use brute force (BF) minimizer
         bf_params_sb = {
             # range of DC offsets you want to sweep to tune LO
-            "offset_range": (-0.2, 0.2),  # (min = -0.5, max = 0.5)
+            "offset_range": (-0.05, 0.05),  # (min = -0.5, max = 0.5)
             # number of DC offset sweep points in the given range i.e. decide step size
-            "num_points": 21,
+            "num_points": 41,
             # number of iterations of the minimization you want to run
             "num_iterations": 5,
             # after each iteration, the sweep range will be reduced by this factor
@@ -67,4 +67,7 @@ if __name__ == "__main__":
 
         # user Nelder-Mead (NM) minimizer
         mixer_tuner.tune_sb(mode=mode, method="NM")
+<<<<<<< HEAD
     
+=======
+>>>>>>> e622c8f0b090e30f47bc6c9ef410aaf48d67e7aa

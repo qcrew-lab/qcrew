@@ -53,10 +53,9 @@ class RepPowerRabi(Experiment):
 
 if __name__ == "__main__":
     
-    amp_start = -1.8
-    amp_stop = 1.8
+    amp_start = -1.2
+    amp_stop = 1.2
     amp_step = 0.05
-
 
     parameters = {
         "modes": ["QUBIT_BETA", "RR"],
@@ -66,7 +65,7 @@ if __name__ == "__main__":
         "qubit_op": "gaussian_pulse",
         "pulse_number": 2,
         "single_shot": False,
-        "plot_quad": "I_AVG",
+        "plot_quad": "Z_AVG",
     }
 
     plot_parameters = {

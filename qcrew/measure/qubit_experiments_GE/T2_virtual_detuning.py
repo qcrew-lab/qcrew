@@ -68,12 +68,12 @@ if __name__ == "__main__":
     x_start = 20
     x_stop = 10000
     x_step = 80
-    detuning_ = 0.4e6  # 1.12e6
+    detuning_ = 500e3
 
     parameters = {
         "modes": ["QUBIT_BETA", "RR"],
         "reps": 100000,
-        "wait_time": 200000,
+        "wait_time": 300000,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
         "qubit_op": "pi2",
         "detuning": int(detuning_),
@@ -87,7 +87,7 @@ if __name__ == "__main__":
                 save_all=True,
             )
         },
-        "plot_quad": "I_AVG",
+        "plot_quad": "Z_AVG",
     }
 
     plot_parameters = {

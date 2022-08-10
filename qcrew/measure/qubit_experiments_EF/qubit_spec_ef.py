@@ -53,7 +53,7 @@ class QubitSpectroscopyEF(Experiment):
 
 if __name__ == "__main__":
     x_start = -189e6
-    x_stop = -184e6 
+    x_stop = -184e6
     xstep = 0.05e6
 
     parameters = {

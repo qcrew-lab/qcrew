@@ -84,7 +84,7 @@ if __name__ == "__main__":
     x_start = 4
     x_stop = 4000
     x_step = 50
-    detuning_ = 500e3  # 1.12e6
+    detuning_ = 400e3  # 1.12e6
 
     parameters = {
         "modes": ["QUBIT", "RR", "QUBIT_EF"],
@@ -102,8 +102,8 @@ if __name__ == "__main__":
                 save_all=True,
             )
         },
-        "single_shot": False,
-        "plot_quad": "I_AVG",
+        "single_shot": True,
+        # "plot_quad": "I_AVG",
     }
 
     plot_parameters = {

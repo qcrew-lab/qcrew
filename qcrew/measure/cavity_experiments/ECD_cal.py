@@ -45,7 +45,7 @@ class ECDCalibration(Experiment):
         Defines pulse sequence to be played inside the experiment loop
         """
         qubit, cav, rr = self.modes  # get the modes
-        
+
         qua.reset_frame(cav.name)
 
         qubit.play(self.qubit_op1)  # play pi/2 pulse around X
@@ -72,6 +72,10 @@ class ECDCalibration(Experiment):
 
         # wait system reset
         qua.wait(int(self.wait_time // 4))
+        if self.single_shot:  # assign state to G or E
+            qua.assign(
+                self.state, qua.Cast.to_fixed(self.I < rr.readout_pulse.threshold)
+            )
 
         self.QUA_stream_results()  # stream variables (I, Q, x, etc)
 
@@ -79,21 +83,22 @@ class ECDCalibration(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-    x_start = -1.8
-    x_stop = 1.8
+    x_start = -1.9
+    x_stop = 1.9
     x_step = 0.1
 
     parameters = {
         "modes": ["QUBIT", "CAV", "RR"],
-        "reps": 10000,
+        "reps": 2000,
         "wait_time": 3.5e6,
         "fetch_period": 3,  # time between data fetching rounds in sec
-        "delay": 100,  # pi/chi
+        "delay": 50,  # pi/chi
         "x_sweep": (x_start, x_stop + x_step / 2, x_step),
         "qubit_op1": "constant_cos_pi2",
         "qubit_op2": "constant_cos_pi",
-        "cav_op": "constant_cos_ECD_state_u",
-        "plot_quad": "I_AVG",
+        "cav_op": "constant_cos_ECD",
+        "single_shot": True,
+        # "plot_quad": "I_AVG",
     }
 
     plot_parameters = {

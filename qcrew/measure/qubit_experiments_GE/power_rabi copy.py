@@ -28,6 +28,8 @@ class PowerRabi(Experiment):
         self.qubit_op = qubit_op
         self.fit_fn = fit_fn
         self.ddrop_params = ddrop_params
+        self.y_list = ["first", "second"]
+        self.internal_sweep = self.y_list
 
         super().__init__(**other_params)  # Passes other parameters to parent
 
@@ -44,33 +46,29 @@ class PowerRabi(Experiment):
 
         qua.align()
 
-        qubit.play(self.qubit_op, ampx=self.x, phase=0)  # for pi2
-        qubit.play(self.qubit_op, ampx=self.x, phase=0)  # if checking a pi2 pulse
-        # qubit.play(self.qubit_op, ampx=self.x, phase=0)  # for pi2
-        # qubit.play(self.qubit_op, ampx=self.x, phase=0)  # if checking a pi2 pulse
-
+        qubit.play(self.qubit_op, ampx=self.x, phase=0)
         qua.align(qubit.name, rr.name)  # wait qubit pulse to end
-        rr.measure((self.I, self.Q))  # measure qubit state
+        for y in self.y_list:
+            rr.measure((self.I, self.Q))  # measure qubit state
+            if self.single_shot:  # assign state to G or E
+                qua.assign(
+                    self.state, qua.Cast.to_fixed(self.I < rr.readout_pulse.threshold)
+                )
+            self.QUA_stream_results()  # stream variables (I, Q, x, etc)
+
         qua.wait(int(self.wait_time // 4))  # wait system reset
-
-        if self.single_shot:  # assign state to G or E
-            qua.assign(
-                self.state, qua.Cast.to_fixed(self.I < rr.readout_pulse.threshold)
-            )
-
-        self.QUA_stream_results()  # stream variables (I, Q, x, etc)
 
 
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
 
-    amp_start = -1
-    amp_stop = 1
+    amp_start = -1.5
+    amp_stop = 1.5
     amp_step = 0.05
     parameters = {
         "modes": ["QUBIT", "RR", "QUBIT_EF"],
-        "reps": 2000,
+        "reps": 20,
         "wait_time": 100000,  # 2000,
         "x_sweep": (amp_start, amp_stop + amp_step / 2, amp_step),
         "qubit_op": "constant_cos_pi",

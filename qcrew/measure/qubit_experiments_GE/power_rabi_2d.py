@@ -35,8 +35,8 @@ class PowerRabi2D(Experiment):
         Defines pulse sequence to be played inside the experiment loop
         """
         qubit, rr = self.modes  # get the modes
-        
-        #qua.reset_frame(qubit.name)
+
+        # qua.reset_frame(qubit.name)
         qubit.play(self.qubit_op, ampx=self.x, duration=self.y)
 
         qua.align(qubit.name, rr.name)  # wait qubit pulse to end
@@ -56,19 +56,19 @@ class PowerRabi2D(Experiment):
 if __name__ == "__main__":
 
     amp_start = -1.7
-    amp_stop =  1.7
+    amp_stop = 1.7
     amp_step = 0.05
-    
-#     duration_start = 200
-#     duration_stop = 1000
-#     duration_step = 50
+
+    #     duration_start = 200
+    #     duration_stop = 1000
+    #     duration_step = 50
 
     parameters = {
         "modes": ["QUBIT", "RR"],
         "reps": 50000,
         "wait_time": 50000,
         "x_sweep": (amp_start, amp_stop + amp_step / 2, amp_step),
-        "y_sweep": [500], #[300 + 60*i for i in range(70)],
+        "y_sweep": [500],  # [300 + 60*i for i in range(70)],
         "qubit_op": "pi_selective",
         "single_shot": False,
     }

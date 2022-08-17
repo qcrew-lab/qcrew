@@ -205,7 +205,7 @@ class CavityDisplacementCalBerry(Experiment):
 if __name__ == "__main__":
     x_start = 0
     x_stop = 1.9
-    x_step = 0.1
+    x_step = 0.05
 
     ecd_amp_scale = 1
     d_amp_scale = 1

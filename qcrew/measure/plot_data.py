@@ -155,23 +155,27 @@ from qcrew.analyze import fit
 # plt.savefig("C:/Users/qcrew/Desktop/characteristic_function.pdf")
 
 
-# ########################  2D plot ##################
+# ########################  1D plot ##################
 import h5py
 import matplotlib.pyplot as plt
 import numpy as np
 
 
 filepath = (
-    "C:/Users/qcrew/Desktop/qcrew/data/panther_transmon/20220728/130200_panther_ECD_characteristic_func.h5"
+    "C:/Users/qcrew/Desktop/qcrew/data/panther_transmon/20220812/103308_panther_power_rabi.h5"
 )
 file = h5py.File(filepath, "r")
 data = file["data"]
-x_vec = np.arange(-1.8, 1.8 + 0.1/2, 0.1)
-y_vec = np.arange(-1.8, 1.8 + 0.1/2, 0.1)
+x = np.array(data['x'][:,0])
+state1 = np.array(data['state'][:,0])
+state2 = np.array(data['state'][:,1])
+print(state1)
+plt.plot(x, state1,'r*')
+plt.plot(x, state2, 'bo')
 
-I_AVG = data["I_AVG"]
-fig, ax = plt.subplots()
-# ax.pcolormesh(x_vec, y_vec, I_AVG, cmap = 'bwr', shading='auto' )
-ax.plot(x_vec, I_AVG[:,19])
-ax.set_title('measured')
+# I_AVG = data["I_AVG"]
+# fig, ax = plt.subplots()
+# # ax.pcolormesh(x_vec, y_vec, I_AVG, cmap = 'bwr', shading='auto' )
+# ax.plot(x_vec, I_AVG[:,19])
+# ax.set_title('measured')
 # ax.set_aspect("equal")

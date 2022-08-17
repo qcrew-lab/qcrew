@@ -81,21 +81,29 @@ class UVcharacteristicfunc(Experiment):
 
             # ECD Gate
             qua.align(cav.name, qubit.name)  # wait for qubit pulse to end
-            cav.play(self.cav_op_ecd, ampx=1, phase=0)  # First positive displacement
+            cav.play(
+                self.cav_op_ecd, ampx=1, phase=0
+            )  # First positive displacement
             qua.wait(
                 int(self.delay // 4), cav.name, qubit.name
             )  # wait time between opposite sign displacements
-            cav.play(self.cav_op_ecd, ampx=-1, phase=0)  # First negative displacement
+            cav.play(
+                self.cav_op_ecd, ampx=-1, phase=0
+            )  # First negative displacement
             qua.align(qubit.name, cav.name)
             qubit.play(
                 self.qubit_op2_ecd, phase=1
             )  # pi pulse to flip the qubit state (echo)
             qua.align(cav.name, qubit.name)  # wait for qubit pulse to end
-            cav.play(self.cav_op_ecd, ampx=-1, phase=0)  # Second negative displacement
+            cav.play(
+                self.cav_op_ecd, ampx=-1, phase=0
+            )  # Second negative displacement
             qua.wait(
                 int(self.delay // 4), cav.name, qubit.name
             )  # wait time between opposite sign displacements
-            cav.play(self.cav_op_ecd, ampx=1, phase=0)  # Second positive displacement
+            cav.play(
+                self.cav_op_ecd, ampx=1, phase=0
+            )  # Second positive displacement
 
             qua.align(qubit.name, cav.name)
 
@@ -274,13 +282,13 @@ class UVcharacteristicfunc(Experiment):
 if __name__ == "__main__":
     x_start = -1.9
     x_stop = 1.9
-    x_step = 0.05
+    x_step = 0.15
 
     y_start = -1.9
     y_stop = 1.9
-    y_step = 0.05
+    y_step = 0.15
 
-    ecd_amp_scale = 0.6  #
+    ecd_amp_scale = 0.2  #
     d_amp_scale = 1
 
     parameters = {

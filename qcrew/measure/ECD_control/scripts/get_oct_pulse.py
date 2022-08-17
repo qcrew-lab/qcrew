@@ -22,13 +22,13 @@ OCT_PULSES_PATH = Path(__file__).resolve().parents[4] / "config/oct_pulses"
 if __name__ == "__main__":
 
     # input target state and size of hilbert space to optimise
-    Nc = 130
+    Nc = 70
     Nq = 2
     alpha = 1
     psi_t = qt.tensor(qt.fock(Nq, 0), (qt.coherent(Nc, alpha)).unit())
 
     opt_params = {
-        "N_blocks": 2,
+        "N_blocks": 1,
         "N_multistart": 200,
         "epochs": 100,
         "epoch_size": 10,
@@ -36,7 +36,7 @@ if __name__ == "__main__":
         "term_fid": 0.999,
         "dfid_stop": 1e-2,
         "beta_scale": 3.0,
-        "initial_states": [qt.tensor(qt.fock(Nq, 1), qt.fock(Nc, 0))],
+        "initial_states": [qt.tensor(qt.fock(Nq, 0), qt.fock(Nc, 0))],
         "target_states": [psi_t],
         "name": "identity",
         "filename": None,
@@ -61,22 +61,21 @@ if __name__ == "__main__":
 
     # enter your circuit Hamiltonian parameters for each mode
     # here, we have a storage cavity and a qubit
-    pulse_shape = "Gaussian"
+    pulse_shape = "Cosine"
     storage_params = {
-        "chi_kHz": 45,
-        "unit_amp": 1.1571841851494695 * 0.2,
-        "sigma": 8,
-        "chop": 6,
-        "pulse_shape": pulse_shape,
-        "rise": 0.4,
-    }
-    qubit_params = {
-        "unit_amp": 1,  # 1.5846*0.2,
-        "sigma": 8,
-        "chop": 6,
-        "pulse_shape": pulse_shape,
-        "rise": 0.4,
-    }
+            "chi_kHz": 45, #dispersive shift in kHz
+            "chi_prime_Hz": 0, #second order dispersive shift in Hz
+            "Ks_Hz": 0, #Kerr correction not implemented here.
+            "unit_amp": 0.08975, #DAC amplitude (at maximum of pulse) for gaussian displacement to alpha=1.
+            "sigma": 8, #oscillator displacement pulse sigma
+            "chop":6, #oscillator displacement pulse chop (number of sigmas to include in gaussian pulse)
+            "length_ring":14,
+            "length_constant":24,
+            "pulse_shape": pulse_shape,
+        }
+
+    qubit_params = {'unit_amp': 1.839, 'sigma': 8, 'chop': 6, "length_ring":8, "length_constant":20, "pulse_shape": pulse_shape
+                    } #parameters for qubit pi pulse.
 
     # set the maximum displacement used during the ECD gates
     alpha_CD = 4

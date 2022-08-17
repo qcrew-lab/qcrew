@@ -62,17 +62,17 @@ class PowerRabi(Experiment):
 
 if __name__ == "__main__":
 
-    amp_start = -1.5
-    amp_stop = 1.5
+    amp_start = -1.1
+    amp_stop = 1.1
     amp_step = 0.05
     parameters = {
         "modes": ["QUBIT", "RR", "QUBIT_EF"],
         "reps": 5000,
         "wait_time": 100000,  # 2000,
         "x_sweep": (amp_start, amp_stop + amp_step / 2, amp_step),
-        "qubit_op": "pi",
-        "single_shot": True,
-        # "plot_quad": "I_AVG",
+        "qubit_op": "constant_cos_pi",
+        "single_shot": False,
+        "plot_quad": "I_AVG",
     }
 
     plot_parameters = {

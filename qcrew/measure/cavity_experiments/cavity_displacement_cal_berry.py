@@ -95,7 +95,7 @@ class CavityDisplacementCalBerry(Experiment):
             # Do the first displacement
             qua.align(qubit.name, cav.name)
             cav.play(self.cav_disp, ampx=self.x * self.d_amp_scale, phase=0.0)
- 
+
             # Do the second ECD gate
             qua.align(cav.name, qubit.name)  # wait for qubit pulse to end
             cav.play(
@@ -215,7 +215,7 @@ if __name__ == "__main__":
         "reps": 10000,
         "wait_time": 3e6,
         "fetch_period": 2,  # time between data fetching rounds in sec
-        "delay": 100,  # wait time between opposite sign displacements
+        "delay": 50,  # wait time between opposite sign displacements
         "ecd_amp_scale": ecd_amp_scale,
         "d_amp_scale": d_amp_scale,
         "x_sweep": (
@@ -225,7 +225,7 @@ if __name__ == "__main__":
         ),  # ampitude sweep of the displacement pulses in the ECD
         "qubit_op1": "constant_cos_pi2",
         "qubit_op2": "constant_cos_pi",
-        "cav_disp": "constant_cos_cohstate_1",
+        "cav_disp": "constant_cos_cohstate_1_long",
         "cav_disp_ecd": "constant_cos_ECD",
         # "ECD_phase": 0
         "measure_real": True,  # measure real part of char function if True, imag Part if false

@@ -63,7 +63,7 @@ if __name__ == "__main__":
     # here, we have a storage cavity and a qubit
     pulse_shape = "Gaussian"
     storage_params = {
-        "chi_kHz": 40,
+        "chi_kHz": 45,
         "unit_amp": 1.1571841851494695 * 0.2,
         "sigma": 8,
         "chop": 6,

@@ -164,6 +164,7 @@ class Experiment(Parametrized):
         zlabel=None,
         trace_labels=[],
         title=None,
+        skip_plot=False,
         plot_type="1D",
         plot_err=True,
         cmap="viridis",
@@ -204,6 +205,7 @@ class Experiment(Parametrized):
             "zlabel": zlabel,
             "trace_labels": trace_labels,
             "title": title,
+            "skip_plot": skip_plot,
             "plot_type": plot_type,
             "plot_err": plot_err,
             "cmap": cmap,
@@ -340,6 +342,7 @@ class Experiment(Parametrized):
         for tag in indep_tags:
             reshaped_data = partial_results[tag].reshape(self.buffering)
             independent_data.append(reshaped_data)
+        # print(reshaped_data)
 
         if 0:
             # Phase information useful for troubleshooting and rr spectroscopy
@@ -353,7 +356,7 @@ class Experiment(Parametrized):
                 - 2 * np.pi * freqs * 32e-9 * 8
             )
 
-            reshaped_phase_data = np.average(phase, axis=0).reshape(self.buffering)
+            reshaped_phase_data = np.average(phase, axis=0)  # .reshape(self.buffering)
             dependent_data.append(reshaped_phase_data)
 
             # if an internal sweep is defined in the child experiment class, add its value
@@ -387,13 +390,14 @@ class Experiment(Parametrized):
         else:
             error_data = None
 
-        plotter.live_plot(
-            independent_data,
-            dependent_data,
-            num_results,
-            fit_fn=self.fit_fn,
-            err=error_data,
-        )
+        if not self.plot_setup["skip_plot"]:
+            plotter.live_plot(
+                independent_data,
+                dependent_data,
+                num_results,
+                fit_fn=self.fit_fn,
+                err=error_data,
+            )
 
         # build data dictionary for final save
         dep_data_dict = {dep_tags[i]: dependent_data[i] for i in range(len(dep_tags))}

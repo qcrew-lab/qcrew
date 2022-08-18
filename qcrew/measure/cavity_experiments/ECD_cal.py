@@ -22,13 +22,8 @@ class ECDCalibration(Experiment):
 
     _parameters: ClassVar[set[str]] = Experiment._parameters | {
         "cav_op",  # operation for displacing the cavity
-<<<<<<< HEAD
         "qubit_op1",  # operation used for exciting the qubit
-        "qubit_op2"
-=======
-        "qubit_op2",  # operation used for exciting the qubit
-        "qubit_op1",  # operation used for exciting the qubit
->>>>>>> de6211f2e29d356d80f941276b1d45a86e3df7be
+        "qubit_op2",
         "fit_fn",  # fit function
         "delay",  # describe...
     }
@@ -93,12 +88,13 @@ if __name__ == "__main__":
         "reps": 10000,
         "wait_time": 3.5e6,
         "fetch_period": 3,  # time between data fetching rounds in sec
-        "delay": 100,  # pi/chi
+        "delay": 50,  # pi/chi
         "x_sweep": (x_start, x_stop + x_step / 2, x_step),
         "qubit_op1": "constant_cos_pi2",
         "qubit_op2": "constant_cos_pi",
-        "cav_op": "constant_cos_ECD_state_u",
+        "cav_op": "constant_cos_ECD",
         "plot_quad": "I_AVG",
+        "single_shot": True,
     }
 
     plot_parameters = {

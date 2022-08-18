@@ -94,20 +94,20 @@ class oct_exp(Experiment):
 
 if __name__ == "__main__":
 
-    x_start = -1.5
-    x_stop = 1.5
-    x_step = 0.1
+    x_start = -1
+    x_stop = 1
+    x_step = 0.05
 
-    y_start = -1.5
-    y_stop = 1.5
-    y_step = 0.1
+    y_start = -1
+    y_stop = 1
+    y_step = 0.05
 
     # amp_start = -1.5
     # amp_stop = 1.5
     # amp_step = 0.1
     parameters = {
         "modes": ["QUBIT", "RR", "CAV"],
-        "reps": 60,
+        "reps": 5000,
         "wait_time": 4e6,  # 2000,
         "x_sweep": (
             x_start,

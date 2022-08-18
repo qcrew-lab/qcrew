@@ -24,18 +24,19 @@ if __name__ == "__main__":
     # input target state and size of hilbert space to optimise
     Nc = 60
     Nq = 2
-    alpha = 1
+    alpha = 2
+    sq = 0.5
     psi_t = qt.tensor(
-        qt.fock(Nq, 0), (qt.squeeze(Nc, 1) * qt.coherent(Nc, alpha)).unit()
+        qt.fock(Nq, 0), (qt.coherent(Nc,alpha)).unit()
     )
 
     opt_params = {
-        "N_blocks": 3,
+        "N_blocks": 1,
         "N_multistart": 200,
         "epochs": 100,
         "epoch_size": 10,
         "learning_rate": 0.03,
-        "term_fid": 0.999,
+        "term_fid": 0.99,
         "dfid_stop": 1e-2,
         "beta_scale": 3.0,
         "initial_states": [qt.tensor(qt.fock(Nq, 0), qt.fock(Nc, 0))],
@@ -68,11 +69,11 @@ if __name__ == "__main__":
         "chi_kHz": 45,  # dispersive shift in kHz
         "chi_prime_Hz": 0,  # second order dispersive shift in Hz
         "Ks_Hz": 0,  # Kerr correction not implemented here.
-        "unit_amp": 0.0572,  # DAC amplitude (at maximum of pulse) for gaussian displacement to alpha=1.
+        "unit_amp": 0.0182,  # DAC amplitude (at maximum of pulse) for gaussian displacement to alpha=1.
         "sigma": 8,  # oscillator displacement pulse sigma
         "chop": 6,  # oscillator displacement pulse chop (number of sigmas to include in gaussian pulse)
-        "length_ring": 8,
-        "length_constant": 40,
+        "length_ring": 4,
+        "length_constant": 32,
         "pulse_shape": pulse_shape,
     }
 
@@ -86,7 +87,7 @@ if __name__ == "__main__":
     }  # parameters for qubit pi pulse.
 
     # set the maximum displacement used during the ECD gates
-    alpha_CD = 10
+    alpha_CD = 13
 
     # small delay to insert between oscillator and qubit pulses
     buffer_time = 0
@@ -124,6 +125,7 @@ if __name__ == "__main__":
     date_str = datetime.datetime.now().strftime("%Y%d%m_%H%M%S_oct_pulse")
     filepath_cavity = OCT_PULSES_PATH / f"{date_str}_cavity_{suffix}"
     filepath_qubit = OCT_PULSES_PATH / f"{date_str}_qubit_{suffix}"
+    print(f"{date_str}_qubit_{suffix}")
     np.savez(filepath_cavity, oct_pulse=cavity_dac_pulse)
     np.savez(filepath_qubit, oct_pulse=qubit_dac_pulse)
 

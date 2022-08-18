@@ -72,26 +72,24 @@ class ECDchar(Experiment):
         qua.reset_frame(cav.name)
 
         if 0:
-            qua.align()
-            qubit.play(self.qubit_op1_ecd, phase=0)
-            qua.align(cav.name, qubit.name)
-            cav.play("constant_cos_cohstate_1", phase=0)
+            # qua.align()
+            # qubit.play(self.qubit_op1_ecd, phase=0)
+            # qua.align(cav.name, qubit.name)
+            cav.play("constant_cos_cohstate_2", phase=0)
             # qua.align(cav.name, qubit.name)
             # qubit.play(self.qubit_op1_ecd, phase=0)
             # qua.wait(int(1200 // 4), cav.name, qubit.name)  # 5us
-            qua.align()
+            # qua.align()
             # qubit.play(self.qubit_op2_ecd, phase=0)
 
         ######################    ECD   ######################
         if 1:
 
-
-            #U
+            # U
             qubit.play(self.qubit_op1_ecd, phase=0.5)  # g+e
-            
-            qubit.play(self.qubit_op2_ecd, phase=0.25)  # pi
 
-            
+            qubit.play(self.qubit_op2_ecd, phase=0.75)  # pi
+
             # ECD Gate
             qua.align(cav.name, qubit.name)  # wait for qubit pulse to end
             cav.play(
@@ -119,18 +117,16 @@ class ECDchar(Experiment):
             )  # Second positive displacement
 
             qua.align(qubit.name, cav.name)
-            
-            
-            qubit.play(self.qubit_op1_ecd, phase=0)  #U
-            
+
+            qubit.play(self.qubit_op1_ecd, phase=0)  # U
+
             qua.align()  # wait for qubit pulse to end
 
         if 1:
-        #V
+            # V
 
-            qubit.play(self.qubit_op1_ecd, phase=0.25)  # g+e
             
-            qubit.play(self.qubit_op2_ecd, phase=0.25) #pi
+            qubit.play(self.qubit_op1_ecd, phase=0.75)  # g+e
 
             # ECD Gate
             qua.align(cav.name, qubit.name)  # wait for qubit pulse to end
@@ -159,24 +155,26 @@ class ECDchar(Experiment):
             )  # Second positive displacement
 
             qua.align(qubit.name, cav.name)
-            
-            
-            qubit.play(self.qubit_op1_ecd, phase=0.75)  ## changed to test, to  be changed back
-            
-            qua.align()  # wait for qubit pulse to end        
-            
+
+            qubit.play(
+                self.qubit_op1_ecd, phase=0.75
+            )  ## changed to test, to  be changed back
+
+            qua.align()  # wait for qubit pulse to end
+
         ######################  Measure the created state with charactristic function  #####################
         # bring qubit into superposition
         qua.align()
         qubit.play(self.qubit_op1_ecd)
         # start ECD gate
         qua.align(cav.name, qubit.name)  # wait for qubit pulse to end
-        cav.play(self.cav_op_ecd, ampx=self.x, phase=0.25)  # First positive displacement
+        cav.play(
+            self.cav_op_ecd, ampx=self.x, phase=0.25
+        )  # First positive displacement
         cav.play(self.cav_op_ecd, ampx=self.y, phase=0.5)
 
         qua.wait(int(self.delay // 4), cav.name)
-        cav.play(
-            self.cav_op_ecd, ampx=-self.x, phase=0.25)
+        cav.play(self.cav_op_ecd, ampx=-self.x, phase=0.25)
         cav.play(self.cav_op_ecd, ampx=-self.y, phase=0.5)
 
         qua.align(qubit.name, cav.name)
@@ -213,23 +211,23 @@ class ECDchar(Experiment):
 
 # -------------------------------- Execution -----------------------------------
 if __name__ == "__main__":
-    x_start = -1.7
-    x_stop = 1.7
+    x_start = -1.8
+    x_stop = 1.8
     x_step = 0.1
 
-    y_start = -1.7
-    y_stop = 1.7
+    y_start = -1.8
+    y_stop = 1.8
     y_step = 0.1
 
-    ecd_amp_scale = 0.5 #  the scale of constant_cos_ECD in ECD gate
-    d_amp_scale = -0.3
+    ecd_amp_scale = -0.5  #  the scale of constant_cos_ECD in ECD gate
+    d_amp_scale = 0.5
 
     parameters = {
         "modes": ["QUBIT", "CAV", "RR", "CAV_DRIVE", "RR_DRIVE"],
         "reps": 50,
         "wait_time": 4e6,  # 50e3,
         "fetch_period": 2,  # time between data fetching rounds in sec
-        "delay": 100,  # 160,  # 100# wait time between opposite sign displacements
+        "delay": 50,  # wait time between opposite sign displacements
         "ecd_amp_scale": ecd_amp_scale,
         "d_amp_scale": d_amp_scale,
         "x_sweep": (

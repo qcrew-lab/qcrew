@@ -89,14 +89,14 @@ if __name__ == "__main__":
 
     parameters = {
         "modes": ["QUBIT", "CAV", "RR"],
-        "reps": 2000,
+        "reps": 1000,
         "wait_time": 3.5e6,
         "fetch_period": 3,  # time between data fetching rounds in sec
         "delay": 50,  # pi/chi
         "x_sweep": (x_start, x_stop + x_step / 2, x_step),
         "qubit_op1": "constant_cos_pi2",
         "qubit_op2": "constant_cos_pi",
-        "cav_op": "constant_cos_ECD",
+        "cav_op": "constant_cos_ECD_2",
         "single_shot": True,
         # "plot_quad": "I_AVG",
     }

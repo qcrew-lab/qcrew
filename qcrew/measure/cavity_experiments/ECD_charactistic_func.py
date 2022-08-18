@@ -196,11 +196,11 @@ class ECDcharacteristicfunc(Experiment):
 if __name__ == "__main__":
     x_start = -1.5
     x_stop = 1.5
-    x_step = 0.05
+    x_step = 0.1
 
     y_start = -1.5
     y_stop = 1.5
-    y_step = 0.05
+    y_step = 0.1
 
     ecd_amp_scale = 1  #  the scale of constant_cos_ECD in ECD gate
     d_amp_scale = 1
@@ -209,8 +209,8 @@ if __name__ == "__main__":
         "modes": ["QUBIT", "CAV", "RR", "CAV_DRIVE", "RR_DRIVE"],
         "reps": 100,
         "wait_time": 2.5e6,  # 50e3,
-        "fetch_period": 5,  # time between data fetching rounds in sec
-        "delay": 100,  # 160,  # 100# wait time between opposite sign displacements
+        "fetch_period": 2,  # time between data fetching rounds in sec
+        "delay": 50,  # 160,  # 100# wait time between opposite sign displacements
         "ecd_amp_scale": ecd_amp_scale,
         "d_amp_scale": d_amp_scale,
         "x_sweep": (

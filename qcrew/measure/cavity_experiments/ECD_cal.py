@@ -94,7 +94,7 @@ if __name__ == "__main__":
         "qubit_op2": "constant_cos_pi",
         "cav_op": "constant_cos_ECD",
         "plot_quad": "I_AVG",
-        "single_shot": True,
+        # "single_shot": True,
     }
 
     plot_parameters = {

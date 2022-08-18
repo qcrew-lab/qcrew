@@ -24,21 +24,20 @@ if __name__ == "__main__":
     # input target state and size of hilbert space to optimise
     Nc = 60
     Nq = 2
-    alpha = 2
+    alpha = 1
     sq = 0.5
-    psi_t = qt.tensor(
-        qt.fock(Nq, 0), (qt.coherent(Nc,alpha)).unit()
-    )
+    psi_t = (qt.tensor(qt.fock(Nq,0), qt.coherent(Nc,alpha))+
+             qt.tensor(qt.fock(Nq,0), qt.coherent(Nc,-alpha))).unit()
 
     opt_params = {
-        "N_blocks": 1,
+        "N_blocks": 3,
         "N_multistart": 200,
         "epochs": 100,
         "epoch_size": 10,
-        "learning_rate": 0.03,
+        "learning_rate": 0.02,
         "term_fid": 0.99,
         "dfid_stop": 1e-2,
-        "beta_scale": 3.0,
+        "beta_scale": 1.0,
         "initial_states": [qt.tensor(qt.fock(Nq, 0), qt.fock(Nc, 0))],
         "target_states": [psi_t],
         "name": "identity",
@@ -69,7 +68,7 @@ if __name__ == "__main__":
         "chi_kHz": 45,  # dispersive shift in kHz
         "chi_prime_Hz": 0,  # second order dispersive shift in Hz
         "Ks_Hz": 0,  # Kerr correction not implemented here.
-        "unit_amp": 0.0182,  # DAC amplitude (at maximum of pulse) for gaussian displacement to alpha=1.
+        "unit_amp": 0.0776,  # DAC amplitude (at maximum of pulse) for gaussian displacement to alpha=1.
         "sigma": 8,  # oscillator displacement pulse sigma
         "chop": 6,  # oscillator displacement pulse chop (number of sigmas to include in gaussian pulse)
         "length_ring": 4,
@@ -87,7 +86,7 @@ if __name__ == "__main__":
     }  # parameters for qubit pi pulse.
 
     # set the maximum displacement used during the ECD gates
-    alpha_CD = 13
+    alpha_CD = 20
 
     # small delay to insert between oscillator and qubit pulses
     buffer_time = 0

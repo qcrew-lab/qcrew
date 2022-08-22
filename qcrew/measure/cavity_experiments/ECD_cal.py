@@ -11,6 +11,7 @@ from qcrew.control import professor as prof
 from qcrew.measure.experiment import Experiment
 from qm import qua
 import numpy as np
+from qcrew.measure.qua_macros import ECD
 
 
 # ---------------------------------- Class -------------------------------------
@@ -21,20 +22,26 @@ class ECDCalibration(Experiment):
     name = "ECD_calibration"
 
     _parameters: ClassVar[set[str]] = Experiment._parameters | {
-        "cav_op",  # operation for displacing the cavity
-        "qubit_op2",  # operation used for exciting the qubit
-        "qubit_op1",  # operation used for exciting the qubit
+        "ecd_displacement",  # operation for displacing the cavity
+        "qubit_pi2",  # operation used for exciting the qubit
+        "qubit_pi",  # operation used for exciting the qubit
         "fit_fn",  # fit function
         "delay",  # describe...
     }
 
     def __init__(
-        self, cav_op, qubit_op1, qubit_op2, fit_fn="gaussian", delay=4, **other_params
+        self,
+        ecd_displacement,
+        qubit_pi,
+        qubit_pi2,
+        fit_fn="gaussian",
+        delay=4,
+        **other_params
     ):
 
-        self.cav_op = cav_op
-        self.qubit_op1 = qubit_op1
-        self.qubit_op2 = qubit_op2
+        self.ecd_displacement = ecd_displacement
+        self.qubit_pi = qubit_pi
+        self.qubit_pi2 = qubit_pi2
         self.fit_fn = fit_fn
         self.delay = delay
 
@@ -48,25 +55,20 @@ class ECDCalibration(Experiment):
 
         qua.reset_frame(cav.name)
 
-        qubit.play(self.qubit_op1)  # play pi/2 pulse around X
-
-        # start ECD gate
-        qua.align()  # wait for qubit pulse to end
-        cav.play(self.cav_op, ampx=self.x, phase=0)  # First positive displacement
-        qua.wait(int(self.delay // 4), cav.name)
-        cav.play(self.cav_op, ampx=-self.x, phase=0)  # First negative displacement
-        qua.align()
-        qubit.play(self.qubit_op2)  # play pi to flip qubit around X
-        qua.align()  # wait for qubit pulse to end
-        cav.play(self.cav_op, ampx=-self.x, phase=0)  # Second negative displacement
-        qua.wait(int(self.delay // 4), cav.name)
-        cav.play(self.cav_op, ampx=self.x, phase=0)  # Second positive displacement
-        qua.align()
-
-        qubit.play(
-            self.qubit_op1,
+        qubit.play(self.qubit_pi2, phase=0)  # play pi/2 pulse around Y
+        # play ECD
+        ECD(
+            cav,
+            qubit,
+            self.ecd_displacement,
+            self.qubit_pi,
+            ampx=self.x,
             phase=0,
-        )  # play pi/2 pulse around X or Y, to measure either the real or imaginary part of the characteristic function
+            delay=self.delay,
+        )
+
+        qubit.play(self.qubit_pi2, phase=0)
+        # play pi/2 pulse around X or Y, to measure either the real or imaginary part of the characteristic function
         qua.align()  # align measurement
         rr.measure((self.I, self.Q))
 
@@ -94,9 +96,9 @@ if __name__ == "__main__":
         "fetch_period": 3,  # time between data fetching rounds in sec
         "delay": 50,  # pi/chi
         "x_sweep": (x_start, x_stop + x_step / 2, x_step),
-        "qubit_op1": "constant_cos_pi2",
-        "qubit_op2": "constant_cos_pi",
-        "cav_op": "constant_cos_ECD_2",
+        "qubit_pi2": "constant_cos_pi2",
+        "qubit_pi": "constant_cos_pi",
+        "ecd_displacement": "constant_cos_ECD_4",
         "single_shot": True,
         # "plot_quad": "I_AVG",
     }

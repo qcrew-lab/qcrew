@@ -59,7 +59,7 @@ class CharacteristicFunction(Experiment):
 
         qua.reset_frame(cav.name)
 
-        cav.play(self.cav_state_op, phase=0.0)  # t o create a coherent state
+        cav.play("constant_cos_cohstate_1", phase=0)  # t o create a coherent state
         qua.align(cav.name, qubit.name)
 
         qubit.play(self.qubit_op1)  # bring qubit into superposition

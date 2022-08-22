@@ -279,3 +279,107 @@ def DDROP_reset(qubit, rr, rr_ddrop_freq, rr_steady_wait, ddrop_pulse, qubit_ef=
 
     # Reset RR frequency
     qua.update_frequency(rr.name, rr.int_freq)
+
+
+def ECD(cav, qubit, displacement_pulse, qubit_pi_pulse, ampx, phase, delay):
+    qua.align(qubit.name, cav.name)  # wait for qubit pulse to end
+    cav.play(displacement_pulse, ampx=ampx, phase=phase)  # First positive displacement
+    qua.wait(int(delay // 4), cav.name)
+    cav.play(displacement_pulse, ampx=-ampx, phase=phase)  # First negative displacement
+    qua.align(qubit.name, cav.name)
+    qubit.play(qubit_pi_pulse, phase=0.25)  # play pi to flip qubit around X
+    qua.align(qubit.name, cav.name)  # wait for qubit pulse to end
+    cav.play(
+        displacement_pulse, ampx=-ampx, phase=phase
+    )  # Second negative displacement
+    qua.wait(int(delay // 4), cav.name)
+    cav.play(displacement_pulse, ampx=ampx, phase=phase)  # Second positive displacement
+    qua.align(qubit.name, cav.name)
+
+
+def Char_2D(
+    cav,
+    qubit,
+    displacement_pulse,
+    qubit_pi_pulse,
+    qubit_pi2_pulse,
+    ampx_x,
+    ampx_y,
+    phase_x,
+    phase_y,
+    delay,
+    measure_real,
+):
+    # bring qubit into superposition
+    qua.align(qubit.name, cav.name)
+    qubit.play(qubit_pi2_pulse)
+
+    # start ECD gate
+    qua.align(cav.name, qubit.name)  # wait for qubit pulse to end
+    # First positive displacement
+    cav.play(displacement_pulse, ampx=ampx_x, phase=phase_x)
+    cav.play(displacement_pulse, ampx=ampx_y, phase=phase_y)
+
+    qua.wait(int(delay // 4), cav.name)
+    # First negative displacement
+    cav.play(displacement_pulse, ampx=-ampx_x, phase=phase_x)
+    cav.play(displacement_pulse, ampx=-ampx_y, phase=phase_y)
+
+    qua.align(qubit.name, cav.name)
+    qubit.play(qubit_pi_pulse, phase=0.25)  # play pi to flip qubit around X
+    qua.align(cav.name, qubit.name)  # wait for qubit pulse to end
+
+    # Second negative displacement
+    cav.play(displacement_pulse, ampx=-ampx_x, phase=phase_x)
+    cav.play(displacement_pulse, ampx=-ampx_y, phase=phase_y)
+
+    qua.wait(int(delay // 4), cav.name)
+    # Second positive displacement
+    cav.play(displacement_pulse, ampx=ampx_x, phase=phase_x)
+    cav.play(displacement_pulse, ampx=ampx_y, phase=phase_y)
+
+    qua.align(qubit.name, cav.name)
+
+    qubit.play(
+        qubit_pi2_pulse, phase=0.0 if measure_real else 0.25
+    )  # play pi/2 pulse around X or SY, to measure either the real or imaginary part of the characteristic function
+
+
+def Char_D(
+    cav,
+    qubit,
+    displacement_pulse,
+    qubit_pi_pulse,
+    qubit_pi2_pulse,
+    ampx_x,
+    phase_x,
+    delay,
+    measure_real,
+):
+    # bring qubit into superposition
+    qua.align(qubit.name, cav.name)
+    qubit.play(qubit_pi2_pulse)
+
+    # start ECD gate
+    qua.align(cav.name, qubit.name)  # wait for qubit pulse to end
+    # First positive displacement
+    cav.play(displacement_pulse, ampx=ampx_x, phase=phase_x)
+
+    qua.wait(int(delay // 4), cav.name)
+    # First negative displacement
+    cav.play(displacement_pulse, ampx=-ampx_x, phase=phase_x)
+
+    qua.align(qubit.name, cav.name)
+    qubit.play(qubit_pi_pulse, phase=0.25)  # play pi to flip qubit around X
+    qua.align(cav.name, qubit.name)  # wait for qubit pulse to end
+
+    # Second negative displacement
+    cav.play(displacement_pulse, ampx=-ampx_x, phase=phase_x)
+
+    qua.wait(int(delay // 4), cav.name)
+    # Second positive displacement
+    cav.play(displacement_pulse, ampx=ampx_x, phase=phase_x)
+
+    qua.align(qubit.name, cav.name)
+
+    qubit.play(qubit_pi2_pulse, phase=0.0 if measure_real else 0.25)

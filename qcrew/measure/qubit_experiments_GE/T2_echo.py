@@ -80,7 +80,7 @@ if __name__ == "__main__":
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
         "qubit_pi2": "constant_cos_pi2",
         "qubit_pi": "constant_cos_pi",
-        "single_shot": True,
+        "single_shot": False,
         "detuning": int(detuning),
         "extra_vars": {
             "phase": macros.ExpVariable(
@@ -91,7 +91,7 @@ if __name__ == "__main__":
                 save_all=True,
             )
         },
-        # "plot_quad": "I_AVG"
+        "plot_quad": "I_AVG"
     }
 
     plot_parameters = {

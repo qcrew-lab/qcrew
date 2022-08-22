@@ -102,8 +102,8 @@ if __name__ == "__main__":
                 save_all=True,
             )
         },
-        "single_shot": True,
-        # "plot_quad": "I_AVG",
+        "single_shot": False,
+        "plot_quad": "I_AVG",
     }
 
     plot_parameters = {

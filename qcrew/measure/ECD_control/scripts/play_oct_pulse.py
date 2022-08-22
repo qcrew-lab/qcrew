@@ -42,7 +42,7 @@ class oct_exp(Experiment):
         # rr.measure((self.I, self.Q))  # measure qubit state
         # qua.wait(int(self.wait_time // 4))  # wait system reset
 
-        if 1:
+        if 0:
             # #### measure characteristic function
             qua.align(cav.name, qubit.name)
             qubit.play("constant_cos_pi2")
@@ -94,12 +94,12 @@ class oct_exp(Experiment):
 
 if __name__ == "__main__":
 
-    x_start = -1.5
-    x_stop = 1.5
+    x_start = -1
+    x_stop = 1
     x_step = 0.1
 
-    y_start = -1.5
-    y_stop = 1.5
+    y_start = -1                                                                              
+    y_stop = 1
     y_step = 0.1
 
     # amp_start = -1.5
@@ -107,7 +107,7 @@ if __name__ == "__main__":
     # amp_step = 0.1
     parameters = {
         "modes": ["QUBIT", "RR", "CAV"],
-        "reps": 50,
+        "reps": 5000,
         "wait_time": 4e6,  # 2000,
         "x_sweep": (
             x_start,

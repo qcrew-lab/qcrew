@@ -30,6 +30,7 @@ class OptimalControlPulse(Pulse):
         i_wave = np.real(self.oct_pulse)
         q_wave = np.imag(self.oct_pulse)
 
+
         if self.pad != 0:
             pad_zeros = np.zeros(self.pad)
             i_wave = np.concatenate((i_wave, pad_zeros), axis=0)

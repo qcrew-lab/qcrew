@@ -279,3 +279,4 @@ def DDROP_reset(qubit, rr, rr_ddrop_freq, rr_steady_wait, ddrop_pulse, qubit_ef=
 
     # Reset RR frequency
     qua.update_frequency(rr.name, rr.int_freq)
+ 

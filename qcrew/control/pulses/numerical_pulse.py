@@ -29,6 +29,10 @@ class NumericalPulse(Pulse):
         """ """
         i_wave = np.real(self.oct_pulse) * self.ampx
         q_wave = np.imag(self.oct_pulse) * self.ampx
+        print(np.max(np.real(self.oct_pulse)))
+        print(np.max(np.imag(self.oct_pulse)))
+        print(np.max(i_wave))
+        print(np.max(q_wave))
 
         if self.pad != 0:
             pad_zeros = np.zeros(self.pad)

@@ -26,11 +26,13 @@ if __name__ == "__main__":
     Nq = 2
     alpha = 1
     sq = 0.5
-    psi_t = (qt.tensor(qt.fock(Nq,0), qt.coherent(Nc,alpha))+
-             qt.tensor(qt.fock(Nq,0), qt.coherent(Nc,-alpha))).unit()
+    psi_t = (
+        qt.tensor(qt.fock(Nq, 0), qt.coherent(Nc, alpha))
+        + qt.tensor(qt.fock(Nq, 0), qt.coherent(Nc, -alpha))
+    ).unit()
 
     opt_params = {
-        "N_blocks": 3,
+        "N_blocks": 5,
         "N_multistart": 200,
         "epochs": 100,
         "epoch_size": 10,
@@ -129,9 +131,27 @@ if __name__ == "__main__":
     np.savez(filepath_qubit, oct_pulse=qubit_dac_pulse)
 
     # plotting the pulse
-    fig, axs = plt.subplots(2, 1)
+    t = np.linspace(0, len(cavity_dac_pulse), len(cavity_dac_pulse))
+    w = 0.5
+    fig, axs = plt.subplots(4, 1)
     axs[0].plot(np.real(cavity_dac_pulse))
     axs[0].plot(np.imag(cavity_dac_pulse))
     axs[1].plot(np.real(qubit_dac_pulse))
     axs[1].plot(np.imag(qubit_dac_pulse))
+    axs[2].plot(
+        np.cos(w * t) * np.real(cavity_dac_pulse)
+        - np.sin(w * t) * np.imag(cavity_dac_pulse)
+    )
+    axs[2].plot(
+        np.sin(w * t) * np.real(cavity_dac_pulse)
+        + np.cos(w * t) * np.imag(cavity_dac_pulse)
+    )
+    axs[3].plot(
+        np.cos(w * t) * np.real(qubit_dac_pulse)
+        - np.sin(w * t) * np.imag(qubit_dac_pulse)
+    )
+    axs[3].plot(
+        np.sin(w * t) * np.real(qubit_dac_pulse)
+        + np.cos(w * t) * np.imag(qubit_dac_pulse)
+    )
     plt.xlabel("ns")

@@ -79,8 +79,8 @@ class ECDCalibration(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-    x_start = -1.8
-    x_stop = 1.8
+    x_start = -1.2
+    x_stop = 1.2
     x_step = 0.1
 
     parameters = {
@@ -92,7 +92,7 @@ if __name__ == "__main__":
         "x_sweep": (x_start, x_stop + x_step / 2, x_step),
         "qubit_op1": "constant_cos_pi2",
         "qubit_op2": "constant_cos_pi",
-        "cav_op": "constant_cos_ECD",
+        "cav_op": "constant_cos_ECD_2",
         "plot_quad": "I_AVG",
         # "single_shot": True,
     }

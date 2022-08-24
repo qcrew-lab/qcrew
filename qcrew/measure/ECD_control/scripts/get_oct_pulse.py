@@ -38,7 +38,7 @@ if __name__ == "__main__":
         "epochs": 100,
         "epoch_size": 10,
         "learning_rate": 0.02,
-        "term_fid": 0.97,
+        "term_fid": 0.99,
         "dfid_stop": 1e-2,
         "beta_scale": 1.0,
         "initial_states": [qt.tensor(qt.fock(Nq, 0), qt.fock(Nc, 0))],
@@ -83,7 +83,7 @@ if __name__ == "__main__":
     }  # parameters for qubit pi pulse.
 
     # set the maximum displacement used during the ECD gates
-    alpha_CD = 18
+    alpha_CD = 12
 
     # small delay to insert between oscillator and qubit pulses
     buffer_time = 0

@@ -65,18 +65,14 @@ class ECDcharacteristicfunc(Experiment):
         """
         Defines pulse sequence to be played inside the experiment loop
         """
-        qubit, cav, rr, cav_drive, rr_drive = self.modes  # get the modes
+        qubit, cav, rr = self.modes  # get the modes
 
         qua.reset_frame(cav.name)
 
         if 1:
-
-            cav.play("constant_cos_cohstate_1", phase=0)
-            qua.align(cav.name, qubit.name)
-            # qubit.play(self.qubit_op2_ecd, phase=0)
-            # qua.wait(int(1200 // 4), cav.name, qubit.name)  # 5us
-            # qua.align(cav.name, qubit.name)
-            # qubit.play(self.qubit_op2_ecd, phase=0)
+            qubit.play("oct_pulse_qubit")
+            cav.play("oct_pulse_cav")
+            qua.align()
 
         ######################    pi/ - ECD - pi ######################
         if 0:
@@ -194,19 +190,19 @@ class ECDcharacteristicfunc(Experiment):
 
 # -------------------------------- Execution -----------------------------------
 if __name__ == "__main__":
-    x_start = -1.5
-    x_stop = 1.5
-    x_step = 0.1
+    x_start = -0.75
+    x_stop = 0.75
+    x_step = 0.05
 
-    y_start = -1.5
-    y_stop = 1.5
-    y_step = 0.1
+    y_start = -0.75
+    y_stop = 0.75
+    y_step = 0.05
 
     ecd_amp_scale = 1  #  the scale of constant_cos_ECD in ECD gate
     d_amp_scale = 1
 
     parameters = {
-        "modes": ["QUBIT", "CAV", "RR", "CAV_DRIVE", "RR_DRIVE"],
+        "modes": ["QUBIT", "CAV", "RR"],
         "reps": 100,
         "wait_time": 2.5e6,  # 50e3,
         "fetch_period": 2,  # time between data fetching rounds in sec
@@ -220,10 +216,10 @@ if __name__ == "__main__":
         ),  # ampitude sweep of the displacement pulses in the ECD
         "y_sweep": (y_start, y_stop + y_step / 2, y_step),
         "qubit_op1_ecd": "constant_cos_pi2",
-        "qubit_op2_ecd": "constant_cos_pi",
+        "qubit_op2_ecd": "oct_pulse_qubit",
         "qubit_pi_selective": "pi_selective_1",
-        "cav_op_ecd": "constant_cos_ECD",
-        "cav_op_ecd_test": "constant_cos_ECD_test",
+        "cav_op_ecd": "constant_cos_ECD_2",
+        "cav_op_ecd_test": "oct_pulse_cav",
         "cav_op_d": "constant_cos_cohstate_1",
         "measure_real": True,
         "plot_quad": "I_AVG",

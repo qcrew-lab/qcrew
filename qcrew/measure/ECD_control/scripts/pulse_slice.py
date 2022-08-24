@@ -22,15 +22,15 @@ OCT_PULSES_PATH = Path(__file__).resolve().parents[4] / "config/oct_pulses"
 
 if __name__ == "__main__":
 
-    cavity__load_path = "20222408_142809_oct_pulse_cavity_.npz"
-    qubit__load_path = "20222408_142809_oct_pulse_qubit_.npz"
+    cavity__load_path = "20222408_152602_oct_pulse_cavity_.npz"
+    qubit__load_path = "20222408_152602_oct_pulse_qubit_.npz"
     cav_len = len(cavity__load_path)
     qubit_len = len(qubit__load_path)
     cavity_dac_pulse = np.load(OCT_PULSES_PATH / cavity__load_path)["oct_pulse"]
     qubit_dac_pulse = np.load(OCT_PULSES_PATH / qubit__load_path)["oct_pulse"]
     
     t_start = 43
-    t_end = 400
+    t_end = 650
     
     cavity_dac_pulse = pulse_slice(t_start,t_end,cavity_dac_pulse)
     qubit_dac_pulse = pulse_slice(t_start,t_end,qubit_dac_pulse)
@@ -40,7 +40,7 @@ if __name__ == "__main__":
     # Save file with today's date
     # save cavity dac pulse and qubit dac pulse separately for now
     date_str = datetime.datetime.now().strftime("%Y%d%m_%H%M%S_oct_pulse")
-    filepath_cavity = OCT_PULSES_PATH / f"{cavity__load_path[:cav_len-6]}_{suffix}_{str(t_end)}"
+    filepath_cavity = OCT_PULSES_PATH / f"{cavity__load_path[:cav_len-5]}_{suffix}_{str(t_end)}"
     filepath_qubit = OCT_PULSES_PATH / f"{qubit__load_path[:cav_len-6]}_{suffix}_{str(t_end)}"
     print(f"{date_str}_qubit_{suffix}")
     np.savez(filepath_cavity, oct_pulse=cavity_dac_pulse)

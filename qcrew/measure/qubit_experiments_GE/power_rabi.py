@@ -71,8 +71,8 @@ if __name__ == "__main__":
         "wait_time": 100000,  # 2000,
         "x_sweep": (amp_start, amp_stop + amp_step / 2, amp_step),
         "qubit_op": "constant_cos_pi",
-        "single_shot": True,
-        # "plot_quad": "I_AVG",
+        # "single_shot": True,
+        "plot_quad": "I_AVG",
     }
 
     plot_parameters = {

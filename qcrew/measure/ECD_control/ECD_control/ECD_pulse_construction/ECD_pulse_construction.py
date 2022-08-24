@@ -12,7 +12,7 @@ from scipy.integrate import quad, simpson
 
 def gaussian_wave(sigma, chop=4):
     ts = np.linspace(-chop / 2 * sigma, chop / 2 * sigma, chop * sigma)
-    P = np.exp(-(ts**2) / (2.0 * sigma**2))
+    P = np.exp(-(ts ** 2) / (2.0 * sigma ** 2))
     ofs = P[0]
     return (P - ofs) / (1 - ofs)
 
@@ -21,12 +21,21 @@ def cos_wave(length_ring, length_constant):
     t1 = np.linspace(0, length_ring, length_ring)
 
     const = np.ones(length_constant)
-    cos_rise = (np.cos(t1*np.pi/length_ring + np.pi)+1)/2
-    cos_fall = (np.cos(t1*np.pi/length_ring)+1)/2
+    cos_rise = (np.cos(t1 * np.pi / length_ring + np.pi) + 1) / 2
+    cos_fall = (np.cos(t1 * np.pi / length_ring) + 1) / 2
     return np.concatenate((cos_rise, const, cos_fall))
 
 
-def rotate(theta, phi=0, sigma=8, chop=6, dt=1, length_ring=14, length_constant=24, pulse_shape="Gaussian"):
+def rotate(
+    theta,
+    phi=0,
+    sigma=8,
+    chop=6,
+    dt=1,
+    length_ring=14,
+    length_constant=24,
+    pulse_shape="Gaussian",
+):
     if pulse_shape == "Cosine":
         wave = cos_wave(length_ring, length_constant)
         ts = np.arange(len(wave)) * dt
@@ -45,25 +54,48 @@ def rotate(theta, phi=0, sigma=8, chop=6, dt=1, length_ring=14, length_constant=
         amp = 1 / energy
         wave = (1 + 0j) * wave
         return (theta / (2.0)) * amp * np.exp(1j * phi) * wave
+
 
 # displace cavity by an amount alpha
 
 
-def disp_cav(alpha, sigma=8, chop=6, dt=1, length_ring=14, length_constant=24, pulse_shape="Gaussian"):
+def pulse_slice(t_start, t_end, pulse):
+    return pulse[t_start:t_end]
+
+
+def disp_cav(
+    alpha,
+    sigma=8,
+    chop=6,
+    dt=1,
+    length_ring=14,
+    length_constant=24,
+    pulse_shape="Gaussian",
+):
     if pulse_shape == "Cosine":
         wave = cos_wave(length_ring, length_constant)
         energy = np.trapz(wave, dx=dt)
         wave = (1 + 0j) * wave
-        return ((np.abs(alpha) / energy) * np.exp(1j * (np.pi / 2.0 + np.angle(alpha))) * wave)
+        return (
+            (np.abs(alpha) / energy)
+            * np.exp(1j * (np.pi / 2.0 + np.angle(alpha)))
+            * wave
+        )
     else:
         wave = gaussian_wave(sigma=sigma, chop=chop)
         energy = np.trapz(wave, dx=dt)
         wave = (1 + 0j) * wave
-        return ((np.abs(alpha) / energy) * np.exp(1j * (np.pi / 2.0 + np.angle(alpha))) * wave)
+        return (
+            (np.abs(alpha) / energy)
+            * np.exp(1j * (np.pi / 2.0 + np.angle(alpha)))
+            * wave
+        )
 
 
 class FakePulse:
-    def __init__(self, unit_amp, sigma, chop, length_ring=14, length_constant=24, detune=0):
+    def __init__(
+        self, unit_amp, sigma, chop, length_ring=14, length_constant=24, detune=0
+    ):
         self.unit_amp = unit_amp
         self.sigma = sigma
         self.chop = chop
@@ -72,8 +104,9 @@ class FakePulse:
         self.length_constant = length_constant
 
     def make_wave_cos(self, pad=False):
-        wave = cos_wave(length_ring=self.length_ring,
-                        length_constant=self.length_constant)
+        wave = cos_wave(
+            length_ring=self.length_ring, length_constant=self.length_constant
+        )
         return np.real(wave), np.imag(wave)
 
     def make_wave_gaussian(self, pad=False):
@@ -108,28 +141,63 @@ class FakeStorage:
         self.pulse_shape = pulse_shape
 
         self.displace = FakePulse(
-            unit_amp=unit_amp, sigma=sigma, chop=chop, length_ring=length_ring, length_constant=length_constant)
+            unit_amp=unit_amp,
+            sigma=sigma,
+            chop=chop,
+            length_ring=length_ring,
+            length_constant=length_constant,
+        )
 
         # calculating conversion between DAC and Hamiltonian drive amplitude
-        disp = disp_cav(alpha=1.0, sigma=sigma, chop=chop,
-                        length_ring=length_ring, length_constant=length_constant, dt=1)
+        disp = disp_cav(
+            alpha=1.0,
+            sigma=sigma,
+            chop=chop,
+            length_ring=length_ring,
+            length_constant=length_constant,
+            dt=1,
+        )
         if pulse_shape == "Cosine":
-            self.epsilon_m_MHz = 1e3 * \
-                np.real(np.max(np.abs(disp))) / unit_amp / 2 / np.pi / 2
+            self.epsilon_m_MHz = (
+                1e3 * np.real(np.max(np.abs(disp))) / unit_amp / 2 / np.pi / 2
+            )
         else:
-            self.epsilon_m_MHz = 1e3 * \
-                np.real(np.max(np.abs(disp))) / unit_amp / 2 / np.pi
+            self.epsilon_m_MHz = (
+                1e3 * np.real(np.max(np.abs(disp))) / unit_amp / 2 / np.pi
+            )
 
 
 class FakeQubit:
-    def __init__(self, unit_amp, sigma, chop, length_ring=14, length_constant=24, detune=0, pulse_shape="Gaussian"):
+    def __init__(
+        self,
+        unit_amp,
+        sigma,
+        chop,
+        length_ring=14,
+        length_constant=24,
+        detune=0,
+        pulse_shape="Gaussian",
+    ):
         self.pulse = FakePulse(
-            unit_amp=unit_amp, sigma=sigma, chop=chop, length_ring=length_ring, length_constant=length_constant, detune=detune)
+            unit_amp=unit_amp,
+            sigma=sigma,
+            chop=chop,
+            length_ring=length_ring,
+            length_constant=length_constant,
+            detune=detune,
+        )
         # calculating conversion between DAC and Hamiltonian drive amplitude
-        pi = rotate(np.pi, phi=0, sigma=sigma, chop=chop, length_ring=length_ring, length_constant=length_constant,
-                    dt=1, pulse_shape=pulse_shape)
-        self.Omega_m_MHz = 1e3 * \
-            np.real(np.max(np.abs(pi))) / unit_amp / 2 / np.pi
+        pi = rotate(
+            np.pi,
+            phi=0,
+            sigma=sigma,
+            chop=chop,
+            length_ring=length_ring,
+            length_constant=length_constant,
+            dt=1,
+            pulse_shape=pulse_shape,
+        )
+        self.Omega_m_MHz = 1e3 * np.real(np.max(np.abs(pi))) / unit_amp / 2 / np.pi
 
 
 # Solution to linear differential equation
@@ -164,12 +232,14 @@ def alpha_from_epsilon_nonlinear(
     epsilon = interp(epsilon_array, dt)
     # todo: find correct rotation...
 
-    def dalpha_dt(t, alpha): return (
-        -1j * delta * alpha
-        + 2j * Ks * np.abs(alpha) ** 2 * alpha
-        - (kappa / 2.0) * alpha
-        - 1j * epsilon(t)
-    )
+    def dalpha_dt(t, alpha):
+        return (
+            -1j * delta * alpha
+            + 2j * Ks * np.abs(alpha) ** 2 * alpha
+            - (kappa / 2.0) * alpha
+            - 1j * epsilon(t)
+        )
+
     alpha = solve_ivp(
         dalpha_dt,
         (0, len(epsilon_array) * dt - dt),
@@ -227,12 +297,14 @@ def alpha_from_epsilon_ge(
     method = "RK45"
     # todo: find correct rotation...
 
-    def dalpha_dt_g(t, alpha): return (
-        -1j * delta * alpha
-        + 2j * Ks * np.abs(alpha) ** 2 * alpha
-        - (kappa / 2.0) * alpha
-        - 1j * epsilon(t)
-    )
+    def dalpha_dt_g(t, alpha):
+        return (
+            -1j * delta * alpha
+            + 2j * Ks * np.abs(alpha) ** 2 * alpha
+            - (kappa / 2.0) * alpha
+            - 1j * epsilon(t)
+        )
+
     alpha_g = solve_ivp(
         dalpha_dt_g,
         (0, len(epsilon_array) * dt - dt),
@@ -245,13 +317,16 @@ def alpha_from_epsilon_ge(
     if chi == 0 and chi_prime == 0 and alpha_g_init == alpha_e_init:
         alpha_e = alpha_g
     else:
-        def dalpha_dt_e(t, alpha): return (
-            -1j * delta * alpha
-            + 2j * Ks * np.abs(alpha) ** 2 * alpha
-            - (kappa / 2.0) * alpha
-            - 1j * epsilon(t)
-            + 1j * (chi + 2 * chi_prime * np.abs(alpha) ** 2) * alpha
-        )
+
+        def dalpha_dt_e(t, alpha):
+            return (
+                -1j * delta * alpha
+                + 2j * Ks * np.abs(alpha) ** 2 * alpha
+                - (kappa / 2.0) * alpha
+                - 1j * epsilon(t)
+                + 1j * (chi + 2 * chi_prime * np.abs(alpha) ** 2) * alpha
+            )
+
         alpha_e = solve_ivp(
             dalpha_dt_e,
             (0, len(epsilon_array) * dt - dt),
@@ -302,8 +377,7 @@ def alpha_from_epsilon_ge_finite_difference(
                 + 2j * Ks * np.abs(alpha_e[j]) ** 2 * alpha_e[j]
                 - (kappa / 2.0) * alpha_e[j]
                 - 1j * epsilon_array[j]
-                + 1j * (chi + 2 * chi_prime *
-                        np.abs(alpha_e[j]) ** 2) * alpha_e[j]
+                + 1j * (chi + 2 * chi_prime * np.abs(alpha_e[j]) ** 2) * alpha_e[j]
             )
             + alpha_e[j - 1]
         )
@@ -326,16 +400,18 @@ def get_ge_trajectories(
         else alpha_from_epsilon_ge
     )
 
-    def f(epsilon, alpha_g_init, alpha_e_init): return func(
-        epsilon,
-        delta=delta,
-        chi=chi,
-        chi_prime=chi_prime,
-        Ks=Ks,
-        kappa=kappa,
-        alpha_g_init=alpha_g_init,
-        alpha_e_init=alpha_e_init,
-    )
+    def f(epsilon, alpha_g_init, alpha_e_init):
+        return func(
+            epsilon,
+            delta=delta,
+            chi=chi,
+            chi_prime=chi_prime,
+            Ks=Ks,
+            kappa=kappa,
+            alpha_g_init=alpha_g_init,
+            alpha_e_init=alpha_e_init,
+        )
+
     epsilons = np.split(epsilon, flip_idxs)
     alpha_g = []  # alpha_g defined as the trajectory that starts in g
     alpha_e = []
@@ -343,8 +419,7 @@ def get_ge_trajectories(
     alpha_g_init = 0 + 0j
     alpha_e_init = 0 + 0j
     for epsilon in epsilons:
-        alpha_g_current, alpha_e_current = f(
-            epsilon, alpha_g_init, alpha_e_init)
+        alpha_g_current, alpha_e_current = f(epsilon, alpha_g_init, alpha_e_init)
         if g_state == 0:
             alpha_g.append(alpha_g_current)
             alpha_e.append(alpha_e_current)
@@ -514,8 +589,7 @@ def conditional_displacement(
             (alpha_g[int(flip_idx / 2)] + alpha_e[int(flip_idx / 2)]) / 2.0
         )
         second_radius = np.abs(
-            (alpha_g[int(3 * flip_idx / 2)] +
-             alpha_e[int(3 * flip_idx / 2)]) / 2.0
+            (alpha_g[int(3 * flip_idx / 2)] + alpha_e[int(3 * flip_idx / 2)]) / 2.0
         )
         if output:
             print(
@@ -559,8 +633,7 @@ def conditional_displacement(
             r0 = x[1]
             r1 = x[2]
             r2 = x[3]
-            cavity_dac_pulse, qubit_dac_pulse = construct_CD(
-                alpha, tw, r, r0, r1, r2)
+            cavity_dac_pulse, qubit_dac_pulse = construct_CD(alpha, tw, r, r0, r1, r2)
             epsilon = cavity_dac_pulse * epsilon_m
             flip_idx = int(len(epsilon) / 2)
             alpha_g, alpha_e = get_ge_trajectories(
@@ -578,8 +651,7 @@ def conditional_displacement(
                 (alpha_g[int(flip_idx / 2)] + alpha_e[int(flip_idx / 2)]) / 2.0
             )
             second_radius = np.abs(
-                (alpha_g[int(3 * flip_idx / 2)] +
-                 alpha_e[int(3 * flip_idx / 2)]) / 2.0
+                (alpha_g[int(3 * flip_idx / 2)] + alpha_e[int(3 * flip_idx / 2)]) / 2.0
             )
             if output:
                 print(
@@ -596,8 +668,7 @@ def conditional_displacement(
                 + np.abs(second_radius - np.abs(alpha))
             )
 
-        result = fmin(cost, x0=[r, r0, r1, r2],
-                      ftol=1e-3, xtol=1e-3, disp=False)
+        result = fmin(cost, x0=[r, r0, r1, r2], ftol=1e-3, xtol=1e-3, disp=False)
         r = result[0]
         r0 = result[1]
         r1 = result[2]
@@ -659,8 +730,7 @@ def conditional_displacement(
                 alpha, tw, r, r0, r1, r2, buf=buffer_time
             )
             epsilon = cavity_dac_pulse * epsilon_m
-            current_beta, current_disp = integrated_beta_and_displacement(
-                epsilon)
+            current_beta, current_disp = integrated_beta_and_displacement(epsilon)
             diff = np.abs(current_beta) - np.abs(beta)
             ratio = np.abs(current_beta) / np.abs(beta)
             if output:
@@ -717,8 +787,7 @@ def conditional_displacement(
     """
     if pad:
         while len(cavity_dac_pulse) % 4 != 0:
-            cavity_dac_pulse = np.pad(
-                cavity_dac_pulse, (0, 1), mode="constant")
+            cavity_dac_pulse = np.pad(cavity_dac_pulse, (0, 1), mode="constant")
             qubit_dac_pulse = np.pad(qubit_dac_pulse, (0, 1), mode="constant")
             # accumulated_phase = np.pad(accumulated_phase, (0,1), mode='edge')
 
@@ -797,8 +866,7 @@ def conditional_displacement_circuit(
     beta_sign = +1
 
     if double_CD:
-        betas, phis, thetas = double_circuit(
-            betas, phis, thetas, final_disp=final_disp)
+        betas, phis, thetas = double_circuit(betas, phis, thetas, final_disp=final_disp)
 
     for i, beta in enumerate(betas):
         if output:
@@ -889,8 +957,7 @@ def conditional_displacement_circuit(
                     * (pr + 1j * pi)
                     * np.exp(1j * phi)
                 )
-                o_r_2 = qubit.pulse.unit_amp * \
-                    (1.0) * (pr + 1j * pi) * np.exp(1j * phi)
+                o_r_2 = qubit.pulse.unit_amp * (1.0) * (pr + 1j * pi) * np.exp(1j * phi)
                 o_r_3 = (
                     qubit.pulse.unit_amp
                     * (theta / np.pi / 2)
@@ -898,12 +965,10 @@ def conditional_displacement_circuit(
                     * np.exp(1j * phi)
                 )
                 o_r = np.concatenate([o_r_1, o_r_2, o_r_3])
-            qubit_dac_pulse[j].append(
-                np.exp(-1j * cumulative_qubit_phase) * o_r)
+            qubit_dac_pulse[j].append(np.exp(-1j * cumulative_qubit_phase) * o_r)
             if buffer_time > 0 and len(qubit_dac_pulse[0]) > 0:
                 qubit_dac_pulse[j].append(np.zeros(buffer_time))
-            qubit_dac_pulse[j].append(
-                np.exp(-1j * cumulative_qubit_phase) * o_cd)
+            qubit_dac_pulse[j].append(np.exp(-1j * cumulative_qubit_phase) * o_cd)
             if buffer_time > 0 and len(qubit_dac_pulse[0]) > 0:
                 qubit_dac_pulse[j].append(np.zeros(buffer_time))
 
@@ -953,19 +1018,16 @@ def conditional_displacement_circuit(
             print("doing Kerr correction!")
             chip_freq = -4 * Ks * np.abs(alpha) ** 2
             accumulated_phase_cav = np.trapz(chip_freq)
-            cavity_dac_pulse = np.exp(
-                1j * accumulated_phase_cav) * cavity_dac_pulse
+            cavity_dac_pulse = np.exp(1j * accumulated_phase_cav) * cavity_dac_pulse
         if qubit_stark_shift_correction:
             print("doing qubit stark shift correction!")
             chip_freq = -chi * np.abs(alpha) ** 2
             accumulated_phase_qb = np.trapz(chip_freq)
-            qubit_dac_pulse = np.exp(-1j *
-                                     accumulated_phase_qb) * qubit_dac_pulse
+            qubit_dac_pulse = np.exp(-1j * accumulated_phase_qb) * qubit_dac_pulse
 
     if pad:
         while len(cavity_dac_pulse) % 4 != 0 and len(cavity_dac_pulse) < 24:
-            cavity_dac_pulse = np.pad(
-                cavity_dac_pulse, (0, 1), mode="constant")
+            cavity_dac_pulse = np.pad(cavity_dac_pulse, (0, 1), mode="constant")
             qubit_dac_pulse = [
                 np.pad(qp, (0, 1), mode="constant") for qp in qubit_dac_pulse
             ]
@@ -999,10 +1061,8 @@ def analytic_CD(epsilon, Omega, chi):
     gamma = np.zeros_like(phi, dtype=np.complex64)
     delta = np.zeros_like(gamma)
     for i in range(len(phi)):
-        delta[i] = -1 * \
-            np.sum(np.sin(phi[: i + 1] - phi[i]) * epsilon[: i + 1])
-        gamma[i] = -1j * \
-            np.sum(np.cos(phi[: i + 1] - phi[i]) * epsilon[: i + 1])
+        delta[i] = -1 * np.sum(np.sin(phi[: i + 1] - phi[i]) * epsilon[: i + 1])
+        gamma[i] = -1j * np.sum(np.cos(phi[: i + 1] - phi[i]) * epsilon[: i + 1])
     theta = -2 * np.cumsum(np.real(np.conj(epsilon) * delta))
     correction = 2 * np.imag(gamma[-1] * delta[-1])
     theta_prime = theta[-1] + correction

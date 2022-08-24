@@ -11,6 +11,7 @@ from qcrew.measure.ECD_control.ECD_control.ECD_pulse_construction.ECD_pulse_cons
     FakeQubit,
     FakeStorage,
     conditional_displacement_circuit,
+    pulse_slice,
 )
 from qcrew.measure.ECD_control.ECD_control.ECD_optimization.batch_optimizer import (
     BatchOptimizer,
@@ -32,12 +33,12 @@ if __name__ == "__main__":
     ).unit()
 
     opt_params = {
-        "N_blocks": 5,
+        "N_blocks": 4,
         "N_multistart": 200,
         "epochs": 100,
         "epoch_size": 10,
         "learning_rate": 0.02,
-        "term_fid": 0.99,
+        "term_fid": 0.97,
         "dfid_stop": 1e-2,
         "beta_scale": 1.0,
         "initial_states": [qt.tensor(qt.fock(Nq, 0), qt.fock(Nc, 0))],
@@ -52,12 +53,6 @@ if __name__ == "__main__":
     # user defined suffix to append to file saving the oct pulse
     suffix = ""
 
-    # path to the .npz file containing rotation params or directly from simulator
-    # path = OCT_ROTATIONS_PATH / "fock_states/fock3.npz"
-    # betas = np.load(path)["betas"]
-    # phis = np.load(path)["phis"]
-    # thetas = np.load(path)["thetas"]
-
     # load directly from optimizer
     betas = best_circuit["betas"]
     phis = best_circuit["phis"]
@@ -70,7 +65,7 @@ if __name__ == "__main__":
         "chi_kHz": 45,  # dispersive shift in kHz
         "chi_prime_Hz": 0,  # second order dispersive shift in Hz
         "Ks_Hz": 0,  # Kerr correction not implemented here.
-        "unit_amp": 0.0776,  # DAC amplitude (at maximum of pulse) for gaussian displacement to alpha=1.
+        "unit_amp": 0.122,  # DAC amplitude (at maximum of pulse) for gaussian displacement to alpha=1.
         "sigma": 8,  # oscillator displacement pulse sigma
         "chop": 6,  # oscillator displacement pulse chop (number of sigmas to include in gaussian pulse)
         "length_ring": 4,
@@ -79,16 +74,16 @@ if __name__ == "__main__":
     }
 
     qubit_params = {
-        "unit_amp": 1.839,
+        "unit_amp": 1.585,
         "sigma": 8,
         "chop": 6,
         "length_ring": 8,
-        "length_constant": 20,
+        "length_constant": 28,
         "pulse_shape": pulse_shape,
     }  # parameters for qubit pi pulse.
 
     # set the maximum displacement used during the ECD gates
-    alpha_CD = 20
+    alpha_CD = 18
 
     # small delay to insert between oscillator and qubit pulses
     buffer_time = 0
@@ -121,6 +116,7 @@ if __name__ == "__main__":
         pulse_dict["qubit_dac_pulse"],
     )
 
+    
     # Save file with today's date
     # save cavity dac pulse and qubit dac pulse separately for now
     date_str = datetime.datetime.now().strftime("%Y%d%m_%H%M%S_oct_pulse")

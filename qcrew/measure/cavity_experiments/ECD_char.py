@@ -27,7 +27,8 @@ class ECDchar(Experiment):
         "cav_ecd_displace",
         "qubit_pi",  # pi pulse
         "qubit_pi2",  # pi/2
-        "ecd_amp_scale",  # amp scaling factor for cav_op_ecd pulse
+        "u_amp_scale",  # amp scaling factor for cav_op_ecd pulse
+        "v_amp_scale",  # amp scaling factor for cav_op_ecd pulse
         "fit_fn",  # fit function
         "delay",  # describe...
         "cav_displace_1",
@@ -40,7 +41,8 @@ class ECDchar(Experiment):
         cav_displace_1,
         qubit_pi,
         qubit_pi2,
-        ecd_amp_scale,
+        u_amp_scale,
+        v_amp_scale,
         cav_ecd_displace,
         # d_amp_scale,
         fit_fn=None,
@@ -56,7 +58,8 @@ class ECDchar(Experiment):
         self.fit_fn = fit_fn
         self.delay = delay
         self.measure_real = measure_real
-        self.ecd_amp_scale = ecd_amp_scale
+        self.u_amp_scale = u_amp_scale
+        self.v_amp_scale = v_amp_scale
         # self.d_amp_scale = d_amp_scale
         # self.internal_sweep = ["first", "second"]
 
@@ -66,7 +69,7 @@ class ECDchar(Experiment):
         """
         Defines pulse sequence to be played inside the experiment loop
         """
-        qubit, cav, rr, cav_drive, rr_drive = self.modes  # get the modes
+        qubit, cav, rr, rr_drive = self.modes  # get the modes
 
         qua.reset_frame(cav.name, qubit.name)
 
@@ -83,64 +86,60 @@ class ECDchar(Experiment):
 
         ######################    ECD   ######################
 
-        if 1:
+        if 0:
 
             # U
-            qubit.play(self.qubit_pi)  # g+e
+            # qubit.play(self.qubit_pi)  # g+e
 
-            # qubit.play(self.qubit_pi, phase=0.75)  # pi
+            qubit.play(self.qubit_pi2, phase=0.5)  # pi
+
+            
 
             # ECD Gate
             ECD(
                 cav,
                 qubit,
-                self.char_func_displacement,
+                self.cav_ecd_displace,
                 self.qubit_pi,
-                ampx=self.ecd_amp_scale,
+                ampx=self.u_amp_scale,
                 phase=0,
                 delay=self.delay,
             )
+            
+            qubit.play(self.qubit_pi, phase=0.75)  # pi
             qubit.play(self.qubit_pi2, phase=0)
+            
+ 
+            
+        if 1:
 
-        if 0:
             # V
 
-            qubit.play(self.qubit_pi2, phase=0.75)  # g+e
+            qubit.play(self.qubit_pi2, phase=0.25)  # pi
+
+            
 
             # ECD Gate
-            qua.align(cav.name, qubit.name)  # wait for qubit pulse to end
-            cav.play(
-                self.cav_op_ecd_2, ampx=self.d_amp_scale, phase=0.25
-            )  # First positive displacement
-            qua.wait(
-                int(self.delay // 4), cav.name, qubit.name
-            )  # wait time between opposite sign displacements
-            cav.play(
-                self.cav_op_ecd_2, ampx=-self.d_amp_scale, phase=0.25
-            )  # First negative displacement
-            qua.align(qubit.name, cav.name)
-            qubit.play(
-                self.qubit_pi, phase=0.25
-            )  # pi pulse to flip the qubit state (echo)
-            qua.align(cav.name, qubit.name)  # wait for qubit pulse to end
-            cav.play(
-                self.cav_op_ecd_2, ampx=-self.d_amp_scale, phase=0.25
-            )  # Second negative displacement
-            qua.wait(
-                int(self.delay // 4), cav.name, qubit.name
-            )  # wait time between opposite sign displacements
-            cav.play(
-                self.cav_op_ecd_2, ampx=self.d_amp_scale, phase=0.25
-            )  # Second positive displacement
-
-            qua.align(qubit.name, cav.name)
-
-            qubit.play(
-                self.qubit_pi2, phase=0.75
-            )  ## changed to test, to  be changed back
+            ECD(
+                cav,
+                qubit,
+                self.cav_ecd_displace,
+                self.qubit_pi,
+                ampx=self.v_amp_scale,
+                phase=0.25,
+                delay=self.delay,
+            )
+            
+            qubit.play(self.qubit_pi, phase=0.75)  # pi
+            qubit.play(self.qubit_pi2, phase=0.75)
 
             qua.align()  # wait for qubit pulse to end
 
+            
+            
+ 
+
+            qua.align()  # wait for qubit pulse to end                             
         ######################  Measure the created state with charactristic function  #####################
         Char_2D(
             cav,
@@ -169,23 +168,25 @@ class ECDchar(Experiment):
 
 # -------------------------------- Execution -----------------------------------
 if __name__ == "__main__":
-    x_start = -1.3
-    x_stop = 1.3
+    x_start = -1.25
+    x_stop = 1.25
     x_step = 0.1
 
-    y_start = -1.3
-    y_stop = 1.3
+    y_start = -1.25
+    y_stop = 1.25
     y_step = 0.1
 
-    ecd_amp_scale = 1  #  the scale of constant_cos_ECD in ECD gate
+    u_amp_scale = 1  #  the scale of constant_cos_ECD in ECD gate
+    v_amp_scale = -0.6
 
     parameters = {
-        "modes": ["QUBIT", "CAV", "RR", "CAV_DRIVE", "RR_DRIVE"],
-        "reps": 200,
+        "modes": ["QUBIT", "CAV", "RR", "RR_DRIVE"],
+        "reps": 500,
         "wait_time": 4e6,  # 50e3,
         "fetch_period": 2,  # time between data fetching rounds in sec
-        "delay": 50,  # wait time between opposite sign displacements
-        "ecd_amp_scale": ecd_amp_scale,
+        "delay": 50,  # 50,  # wait time between opposite sign displacements
+        "u_amp_scale": u_amp_scale,
+        "v_amp_scale": v_amp_scale,
         "x_sweep": (
             x_start,
             x_stop + x_step / 2,
@@ -195,11 +196,11 @@ if __name__ == "__main__":
         "qubit_pi": "constant_cos_pi",
         "qubit_pi2": "constant_cos_pi2",
         "char_func_displacement": "constant_cos_ECD_2",
-        "cav_ecd_displace": "constant_cos_ECD_4",
-        "cav_displace_1": "constant_cos_cohstate_1",
+        "cav_ecd_displace": "constant_cos_ECD_2",
+        "cav_displace_1": "constant_cos_cohstate_2",
         "measure_real": True,
-        # "plot_quad": "I_AVG",
-        "single_shot": True,
+        "plot_quad": "I_AVG",
+        # "single_shot": True,
     }
 
     plot_parameters = {

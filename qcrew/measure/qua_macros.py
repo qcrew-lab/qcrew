@@ -345,7 +345,7 @@ def Char_2D(
     )  # play pi/2 pulse around X or SY, to measure either the real or imaginary part of the characteristic function
 
 
-def Char_D(
+def Char_1D(
     cav,
     qubit,
     displacement_pulse,

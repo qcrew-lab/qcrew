@@ -66,7 +66,7 @@ if __name__ == "__main__":
         "reps": 1000,
         "wait_time": 4e6,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
-        "qubit_op": "pi_selective_2",
+        "qubit_op": "pi_selective_1",
         "cav_op": "gaussian_pulse",
         "single_shot": False,
         "plot_quad": "I_AVG",

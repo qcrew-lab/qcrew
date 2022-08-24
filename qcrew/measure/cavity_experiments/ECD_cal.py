@@ -11,7 +11,7 @@ from qcrew.control import professor as prof
 from qcrew.measure.experiment import Experiment
 from qm import qua
 import numpy as np
-from qcrew.measure.qua_macros import ECD
+from qcrew.measure.qua_macros import ECD, Char_1D
 
 
 # ---------------------------------- Class -------------------------------------
@@ -36,6 +36,7 @@ class ECDCalibration(Experiment):
         qubit_pi2,
         fit_fn="gaussian",
         delay=4,
+        measure_real=True,
         **other_params
     ):
 
@@ -44,6 +45,7 @@ class ECDCalibration(Experiment):
         self.qubit_pi2 = qubit_pi2
         self.fit_fn = fit_fn
         self.delay = delay
+        self.measure_real = measure_real 
 
         super().__init__(**other_params)  # Passes other parameters to parent
 
@@ -55,19 +57,17 @@ class ECDCalibration(Experiment):
 
         qua.reset_frame(cav.name)
 
-        qubit.play(self.qubit_pi2, phase=0)  # play pi/2 pulse around Y
-        # play ECD
-        ECD(
-            cav,
-            qubit,
-            self.ecd_displacement,
-            self.qubit_pi,
-            ampx=self.x,
-            phase=0,
-            delay=self.delay,
+        Char_1D(
+                cav,
+                qubit,
+                self.ecd_displacement,
+                self.qubit_pi,
+                self.qubit_pi2,
+                ampx_x=self.x,
+                phase_x=0.25,
+                delay=self.delay,
+                measure_real=self.measure_real,
         )
-
-        qubit.play(self.qubit_pi2, phase=0)
         # play pi/2 pulse around X or Y, to measure either the real or imaginary part of the characteristic function
         qua.align()  # align measurement
         rr.measure((self.I, self.Q))
@@ -85,22 +85,23 @@ class ECDCalibration(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-    x_start = -1.9
-    x_stop = 1.9
+    x_start = -1.4
+    x_stop = 1.4
     x_step = 0.1
 
     parameters = {
         "modes": ["QUBIT", "CAV", "RR"],
         "reps": 1000,
         "wait_time": 3.5e6,
-        "fetch_period": 3,  # time between data fetching rounds in sec
+        "fetch_period": 2,  # time between data fetching rounds in sec
         "delay": 50,  # pi/chi
         "x_sweep": (x_start, x_stop + x_step / 2, x_step),
         "qubit_pi2": "constant_cos_pi2",
         "qubit_pi": "constant_cos_pi",
-        "ecd_displacement": "constant_cos_ECD_4",
-        "single_shot": True,
-        # "plot_quad": "I_AVG",
+        "ecd_displacement": "constant_cos_ECD_2",
+        "single_shot": False,
+        "plot_quad": "I_AVG",
+        "measure_real": True,
     }
 
     plot_parameters = {

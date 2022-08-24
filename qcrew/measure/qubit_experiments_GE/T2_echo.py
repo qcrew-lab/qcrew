@@ -68,9 +68,9 @@ class T2_Echo(Experiment):
 
 if __name__ == "__main__":
     x_start = 4
-    x_stop = 8000
-    x_step = 160
-    detuning = 200e3
+    x_stop = 10000
+    x_step = 80
+    detuning = 0e3
     
     
     parameters = {

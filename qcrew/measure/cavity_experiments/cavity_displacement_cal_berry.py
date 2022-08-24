@@ -192,7 +192,7 @@ if __name__ == "__main__":
         "qubit_pi2": "constant_cos_pi2",
         "qubit_pi": "constant_cos_pi",
         "cav_disp": "constant_cos_cohstate_1",
-        "cav_disp_ecd": "constant_cos_ECD",
+        "cav_disp_ecd": "constant_cos_ECD_2",
         # "ECD_phase": 0
         "measure_real": True,  # measure real part of char function if True, imag Part if false
         "plot_quad": "I_AVG",

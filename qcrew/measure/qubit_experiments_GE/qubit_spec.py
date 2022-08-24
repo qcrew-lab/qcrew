@@ -46,9 +46,9 @@ class QubitSpectroscopy(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-    x_start = 48e6 #45e6
-    x_stop = 51.5e6#55e6
-    x_step = 0.05e6
+    x_start = 49.5e6 #45e6
+    x_stop = 50.25e6#55e6
+    x_step = 0.01e6
 
     parameters = {
         "modes": ["QUBIT", "RR", "CAV"],

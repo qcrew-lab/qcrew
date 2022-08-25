@@ -71,7 +71,7 @@ class ECDcharacteristicfunc(Experiment):
 
         if 1:
             qubit.play("oct_pulse_qubit")
-            cav.play("oct_pulse_cav")
+            cav.play("oct_pulse_cavity")
             qua.align()
 
         ######################    pi/ - ECD - pi ######################
@@ -190,13 +190,13 @@ class ECDcharacteristicfunc(Experiment):
 
 # -------------------------------- Execution -----------------------------------
 if __name__ == "__main__":
-    x_start = -0.75
-    x_stop = 0.75
-    x_step = 0.05
+    x_start = -1
+    x_stop = 1
+    x_step = 0.1
 
-    y_start = -0.75
-    y_stop = 0.75
-    y_step = 0.05
+    y_start = -1
+    y_stop = 1
+    y_step = 0.1
 
     ecd_amp_scale = 1  #  the scale of constant_cos_ECD in ECD gate
     d_amp_scale = 1
@@ -219,7 +219,7 @@ if __name__ == "__main__":
         "qubit_op2_ecd": "oct_pulse_qubit",
         "qubit_pi_selective": "pi_selective_1",
         "cav_op_ecd": "constant_cos_ECD_2",
-        "cav_op_ecd_test": "oct_pulse_cav",
+        "cav_op_ecd_test": "oct_pulse_cavity",
         "cav_op_d": "constant_cos_cohstate_1",
         "measure_real": True,
         "plot_quad": "I_AVG",

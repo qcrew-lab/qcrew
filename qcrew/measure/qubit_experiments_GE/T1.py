@@ -8,6 +8,7 @@ from typing import ClassVar
 from qcrew.control import professor as prof
 from qcrew.measure.experiment import Experiment
 from qm import qua
+from lmfit import Parameters
 
 # ---------------------------------- Class -------------------------------------
 # delete this comment
@@ -46,6 +47,11 @@ class T1(Experiment):
         qua.wait(int(self.wait_time // 4), rr.name)  # wait system reset
 
         self.QUA_stream_results()  # stream variables (I, Q, x, etc)
+
+    def data_analysis(self, fit_params):
+        tau_ns = fit_params["tau"].value * 4
+        fit_params.add("tau_ns", tau_ns)
+        return fit_params
 
 
 # -------------------------------- Execution -----------------------------------

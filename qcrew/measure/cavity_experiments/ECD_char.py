@@ -12,7 +12,7 @@ from qcrew.measure.experiment import Experiment
 from qm import qua
 import numpy as np
 
-from qcrew.measure.qua_macros import ECD, Char_2D
+from qcrew.measure.qua_macros import ECD, Char_2D, U, V
 
 
 # ---------------------------------- Class -------------------------------------
@@ -88,58 +88,28 @@ class ECDchar(Experiment):
 
         if 0:
 
-            # U
-            # qubit.play(self.qubit_pi)  # g+e
-
-            qubit.play(self.qubit_pi2, phase=0.5)  # pi
-
-            
-
-            # ECD Gate
-            ECD(
+            U(
                 cav,
                 qubit,
                 self.cav_ecd_displace,
                 self.qubit_pi,
+                self.qubit_pi2,
                 ampx=self.u_amp_scale,
-                phase=0,
                 delay=self.delay,
             )
-            
-            qubit.play(self.qubit_pi, phase=0.75)  # pi
-            qubit.play(self.qubit_pi2, phase=0)
-            
- 
-            
+
         if 1:
 
-            # V
-
-            qubit.play(self.qubit_pi2, phase=0.25)  # pi
-
             
-
-            # ECD Gate
-            ECD(
+            V(
                 cav,
                 qubit,
                 self.cav_ecd_displace,
                 self.qubit_pi,
-                ampx=self.v_amp_scale,
-                phase=0.25,
+                self.qubit_pi2,
+                ampx=self.u_amp_scale,
                 delay=self.delay,
             )
-            
-            qubit.play(self.qubit_pi, phase=0.75)  # pi
-            qubit.play(self.qubit_pi2, phase=0.75)
-
-            qua.align()  # wait for qubit pulse to end
-
-            
-            
- 
-
-            qua.align()  # wait for qubit pulse to end                             
         ######################  Measure the created state with charactristic function  #####################
         Char_2D(
             cav,
@@ -149,8 +119,8 @@ class ECDchar(Experiment):
             self.qubit_pi2,
             ampx_x=self.x,
             ampx_y=self.y,
-            phase_x=0.25,
-            phase_y=0.5,
+            phase_x=0.25,  # 0.25,
+            phase_y=0.5,  # 0.5,
             delay=self.delay,
             measure_real=self.measure_real,
         )

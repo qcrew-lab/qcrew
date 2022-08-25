@@ -63,8 +63,8 @@ class ECDCalibration(Experiment):
                 self.ecd_displacement,
                 self.qubit_pi,
                 self.qubit_pi2,
-                ampx_x=self.x,
-                phase_x=0.25,
+                ampx=self.x,
+                phase=0.25,
                 delay=self.delay,
                 measure_real=self.measure_real,
         )

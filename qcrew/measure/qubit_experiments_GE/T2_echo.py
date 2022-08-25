@@ -64,6 +64,13 @@ class T2_Echo(Experiment):
         self.QUA_stream_results()  # stream variables (I, Q, x, etc)
 
 
+    def data_analysis(self, fit_params):
+        tau_ns = fit_params["tau"].value * 4
+        fit_params.add("tau_ns", tau_ns)
+        return fit_params
+
+
+
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":

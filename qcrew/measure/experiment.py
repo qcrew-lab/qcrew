@@ -262,6 +262,15 @@ class Experiment(Parametrized):
         """
         pass
 
+    @abc.abstractmethod
+    def data_analysis(self, params):
+        """
+        (XGH)
+        Makes PhD student stupidier. Manipulates the fit parameters as defined in the
+        child experiment class and spits out another set of parameters.
+        """
+        raise NotImplementedError
+
     def QUA_sequence(self):
         """
         Method that returns the QUA sequence to be executed in the quantum machine.
@@ -397,6 +406,7 @@ class Experiment(Parametrized):
                 num_results,
                 fit_fn=self.fit_fn,
                 err=error_data,
+                data_analysis=self.data_analysis,
             )
 
         # build data dictionary for final save

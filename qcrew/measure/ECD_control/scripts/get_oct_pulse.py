@@ -25,7 +25,7 @@ if __name__ == "__main__":
     # input target state and size of hilbert space to optimise
     Nc = 60
     Nq = 2
-    alpha = 2
+    alpha = 1
     sq = 0.5
     psi_t = (
         qt.tensor(qt.fock(Nq, 0), qt.coherent(Nc, alpha))

@@ -379,7 +379,7 @@ def Char_1D(
     # bring qubit into superposition
     qua.align(qubit.name, cav.name)
     qubit.play(qubit_pi2_pulse)
-    ECD(cav, qubit, displacement_pulse, qubit_pi_pulse, ampx, phase, delay)
+    ECD(cav, qubit, displacement_pulse, qubit_pi_pulse, ampx, delay, phase)
     qua.align(qubit.name, cav.name)
 
     qubit.play(qubit_pi2_pulse, phase=0.0 if measure_real else 0.25)

@@ -86,7 +86,7 @@ class ECDchar(Experiment):
 
         ######################    ECD   ######################
 
-        if 0:
+        if 1:
 
             U(
                 cav,
@@ -98,7 +98,7 @@ class ECDchar(Experiment):
                 delay=self.delay,
             )
 
-        if 1:
+        if 0:
 
             
             V(
@@ -107,9 +107,20 @@ class ECDchar(Experiment):
                 self.cav_ecd_displace,
                 self.qubit_pi,
                 self.qubit_pi2,
-                ampx=self.u_amp_scale,
+                ampx=self.v_amp_scale,
                 delay=self.delay,
             )
+            
+        if 1:
+            U(
+                cav,
+                qubit,
+                self.cav_ecd_displace,
+                self.qubit_pi,
+                self.qubit_pi2,
+                ampx=self.u_amp_scale,
+                delay=self.delay,
+            )            
         ######################  Measure the created state with charactristic function  #####################
         Char_2D(
             cav,
@@ -127,6 +138,7 @@ class ECDchar(Experiment):
 
         # Measure cavity state
         qua.align()  # align measurement
+        qua.wait(int(6))
         rr.measure((self.I, self.Q))  # measure transmitted signal
         qua.wait(int(self.wait_time // 4), cav.name)
         if self.single_shot:  # assign state to G or E
@@ -138,15 +150,15 @@ class ECDchar(Experiment):
 
 # -------------------------------- Execution -----------------------------------
 if __name__ == "__main__":
-    x_start = -1.25
-    x_stop = 1.25
+    x_start = -1.4
+    x_stop = 1.4
     x_step = 0.1
 
-    y_start = -1.25
-    y_stop = 1.25
+    y_start = -1.4
+    y_stop = 1.4
     y_step = 0.1
 
-    u_amp_scale = 1  #  the scale of constant_cos_ECD in ECD gate
+    u_amp_scale = 0.5  #  the scale of constant_cos_ECD in ECD gate
     v_amp_scale = -0.6
 
     parameters = {

@@ -85,8 +85,8 @@ class ECDCalibration(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-    x_start = -1.4
-    x_stop = 1.4
+    x_start = -1.1
+    x_stop = 1.1
     x_step = 0.1
 
     parameters = {

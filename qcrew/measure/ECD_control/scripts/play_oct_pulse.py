@@ -33,8 +33,8 @@ class oct_exp(Experiment):
         qubit, rr, cav = self.modes
 
         qua.reset_frame(qubit.name, cav.name)
-        qubit.play("oct_pulse")
-        cav.play("oct_pulse")
+        qubit.play("oct_pulse_qubit")
+        cav.play("oct_pulse_cavity")
         qua.align()
         # qubit.play(self.qubit_op)
         # qua.align()
@@ -94,12 +94,12 @@ class oct_exp(Experiment):
 
 if __name__ == "__main__":
 
-    x_start = -1
-    x_stop = 1
+    x_start = -1.4
+    x_stop = 1.4
     x_step = 0.1
 
-    y_start = -1                                                                              
-    y_stop = 1
+    y_start = -1.4                                                                              
+    y_stop = 1.4
     y_step = 0.1
 
     # amp_start = -1.5
@@ -117,8 +117,8 @@ if __name__ == "__main__":
         "y_sweep": (y_start, y_stop + y_step / 2, y_step),
         # "qubit_op": "pi_selective_1",
         "fetch_period": 3,  # time between data fetching rounds in sec
-        "single_shot": True,
-        # "plot_quad": "I_AVG",
+        #"single_shot": True,
+        "plot_quad": "I_AVG",
     }
 
     plot_parameters = {

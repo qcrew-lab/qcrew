@@ -29,11 +29,11 @@ if __name__ == "__main__":
     sq = 0.5
     psi_t = (
         qt.tensor(qt.fock(Nq, 0), qt.coherent(Nc, alpha))
-        + qt.tensor(qt.fock(Nq, 0), qt.coherent(Nc, -alpha))
+        + qt.tensor(qt.fock(Nq, 0), qt.coherent(Nc, alpha))
     ).unit()
 
     opt_params = {
-        "N_blocks": 4,
+        "N_blocks": 1,
         "N_multistart": 200,
         "epochs": 100,
         "epoch_size": 10,

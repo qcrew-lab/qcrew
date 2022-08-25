@@ -65,7 +65,7 @@ if __name__ == "__main__":
         "chi_kHz": 45,  # dispersive shift in kHz
         "chi_prime_Hz": 0,  # second order dispersive shift in Hz
         "Ks_Hz": 0,  # Kerr correction not implemented here.
-        "unit_amp": 0.122,  # DAC amplitude (at maximum of pulse) for gaussian displacement to alpha=1.
+        "unit_amp": 1,  # DAC amplitude (at maximum of pulse) for gaussian displacement to alpha=1.
         "sigma": 8,  # oscillator displacement pulse sigma
         "chop": 6,  # oscillator displacement pulse chop (number of sigmas to include in gaussian pulse)
         "length_ring": 4,

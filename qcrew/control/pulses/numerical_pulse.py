@@ -4,7 +4,7 @@ from pathlib import Path
 
 import numpy as np
 
-from qcrew.control.pulses.pulse import Pulse
+from qcrew.control.pulses.pulse import BASE_PULSE_AMP, Pulse
 
 
 class NumericalPulse(Pulse):
@@ -27,8 +27,8 @@ class NumericalPulse(Pulse):
     @property
     def samples(self):
         """ """
-        i_wave = np.real(self.oct_pulse) * self.ampx
-        q_wave = np.imag(self.oct_pulse) * self.ampx
+        i_wave = np.real(self.oct_pulse) * BASE_PULSE_AMP * self.ampx
+        q_wave = np.imag(self.oct_pulse) * BASE_PULSE_AMP * self.ampx
         print(np.max(np.real(self.oct_pulse)))
         print(np.max(np.imag(self.oct_pulse)))
         print(np.max(i_wave))

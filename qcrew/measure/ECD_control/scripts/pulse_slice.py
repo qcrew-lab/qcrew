@@ -22,15 +22,15 @@ OCT_PULSES_PATH = Path(__file__).resolve().parents[4] / "config/oct_pulses"
 
 if __name__ == "__main__":
 
-    cavity__load_path = "20222408_152602_oct_pulse_cavity_.npz"
-    qubit__load_path = "20222408_152602_oct_pulse_qubit_.npz"
+    cavity__load_path = "20222508_150611_oct_pulse_cavity_.npz"
+    qubit__load_path = "20222508_150611_oct_pulse_qubit_.npz"
     cav_len = len(cavity__load_path)
     qubit_len = len(qubit__load_path)
     cavity_dac_pulse = np.load(OCT_PULSES_PATH / cavity__load_path)["oct_pulse"]
     qubit_dac_pulse = np.load(OCT_PULSES_PATH / qubit__load_path)["oct_pulse"]
     
-    t_start = 43
-    t_end = 650
+    t_start = 44
+    t_end = 100
     
     cavity_dac_pulse = pulse_slice(t_start,t_end,cavity_dac_pulse)
     qubit_dac_pulse = pulse_slice(t_start,t_end,qubit_dac_pulse)

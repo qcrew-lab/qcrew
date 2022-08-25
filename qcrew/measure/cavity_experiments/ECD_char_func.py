@@ -77,9 +77,9 @@ class ECDchar(Experiment):
         #qua.align()  # align measurement
         
         if 1:
-            #qubit.play("oct_pulse")
+            qubit.play("oct_pulse")
             cav.play("oct_pulse")
-            cav.play("constant_cos_cohstate_1_long")
+            # cav.play("constant_cos_cohstate_1_long")
             qua.align()
 
         ######################  Measure the created state with charactristic function  #####################

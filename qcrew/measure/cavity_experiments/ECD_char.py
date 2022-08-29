@@ -98,9 +98,7 @@ class ECDchar(Experiment):
                 delay=self.delay,
             )
 
-        if 0:
-
-            
+        if 1:
             V(
                 cav,
                 qubit,
@@ -110,17 +108,28 @@ class ECDchar(Experiment):
                 ampx=self.v_amp_scale,
                 delay=self.delay,
             )
-            
-        if 1:
+
+        if 0:
             U(
                 cav,
                 qubit,
                 self.cav_ecd_displace,
                 self.qubit_pi,
                 self.qubit_pi2,
-                ampx=self.u_amp_scale,
+                ampx=-self.u_amp_scale,  # (-1) * amp
                 delay=self.delay,
-            )            
+            )
+        if 0:
+            V(
+                cav,
+                qubit,
+                self.cav_ecd_displace,
+                self.qubit_pi,
+                self.qubit_pi2,
+                ampx=-self.v_amp_scale,  # (-1) * amp
+                delay=self.delay,
+            )
+
         ######################  Measure the created state with charactristic function  #####################
         Char_2D(
             cav,
@@ -150,20 +159,20 @@ class ECDchar(Experiment):
 
 # -------------------------------- Execution -----------------------------------
 if __name__ == "__main__":
-    x_start = -1.4
-    x_stop = 1.4
+    x_start = -1.1
+    x_stop = 1.15
     x_step = 0.1
 
-    y_start = -1.4
-    y_stop = 1.4
+    y_start = -1.15
+    y_stop = 1.15
     y_step = 0.1
 
-    u_amp_scale = 0.5  #  the scale of constant_cos_ECD in ECD gate
-    v_amp_scale = -0.6
+    u_amp_scale = 1 #0.5  #  the scale of constant_cos_ECD in ECD gate
+    v_amp_scale = -0.6 # -0.3
 
     parameters = {
         "modes": ["QUBIT", "CAV", "RR", "RR_DRIVE"],
-        "reps": 500,
+        "reps": 1000,
         "wait_time": 4e6,  # 50e3,
         "fetch_period": 2,  # time between data fetching rounds in sec
         "delay": 50,  # 50,  # wait time between opposite sign displacements
@@ -177,8 +186,8 @@ if __name__ == "__main__":
         "y_sweep": (y_start, y_stop + y_step / 2, y_step),
         "qubit_pi": "constant_cos_pi",
         "qubit_pi2": "constant_cos_pi2",
+        "cav_ecd_displace": "constant_cos_ECD",
         "char_func_displacement": "constant_cos_ECD_2",
-        "cav_ecd_displace": "constant_cos_ECD_2",
         "cav_displace_1": "constant_cos_cohstate_2",
         "measure_real": True,
         "plot_quad": "I_AVG",

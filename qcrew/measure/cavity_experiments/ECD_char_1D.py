@@ -12,7 +12,7 @@ from qcrew.measure.experiment import Experiment
 from qm import qua
 import numpy as np
 
-from qcrew.measure.qua_macros import ECD, Char_1D, U
+from qcrew.measure.qua_macros import ECD, Char_1D, U, V
 
 
 # ---------------------------------- Class -------------------------------------
@@ -76,7 +76,19 @@ class ECDchar1D(Experiment):
                 self.qubit_pi2,
                 ampx=self.u_amp_scale,
                 delay=self.delay,
-            )        
+            )     
+        if 1:
+
+            U(
+                cav,
+                qubit,
+                self.cav_ecd_displace,
+                self.qubit_pi,
+                self.qubit_pi2,
+                ampx=self.u_amp_scale,
+                delay=self.delay,
+            )                   
+                            
         # Measure 1D char func
         Char_1D(
                 cav,
@@ -106,10 +118,10 @@ class ECDchar1D(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-    x_start = -1.4
+    x_start = -1.5
     x_stop = 0.5
     x_step = 0.05
-    u_amp_scale = 1
+    u_amp_scale = 0.5
     
 
     parameters = {
@@ -122,7 +134,7 @@ if __name__ == "__main__":
         "qubit_pi2": "constant_cos_pi2",
         "qubit_pi": "constant_cos_pi",
         "char_func_displacement": "constant_cos_ECD_2",
-        "cav_ecd_displace": "constant_cos_ECD_2",
+        "cav_ecd_displace": "constant_cos_ECD",
         "single_shot": False,
         "plot_quad": "I_AVG",
         "measure_real": True,

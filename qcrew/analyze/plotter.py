@@ -51,11 +51,15 @@ class Plotter:
 
         self.hdisplay = display.display(self.fig, display_id=True)
 
-    def fit(self, xs, ys, fit_fn) -> tuple:
+    def fit(self, xs, ys, fit_fn, data_analysis=None) -> tuple:
 
         # get fit parameters
         params = fit.do_fit(fit_fn, xs, ys)
         fit_ys = fit.eval_fit(fit_fn, params, xs)
+        try:
+            params = data_analysis(params)
+        except NotImplementedError:
+            pass
 
         # convert param values into formated string
         param_val_list = [
@@ -73,6 +77,7 @@ class Plotter:
         n,
         fit_fn=None,
         err=None,
+        data_analysis=None,
     ):
         """
         If `live_plot(data)` is called in an IPython terminal context, the axis is refreshed and plotted with the new data using IPython `display` tools.
@@ -93,7 +98,14 @@ class Plotter:
                     label = self.plot_setup["trace_labels"][0]
                 except IndexError:
                     label = None
-                self.plot_1D(x_data, z_data, fit_fn, label=label, err=err)
+                self.plot_1D(
+                    x_data,
+                    z_data,
+                    fit_fn,
+                    label=label,
+                    err=err,
+                    data_analysis=data_analysis,
+                )
 
             # Plot a trace for each value in independent_data[1]
             if len(independent_data) == 2:
@@ -122,6 +134,7 @@ class Plotter:
                         label=label,
                         err=err_trace_data,
                         color=color,
+                        data_analysis=data_analysis,
                     )
 
             # Set plot parameters
@@ -172,7 +185,9 @@ class Plotter:
         ax.set_ylabel(self.plot_setup["ylabel"])
         cbar.set_label(self.plot_setup["zlabel"])
 
-    def plot_1D(self, x, z, fit_fn, label=None, err=None, color="b"):
+    def plot_1D(
+        self, x, z, fit_fn, label=None, err=None, color="b", data_analysis=None
+    ):
 
         ax = self.fig.gca()
 
@@ -185,7 +200,7 @@ class Plotter:
 
         if fit_fn:
             # plot the fit curve
-            fit_text, fit_z = self.fit(x, z, fit_fn=fit_fn)
+            fit_text, fit_z = self.fit(x, z, fit_fn=fit_fn, data_analysis=data_analysis)
             left = 0
             bottom = -0.1
             ax.text(

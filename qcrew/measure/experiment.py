@@ -164,6 +164,7 @@ class Experiment(Parametrized):
         zlabel=None,
         trace_labels=[],
         title=None,
+        skip_plot=False,
         plot_type="1D",
         plot_err=True,
         cmap="viridis",
@@ -204,6 +205,7 @@ class Experiment(Parametrized):
             "zlabel": zlabel,
             "trace_labels": trace_labels,
             "title": title,
+            "skip_plot": skip_plot,
             "plot_type": plot_type,
             "plot_err": plot_err,
             "cmap": cmap,
@@ -259,6 +261,15 @@ class Experiment(Parametrized):
         specified by the experiment (spectroscopy, power rabi, etc.) in the child class.
         """
         pass
+
+    @abc.abstractmethod
+    def data_analysis(self, params):
+        """
+        (XGH)
+        Makes PhD student stupidier. Manipulates the fit parameters as defined in the
+        child experiment class and spits out another set of parameters.
+        """
+        raise NotImplementedError
 
     def QUA_sequence(self):
         """
@@ -387,13 +398,15 @@ class Experiment(Parametrized):
         else:
             error_data = None
 
-        plotter.live_plot(
-            independent_data,
-            dependent_data,
-            num_results,
-            fit_fn=self.fit_fn,
-            err=error_data,
-        )
+        if not self.plot_setup["skip_plot"]:
+            plotter.live_plot(
+                independent_data,
+                dependent_data,
+                num_results,
+                fit_fn=self.fit_fn,
+                err=error_data,
+                data_analysis=self.data_analysis,
+            )
 
         # build data dictionary for final save
         dep_data_dict = {dep_tags[i]: dependent_data[i] for i in range(len(dep_tags))}

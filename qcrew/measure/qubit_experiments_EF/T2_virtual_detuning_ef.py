@@ -8,6 +8,7 @@ from typing import ClassVar
 from qcrew.control import professor as prof
 from qcrew.measure.experiment import Experiment
 from qm import qua
+import qcrew.measure.qua_macros as macros
 
 # ---------------------------------- Class -------------------------------------
 
@@ -43,14 +44,22 @@ class T2EF(Experiment):
         """
         Defines pulse sequence to be played inside the experiment loop
         """
-        qubit, rr, qubit_ef = self.modes  # get the modes
-        qubit.play(self.qubit_ge_pi)  # g-> e pi
 
+        factor = qua.declare(qua.fixed)
+        qua.assign(factor, self.detuning * 4 * 1e-9)
+
+        qubit, rr, qubit_ef = self.modes  # get the modes
+        qua.reset_frame(qubit.name, qubit_ef.name)
+        
+        qubit.play(self.qubit_ge_pi)  # g-> e pi
         qua.align(qubit.name, qubit_ef.name)
-        qua.update_frequency(qubit_ef.name, qubit_ef.int_freq + self.detuning)
+        
         qubit_ef.play(self.qubit_ef_pi2)  # e-> f half pi
+        
         qua.wait(self.x, qubit.name)  # wait for partial qubit decay
-        qubit_ef.play(self.qubit_ef_pi2)  # e-> f half pi
+        qua.assign(self.phase, qua.Cast.mul_fixed_by_int(factor, self.x))
+        
+        qubit_ef.play(self.qubit_ef_pi2, phase=self.phase)  # e-> f half pi
         qua.align(qubit.name, qubit_ef.name)
 
         qubit.play(self.qubit_ge_pi)  # e->g pi
@@ -65,20 +74,29 @@ class T2EF(Experiment):
 
 if __name__ == "__main__":
 
-    x_start = 4
-    x_stop = 5000
-    x_step = 40
-    detuning = 0e6
+    x_start = 20
+    x_stop = 6e3
+    x_step = 80
+    detuning = 300e3
 
     parameters = {
-        "modes": ["QUBIT_ALPHA", "RR"],
-        "reps": 25000,
-        "wait_time": 200000,
+        "modes": ["QUBIT_BETA", "RR", "QUBIT_BETA_EF"],
+        "reps": 5000,
+        "wait_time": 400000,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
         "qubit_ge_pi": "pi",
-        "qubit_ef_pi2": "pi2_ef",
-        "ef_int_freq": int(-186.5e6),
+        "qubit_ef_pi2": "pi2",
         "detuning": int(detuning),
+        "extra_vars": {
+            "phase": macros.ExpVariable(
+                var_type=qua.fixed,
+                tag="phase",
+                average=True,
+                buffer=True,
+                save_all=True,
+            )
+        },
+        "plot_quad": "Z_AVG",
     }
 
     plot_parameters = {

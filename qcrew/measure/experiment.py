@@ -249,7 +249,7 @@ class Experiment(Parametrized):
             pass
 
         self.buffering = tuple(buffering)
-
+        logger.info(f"Buffer dimensions: {self.buffering}")
         if len(self.buffering) == 0:
             logger.warning("No sweep is configured")
         return

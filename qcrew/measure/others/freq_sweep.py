@@ -26,22 +26,19 @@ if __name__ == "__main__":
 
     with Stagehand() as stage:
         # sa, qubit, qubit_ef, rr, cav = stage.SA, stage.QUBIT, stage.QUBIT_EF, stage.RR, stage.CAV
-        sa, qubit, rr, qubit_ef, cav, cav_drive = (
+        sa, qubit, rr = (
             stage.SA,
             stage.QUBIT,
             stage.RR,
-            stage.QUBIT_EF,
-            stage.CAV,
-            stage.CAV_DRIVE,
         )
         # rr.int_freq = -50e6
         # rr.lo_freq = 7.5e9
 
-        mode = cav_drive  # select the mode whose spectrum you want to sweep
+        mode = qubit  # select the mode whose spectrum you want to sweep
 
         sweep_parameters = {  # set sweep parameters
             "center": mode.lo_freq,
-            "span": 400e6,
+            "span": 430e6,
             "rbw": Sa124.default_rbw,
             "ref_power": Sa124.default_ref_power,
         }

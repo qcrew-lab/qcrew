@@ -7,14 +7,27 @@ import numpy as np
 import matplotlib.pyplot as plt
 from qutip import *
 from get_pulse_seq import *
+from matplotlib.animation import FuncAnimation
 
 def save(result, save_path, args):
     '''
     To save relevant information
+    Parameters
+    ---------
+    result : pygrape result object
+        Describes the result of optimsation
+    save_path : string
+        Desribes the directory to save the file (.npz)
+    args : dict
+        Contains the necessary miscellaneous parameters
+    
+    Returns
+    ---------
+    None
     '''
     np.savez(
         save_path,
-        ts = result.ts
+        ts = result.ts,
         cav_X = result.controls[0],
         cav_Y = result.controls[1],
         qb_X = result.controls[2],
@@ -26,18 +39,59 @@ def save(result, save_path, args):
         q_dims = 2 if 'q_dims' not in args else args['q_dims'],
         p_len = args['p_len'],
         name = None if 'name' not in args else args['name'],
-        targ_fid = args['targ_fid']
+        targ_fid = args['targ_fid'],
     )
 
     print(f"File saved at {save_path}")
 
 def read(read_path):
+    '''
+    tbc
+    '''
     args = dict()
     return None
+
+def read_amplitudes_from_file(filename):
+    """
+    Reads file that contains a pulse amplitudes and retrieve it as array
+
+    Parameters:
+    ---------
+    filename: string
+        Name of the file where the pulse is stored.
+
+    Returns:
+    ---------
+    amplitudes: ndarray
+        Array of floats corresponding to pulse amplitudes.
+    """
+
+    if filename.split(".")[-1] == "txt":
+        f = open(filename, "r")
+        pulse_amplitudes = []
+        f_lines = f.readlines()
+        times = [float(line.split()[0]) for line in f_lines]
+        pulse_amplitudes = [[float(line.split()[i]) for line in f_lines]
+                            for i in range(1, len(f_lines[0].split()))]
+
+    if filename.split(".")[-1] == "npz":
+        f = np.load(filename)
+        times = f["ts"]
+        pulse_amplitudes = [f["cav_X"], f["cav_Y"],  f["qb_X"], f["qb_Y"]]
+
+    return np.array(times), np.array(pulse_amplitudes)
 
 def show_pulse(result):
     '''
     Plotting the Pulse waveform
+    Parameters
+    ---------
+    result : pygrape result object
+        Describes the result of pygrape optimisation
+
+    Returns
+    ---------
+    None
     '''
     plt.plot(result.ts, result.controls[0], label = "Resonator Pulse X")
     plt.plot(result.ts, result.controls[1], label = "Resonator Pulse Y")
@@ -48,6 +102,116 @@ def show_pulse(result):
     plt.title("Pulse Sequence in the Interaction Picture")
     plt.show()
 
-def show_evolution(result, args):
-    H, H_ctrl = make_Hamiltonian(arg)
-    H_targ = make_unitary_target(arg)
+def get_AW_envelope(amplitudes, times):
+    '''
+    Gets the wave envelope 
+
+    Parameters
+    ---------
+    amplitudes : list of floats
+        Describes the pulse
+    times : list of floats
+        Describes the time steps
+
+    Returns
+    ---------
+    envelope : function
+        Returns a function that gives the amplitude at time t
+    '''
+    if not len(times) == len(amplitudes):
+        print("Both amplitudes and times arrays must have equal length")
+
+    # Get time step. This assumes the step is constant.
+    dt = times[1]-times[0]
+
+    def envelope(t, args):
+        if np.min(times)<t<np.max(times):
+            return amplitudes[int(t//dt)]
+        else:
+            return 0
+    return envelope
+
+def show_evolution(result, args, save_path = None, initial = None, t_len = 1000, t_step = 0.1):
+    '''
+    To generate a gif of the wigner time evolution
+
+    Parameters
+    ---------
+    result : pygrape result object
+        Describes the result of pygrape optimisation
+    args : dict
+        Contains the miscellaneous parameters used
+    initial : Qobj ket
+        The initial state to evolve from. If None, the vacuum state is used
+    t_len : float / int
+        Total time to evolve for (in ns)
+    t_step : float / int
+        Time step to evolve for (in ns)
+
+    Returns
+    ---------
+    None
+    '''
+    # Get the Hamiltonians
+    H0, H_ctrl = make_Hamiltonian(args)
+    H = [H0,] + H_ctrl
+    H_targ = make_unitary_target(args)
+
+    times, amplitudes = result.ts, result.controls
+
+    # Cavity Pulse
+    envelope_quad1 = get_AW_envelope(amplitudes[0], times)
+    H_res_quad1 = [H_ctrl[0], envelope_quad1]
+    envelope_quad2 = get_AW_envelope(amplitudes[1], times)
+    H_res_quad2 = [H_ctrl[1], envelope_quad2]
+
+    # Qubit Pulse
+    envelope_sx = get_AW_envelope(amplitudes[2], times)
+    H_qubit_sx = [H_ctrl[2], envelope_sx]
+    envelope_sy = get_AW_envelope(amplitudes[3], times)
+    H_qubit_sy = [H_ctrl[3], envelope_sy]
+
+    # Initial State
+    if initial is None:
+        initial = tensor(fock(args['c_dims'], 0), fock(args['q_dims'], 0))
+
+    # Time steps
+    t_list = np.arange(0, t_len, t_step)
+
+    # ME Solver Output
+    solved = mesolve(H, initial, t_list, options = Options(nsteps = 2000))
+
+    # plot wigner function
+    max_range = 6
+    displ_array = np.linspace(-max_range, max_range, 61)
+    wigner_list0 = [wigner(x.ptrace(0), displ_array, displ_array) for x in solved.states[::40]]
+    wigner_list1 = [wigner(x.ptrace(1), displ_array, displ_array) for x in solved.states[::40]]
+
+    # create first plot
+    fig, axes = plt.subplots(1,2)
+    axes[0].set_aspect('equal', 'box')
+    axes[1].set_aspect('equal', 'box')
+    fig.set_size_inches(20, 8)
+    wigner_f0 = wigner(solved.states[0].ptrace(0), displ_array, displ_array)
+    wigner_f1 = wigner(solved.states[0].ptrace(1), displ_array, displ_array)
+    cont0 = axes[0].pcolormesh(displ_array, displ_array, wigner_f0, cmap = "bwr")
+    cont1 = axes[1].pcolormesh(displ_array, displ_array, wigner_f1, cmap = "bwr")
+    cb = fig.colorbar(cont0)
+
+    # refresh function
+    def animated_wigner(frame):
+        wigner_f0 = wigner_list0[frame]
+        wigner_f1 = wigner_list1[frame]
+        cont0 = axes[0].pcolormesh(displ_array, displ_array, wigner_f0, cmap = "bwr")
+        cont1 = axes[1].pcolormesh(displ_array, displ_array, wigner_f1, cmap = "bwr")
+        cont0.set_clim(-1/np.pi, 1/np.pi)
+        cont1.set_clim(-1/np.pi, 1/np.pi)
+
+        axes[0].set_title("Cavity State", fontsize = 20)
+        axes[1].set_title("Qubit State", fontsize = 20)
+
+
+    anim = FuncAnimation(fig, animated_wigner, frames=len(wigner_list0), interval=100)
+    if save_path == None:
+        save_path = 'animation1.gif'
+    anim.save(save_path, writer='imagemagick')

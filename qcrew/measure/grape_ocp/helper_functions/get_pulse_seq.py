@@ -29,6 +29,13 @@ def make_Hamiltonian(args):
         'qubit drive'  : Initial amplitude of qubit drive
         'cavity drive' : Initial ampltide of cavity drive
         ... and other stuff
+    
+    Returns
+    ---------
+    H : Qobj
+        Hamiltonian for system in Interaction picture
+    H_ctrl: List of Qobj 
+        Hamiltonians for drive terms
     '''
 
     chi = args['chi']
@@ -71,6 +78,11 @@ def make_unitary_target(arg):
         'c_dims'   : Number of Fock states before truncating
         'q_dims'   : Number of circuit levels (usually 2 or 3)
         ... and other stuff
+
+    Return
+    ---------
+    U : Qobj
+        Unitary matrix describing the goal evolution
     '''
     
     U = None if 'unitary' not in arg else arg['unitary']
@@ -109,7 +121,11 @@ def make_setup(arg):
     arg : dict
         contains all the stuff for the other two functions
         ... and other stuff
-
+    
+    Returns
+    ---------
+    setups : list of UnitarySetUp
+        Information for pygrape optimsation
     '''
     H, H_ctrl = make_Hamiltonian(arg)
     H_targ = make_unitary_target(arg)

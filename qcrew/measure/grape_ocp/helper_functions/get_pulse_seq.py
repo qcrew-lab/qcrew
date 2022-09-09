@@ -6,12 +6,6 @@ Last Update: 10 Sept 2022 Kai Xiang
 from pygrape import *
 from qutip import *
 
-penalties = [make_amp_cost(1, 1, iq_pairs = True)]
-opts = {
-    'maxfun' : 15000 * 5,
-    'maxiter': 15000 * 5,
-    }
-
 def make_Hamiltonian(args):
     '''
     A function that creates the interaction Hamiltonian and the control drives
@@ -135,8 +129,8 @@ def make_setup(arg):
     new_arg = arg.copy()
     new_arg['c_dims'] += 1
     
-    H, H_ctrl = make_Hamiltonian(arg)
-    H_targ = make_unitary_target(arg)
+    H, H_ctrl = make_Hamiltonian(new_arg)
+    H_targ = make_unitary_target(new_arg)
 
     setup2 = UnitarySetup(H, H_ctrl, H_targ)
 

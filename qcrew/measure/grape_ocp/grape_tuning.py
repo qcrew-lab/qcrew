@@ -17,6 +17,7 @@ from pygrape import run_grape, random_waves, UnitarySetup, make_amp_cost
 from qutip import *
 import os
 from helper_functions.get_pulse_seq import *
+from helper_functions.data_control import *
 
 # Path for the save files for the .npz
 path = r'qcrew\qcrew\measure\grape_ocp\Saved Pulse Sequences'
@@ -27,18 +28,18 @@ name = 'fock1'
 # I'm going to load some precalibrated targets, but the intention
 # is to be able to specify the unitary in qutip
 U_targ = 'fock1'
-targ_fid = 0.7
-
+targ_fid = 0.8
 
 args = {
     # Number of dimensions to simulate, depends on target state 
     # E.g., Fock state n = 1 requires >6 photons
     'c_dims': 8,
-    'q_dims': 3,
+    'q_dims': 2,
     # In GHz
     'chi'   : 1.5e-3 * 2,
-    'kerr'  : 1e-5,
-    'anharm': 0.4,
+    'kerr'  : 0,#1e-5,
+    'anharm': 0,#0.4,
+    # Other deets
     'name'  : U_targ,
     'p_len'   : 500//2,
     'targ_fid': targ_fid,
@@ -50,18 +51,30 @@ verbose = False
 fullpath = path + '\\' + name + '.npz'
 init = random_waves(n_ctrls = 4, plen = args['p_len'], npoints = 15)
 
+print(init, init.shape)
+
 if os.path.exists(fullpath):
     '''
     Insert a way to convert the .npz file into the starting initial pulse shape
     '''
-    init = init
+    init = read_amplitudes_from_file(fullpath)
+    init = init[1]
+    print(init, init.shape) 
+
+penalties = [make_amp_cost(1, 1, iq_pairs = True)]
+opts = {
+    'maxfun' : 15000 * 5,
+    'maxiter': 15000 * 5,
+    }
 
 setups = make_setup(args)
-print("Yes")
-#result = run_grape(inits, setups, term_fid = targ_fid, opts = opts, dt = 1)
+result = run_grape(init, setups, term_fid = targ_fid, opts = opts, dt = 1)
 
+save(result, fullpath, args)
 
-
+show_pulse(result)
+show(result, args)
+#show_evolution(result, args, path + '\\animation1.gif')
 
 
 

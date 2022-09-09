@@ -6,7 +6,7 @@ Last Update: 10 Sept 2022 Kai Xiang
 import numpy as np
 import matplotlib.pyplot as plt
 from qutip import *
-from get_pulse_seq import *
+from helper_functions.get_pulse_seq import *
 from matplotlib.animation import FuncAnimation
 
 def save(result, save_path, args):
@@ -215,3 +215,54 @@ def show_evolution(result, args, save_path = None, initial = None, t_len = 1000,
     if save_path == None:
         save_path = 'animation1.gif'
     anim.save(save_path, writer='imagemagick')
+    
+    print("Gif created!")
+
+def show(result, args, initial = None, t_len = 1000, t_step = 0.1):
+    '''
+    To generate a plot of the photon number time evolution
+
+    Parameters
+    ---------
+    result : pygrape result object
+        Describes the result of pygrape optimisation
+    args : dict
+        Contains the miscellaneous parameters used
+    initial : Qobj ket
+        The initial state to evolve from. If None, the vacuum state is used
+    t_len : float / int
+        Total time to evolve for (in ns)
+    t_step : float / int
+        Time step to evolve for (in ns)
+
+    Returns
+    ---------
+    None
+    '''
+    c_dims = 8 if 'c_dims' not in args else args['c_dims']
+    q_dims = 2 if 'q_dims' not in args else args['q_dims']
+
+    # Initial State
+    if initial is None:
+        initial = tensor(fock(args['c_dims'], 0), fock(args['q_dims'], 0))
+
+    # Time steps
+    t_list = np.arange(0, t_len, t_step)
+
+    a = tensor(destroy(c_dims), qeye(q_dims))
+    b = tensor(qeye(c_dims), destroy(q_dims))
+
+    # Get the Hamiltonians
+    H0, H_ctrl = make_Hamiltonian(args)
+    H = [H0,] + H_ctrl
+    H_targ = make_unitary_target(args)
+    solved = mesolve(H, initial, t_list, options = Options(nsteps = 2000))
+
+    cavity_expectation = [ (state.dag() * a.dag()*a * state)[0,0] for state in solved.states ]
+    qubit_expectation = [ (state.dag() * b.dag()*b * state)[0,0] for state in solved.states ]
+
+    plt.plot(t_list, cavity_expectation, label = "Cavity")
+    plt.plot(t_list, qubit_expectation, label = "Qubit")
+    plt.title("Expectation of Photon Number Operator")
+    plt.legend()
+    plt.show()

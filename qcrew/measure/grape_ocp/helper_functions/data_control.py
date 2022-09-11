@@ -86,16 +86,18 @@ def read_amplitudes_from_file(filename):
     if filename.split(".")[-1] == "npz":
         f = np.load(filename)
         times = f["ts"]
-        pulse_amplitudes = [f["cav_X"], f["cav_Y"],  f["qb_X"], f["qb_Y"]]
+        pulse_amplitudes = [f["cav_X"], f["cav_Y"],  f["qb_X"], f["qb_Y"]] if "cav_X" in f else [f["pulseX"], f["pulseY"]]
         args = {
-            'chi': float(f['chi']),
-            'kerr':  float(f['kerr']),
-            'anharm':  float(f['anharm']),
-            'c_dims':  int(f['c_dims']),
-            'q_dims':  int(f['q_dims']),
+            'chi': 0 if 'anharm' not in f else float(f['chi']),
+            'kerr':  0 if 'anharm' not in f else float(f['kerr']),
+            'anharm':  0 if 'anharm' not in f else float(f['anharm']),
+            'c_dims':  10 if 'c_dims' not in f else int(f['c_dims']),
+            'q_dims':  2 if 'q_dims' not in f else int(f['q_dims']),
             'p_len':  int(f['p_len']),
             'name': str(f['name']),
             'targ_fid':  float(f['targ_fid']),
+            'qubit_freq' : 0 if 'qubit_freq' not in f else int(f['qubit_freq']),
+            'cav_freq' : 0 if 'cav_freq' not in f else int(f['cav_freq']),
         }
 
     return np.array(times), np.array(pulse_amplitudes), args
@@ -115,28 +117,49 @@ def show_pulse(result = None, pulse_save_file = None):
     None
     '''
     if result != None:
-        plt.plot(result.ts, result.controls[0], label = "Resonator Pulse X")
-        plt.plot(result.ts, result.controls[1], label = "Resonator Pulse Y")
-        plt.plot(result.ts, result.controls[2], "--", label = "Qubit Pulse X")
-        plt.plot(result.ts, result.controls[3], "--", label = "Qubit Pulse Y")
-        plt.legend()
-        plt.grid()
-        plt.title("Pulse Sequence in the Interaction Picture")
-        plt.show()
-        return
+        
+        if len(result.controls) == 4:
+            plt.plot(result.ts, result.controls[0], label = "Resonator Pulse X")
+            plt.plot(result.ts, result.controls[1], label = "Resonator Pulse Y")
+            plt.plot(result.ts, result.controls[2], "--", label = "Qubit Pulse X")
+            plt.plot(result.ts, result.controls[3], "--", label = "Qubit Pulse Y")
+            plt.legend()
+            plt.grid()
+            plt.title("Pulse Sequence in the Interaction Picture")
+            plt.show()
+            return
+
+        if len(result.controls) == 2:
+            plt.plot(result.ts, result.controls[0], label = "Pulse X")
+            plt.plot(result.ts, result.controls[1], label = "Pulse Y")
+            plt.legend()
+            plt.grid()
+            plt.title("Pulse Sequence in the Interaction Picture")
+            plt.show()
+            return
     
     if pulse_save_file != None:
         ts, amps, args = read_amplitudes_from_file(pulse_save_file)
         
-        plt.plot(ts, amps[0], label = "Resonator Pulse X")
-        plt.plot(ts, amps[1], label = "Resonator Pulse Y")
-        plt.plot(ts, amps[2], "--", label = "Qubit Pulse X")
-        plt.plot(ts, amps[3], "--", label = "Qubit Pulse Y")
-        plt.legend()
-        plt.grid()
-        plt.title("Pulse Sequence in the Interaction Picture")
-        plt.show()
-        return
+        if len(amps) == 4:
+            plt.plot(ts, amps[0], label = "Resonator Pulse X")
+            plt.plot(ts, amps[1], label = "Resonator Pulse Y")
+            plt.plot(ts, amps[2], "--", label = "Qubit Pulse X")
+            plt.plot(ts, amps[3], "--", label = "Qubit Pulse Y")
+            plt.legend()
+            plt.grid()
+            plt.title("Pulse Sequence in the Interaction Picture")
+            plt.show()
+            return
+        
+        if len(amps) == 2:
+            plt.plot(ts, amps[0], label = "Pulse X")
+            plt.plot(ts, amps[1], label = "Pulse Y")
+            plt.legend()
+            plt.grid()
+            plt.title("Pulse Sequence in the Interaction Picture")
+            plt.show()
+            return
 
     raise Exception("No pulse provided - Pass a valid save file or a pygrape optimisation result object")
 

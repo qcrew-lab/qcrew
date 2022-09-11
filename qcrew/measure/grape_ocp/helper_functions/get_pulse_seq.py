@@ -52,11 +52,10 @@ def make_Hamiltonian(args):
     cd = c.dag()
     qd = q.dag()
 
-    H = cd*c*qd*q * chi         / 2
+    H = cd*c*qd*q * chi
     H += cd*cd*c*c * kerr/2
     H += qd*qd*q*q * anharm/2
 
-    H = chi * cd*c * tensor(qeye(c_dims), sigmaz()) / 2
 
     H_ctrl = [
         Dq * (q + qd),

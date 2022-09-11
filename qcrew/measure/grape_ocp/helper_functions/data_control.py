@@ -95,8 +95,8 @@ def show_pulse(result):
     '''
     plt.plot(result.ts, result.controls[0], label = "Resonator Pulse X")
     plt.plot(result.ts, result.controls[1], label = "Resonator Pulse Y")
-    plt.plot(result.ts, result.controls[2], label = "Qubit Pulse X")
-    plt.plot(result.ts, result.controls[3], label = "Qubit Pulse Y")
+    plt.plot(result.ts, result.controls[2], ":.", label = "Qubit Pulse X")
+    plt.plot(result.ts, result.controls[3], ":.", label = "Qubit Pulse Y")
     plt.legend()
     plt.grid()
     plt.title("Pulse Sequence in the Interaction Picture")
@@ -154,7 +154,6 @@ def show_evolution(result, args, save_path = None, initial = None, t_len = 1000,
     '''
     # Get the Hamiltonians
     H0, H_ctrl = make_Hamiltonian(args)
-    H = [H0,] + H_ctrl
     H_targ = make_unitary_target(args)
 
     times, amplitudes = result.ts, result.controls
@@ -170,6 +169,8 @@ def show_evolution(result, args, save_path = None, initial = None, t_len = 1000,
     H_qubit_sx = [H_ctrl[2], envelope_sx]
     envelope_sy = get_AW_envelope(amplitudes[3], times)
     H_qubit_sy = [H_ctrl[3], envelope_sy]
+
+    H = [H0, H_res_quad1, H_res_quad2, H_qubit_sx, H_qubit_sy]
 
     # Initial State
     if initial is None:
@@ -254,7 +255,22 @@ def show(result, args, initial = None, t_len = 1000, t_step = 0.1):
 
     # Get the Hamiltonians
     H0, H_ctrl = make_Hamiltonian(args)
-    H = [H0,] + H_ctrl
+
+    times, amplitudes = result.ts, result.controls
+
+    # Cavity Pulse
+    envelope_quad1 = get_AW_envelope(amplitudes[0], times)
+    H_res_quad1 = [H_ctrl[0], envelope_quad1]
+    envelope_quad2 = get_AW_envelope(amplitudes[1], times)
+    H_res_quad2 = [H_ctrl[1], envelope_quad2]
+
+    # Qubit Pulse
+    envelope_sx = get_AW_envelope(amplitudes[2], times)
+    H_qubit_sx = [H_ctrl[2], envelope_sx]
+    envelope_sy = get_AW_envelope(amplitudes[3], times)
+    H_qubit_sy = [H_ctrl[3], envelope_sy]
+    H = [H0, H_res_quad1, H_res_quad2, H_qubit_sx, H_qubit_sy]
+
     H_targ = make_unitary_target(args)
     solved = mesolve(H, initial, t_list, options = Options(nsteps = 2000))
 

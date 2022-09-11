@@ -1,12 +1,13 @@
 '''
 Holds the functions for retrieving and saving the data
-and for visualisation
-Last Update: 10 Sept 2022 Kai Xiang
+and for data visualisation (plotting)
+
+Last Update: Sept 2022 Kai Xiang
 '''
 import numpy as np
 import matplotlib.pyplot as plt
 from qutip import *
-from helper_functions.Hamiltonians import *
+from Hamiltonians import *
 from matplotlib.animation import FuncAnimation
 
 def save(result, save_path, args):

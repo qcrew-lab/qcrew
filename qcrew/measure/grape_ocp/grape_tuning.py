@@ -4,7 +4,7 @@ generate the appropriate pulse sequence using GRAPE. This pulse
 sequence will then be stored as a ".npz" file and converted to an
 actual pulse using the numerical pulse receipe
 
-Last Update: 10 Sept 2022 Kai Xiang
+Last Update: Sept 2022 Kai Xiang
 '''
 
 ######################################################
@@ -17,7 +17,7 @@ import os
 from helper_functions.Hamiltonians import *
 from helper_functions.data_control import *
 
-# Path for the save files for the .npz
+# Path for the save files for the ".npz"
 path = r'qcrew\qcrew\measure\grape_ocp\Saved Pulse Sequences'
 # Name of the file to be saved
 name = 'fock1'
@@ -31,20 +31,17 @@ targ_fid = 0.999
 args = {
     # Number of dimensions to simulate, depends on target state 
     # E.g., Fock state n = 1 requires >6 photons
-    'c_dims': 8,
-    'q_dims': 2,
+    'c_dims': 10,
+    'q_dims': 3,
     # In GHz
     'chi'   : -1.5e-3 * 2,
-    'kerr'  : 0,#1e-5,
-    'anharm': 0,#0.4,
+    'kerr'  : 1e-5,
+    'anharm': 0.4,
     # Other deets
     'name'  : U_targ,
     'p_len'   : 500//2,
     'targ_fid': targ_fid,
 }
-
-# Whether to generate plots
-verbose = False
 
 fullpath = os.path.join(path, name + '.npz')
 init = None
@@ -70,8 +67,8 @@ result = run_grape(init, setups, term_fid = targ_fid, opts = opts, dt = 1)
 
 save(result, fullpath, args)
 
-#show_pulse(pulse_save_file = fullpath)
-#show(pulse_save_file = fullpath)
+show_pulse(pulse_save_file = fullpath)
+show(pulse_save_file = fullpath)
 show_evolution(pulse_save_file = fullpath, save_path = os.path.join(path, name + '.gif'))
 
 

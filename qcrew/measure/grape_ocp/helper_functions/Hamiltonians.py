@@ -1,6 +1,8 @@
 '''
-This script is to get the pulse sequence given the input parameters
-Last Update: 10 Sept 2022 Kai Xiang
+Contains the information to build the Hamiltonians of interest, as well
+as the set-up for pygrape
+
+Last Update: Sept 2022 Kai Xiang
 '''
 
 from pygrape import *

@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 from pygrape import run_grape, random_waves, UnitarySetup, make_amp_cost
 from qutip import *
 import os
-from helper_functions.get_pulse_seq import *
+from helper_functions.Hamiltonians import *
 from helper_functions.data_control import *
 
 # Path for the save files for the .npz
@@ -26,7 +26,7 @@ name = 'fock1'
 # I'm going to load some precalibrated targets, but the intention
 # is to be able to specify the unitary in qutip
 U_targ = 'fock1'
-targ_fid = 0.8
+targ_fid = 0.999
 
 args = {
     # Number of dimensions to simulate, depends on target state 
@@ -47,14 +47,17 @@ args = {
 verbose = False
 
 fullpath = os.path.join(path, name + '.npz')
-init = random_waves(n_ctrls = 4, plen = args['p_len'], npoints = 15)
+init = None
 
 if os.path.exists(fullpath):
     '''
     Insert a way to convert the .npz file into the starting initial pulse shape
     '''
-    init = read_amplitudes_from_file(fullpath)
-    init = init[1]
+    saved_ts, saved_amps, saved_args = read_amplitudes_from_file(fullpath)
+    print("Path Found!")
+    init = saved_amps
+else:
+    init = random_waves(n_ctrls = 4, plen = args['p_len'], npoints = 15)
 
 penalties = [make_amp_cost(1, 1, iq_pairs = True)]
 opts = {
@@ -67,9 +70,9 @@ result = run_grape(init, setups, term_fid = targ_fid, opts = opts, dt = 1)
 
 save(result, fullpath, args)
 
-show_pulse(result)
-show(result, args)
-show_evolution(result, args, path + '\\animation1.gif')
+#show_pulse(pulse_save_file = fullpath)
+#show(pulse_save_file = fullpath)
+show_evolution(pulse_save_file = fullpath, save_path = os.path.join(path, name + '.gif'))
 
 
 

@@ -6,7 +6,7 @@ Last Update: 10 Sept 2022 Kai Xiang
 import numpy as np
 import matplotlib.pyplot as plt
 from qutip import *
-from helper_functions.get_pulse_seq import *
+from helper_functions.Hamiltonians import *
 from matplotlib.animation import FuncAnimation
 
 def save(result, save_path, args):
@@ -78,31 +78,60 @@ def read_amplitudes_from_file(filename):
         f = np.load(filename)
         times = f["ts"]
         pulse_amplitudes = [f["cav_X"], f["cav_Y"],  f["qb_X"], f["qb_Y"]]
+        args = {
+            'chi': float(f['chi']),
+            'kerr':  float(f['kerr']),
+            'anharm':  float(f['anharm']),
+            'c_dims':  int(f['c_dims']),
+            'q_dims':  int(f['q_dims']),
+            'p_len':  int(f['p_len']),
+            'name': str(f['name']),
+            'targ_fid':  float(f['targ_fid']),
+        }
 
-    return np.array(times), np.array(pulse_amplitudes)
+    return np.array(times), np.array(pulse_amplitudes), args
 
-def show_pulse(result):
+def show_pulse(result = None, pulse_save_file = None):
     '''
     Plotting the Pulse waveform
     Parameters
     ---------
     result : pygrape result object
         Describes the result of pygrape optimisation
+    pulse_save_file : string ('.npz')
+        Save file of the calculated pulse waveform
 
     Returns
     ---------
     None
     '''
-    plt.plot(result.ts, result.controls[0], label = "Resonator Pulse X")
-    plt.plot(result.ts, result.controls[1], label = "Resonator Pulse Y")
-    plt.plot(result.ts, result.controls[2], ":.", label = "Qubit Pulse X")
-    plt.plot(result.ts, result.controls[3], ":.", label = "Qubit Pulse Y")
-    plt.legend()
-    plt.grid()
-    plt.title("Pulse Sequence in the Interaction Picture")
-    plt.show()
+    if result != None:
+        plt.plot(result.ts, result.controls[0], label = "Resonator Pulse X")
+        plt.plot(result.ts, result.controls[1], label = "Resonator Pulse Y")
+        plt.plot(result.ts, result.controls[2], "--", label = "Qubit Pulse X")
+        plt.plot(result.ts, result.controls[3], "--", label = "Qubit Pulse Y")
+        plt.legend()
+        plt.grid()
+        plt.title("Pulse Sequence in the Interaction Picture")
+        plt.show()
+        return
+    
+    if pulse_save_file != None:
+        ts, amps, args = read_amplitudes_from_file(pulse_save_file)
+        
+        plt.plot(ts, amps[0], label = "Resonator Pulse X")
+        plt.plot(ts, amps[1], label = "Resonator Pulse Y")
+        plt.plot(ts, amps[2], "--", label = "Qubit Pulse X")
+        plt.plot(ts, amps[3], "--", label = "Qubit Pulse Y")
+        plt.legend()
+        plt.grid()
+        plt.title("Pulse Sequence in the Interaction Picture")
+        plt.show()
+        return
 
-def get_AW_envelope(amplitudes, times):
+    raise Exception("No pulse provided - Pass a valid save file or a pygrape optimisation result object")
+
+def get_AW_envelope(amplitudes, times,):
     '''
     Gets the wave envelope 
 
@@ -131,7 +160,7 @@ def get_AW_envelope(amplitudes, times):
             return 0
     return envelope
 
-def show_evolution(result, args, save_path = None, initial = None, t_len = 1000, t_step = 0.1):
+def show_evolution(result = None, args = None, pulse_save_file = None, save_path = None, initial = None, t_len = 1000, t_step = 0.1):
     '''
     To generate a gif of the wigner time evolution
 
@@ -147,16 +176,31 @@ def show_evolution(result, args, save_path = None, initial = None, t_len = 1000,
         Total time to evolve for (in ns)
     t_step : float / int
         Time step to evolve for (in ns)
+    pulse_save_file : string ('.npz')
+        Save file of the calculated pulse waveform
+    save_path : string
+        Directory to save the gif to
 
     Returns
     ---------
     None
     '''
+    if pulse_save_file != None and args is None:
+        ts, amps, args = read_amplitudes_from_file(pulse_save_file)
+
+    # Initial State
+    if initial is None:
+        initial = tensor(fock(args['c_dims'], 0), fock(args['q_dims'], 0))
+
+        
     # Get the Hamiltonians
     H0, H_ctrl = make_Hamiltonian(args)
     H_targ = make_unitary_target(args)
 
-    times, amplitudes = result.ts, result.controls
+    if result is not None:
+        times, amplitudes = result.ts, result.controls
+    else:
+        times, amplitudes = ts, amps
 
     # Cavity Pulse
     envelope_quad1 = get_AW_envelope(amplitudes[0], times)
@@ -171,10 +215,6 @@ def show_evolution(result, args, save_path = None, initial = None, t_len = 1000,
     H_qubit_sy = [H_ctrl[3], envelope_sy]
 
     H = [H0, H_res_quad1, H_res_quad2, H_qubit_sx, H_qubit_sy]
-
-    # Initial State
-    if initial is None:
-        initial = tensor(fock(args['c_dims'], 0), fock(args['q_dims'], 0))
 
     # Time steps
     t_list = np.arange(0, t_len, t_step)
@@ -213,13 +253,12 @@ def show_evolution(result, args, save_path = None, initial = None, t_len = 1000,
 
 
     anim = FuncAnimation(fig, animated_wigner, frames=len(wigner_list0), interval=100)
-    if save_path == None:
-        save_path = 'animation1.gif'
-    anim.save(save_path, writer='imagemagick')
-    
-    print("Gif created!")
 
-def show(result, args, initial = None, t_len = 1000, t_step = 0.1):
+    if save_path == None:
+        return
+    anim.save(save_path, writer='imagemagick')
+
+def show(result = None, args = None, pulse_save_file = None, initial = None, t_len = 1000, t_step = 0.1):
     '''
     To generate a plot of the photon number time evolution
 
@@ -235,11 +274,16 @@ def show(result, args, initial = None, t_len = 1000, t_step = 0.1):
         Total time to evolve for (in ns)
     t_step : float / int
         Time step to evolve for (in ns)
+    pulse_save_file : string ('npz')
+        Save file of pulse waveform
 
     Returns
     ---------
     None
     '''
+    if args == None and pulse_save_file != None:
+        ts, amps, args = read_amplitudes_from_file(pulse_save_file)
+
     c_dims = 8 if 'c_dims' not in args else args['c_dims']
     q_dims = 2 if 'q_dims' not in args else args['q_dims']
 
@@ -256,7 +300,10 @@ def show(result, args, initial = None, t_len = 1000, t_step = 0.1):
     # Get the Hamiltonians
     H0, H_ctrl = make_Hamiltonian(args)
 
-    times, amplitudes = result.ts, result.controls
+    if result is not None:
+        times, amplitudes = result.ts, result.controls
+    else:
+        times, amplitudes = ts, amps
 
     # Cavity Pulse
     envelope_quad1 = get_AW_envelope(amplitudes[0], times)

@@ -108,7 +108,7 @@ def find_pulse():
 
     show_pulse(pulse_save_file = fullpath)
     show(pulse_save_file = fullpath)
-    show_evolution(pulse_save_file = fullpath, save_path = os.path.join(path, name + '.gif'))
+    #show_evolution(pulse_save_file = fullpath, save_path = os.path.join(path, name + '.gif'))
 
 
 

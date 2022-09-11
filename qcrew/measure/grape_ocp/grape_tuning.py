@@ -7,8 +7,6 @@ actual pulse using the numerical pulse receipe
 Last Update: 10 Sept 2022 Kai Xiang
 '''
 
-
-
 ######################################################
 
 import numpy as np
@@ -48,7 +46,7 @@ args = {
 # Whether to generate plots
 verbose = False
 
-fullpath = path + '\\' + name + '.npz'
+fullpath = os.path.join(path, name + '.npz')
 init = random_waves(n_ctrls = 4, plen = args['p_len'], npoints = 15)
 
 if os.path.exists(fullpath):
@@ -71,7 +69,7 @@ save(result, fullpath, args)
 
 show_pulse(result)
 show(result, args)
-#show_evolution(result, args, path + '\\animation1.gif')
+show_evolution(result, args, path + '\\animation1.gif')
 
 
 

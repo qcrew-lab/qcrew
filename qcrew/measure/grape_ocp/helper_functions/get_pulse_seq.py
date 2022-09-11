@@ -40,6 +40,9 @@ def make_Hamiltonian(args):
 
     Dq *= 2*np.pi
     Dc *= 2*np.pi
+    chi *= 2*np.pi
+    anharm *= 2*np.pi
+    kerr *= 2*np.pi
 
     c_dims = 8 if 'c_dims' not in args else args['c_dims']
     q_dims = 2 if 'q_dims' not in args else args['q_dims']
@@ -49,15 +52,17 @@ def make_Hamiltonian(args):
     cd = c.dag()
     qd = q.dag()
 
-    H = cd*c*qd*q * chi         *2 * np.pi
-    H += cd*cd*c*c * kerr/2     *2 * np.pi
-    H += qd*qd*q*q * anharm/2   *2 * np.pi
+    H = cd*c*qd*q * chi         / 2
+    H += cd*cd*c*c * kerr/2
+    H += qd*qd*q*q * anharm/2
+
+    H = chi * cd*c * tensor(qeye(c_dims), sigmaz()) / 2
 
     H_ctrl = [
         Dq * (q + qd),
-        Dq * 1j*(q - qd),
+        Dq * 1j*(qd - q),
         Dc * (c + cd),
-        Dc * 1j*(c + cd),
+        Dc * 1j*(cd - c),
     ]
 
     return H, H_ctrl

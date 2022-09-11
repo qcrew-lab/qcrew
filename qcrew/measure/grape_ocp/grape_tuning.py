@@ -26,7 +26,6 @@ name = 'fock1'
 # I'm going to load some precalibrated targets, but the intention
 # is to be able to specify the unitary in qutip
 U_targ = 'fock1'
-targ_fid = 0.999
 
 args = {
     # Number of dimensions to simulate, depends on target state 
@@ -40,7 +39,7 @@ args = {
     # Other deets
     'name'  : U_targ,
     'p_len'   : 500//2,
-    'targ_fid': targ_fid,
+    'targ_fid': 0.999,
 }
 
 fullpath = os.path.join(path, name + '.npz')
@@ -63,7 +62,7 @@ opts = {
     }
 
 setups = make_setup(args)
-result = run_grape(init, setups, term_fid = targ_fid, opts = opts, dt = 1)
+result = run_grape(init, setups, term_fid = args['targ_fid'], opts = opts, dt = 1)
 
 save(result, fullpath, args)
 

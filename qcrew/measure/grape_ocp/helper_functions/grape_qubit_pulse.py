@@ -100,8 +100,9 @@ def find_pulse():
         'maxiter': 15000 * 5,
         }
 
-    setups = [*make_Hamiltonian(args), fock(2,0), fock(2,1)]
-    result = run_grape(init, setups, term_fid = targ_fid, opts = opts, dt = 1)
+    setups = StateTransferSetup(*make_Hamiltonian(args), [fock(2,0)], [fock(2,1)])
+    
+    result = run_grape(init, setups, term_fid = args['targ_fid'], opts = opts, dt = 1)
 
     save(result, fullpath, args)
 
@@ -111,4 +112,4 @@ def find_pulse():
 
 
 
-
+find_pulse()

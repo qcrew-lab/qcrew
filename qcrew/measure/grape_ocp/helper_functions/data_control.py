@@ -26,31 +26,39 @@ def save(result, save_path, args):
     ---------
     None
     '''
-    np.savez(
-        save_path,
-        ts = result.ts,
-        cav_X = result.controls[0],
-        cav_Y = result.controls[1],
-        qb_X = result.controls[2],
-        qb_Y = result.controls[3],
-        chi = args['chi'],
-        anharm = args['anharm'],
-        kerr = 0 if 'kerr' not in args else args['kerr'],
-        c_dims = 8 if 'c_dims' not in args else args['c_dims'],
-        q_dims = 2 if 'q_dims' not in args else args['q_dims'],
-        p_len = args['p_len'],
-        name = None if 'name' not in args else args['name'],
-        targ_fid = args['targ_fid'],
-    )
+    
+    if len(result.controls) == 4:
+        np.savez(
+            save_path,
+            ts = result.ts,
+            cav_X = result.controls[0],
+            cav_Y = result.controls[1],
+            qb_X = result.controls[2],
+            qb_Y = result.controls[3],
+            chi = args['chi'],
+            anharm = args['anharm'],
+            kerr = 0 if 'kerr' not in args else args['kerr'],
+            c_dims = 8 if 'c_dims' not in args else args['c_dims'],
+            q_dims = 2 if 'q_dims' not in args else args['q_dims'],
+            p_len = args['p_len'],
+            name = None if 'name' not in args else args['name'],
+            targ_fid = args['targ_fid'],
+        )
+    elif len(results.controls) == 2:
+        np.savez(
+            save_path,
+            ts = result.ts,
+            pulseX = result.controls[0],
+            pulseY = result.controls[1],
+            qubit_freq = 0 if 'qubit_freq' not in args else args['qubit_freq'],
+            cav_freq = 0 if 'cav_freq' not in args else args['cav_freq'],
+            c_dims = 10 if 'c_dims' not in args else args['c_dims'],
+            p_len = args['p_len'],
+            name = None if 'name' not in args else args['name'],
+            targ_fid = args['targ_fid'],
+        )
 
     print(f"File saved at {save_path}")
-
-def read(read_path):
-    '''
-    tbc
-    '''
-    args = dict()
-    return None
 
 def read_amplitudes_from_file(filename):
     """

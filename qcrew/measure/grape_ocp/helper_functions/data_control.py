@@ -44,7 +44,8 @@ def save(result, save_path, args):
             name = None if 'name' not in args else args['name'],
             targ_fid = args['targ_fid'],
         )
-    elif len(results.controls) == 2:
+
+    elif len(result.controls) == 2:
         np.savez(
             save_path,
             ts = result.ts,
@@ -319,45 +320,83 @@ def show(result = None, args = None, pulse_save_file = None, initial = None, t_l
     c_dims = 8 if 'c_dims' not in args else args['c_dims']
     q_dims = 2 if 'q_dims' not in args else args['q_dims']
 
-    # Initial State
-    if initial is None:
-        initial = tensor(fock(args['c_dims'], 0), fock(args['q_dims'], 0))
+    if len(amps) == 4:
+        # Initial State
+        if initial is None:
+            initial = tensor(fock(args['c_dims'], 0), fock(args['q_dims'], 0))
 
-    # Time steps
-    t_list = np.arange(0, t_len, t_step)
+        # Time steps
+        t_list = np.arange(0, t_len, t_step)
 
-    a = tensor(destroy(c_dims), qeye(q_dims))
-    b = tensor(qeye(c_dims), destroy(q_dims))
+        a = tensor(destroy(c_dims), qeye(q_dims))
+        b = tensor(qeye(c_dims), destroy(q_dims))
 
-    # Get the Hamiltonians
-    H0, H_ctrl = make_Hamiltonian(args)
+        # Get the Hamiltonians
+        H0, H_ctrl = make_Hamiltonian(args)
 
-    if result is not None:
-        times, amplitudes = result.ts, result.controls
-    else:
-        times, amplitudes = ts, amps
+        if result is not None:
+            times, amplitudes = result.ts, result.controls
+        else:
+            times, amplitudes = ts, amps
 
-    # Cavity Pulse
-    envelope_quad1 = get_AW_envelope(amplitudes[0], times)
-    H_res_quad1 = [H_ctrl[0], envelope_quad1]
-    envelope_quad2 = get_AW_envelope(amplitudes[1], times)
-    H_res_quad2 = [H_ctrl[1], envelope_quad2]
+        # Cavity Pulse
+        envelope_quad1 = get_AW_envelope(amplitudes[0], times)
+        H_res_quad1 = [H_ctrl[0], envelope_quad1]
+        envelope_quad2 = get_AW_envelope(amplitudes[1], times)
+        H_res_quad2 = [H_ctrl[1], envelope_quad2]
 
-    # Qubit Pulse
-    envelope_sx = get_AW_envelope(amplitudes[2], times)
-    H_qubit_sx = [H_ctrl[2], envelope_sx]
-    envelope_sy = get_AW_envelope(amplitudes[3], times)
-    H_qubit_sy = [H_ctrl[3], envelope_sy]
-    H = [H0, H_res_quad1, H_res_quad2, H_qubit_sx, H_qubit_sy]
+        # Qubit Pulse
+        envelope_sx = get_AW_envelope(amplitudes[2], times)
+        H_qubit_sx = [H_ctrl[2], envelope_sx]
+        envelope_sy = get_AW_envelope(amplitudes[3], times)
+        H_qubit_sy = [H_ctrl[3], envelope_sy]
+        H = [H0, H_res_quad1, H_res_quad2, H_qubit_sx, H_qubit_sy]
 
-    H_targ = make_unitary_target(args)
-    solved = mesolve(H, initial, t_list, options = Options(nsteps = 2000))
+        solved = mesolve(H, initial, t_list, options = Options(nsteps = 2000))
 
-    cavity_expectation = [ (state.dag() * a.dag()*a * state)[0,0] for state in solved.states ]
-    qubit_expectation = [ (state.dag() * b.dag()*b * state)[0,0] for state in solved.states ]
+        cavity_expectation = [ (state.dag() * a.dag()*a * state)[0,0] for state in solved.states ]
+        qubit_expectation = [ (state.dag() * b.dag()*b * state)[0,0] for state in solved.states ]
 
-    plt.plot(t_list, cavity_expectation, label = "Cavity")
-    plt.plot(t_list, qubit_expectation, label = "Qubit")
-    plt.title("Expectation of Photon Number Operator")
-    plt.legend()
-    plt.show()
+        plt.plot(t_list, cavity_expectation, label = "Cavity")
+        plt.plot(t_list, qubit_expectation, label = "Qubit")
+        plt.title("Expectation of Photon Number Operator")
+        plt.legend()
+        plt.show()
+
+    if len(amps) == 2:
+        # Initial State
+        if initial is None:
+            initial = fock(args['q_dims'], 0)
+
+        # Time steps
+        t_list = np.arange(0, t_len, t_step)
+
+        # Get the Hamiltonians
+        
+        q = destroy(2)
+        qd = q.dag()
+        Dq = 5e-3 *2 if 'qubit drive' not in args else args['qubit drive']
+
+        H0, H_ctrl = qd*q, [Dq * (q + qd),Dq * 1j*(qd - q),]
+
+        if result is not None:
+            times, amplitudes = result.ts, result.controls
+        else:
+            times, amplitudes = ts, amps
+
+        # Qubit Pulse
+        envelope_sx = get_AW_envelope(amplitudes[0], times)
+        H_qubit_sx = [H_ctrl[0], envelope_sx]
+        envelope_sy = get_AW_envelope(amplitudes[1], times)
+        H_qubit_sy = [H_ctrl[1], envelope_sy]
+        H = [H0, H_qubit_sx, H_qubit_sy]
+
+        solved = mesolve(H, initial, t_list, options = Options(nsteps = 2000))
+
+        b = destroy(2)
+        qubit_expectation = [ (state.dag() * b.dag()*b * state)[0,0] for state in solved.states ]
+
+        plt.plot(t_list, qubit_expectation, label = "Qubit")
+        plt.title("Expectation of Photon Number Operator")
+        plt.legend()
+        plt.show()

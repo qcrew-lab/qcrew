@@ -36,7 +36,7 @@ args = {
     'c_dims': 8,
     'q_dims': 2,
     # In GHz
-    'chi'   : 1.5e-3 * 2,
+    'chi'   : -1.5e-3 * 2,
     'kerr'  : 0,#1e-5,
     'anharm': 0,#0.4,
     # Other deets
@@ -51,15 +51,12 @@ verbose = False
 fullpath = path + '\\' + name + '.npz'
 init = random_waves(n_ctrls = 4, plen = args['p_len'], npoints = 15)
 
-print(init, init.shape)
-
 if os.path.exists(fullpath):
     '''
     Insert a way to convert the .npz file into the starting initial pulse shape
     '''
     init = read_amplitudes_from_file(fullpath)
     init = init[1]
-    print(init, init.shape) 
 
 penalties = [make_amp_cost(1, 1, iq_pairs = True)]
 opts = {

@@ -38,6 +38,9 @@ def make_Hamiltonian(args):
     Dq = 5e-3 *2 if 'qubit drive' not in args else args['qubit drive']
     Dc = 5e-3 *2 if 'cavity drive' not in args else args['cavity drive']
 
+    Dq *= 2*np.pi
+    Dc *= 2*np.pi
+
     c_dims = 8 if 'c_dims' not in args else args['c_dims']
     q_dims = 2 if 'q_dims' not in args else args['q_dims']
 
@@ -46,9 +49,9 @@ def make_Hamiltonian(args):
     cd = c.dag()
     qd = q.dag()
 
-    H = cd*cd*c*c * kerr/2
-    H += qd*qd*q*q * anharm/2
-    H += cd*c*qd*q * chi
+    H = cd*c*qd*q * chi         *2 * np.pi
+    H += cd*cd*c*c * kerr/2     *2 * np.pi
+    H += qd*qd*q*q * anharm/2   *2 * np.pi
 
     H_ctrl = [
         Dq * (q + qd),
@@ -128,6 +131,8 @@ def make_setup(arg):
 
     new_arg = arg.copy()
     new_arg['c_dims'] += 1
+
+    del H, H_ctrl, H_targ
     
     H, H_ctrl = make_Hamiltonian(new_arg)
     H_targ = make_unitary_target(new_arg)

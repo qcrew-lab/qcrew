@@ -10,13 +10,13 @@ from qcrew.control.pulses.pulse import BASE_PULSE_AMP, Pulse
 class NumericalPulse(Pulse):
     """ """
 
-    def __init__(self, path: Path, ampx: float = 1.0, pad: int = 0) -> None:
+    def __init__(self, path: str, ampx: float = 1.0, pad: int = 0) -> None:
         """
         To initialise the Numerical Pulse class
 
         Parameters
         -----------
-        path : Path obj  ???? string ???
+        path : str
             To point to the ".npz" save file of the numerical pulse
         ampx : float
             amplitude of the pulse

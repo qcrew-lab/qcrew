@@ -54,7 +54,7 @@ if __name__ == "__main__":
         "reps": 50000,
         "wait_time": 1000000,
         "amp_sweep": (amp_start, amp_stop + amp_step / 2, amp_step),
-        "qubit_op": "pi_selective",
+        "qubit_op": "pi_selective", # This needs modification
     }
 
     plot_parameters = {

@@ -11,21 +11,18 @@ from qm import qua
 # ---------------------------------- Class -------------------------------------
 
 
-class Grape_Pulse_Calibration(Experiment):
+class Qubit_Pulse_Calibration(Experiment):
 
-    name = "grape_pulse_calibration"
+    name = "qubit_pulse_calibration"
 
     _parameters: ClassVar[set[str]] = Experiment._parameters | {
-        "cav_op",  # operation for displacing the cavity
         "qubit_op",  # operation used for exciting the qubit
         "fit_fn",  # fit function
     }
 
-    def __init__(self, cav_op, qubit_op, fit_fn="gaussian", **other_params):
+    def __init__(self, cav_op, qubit_op, **other_params):
 
-        self.cav_op = cav_op
         self.qubit_op = qubit_op
-        self.fit_fn = None #fit_fn
 
         super().__init__(**other_params)  # Passes other parameters to parent
 
@@ -33,15 +30,12 @@ class Grape_Pulse_Calibration(Experiment):
         """
         Defines pulse sequence to be played inside the experiment loop
         """
-        qubit, cav, rr = self.modes  # get the modes
+        qubit, rr = self.modes  # get the modes
 
-        qua.update_frequency(cav.name, self.x)  # update resonator pulse frequency
-        cav.play(self.cav_op)  # play displacement to cavity
-        qua.align(cav.name, qubit.name)  # align all modes
-        qubit.play(self.qubit_op)  # play qubit pulse
-        qua.align(qubit.name, rr.name)  # align all modes
-        rr.measure((self.I, self.Q))  # measure transmitted signal
-        qua.wait(int(self.wait_time // 4), cav.name)  # wait system reset
+        qubit.play(self.qubit_op, ampx = self.x)  # play qubit pulse
+        qua.align(qubit.name, rr.name)  # wait qubit pulse to end
+        rr.measure((self.I, self.Q))  # measure qubit state
+        qua.wait(int(self.wait_time // 4), rr.name)  # wait system reset
 
         self.QUA_stream_results()  # stream variables (I, Q, x, etc)
 
@@ -51,23 +45,23 @@ class Grape_Pulse_Calibration(Experiment):
 
 if __name__ == "__main__":
 
-    x_start = -50.10e6
-    x_stop = -49.95e6
-    x_step = 0.002e6
+    amp_start = 0
+    amp_stop = 2
+    amp_step = 0.01
+
     parameters = {
-        "modes": ["QUBIT", "CAV", "RR"],
+        "modes": ["QUBIT", "RR"],
         "reps": 50000,
         "wait_time": 1000000,
-        "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
+        "amp_sweep": (amp_start, amp_stop + amp_step / 2, amp_step),
         "qubit_op": "pi_selective",
-        "cav_op": "gaussian_pulse",
     }
 
     plot_parameters = {
-        "xlabel": "Cavity pulse frequency (Hz)",
+        "xlabel": "Pulse Amplitude",
     }
 
-    experiment = CavitySpectroscopy(**parameters)
+    experiment = Qubit_Pulse_Calibration(**parameters)
     experiment.setup_plot(**plot_parameters)
 
     prof.run(experiment)

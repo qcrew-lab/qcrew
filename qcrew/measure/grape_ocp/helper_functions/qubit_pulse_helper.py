@@ -20,6 +20,7 @@ def show_pulse(result, title, fullpath=None):
     result : pygrape result obj
         The result from pygrape optimisation
     """
+    plt.figure(figsize=(8, 6), dpi=200)
     plt.plot(
         result.ts,
         result.controls[0],

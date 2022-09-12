@@ -19,8 +19,8 @@ from qcrew.measure.grape_ocp.grape.grape.pygrape import (
 )
 from qutip import *
 import os
-from helper_functions.Hamiltonians import *
-from helper_functions.data_control import *
+from qcrew.measure.grape_ocp.helper_functions.Hamiltonians import *
+from qcrew.measure.grape_ocp.helper_functions.data_control import *
 
 # Path for the save files for the ".npz"
 path = r"qcrew\qcrew\measure\grape_ocp\Saved Pulse Sequences"

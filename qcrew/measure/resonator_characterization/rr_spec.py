@@ -44,8 +44,8 @@ class RRSpectroscopy(Experiment):
 
 if __name__ == "__main__":
 
-    x_start = -53e6
-    x_stop = -47e6
+    x_start = -55e6
+    x_stop = -45e6
     x_step = 0.1e6
 
     parameters = {

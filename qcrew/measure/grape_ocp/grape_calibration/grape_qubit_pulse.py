@@ -41,7 +41,7 @@ opts = {
 }
 result = run_grape(init_ctrls, setup, dt=0.2)
 
-path = "C:\\Users\\qcrew\\Desktop\\qcrew\\qcrew\\qcrew\\measure\\grape_ocp\\Saved Pulse Sequences\\"
+path = "C:\\Users\\qcrew\\Desktop\\qcrew\\qcrew\\qcrew\\measure\\grape_ocp\\saved_pulse_sequences\\"
 
 save(result, path + name + ".npz")
 show_pulse(result, path + name + ".png")

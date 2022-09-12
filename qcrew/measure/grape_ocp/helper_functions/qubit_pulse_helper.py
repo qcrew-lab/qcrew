@@ -5,7 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 import os
-from data_control import get_AW_envelope
+from .data_control import get_AW_envelope
 from matplotlib.animation import FuncAnimation
 
 #######################################

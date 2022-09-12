@@ -7,7 +7,7 @@ Last Update: Sept 2022 Kai Xiang
 import numpy as np
 import matplotlib.pyplot as plt
 from qutip import *
-from Hamiltonians import *
+from .Hamiltonians import *
 from matplotlib.animation import FuncAnimation
 
 def save(result, save_path, args):

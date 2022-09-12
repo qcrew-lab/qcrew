@@ -11,7 +11,7 @@ from qutip import *
 import numpy as np
 import matplotlib.pyplot as plt
 
-from qcrew.measure.grape_ocp.helper_functions.qubit_pulse_helper import *
+from helper_functions.qubit_pulse_helper import *
 
 #######################################
 ##### Setting Up the Hamiltonian ######
@@ -20,12 +20,12 @@ from qcrew.measure.grape_ocp.helper_functions.qubit_pulse_helper import *
 b = destroy(2)
 
 H0 = b.dag()*b
-Hc = b.dag() + b
+Hc = 1j*(b.dag() - b)
 
 ###### Defining Gate Operation ########
 
 U_target = b.dag() + b
-name = 'π_Pulse_X'
+name = 'π2_Pulse_Y'
 
 ############ Set-up Grape ############
 
@@ -39,8 +39,8 @@ opts = {
     }
 result = run_grape(init_ctrls, setup, dt=.2)
 
-path = r'qcrew\qcrew\measure\grape_ocp\Saved Pulse Sequences'
+path = 'qcrew\\qcrew\\measure\\grape_ocp\\Saved Pulse Sequences\\'
 
 save(result, path + name + '.npz')
 show_pulse(result, path + name + '.png')
-make_wigner_anim(H0, Hc, result, path + name + '.gif')
+make_wigner_anim(H0, Hc, 2, result, path + name + '.gif')

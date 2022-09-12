@@ -11,7 +11,8 @@ from qutip import *
 import numpy as np
 import matplotlib.pyplot as plt
 
-from qcrew.measure.grape_ocp.helper_functions.qubit_pulse_helper import *
+#from qcrew.measure.grape_ocp.helper_functions.qubit_pulse_helper import *
+from helper_functions.qubit_pulse_helper import *
 
 #######################################
 ##### Setting Up the Hamiltonian ######
@@ -20,12 +21,12 @@ from qcrew.measure.grape_ocp.helper_functions.qubit_pulse_helper import *
 b = destroy(2)
 
 H0 = b.dag()*b
-Hc = 1j*(b.dag() - b)
+Hc = (b.dag() + b)
 
 ###### Defining Gate Operation ########
 
 U_target = b.dag() + b
-name = 'π2_Pulse_Y'
+name = 'π2_Pulse_X'
 
 ############ Set-up Grape ############
 

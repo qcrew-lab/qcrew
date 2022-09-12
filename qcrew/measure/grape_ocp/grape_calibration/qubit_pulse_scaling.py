@@ -47,14 +47,14 @@ if __name__ == "__main__":
 
     amp_start = 0
     amp_stop = 2
-    amp_step = 0.01
+    amp_step = 0.1
 
     parameters = {
         "modes": ["QUBIT", "RR"],
         "reps": 50000,
         "wait_time": 1000000,
         "amp_sweep": (amp_start, amp_stop + amp_step / 2, amp_step),
-        "qubit_op": "pi_selective", # This needs modification
+        "qubit_op": "numerical_pi", # This needs modification
     }
 
     plot_parameters = {

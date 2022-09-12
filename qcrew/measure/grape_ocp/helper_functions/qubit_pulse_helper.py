@@ -99,5 +99,6 @@ def save(result, save_path,):
     np.savez(
         save_path,
         ts = result.ts,
-        pulse = result.controls[0],
+        pulseX = result.controls[0],
+        pulseY = [] if len(result.controls) == 1 else result.controls[1],
     )

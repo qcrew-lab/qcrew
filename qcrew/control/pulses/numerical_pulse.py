@@ -11,13 +11,41 @@ class NumericalPulse(Pulse):
     """ """
 
     def __init__(self, path: Path, ampx: float = 1.0, pad: int = 0) -> None:
-        """ """
+        """ 
+        To initialise the Numerical Pulse class
+
+        Parameters
+        -----------
+        path : Path obj????
+            To point to the ".npz" save file of the numerical pulse
+        ampx : float
+            amplitude of the pulse
+        pad : int
+            padding of the pulse
+        
+        return
+        -----------
+        NumericalPulse obj
+        """
         self.path = path
         self.pad = pad
 
         npzfile = np.load(Path(self.path))
-        self.oct_pulse = npzfile["oct_pulse"]
-        length = len(self.oct_pulse)
+        self.oct_pulse_X = npzfile["pulseX"]
+        self.oct_pulse_Y = npzfile["pulseY"]
+
+        # Checking if the quadratures have the same pulse length
+        quad_len_diff = len(self.oct_pulse_X) - len(self.oct_pulse_Y)
+        if quad_len_diff != 0:
+            print("Pulse Quadrature Lengths are Different: Padding Tail ... ")
+
+            if quad_len_diff < 0:
+                self.oct_pulse_X = np.append(npzfile["pulseX"], [0]*(quad_len_diff*-1))
+            elif quad_len_diff > 0:
+                self.oct_pulse_Y = np.append(npzfile["pulseY"], [0]*quad_len_diff)
+
+        length = len(self.oct_pulse_X)
+
         if length % 4 != 0:
             self.pad = 4 - length % 4
             length += self.pad
@@ -27,10 +55,18 @@ class NumericalPulse(Pulse):
     @property
     def samples(self):
         """ """
-        i_wave = np.real(self.oct_pulse) * BASE_PULSE_AMP * self.ampx
-        q_wave = np.imag(self.oct_pulse) * BASE_PULSE_AMP * self.ampx
-        print(np.max(np.real(self.oct_pulse)))
-        print(np.max(np.imag(self.oct_pulse)))
+        ########## REDACTED ##########
+
+        #i_wave = np.real(self.oct_pulse) * BASE_PULSE_AMP * self.ampx
+        #q_wave = np.imag(self.oct_pulse) * BASE_PULSE_AMP * self.ampx
+
+        ########## REDACTED ##########
+
+        i_wave = self.oct_pulse_X *  BASE_PULSE_AMP * self.ampx
+        q_wave = self.oct_pulse_Y *  BASE_PULSE_AMP * self.ampx
+
+        print(np.max(np.real(self.oct_pulse_X)))
+        print(np.max(np.imag(self.oct_pulse_Y)))
         print(np.max(i_wave))
         print(np.max(q_wave))
 

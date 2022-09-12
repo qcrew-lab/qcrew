@@ -129,15 +129,6 @@ def show_pulse(result = None, pulse_save_file = None):
             plt.title("Pulse Sequence in the Interaction Picture")
             plt.show()
             return
-
-        if len(result.controls) == 2:
-            plt.plot(result.ts, result.controls[0], label = "Pulse X")
-            plt.plot(result.ts, result.controls[1], label = "Pulse Y")
-            plt.legend()
-            plt.grid()
-            plt.title("Pulse Sequence in the Interaction Picture")
-            plt.show()
-            return
     
     if pulse_save_file != None:
         ts, amps, args = read_amplitudes_from_file(pulse_save_file)
@@ -147,15 +138,6 @@ def show_pulse(result = None, pulse_save_file = None):
             plt.plot(ts, amps[1], label = "Resonator Pulse Y")
             plt.plot(ts, amps[2], "--", label = "Qubit Pulse X")
             plt.plot(ts, amps[3], "--", label = "Qubit Pulse Y")
-            plt.legend()
-            plt.grid()
-            plt.title("Pulse Sequence in the Interaction Picture")
-            plt.show()
-            return
-        
-        if len(amps) == 2:
-            plt.plot(ts, amps[0], label = "Pulse X")
-            plt.plot(ts, amps[1], label = "Pulse Y")
             plt.legend()
             plt.grid()
             plt.title("Pulse Sequence in the Interaction Picture")
@@ -191,6 +173,7 @@ def get_AW_envelope(amplitudes, times,):
             return amplitudes[int(t//dt)]
         else:
             return 0
+            
     return envelope
 
 def show_evolution(result = None, args = None, pulse_save_file = None, save_path = None, initial = None, t_len = 1000, t_step = 0.1):
@@ -228,7 +211,6 @@ def show_evolution(result = None, args = None, pulse_save_file = None, save_path
         
     # Get the Hamiltonians
     H0, H_ctrl = make_Hamiltonian(args)
-    H_targ = make_unitary_target(args)
 
     if result is not None:
         times, amplitudes = result.ts, result.controls
@@ -358,44 +340,6 @@ def show(result = None, args = None, pulse_save_file = None, initial = None, t_l
         qubit_expectation = [ (state.dag() * b.dag()*b * state)[0,0] for state in solved.states ]
 
         plt.plot(t_list, cavity_expectation, label = "Cavity")
-        plt.plot(t_list, qubit_expectation, label = "Qubit")
-        plt.title("Expectation of Photon Number Operator")
-        plt.legend()
-        plt.show()
-
-    if len(amps) == 2:
-        # Initial State
-        if initial is None:
-            initial = fock(args['q_dims'], 0)
-
-        # Time steps
-        t_list = np.arange(0, t_len, t_step)
-
-        # Get the Hamiltonians
-        
-        q = destroy(2)
-        qd = q.dag()
-        Dq = 5e-3 *2 if 'qubit drive' not in args else args['qubit drive']
-
-        H0, H_ctrl = qd*q, [Dq * (q + qd),Dq * 1j*(qd - q),]
-
-        if result is not None:
-            times, amplitudes = result.ts, result.controls
-        else:
-            times, amplitudes = ts, amps
-
-        # Qubit Pulse
-        envelope_sx = get_AW_envelope(amplitudes[0], times)
-        H_qubit_sx = [H_ctrl[0], envelope_sx]
-        envelope_sy = get_AW_envelope(amplitudes[1], times)
-        H_qubit_sy = [H_ctrl[1], envelope_sy]
-        H = [H0, H_qubit_sx, H_qubit_sy]
-
-        solved = mesolve(H, initial, t_list, options = Options(nsteps = 2000))
-
-        b = destroy(2)
-        qubit_expectation = [ (state.dag() * b.dag()*b * state)[0,0] for state in solved.states ]
-
         plt.plot(t_list, qubit_expectation, label = "Qubit")
         plt.title("Expectation of Photon Number Operator")
         plt.legend()

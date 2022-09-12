@@ -11,7 +11,7 @@ from qutip import *
 import numpy as np
 import matplotlib.pyplot as plt
 
-from .helper_functions.qubit_pulse_helper import *
+from qcrew.measure.grape_ocp.helper_functions.qubit_pulse_helper import *
 
 #######################################
 ##### Setting Up the Hamiltonian ######

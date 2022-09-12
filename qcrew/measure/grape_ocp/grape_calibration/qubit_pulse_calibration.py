@@ -1,7 +1,7 @@
-'''
+"""
 This script will perform the necessary pulse scaling to convert between the real
 pulse (with attenuation) to the pulse given by pygrape/qutip simulations
-'''
+"""
 from typing import ClassVar
 
 from qcrew.control import professor as prof
@@ -32,7 +32,7 @@ class Qubit_Pulse_Calibration(Experiment):
         """
         qubit, rr = self.modes  # get the modes
 
-        qubit.play(self.qubit_op, ampx = self.x)  # play qubit pulse
+        qubit.play(self.qubit_op, ampx=self.x)  # play qubit pulse
         qua.align(qubit.name, rr.name)  # wait qubit pulse to end
         rr.measure((self.I, self.Q))  # measure qubit state
         qua.wait(int(self.wait_time // 4), rr.name)  # wait system reset
@@ -54,7 +54,7 @@ if __name__ == "__main__":
         "reps": 50000,
         "wait_time": 1000000,
         "amp_sweep": (amp_start, amp_stop + amp_step / 2, amp_step),
-        "qubit_op": "numerical_pi", # This needs modification
+        "qubit_op": "numerical_pi",  # This needs modification
     }
 
     plot_parameters = {
@@ -65,4 +65,3 @@ if __name__ == "__main__":
     experiment.setup_plot(**plot_parameters)
 
     prof.run(experiment)
-

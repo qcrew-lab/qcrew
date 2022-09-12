@@ -11,18 +11,18 @@ class NumericalPulse(Pulse):
     """ """
 
     def __init__(self, path: Path, ampx: float = 1.0, pad: int = 0) -> None:
-        """ 
+        """
         To initialise the Numerical Pulse class
 
         Parameters
         -----------
-        path : Path obj????
+        path : Path obj  ???? string ???
             To point to the ".npz" save file of the numerical pulse
         ampx : float
             amplitude of the pulse
         pad : int
             padding of the pulse
-        
+
         return
         -----------
         NumericalPulse obj
@@ -40,9 +40,11 @@ class NumericalPulse(Pulse):
             print("Pulse Quadrature Lengths are Different: Padding Tail ... ")
 
             if quad_len_diff < 0:
-                self.oct_pulse_X = np.append(npzfile["pulseX"], [0]*(quad_len_diff*-1))
+                self.oct_pulse_X = np.append(
+                    npzfile["pulseX"], [0] * (quad_len_diff * -1)
+                )
             elif quad_len_diff > 0:
-                self.oct_pulse_Y = np.append(npzfile["pulseY"], [0]*quad_len_diff)
+                self.oct_pulse_Y = np.append(npzfile["pulseY"], [0] * quad_len_diff)
 
         length = len(self.oct_pulse_X)
 
@@ -57,13 +59,13 @@ class NumericalPulse(Pulse):
         """ """
         ########## REDACTED ##########
 
-        #i_wave = np.real(self.oct_pulse) * BASE_PULSE_AMP * self.ampx
-        #q_wave = np.imag(self.oct_pulse) * BASE_PULSE_AMP * self.ampx
+        # i_wave = np.real(self.oct_pulse) * BASE_PULSE_AMP * self.ampx
+        # q_wave = np.imag(self.oct_pulse) * BASE_PULSE_AMP * self.ampx
 
         ########## REDACTED ##########
 
-        i_wave = self.oct_pulse_X *  BASE_PULSE_AMP * self.ampx
-        q_wave = self.oct_pulse_Y *  BASE_PULSE_AMP * self.ampx
+        i_wave = self.oct_pulse_X * BASE_PULSE_AMP * self.ampx
+        q_wave = self.oct_pulse_Y * BASE_PULSE_AMP * self.ampx
 
         print(np.max(np.real(self.oct_pulse_X)))
         print(np.max(np.imag(self.oct_pulse_Y)))

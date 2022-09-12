@@ -36,7 +36,7 @@ class CavityT1(Experiment):
         """
         qubit, cav, rr = self.modes  # get the modes
 
-        cav.play(self.cav_op, ampx=1.4)  # play displacement to cavity
+        cav.play(self.cav_op)  # play displacement to cavity
         qua.wait(self.x, cav.name)  # wait relaxation
         qua.align(cav.name, qubit.name)  # align all modes
         qubit.play(self.qubit_op)  # play qubit pulse
@@ -59,8 +59,8 @@ if __name__ == "__main__":
         "reps": 20000,
         "wait_time": 2000000,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
-        "qubit_op": "pi_selective3",
-        "cav_op": "cohstate_1",
+        "qubit_op": "gaussian_pi_selective_pulse",
+        "cav_op": "constant_pulse",
         "plot_quad": "I_AVG",
         "fetch_period": 4,
         

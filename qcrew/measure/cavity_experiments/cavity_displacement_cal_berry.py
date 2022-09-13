@@ -169,8 +169,8 @@ class CavityDisplacementCalBerry(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-    x_start = 0
-    x_stop = 1.9
+    x_start = 0.1
+    x_stop = 1.3
     x_step = 0.05
 
     ecd_amp_scale = 1
@@ -178,10 +178,10 @@ if __name__ == "__main__":
 
     parameters = {
         "modes": ["QUBIT", "CAV", "RR"],
-        "reps": 10000,
+        "reps": 500,
         "wait_time": 3e6,
         "fetch_period": 2,  # time between data fetching rounds in sec
-        "delay": 50,  # wait time between opposite sign displacements
+        "delay": 80,  # wait time between opposite sign displacements
         "ecd_amp_scale": ecd_amp_scale,
         "d_amp_scale": d_amp_scale,
         "x_sweep": (
@@ -189,9 +189,9 @@ if __name__ == "__main__":
             x_stop + x_step / 2,
             x_step,
         ),  # ampitude sweep of the displacement pulses in the ECD
-        "qubit_pi2": "constant_cos_pi2",
-        "qubit_pi": "constant_cos_pi",
-        "cav_disp": "constant_cos_cohstate_1",
+        "qubit_pi2": "pi2",
+        "qubit_pi": "pi",
+        "cav_disp": "constant_cos_cohstate_0.25",
         "cav_disp_ecd": "constant_cos_ECD_2",
         # "ECD_phase": 0
         "measure_real": True,  # measure real part of char function if True, imag Part if false

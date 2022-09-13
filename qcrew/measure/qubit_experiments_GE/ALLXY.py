@@ -101,10 +101,10 @@ if __name__ == "__main__":
         "modes": ["QUBIT", "RR"],
         "reps": 20000,
         "wait_time": 100000,
-        "qubit_pi_op": "constant_cos_pi",
-        "qubit_pi2_op": "constant_cos_pi2",
+        "qubit_pi_op": "pi",
+        "qubit_pi2_op": "pi2",
         "single_shot": False,
-        "plot_quad": "I_AVG"
+        "plot_quad": "I_AVG",
     }
 
     plot_parameters = {

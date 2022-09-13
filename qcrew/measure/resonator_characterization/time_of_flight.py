@@ -47,7 +47,8 @@ if __name__ == "__main__":
         fig, axes = plt.subplots(2, 1)
 
         axes[0].plot(results / 2 ** 12)
-        axes[1].plot(freqs[5:] / 1e6, amps[5:])
+        axes[1].plot(freqs[5:200] / 1e6, amps[5:200])
+        
     
         # Retrieving and plotting FFT data.
         plt.show()

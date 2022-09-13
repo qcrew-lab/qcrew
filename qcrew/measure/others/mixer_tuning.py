@@ -11,13 +11,12 @@ if __name__ == "__main__":
 
     with Stagehand() as stage:
 
-        sa, qubit, rr, qubit_ef, cav, cav_drive = (
+        sa, qubit, rr, qubit_ef, cav= (
             stage.SA,
             stage.QUBIT,
             stage.RR,
             stage.QUBIT_EF,
             stage.CAV,
-            stage.CAV_DRIVE,
         )
 
         
@@ -25,7 +24,7 @@ if __name__ == "__main__":
         mixer_tuner = MixerTuner(sa, qm)
 
         # this is the mode whose mixerS's LO or SB leakage you are tuning
-        mode = cav
+        mode = qubit
 
         # minimize LO leakage
 

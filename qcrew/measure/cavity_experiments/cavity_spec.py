@@ -38,7 +38,7 @@ class CavitySpectroscopy(Experiment):
 
         qua.update_frequency(cav.name, self.x)  # update resonator pulse frequency
         qua.align(cav.name, qubit.name)
-        cav.play(self.cav_op, ampx=0.05)  # play displacement to cavity
+        cav.play(self.cav_op, ampx=0.15)  # play displacement to cavity
         qua.align(cav.name, qubit.name)  # align all modes
         qubit.play(self.qubit_op)  # play qubit pulse
         qua.align(qubit.name, rr.name)  # align all modes
@@ -58,9 +58,9 @@ class CavitySpectroscopy(Experiment):
 
 if __name__ == "__main__":
 
-    x_start = -53e6
-    x_stop = -47e6
-    x_step = 0.1e6
+    x_start = -50.75e6
+    x_stop = -49.5e6
+    x_step = 0.01e6
     parameters = {
         "modes": ["QUBIT", "CAV", "RR"],
         "reps": 1000,

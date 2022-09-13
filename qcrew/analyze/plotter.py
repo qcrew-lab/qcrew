@@ -1,4 +1,6 @@
 """ Qcrew plotter v1.0 """
+from pathlib import Path
+from datetime import datetime
 
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
@@ -60,6 +62,10 @@ class Plotter:
             params = data_analysis(params)
         except NotImplementedError:
             pass
+
+        # TODO HARD CODED TO REMOVE LATER
+        # for param in ("f0", "ofs", "amp", "phi"):
+        #     params.pop(param)
 
         # convert param values into formated string
         param_val_list = [
@@ -158,6 +164,13 @@ class Plotter:
         )
         ax.set_xlabel(self.plot_setup["xlabel"])
         self.hdisplay.update(self.fig)
+
+   
+        # TODO HARD CODED TO BE REMOVED LATER
+        # if n > 3900:
+        #     date = datetime.now().strftime("%Y%m%d-%H%M%S")
+        #     filepath = Path.cwd() / f"t2_figs/{date}.png"
+        #     self.fig.savefig(filepath)
 
     def plot_2D(self, x, y, z):
 

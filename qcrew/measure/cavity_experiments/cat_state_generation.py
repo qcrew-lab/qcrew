@@ -11,16 +11,15 @@ from qcrew.control import professor as prof
 from qcrew.measure.experiment import Experiment
 from qm import qua
 import numpy as np
-
-from qcrew.measure.qua_macros import ECD, Char_2D, U, V
+from qcrew.measure.qua_macros import *
 
 
 # ---------------------------------- Class -------------------------------------
 
 
-class ECDchar(Experiment):
+class ECDcharpostselect(Experiment):
 
-    name = "ECD_char"
+    name = "ECD_char_postselect"
 
     _parameters: ClassVar[set[str]] = Experiment._parameters | {
         "char_func_displacement",  # fixed displacement.
@@ -61,7 +60,7 @@ class ECDchar(Experiment):
         self.u_amp_scale = u_amp_scale
         self.v_amp_scale = v_amp_scale
         self.ecd_amp_scale = ecd_amp_scale
-        # self.internal_sweep = ["first", "second"]
+        self.internal_sweep = ["first", "second"]
 
         super().__init__(**other_params)  # Passes other parameters to parent
 
@@ -69,34 +68,24 @@ class ECDchar(Experiment):
         """
         Defines pulse sequence to be played inside the experiment loop
         """
-        qubit, cav, rr, rr_drive = self.modes  # get the modes
+        qubit, cav, rr = self.modes  # get the modes
 
-        qua.reset_frame(cav.name, qubit.name)
+        qua.reset_frame(cav.name)
 
         if 0:
-            # qubit.play(self.qubit_pi)  # play pi qubit pulse
-            qua.align(cav.name, qubit.name)
+            # qua.align()
+            # qubit.play(self.qubit_op1_ecd, phase=0)
+            # qua.align(cav.name, qubit.name)
             cav.play(self.cav_displace_1, phase=0)
-            # qua.wait(int(200 // 4), cav.name, qubit.name)  # 5us
-            qua.align()
+            # qua.align(cav.name, qubit.name)
+            # qubit.play(self.qubit_op1_ecd, phase=0)
+            # qua.wait(int(1200 // 4), cav.name, qubit.name)  # 5us
+            # qua.align()
             # qubit.play(self.qubit_op2_ecd, phase=0)
 
         ######################    ECD   ######################
 
-        if 0:
-
-            # ECD Gate
-            ECD(
-                cav,
-                qubit,
-                self.cav_ecd_displace,
-                self.qubit_pi,
-                ampx=self.ecd_amp_scale,
-                phase=0,
-                delay=self.delay,
-            )
-
-        if 0:
+        if 1:
 
             U(
                 cav,
@@ -108,37 +97,14 @@ class ECDchar(Experiment):
                 delay=self.delay,
             )
 
-        if 0:
-            V(
-                cav,
-                qubit,
-                self.cav_ecd_displace,
-                self.qubit_pi,
-                self.qubit_pi2,
-                ampx=self.v_amp_scale,
-                delay=self.delay,
-            )
+        ###################### do a first measurement  #####################
 
-        if 0:
-            U(
-                cav,
-                qubit,
-                self.cav_ecd_displace,
-                self.qubit_pi,
-                self.qubit_pi2,
-                ampx=-self.u_amp_scale,  # (-1) * amp
-                delay=self.delay,
+        rr.measure((self.I, self.Q))  # measure transmitted signal
+        if self.single_shot:  # assign state to G or E
+            qua.assign(
+                self.state, qua.Cast.to_fixed(self.I < rr.readout_pulse.threshold)
             )
-        if 0:
-            V(
-                cav,
-                qubit,
-                self.cav_ecd_displace,
-                self.qubit_pi,
-                self.qubit_pi2,
-                ampx=-self.v_amp_scale,  # (-1) * amp
-                delay=self.delay,
-            )
+        self.QUA_stream_results()  # stream variables (I, Q, x, etc)
 
         ######################  Measure the created state with charactristic function  #####################
         Char_2D(
@@ -169,43 +135,41 @@ class ECDchar(Experiment):
 
 # -------------------------------- Execution -----------------------------------
 if __name__ == "__main__":
-    x_start = -1.15
-    x_stop = 1.15
-    x_step = 0.08
+    x_start = -1.1
+    x_stop = 1.1
+    x_step = 0.1
 
-    y_start = -1.15
-    y_stop = 1.15
-    y_step = 0.08
+    y_start = -1.1
+    y_stop = 1.1
+    y_step = 0.1
 
-    u_amp_scale = 1  # 0.5  #  the scale of constant_cos_ECD in ECD gate
-    v_amp_scale = -0.6  # -0.6 # -0.3
-    ecd_amp_scale = 1  # ECD(1)
+    ecd_amp_scale = 0.5  #  the scale of constant_cos_ECD in ECD gate
+    u_amp_scale = 1
+    v_amp_scale = -0.6
 
     parameters = {
-        "modes": ["QUBIT", "CAV", "RR", "RR_DRIVE"],
+        "modes": ["QUBIT", "CAV", "RR"],
         "reps": 1000,
         "wait_time": 4e6,  # 50e3,
-        "fetch_period": 2,  # time between data fetching rounds in sec
-        "delay": 80,  # 50,  # wait time between opposite sign displacements
+        "fetch_period": 4,  # time between data fetching rounds in sec
+        "delay": 80,  # 160,  # 100# wait time between opposite sign displacements
+        "ecd_amp_scale": ecd_amp_scale,
         "u_amp_scale": u_amp_scale,
         "v_amp_scale": v_amp_scale,
-        "ecd_amp_scale": ecd_amp_scale,
         "x_sweep": (
             x_start,
             x_stop + x_step / 2,
             x_step,
         ),  # ampitude sweep of the displacement pulses in the ECD
         "y_sweep": (y_start, y_stop + y_step / 2, y_step),
-        "qubit_pi": "pi",
         "qubit_pi2": "pi2",
-        #"cav_ecd_displace": "constant_cos_ECD_2",
-        #"char_func_displacement": "constant_cos_ECD_2",
-        "char_func_displacement": "constant_cos_ECD_2_test",
-        "cav_ecd_displace": "constant_cos_ECD_2_test",
+        "qubit_pi": "pi",
+        "char_func_displacement": "constant_cos_ECD_2",
         "cav_displace_1": "constant_cos_cohstate_1",
+        "cav_ecd_displace": "constant_cos_ECD_2",
         "measure_real": True,
         "plot_quad": "I_AVG",
-        # "single_shot": True,
+        "single_shot": False,
     }
 
     plot_parameters = {
@@ -214,10 +178,10 @@ if __name__ == "__main__":
         "plot_type": "2D",
         "cmap": "bwr",
         "plot_err": False,
-        "skip_plot": False,
+        "skip_plot": True,
     }
 
-    experiment = ECDchar(**parameters)
+    experiment = ECDcharpostselect(**parameters)
     experiment.setup_plot(**plot_parameters)
 
     prof.run(experiment)

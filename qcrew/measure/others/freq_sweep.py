@@ -11,8 +11,8 @@ from qm import qua
 def get_qua_program(mode):
     with qua.program() as play_constant_pulse:
         with qua.infinite_loop_():
-            qua.wait(500 // 4)
-            # mode.play("constant_pulse", ampx=1)
+            # qua.wait(500 // 4)
+            mode.play("constant_pulse", ampx=1)
     return play_constant_pulse
 
 
@@ -38,7 +38,7 @@ if __name__ == "__main__":
         # rr.int_freq = -50e6
         # rr.lo_freq = 7.5e9
 
-        mode = cav  # select the mode whose spectrum you want to sweep
+        mode = cav # select the mode whose spectrum you want to sweep
 
         sweep_parameters = {  # set sweep parameters
             "center": mode.lo_freq,

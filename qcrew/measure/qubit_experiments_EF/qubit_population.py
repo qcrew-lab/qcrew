@@ -23,9 +23,7 @@ class QubitPopulation(Experiment):
         "fit_fn",  # fit function
     }
 
-    def __init__(
-        self, qubit_ge_pi, qubit_ef_pi, fit_fn="sine", **other_params
-    ):
+    def __init__(self, qubit_ge_pi, qubit_ef_pi, fit_fn="sine", **other_params):
 
         self.qubit_ge_pi = qubit_ge_pi
         self.fit_fn = fit_fn
@@ -39,7 +37,7 @@ class QubitPopulation(Experiment):
         """
         qubit, qubit_ef, rr = self.modes  # get the modes
 
-        qubit.play(self.qubit_ge_pi, ampx=self.y) # g->e
+        qubit.play(self.qubit_ge_pi, ampx=self.y)  # g->e
         qua.align(qubit.name, qubit_ef.name)
         qubit_ef.play(self.qubit_ef_pi, ampx=self.x)  # e-> f
         qua.align(qubit.name, qubit_ef.name)
@@ -60,8 +58,6 @@ class QubitPopulation(Experiment):
 
 if __name__ == "__main__":
     # _ef_int_freq = -70.6e6
-    
-    
 
     amp_start = -1.9
     amp_stop = 1.9
@@ -71,7 +67,7 @@ if __name__ == "__main__":
         "modes": ["QUBIT", "QUBIT_EF", "RR"],
         "reps": 5000,
         "wait_time": 300000,
-        "qubit_ge_pi": "constant_cos_pi",
+        "qubit_ge_pi": "pi",
         "qubit_ef_pi": "pi",
         "x_sweep": (amp_start, amp_stop + amp_step / 2, amp_step),
         "y_sweep": [0.0, 1.0],

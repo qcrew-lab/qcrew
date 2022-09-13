@@ -63,32 +63,29 @@ class T2_Echo(Experiment):
 
         self.QUA_stream_results()  # stream variables (I, Q, x, etc)
 
-
     def data_analysis(self, fit_params):
         tau_ns = fit_params["tau"].value * 4
         fit_params.add("tau_ns", tau_ns)
         return fit_params
 
 
-
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
     x_start = 4
-    x_stop = 10000
-    x_step = 80
-    detuning = 0e3
-    
-    
+    x_stop = 5000
+    x_step = 40
+    detuning_ = 500e3  # 1.12e6
+
     parameters = {
         "modes": ["QUBIT", "RR"],
-        "reps": 30000,
+        "reps": 2000,
         "wait_time": 80000,
-        "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
+        "x_sweep": (int(x_start), int(x_stop), int(x_step)),
         "qubit_pi2": "constant_cos_pi2",
         "qubit_pi": "constant_cos_pi",
         "single_shot": False,
-        "detuning": int(detuning),
+        "detuning": int(detuning_),
         "extra_vars": {
             "phase": macros.ExpVariable(
                 var_type=qua.fixed,
@@ -98,7 +95,7 @@ if __name__ == "__main__":
                 save_all=True,
             )
         },
-        "plot_quad": "I_AVG"
+        "plot_quad": "I_AVG",
     }
 
     plot_parameters = {

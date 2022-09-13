@@ -45,7 +45,7 @@ class ECDCalibration(Experiment):
         self.qubit_pi2 = qubit_pi2
         self.fit_fn = fit_fn
         self.delay = delay
-        self.measure_real = measure_real 
+        self.measure_real = measure_real
 
         super().__init__(**other_params)  # Passes other parameters to parent
 
@@ -58,15 +58,15 @@ class ECDCalibration(Experiment):
         qua.reset_frame(cav.name)
 
         Char_1D(
-                cav,
-                qubit,
-                self.ecd_displacement,
-                self.qubit_pi,
-                self.qubit_pi2,
-                ampx=self.x,
-                phase=0.25,
-                delay=self.delay,
-                measure_real=self.measure_real,
+            cav,
+            qubit,
+            self.ecd_displacement,
+            self.qubit_pi,
+            self.qubit_pi2,
+            ampx=self.x,
+            phase=0.25,
+            delay=self.delay,
+            measure_real=self.measure_real,
         )
         # play pi/2 pulse around X or Y, to measure either the real or imaginary part of the characteristic function
         qua.align()  # align measurement
@@ -87,18 +87,18 @@ class ECDCalibration(Experiment):
 if __name__ == "__main__":
     x_start = -1.1
     x_stop = 1.1
-    x_step = 0.1
+    x_step = 0.05
 
     parameters = {
         "modes": ["QUBIT", "CAV", "RR"],
-        "reps": 400,
+        "reps": 1000,
         "wait_time": 3.5e6,
         "fetch_period": 2,  # time between data fetching rounds in sec
-        "delay": 50,  # pi/chi
+        "delay": 80,  # pi/chi
         "x_sweep": (x_start, x_stop + x_step / 2, x_step),
-        "qubit_pi2": "constant_cos_pi2",
-        "qubit_pi": "constant_cos_pi",
-        "ecd_displacement": "constant_cos_ECD",
+        "qubit_pi2": "pi2",
+        "qubit_pi": "pi",
+        "ecd_displacement": "constant_cos_ECD_2",
         "single_shot": False,
         "plot_quad": "I_AVG",
         "measure_real": True,

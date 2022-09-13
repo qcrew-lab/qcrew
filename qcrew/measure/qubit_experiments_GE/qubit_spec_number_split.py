@@ -60,7 +60,7 @@ if __name__ == "__main__":
         "wait_time": 80000,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
         "y_sweep": (0,0.005,0.01,0.02),
-        "qubit_op": "pi_selective",
+        "qubit_op": "pi_selective_1",
         "rr_op" : "constant_pulse"
     }   
 

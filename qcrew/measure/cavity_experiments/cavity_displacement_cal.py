@@ -63,13 +63,13 @@ class CavityDisplacementCal(Experiment):
 
 if __name__ == "__main__":
     x_start = 0.1
-    x_stop = 2
+    x_stop = 1.5
     x_step = 0.02
 
     parameters = {
         #"modes": ["QUBIT", "CAV", "RR", "CAV_DRIVE", "RR_DRIVE"],
         "modes": ["QUBIT", "CAV", "RR"],
-        "reps": 5000,
+        "reps": 2000,
         "wait_time": 3e6,
         "x_sweep": (x_start, x_stop + x_step / 2, x_step),
         "qubit_op": "pi_selective_1",

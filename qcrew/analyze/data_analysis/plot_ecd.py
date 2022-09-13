@@ -4,7 +4,7 @@ import numpy as np
 import numpy.ma as ma
 
 if 1:
-    filepath = "C:/Users/qcrew/Desktop/qcrew/data/panther_transmon/20220817/221448_panther_ECD_char_postselect.h5"
+    filepath = "C:/Users/qcrew/Desktop/qcrew/data/panther_transmon/20220912/172500_panther_ECD_char_postselect.h5"
     file = h5py.File(filepath, "r")
     data = file["data"]
     data_i = data["I"][:]
@@ -27,7 +27,7 @@ if 1:
     # test = m1.mean(axis=0).reshape(31, 31) 
     fig, ax = plt.subplots()
     proj_ge = [mx_g, mx_e, mx_ge]  # m2.mean(axis = 0).reshape(n_points, n_points)
-    index_1 = 2
+    index_1 = 0
     f = ax.pcolormesh(x, x, proj_ge[index_1], cmap="bwr")
     # ax.set_title("%i" % index_1)
     if index_1 == 0:

@@ -252,6 +252,8 @@ class Experiment(Parametrized):
 
         if len(self.buffering) == 0:
             logger.warning("No sweep is configured")
+        
+        logger.info(f"Set buffer dimensions: {self.buffering}")
         return
 
     @abc.abstractmethod

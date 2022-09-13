@@ -26,6 +26,7 @@ class ECDchar1D(Experiment):
         "char_func_displacement",  # fixed displacement.
         "cav_ecd_displace",
         "u_amp_scale",  # amp scaling factor for cav_op_ecd pulse
+        "ecd_amp_scale",
         "qubit_pi2",  # operation used for exciting the qubit
         "qubit_pi",  # operation used for exciting the qubit
         "fit_fn",  # fit function
@@ -37,10 +38,11 @@ class ECDchar1D(Experiment):
         char_func_displacement,
         cav_ecd_displace,
         u_amp_scale,
+        ecd_amp_scale,
         qubit_pi,
         qubit_pi2,
         delay,
-        fit_fn="gaussian",
+        fit_fn=None,
         measure_real=True,
         **other_params
     ):
@@ -51,8 +53,9 @@ class ECDchar1D(Experiment):
         self.qubit_pi2 = qubit_pi2
         self.fit_fn = fit_fn
         self.delay = delay
-        self.measure_real = measure_real 
+        self.measure_real = measure_real
         self.u_amp_scale = u_amp_scale
+        self.ecd_amp_scale = ecd_amp_scale
 
         super().__init__(**other_params)  # Passes other parameters to parent
 
@@ -63,10 +66,28 @@ class ECDchar1D(Experiment):
         qubit, cav, rr = self.modes  # get the modes
 
         qua.reset_frame(cav.name)
-        
+
         # state creation
-        #cav.play("constant_cos_cohstate_1", phase=0.25)
+        if 0:
+            cav.play("constant_cos_cohstate_1", phase=0)
+            qua.align()  # align measurement
+        
+        
         if 1:
+            qubit.play(self.qubit_pi, phase=0.25)  # play pi to flip qubit around X
+            qua.align()
+            # ECD Gate
+            ECD(
+                cav,
+                qubit,
+                self.cav_ecd_displace,
+                self.qubit_pi,
+                ampx=self.ecd_amp_scale,
+                phase=0,
+                delay=self.delay,
+            )
+
+        if 0:
 
             U(
                 cav,
@@ -76,8 +97,8 @@ class ECDchar1D(Experiment):
                 self.qubit_pi2,
                 ampx=self.u_amp_scale,
                 delay=self.delay,
-            )     
-        if 1:
+            )
+        if 0:
 
             U(
                 cav,
@@ -87,19 +108,19 @@ class ECDchar1D(Experiment):
                 self.qubit_pi2,
                 ampx=self.u_amp_scale,
                 delay=self.delay,
-            )                   
-                            
+            )
+
         # Measure 1D char func
         Char_1D(
-                cav,
-                qubit,
-                self.char_func_displacement,
-                self.qubit_pi,
-                self.qubit_pi2,
-                ampx=self.x,
-                delay=self.delay,
-                phase=0.5,
-                measure_real=self.measure_real,
+            cav,
+            qubit,
+            self.char_func_displacement,
+            self.qubit_pi,
+            self.qubit_pi2,
+            ampx=self.x,
+            delay=self.delay,
+            phase=0.25,
+            measure_real=self.measure_real,
         )
         # play pi/2 pulse around X or Y, to measure either the real or imaginary part of the characteristic function
         qua.align()  # align measurement
@@ -118,33 +139,34 @@ class ECDchar1D(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-    x_start = -1.5
-    x_stop = 0.5
-    x_step = 0.05
-    u_amp_scale = 0.5
+    x_start = -1.2
+    x_stop = 1.2
+    x_step = 0.02
     
+    u_amp_scale = 1
+    ecd_amp_scale = 1
 
     parameters = {
         "modes": ["QUBIT", "CAV", "RR"],
-        "reps": 1000,
+        "reps": 800 ,
         "wait_time": 4e6,
         "fetch_period": 2,  # time between data fetching rounds in sec
-        "delay": 50,  # pi/chi
+        "delay": 80,  # pi/chi
         "x_sweep": (x_start, x_stop + x_step / 2, x_step),
-        "qubit_pi2": "constant_cos_pi2",
-        "qubit_pi": "constant_cos_pi",
-        "char_func_displacement": "constant_cos_ECD_2",
-        "cav_ecd_displace": "constant_cos_ECD",
+        "qubit_pi2": "pi2",
+        "qubit_pi": "pi",
+        "char_func_displacement": "constant_cos_ECD_2_test",
+        "cav_ecd_displace": "constant_cos_ECD_2_test",
         "single_shot": False,
         "plot_quad": "I_AVG",
         "measure_real": True,
-        "u_amp_scale": u_amp_scale
+        "u_amp_scale": u_amp_scale,
+        "ecd_amp_scale": ecd_amp_scale,
     }
 
     plot_parameters = {
         "xlabel": "X",  # beta of (ECD(beta))
     }
-
 
     experiment = ECDchar1D(**parameters)
     experiment.setup_plot(**plot_parameters)

@@ -58,7 +58,7 @@ if __name__ == "__main__":
         "wait_time": 80000,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
         "y_sweep": [0.0, 1.0],
-        "qubit_op": "constant_cos_pi",
+        "qubit_op": "pi",
         "plot_quad": "Z_AVG"
     }
 

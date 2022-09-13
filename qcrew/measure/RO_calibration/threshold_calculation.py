@@ -12,7 +12,7 @@ if __name__ == "__main__":
         params = {
             "reps": 20000,
             "wait_time": 100000,  # ns
-            "qubit_pi_pulse": "constant_cos_pi",  # pulse to excite qubit
+            "qubit_pi_pulse": "pi",  # pulse to excite qubit
         }
 
         # ddrop_params = {

@@ -43,7 +43,7 @@ class PowerRabiEF(Experiment):
         qua.align(qubit.name, qubit_ef.name)
         qubit.play(self.qubit_ge_pi)  # e->g
         qua.align(qubit.name, rr.name)  # wait qubit pulse to end
-        
+
         rr.measure((self.I, self.Q))  # measure qubit state
         qua.wait(int(self.wait_time // 4), rr.name)  # wait system reset
 
@@ -53,18 +53,18 @@ class PowerRabiEF(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-    amp_start = -1.6
-    amp_stop = 1.6
+    amp_start = -1.3
+    amp_stop = 1.3
     amp_step = 0.05
 
     parameters = {
         "modes": ["QUBIT", "QUBIT_EF", "RR"],
         "reps": 5000,
         "wait_time": 100000,
-        "qubit_ge_pi": "constant_cos_pi",
+        "qubit_ge_pi": "pi",
         "qubit_ef_op": "pi",
         "x_sweep": (amp_start, amp_stop + amp_step / 2, amp_step),
-        "plot_quad": "I_AVG"
+        "plot_quad": "I_AVG",
     }
 
     plot_parameters = {

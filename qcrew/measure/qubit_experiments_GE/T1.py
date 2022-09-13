@@ -52,21 +52,22 @@ class T1(Experiment):
 
 if __name__ == "__main__":
     x_start = int(16)
-    x_stop = int(15e3)
+    x_stop = int(20e3)
     x_step = int(50)
 
     parameters = {
         "modes": ["QUBIT", "RR"],
-        "reps": 10000,
-        "wait_time": 100000,
+        "reps": 60000,
+        "wait_time": 120000,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
-        "qubit_op": "pi",
+        "qubit_op": "gaussian_pi_pulse",
         "single_shot": False,
-        "plot_quad": "Q_AVG"
+        "plot_quad": "Z_AVG"
     }
 
     plot_parameters = {
         "xlabel": "Relaxation time (clock cycles)",
+        "err": None,
     }
 
     experiment = T1(**parameters)

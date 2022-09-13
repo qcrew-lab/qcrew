@@ -19,18 +19,19 @@ if __name__ == "__main__":
         params = {
             "reps": 10000,
             "wait_time": 100000,  # ns
-            "qubit_pi_pulse": "constant_cos_pi",  # pulse to excite qubit
+            "qubit_pi_pulse": "gaussian_pi_pulse",  # pulse to excite qubit
             "weights_file_path": file_path,
         }
 
-        ddrop_params = {
-            "rr_ddrop_freq": int(-50.4e6),
-            "rr_ddrop": "ddrop_pulse",
-            "qubit_ddrop": "ddrop_pulse",
-            "qubit_ef_mode": stage.QUBIT_EF,
-            "steady_state_wait": 2000,
-        }
-        ro_trainer = ReadoutTrainer(rr, qubit, qm, ddrop_params=ddrop_params, **params)
+        # ddrop_params = {
+        #     "rr_ddrop_freq": int(-50.4e6),
+        #     "rr_ddrop": "ddrop_pulse",
+        #     "qubit_ddrop": "ddrop_pulse",
+        #     "qubit_ef_mode": stage.QUBIT_EF,
+        #     "steady_state_wait": 2000,
+        # }
+        # ro_trainer = ReadoutTrainer(rr, qubit, qm, ddrop_params=ddrop_params, **params)
+        ro_trainer = ReadoutTrainer(rr, qubit, qm, **params)
         ro_trainer.train_weights()
 
         ## Make sure to run this script every time the readout pulse is changed!!

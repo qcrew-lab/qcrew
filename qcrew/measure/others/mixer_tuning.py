@@ -10,7 +10,7 @@ if __name__ == "__main__":
 
     with Stagehand() as stage:
 
-        sa, qubit, rr, cav, rr_drive = stage.SA, stage.QUBIT, stage.RR, stage.CAV, stage.RR_DRIVE
+        sa, qubit, rr, cav = stage.SA, stage.QUBIT, stage.RR, stage.CAV
         qm = stage.QM
         mixer_tuner = MixerTuner(sa, qm)
 
@@ -38,7 +38,7 @@ if __name__ == "__main__":
         # mixer_tuner.tune_lo(mode=mode, method="BF", **bf_params_lo)
 
         # user Nelder-Mead (NM) minimizer
-        # mixer_tuner.tune_lo(mode=mode, method="NM")
+        mixer_tuner.tune_lo(mode=mode, method="NM")
 
         # minimize SB leakage
 
@@ -58,7 +58,7 @@ if __name__ == "__main__":
             "plot": False,
         }
 
-        mixer_tuner.tune_sb(mode=mode, method="NM", **bf_params_lo)
+        # mixer_tuner.tune_sb(mode=mode, method="NM", **bf_params_lo)
 
         # user Nelder-Mead (NM) minimizer
         # mixer_tuner.tune_sb(mode=mode, method="NM")

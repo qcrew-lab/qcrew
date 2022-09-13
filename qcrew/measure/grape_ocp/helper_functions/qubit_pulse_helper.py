@@ -1,4 +1,5 @@
-from qcrew.measure.grape_ocp.grape.grape.pygrape import *
+# from qcrew.measure.grape_ocp.grape.grape.pygrape import *
+from pygrape import *
 from qutip import *
 
 import numpy as np

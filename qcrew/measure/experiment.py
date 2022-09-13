@@ -167,8 +167,9 @@ class Experiment(Parametrized):
         zlabel=None,
         trace_labels=[],
         title=None,
+        skip_plot=False,
         plot_type="1D",
-        err=True,
+        plot_err=True,
         cmap="viridis",
         zlimits=None,
         zlog=False,
@@ -207,8 +208,9 @@ class Experiment(Parametrized):
             "zlabel": zlabel,
             "trace_labels": trace_labels,
             "title": title,
+            "skip_plot": skip_plot,
             "plot_type": plot_type,
-            "plot_err": err,
+            "plot_err": plot_err,
             "cmap": cmap,
             "zlimits": zlimits,
             "zlog": zlog,
@@ -262,6 +264,15 @@ class Experiment(Parametrized):
         specified by the experiment (spectroscopy, power rabi, etc.) in the child class.
         """
         pass
+
+    @abc.abstractmethod
+    def data_analysis(self, params):
+        """
+        (XGH)
+        Makes PhD student stupidier. Manipulates the fit parameters as defined in the
+        child experiment class and spits out another set of parameters.
+        """
+        raise NotImplementedError
 
     def QUA_sequence(self):
         """
@@ -344,18 +355,24 @@ class Experiment(Parametrized):
             reshaped_data = partial_results[tag].reshape(self.buffering)
             independent_data.append(reshaped_data)
 
-        # Phase information useful for troubleshooting and rr spectroscopy
-        # freqs = independent_data[0]
-        # phase = (
-        #    np.arctan(partial_results["Q"] / partial_results["I"])
-        #    - 0 * 2 * np.pi * freqs * 31e-9 * 8
-        # )
-        # reshaped_phase_data = np.average(phase, axis=0).reshape(self.buffering)
-        # dependent_data.append(reshaped_phase_data)
+        if 0:
+            # Phase information useful for troubleshooting and rr spectroscopy
+            freqs = independent_data[0]
+            # phase = (
+            #     np.arctan(partial_results["Q"] / partial_results["I"])
+            #     - 2 * np.pi * freqs * 31e-9 * 8
+            # )
+            phase = (
+                np.angle(partial_results["Q"] + 1j * partial_results["I"])
+                - 2 * np.pi * freqs * 32e-9 * 8
+            )
 
-        # if an internal sweep is defined in the child experiment class, add its value
-        # as independent variable data. The values are repeated so the dimensions match
-        # the other independent data shapes.
+            reshaped_phase_data = np.average(phase, axis=0).reshape(self.buffering)
+            dependent_data.append(reshaped_phase_data)
+
+            # if an internal sweep is defined in the child experiment class, add its value
+            # as independent variable data. The values are repeated so the dimensions match
+            # the other independent data shapes.
 
         try:
             internal_sweep = self.internal_sweep
@@ -370,24 +387,29 @@ class Experiment(Parametrized):
             pass
 
         # Estimate standard error
-        if self.single_shot:
+        if self.single_shot and self.plot_setup["plot_err"]:
             # Variance of the binomial variable assuming our estimate for probabilities
             # are accurate.
             error_data = np.sqrt(
                 dependent_data[0] * (1 - dependent_data[0]) / num_results
             )
 
-        else:
+        elif self.plot_setup["plot_err"]:
             # Retrieve and reshape standard error estimation
             error_data = stderr[0].reshape(self.buffering)
 
-        plotter.live_plot(
-            independent_data,
-            dependent_data,
-            num_results,
-            fit_fn=self.fit_fn,
-            err=error_data,
-        )
+        else:
+            error_data = None
+
+        if not self.plot_setup["skip_plot"]:
+            plotter.live_plot(
+                independent_data,
+                dependent_data,
+                num_results,
+                fit_fn=self.fit_fn,
+                err=error_data,
+                data_analysis=self.data_analysis,
+            )
 
         # build data dictionary for final save
         dep_data_dict = {dep_tags[i]: dependent_data[i] for i in range(len(dep_tags))}

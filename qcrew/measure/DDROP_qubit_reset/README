@@ -52,4 +52,5 @@ qubit_ef -> stage.QUBIT_EF               (optional, default to None)
 We'll assume every pulse has the same name as defined in "ddrop_pulse". 
 This should be defined in their respective modes.
 
-The scripts rr_spec_DDROP and T1_DDROP are examples of how to use this reset in experiments.
+The script rr_spec_DDROP can be used to check whether the DDROP pulses make any difference in RR spec 
+The script T1_DDROP is an example of how to include this reset in normal experiments.

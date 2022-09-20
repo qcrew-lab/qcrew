@@ -17,9 +17,9 @@ if __name__ == "__main__":
         file_path = Path("C:/Users/qcrew/Desktop/qcrew/qcrew/config/weights") / date_str
 
         params = {
-            "reps": 10000,
-            "wait_time": 100000,  # ns
-            "qubit_pi_pulse": "constant_cos_pi",  # pulse to excite qubit
+            "reps": 50000,
+            "wait_time": 10000,  # ns
+            "qubit_pi_pulse": "pi",  # pulse to excite qubit
             "weights_file_path": file_path,
         }
 
@@ -30,7 +30,7 @@ if __name__ == "__main__":
             "qubit_ef_mode": stage.QUBIT_EF,
             "steady_state_wait": 2000,
         }
-        ro_trainer = ReadoutTrainer(rr, qubit, qm, ddrop_params=ddrop_params, **params)
+        ro_trainer = ReadoutTrainer(rr, qubit, qm, **params) #, ddrop_params=ddrop_params
         ro_trainer.train_weights()
 
         ## Make sure to run this script every time the readout pulse is changed!!

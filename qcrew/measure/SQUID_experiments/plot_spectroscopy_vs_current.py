@@ -48,15 +48,23 @@ def read_results(filepath):
     return freqs_total, currents_total, np.array(z_matrix)
 
 
-filepath_list = "C:/Users/qcrew/Desktop/qcrew/data/cc1_nusquid/20220511/165834_cc1_qubit_spec_current_sweep.h5"  # 234732_cc2_qubit_spec_current_sweep.h5"#
+filepath_list = "C:/Users/qcrew/Desktop/qcrew/data/jonny-hose/20220919/172448_jonny_qubit_spec_current_sweep.h5"  # 234732_cc2_qubit_spec_current_sweep.h5"#
 freqs, currents_1, z_matrix_1 = read_results(filepath_list)
-
+print(freqs.shape)
+print(freqs)
+print(len(currents_1))
+print(currents_1)
+print(z_matrix_1)
+print(z_matrix_1.shape)
+# plt.plot(z_matrix_1[-1,:])
+print(np.max(z_matrix_1), np.min(z_matrix_1))
 # currents = np.concatenate((np.array(currents_1), currents_2, currents_3), axis=0)
 # z_matrix = np.concatenate((z_matrix_1, z_matrix_2, z_matrix_3), axis=0)
 
-fig, ax = plt.subplots()
-ax.pcolormesh(currents_1, freqs, -z_matrix_1.T, cmap="Blues")
-
+fig, ax = plt.subplots(figsize=(5, 10))
+# plt.plot(freqs)
+ax.pcolormesh(z_matrix_1.T, cmap="plasma", vmax=0.000153, vmin=0.00003)
+# np.savez(z_matrix_1)
 # filename = (
 #    "C:/Users/qcrew/Desktop/qcrew/data/cc2_deltaSQUID/20220317/current_sweep2.npz"
 # )

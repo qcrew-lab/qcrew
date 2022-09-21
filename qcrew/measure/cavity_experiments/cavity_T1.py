@@ -68,7 +68,7 @@ if __name__ == "__main__":
 
     x_start = 4
     x_stop = 1000e3
-    x_step = 30e3
+    x_step = 20e3
     parameters = {
         "modes": ["QUBIT", "CAV", "RR"],
         # "modes": ["QUBIT", "CAV", "RR", "CAV_DRIVE2", "RR_DRIVE"],
@@ -77,8 +77,9 @@ if __name__ == "__main__":
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
         "qubit_op": "pi_selective_1",
         "cav_op": "constant_cos_cohstate_1",
-        "fetch_period": 2,
+        "fetch_period": 4,
         "plot_quad": "I_AVG",
+        
     }
 
     plot_parameters = {

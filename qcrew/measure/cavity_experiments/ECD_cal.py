@@ -98,7 +98,7 @@ if __name__ == "__main__":
         "x_sweep": (x_start, x_stop + x_step / 2, x_step),
         "qubit_pi2": "pi2",
         "qubit_pi": "pi",
-        "ecd_displacement": "constant_cos_ECD_2",
+        "ecd_displacement": "constant_cos_ECD_2_alpha0.5",
         "single_shot": False,
         "plot_quad": "I_AVG",
         "measure_real": True,

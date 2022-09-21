@@ -191,7 +191,7 @@ if __name__ == "__main__":
         ),  # ampitude sweep of the displacement pulses in the ECD
         "qubit_pi2": "pi2",
         "qubit_pi": "pi",
-        "cav_disp": "constant_cos_cohstate_0.25",
+        "cav_disp": "constant_cos_cohstate_1",
         "cav_disp_ecd": "constant_cos_ECD_2",
         # "ECD_phase": 0
         "measure_real": True,  # measure real part of char function if True, imag Part if false

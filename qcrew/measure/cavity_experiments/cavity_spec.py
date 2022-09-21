@@ -58,9 +58,9 @@ class CavitySpectroscopy(Experiment):
 
 if __name__ == "__main__":
 
-    x_start = -50.75e6
-    x_stop = -49.5e6
-    x_step = 0.01e6
+    x_start = -53e6
+    x_stop = -47e6
+    x_step = 0.1e6
     parameters = {
         "modes": ["QUBIT", "CAV", "RR"],
         "reps": 1000,

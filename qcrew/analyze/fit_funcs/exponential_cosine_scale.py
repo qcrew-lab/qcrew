@@ -23,6 +23,5 @@ def guess(xs, ys):
     return {
         "f0": (f0, fs[0], fs[-1]),
         "ofs": (ofs, np.min(ys), np.max(ys)),
-        "amp": (amp, 0, np.max(ys) - np.min(ys)),
-        # 'phi': (phi, -2*np.pi, 2*np.pi),
+        "amp": (amp, -(np.max(ys) - np.min(ys)), np.max(ys) - np.min(ys)),
     }

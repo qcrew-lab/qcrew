@@ -42,7 +42,7 @@ class ECDchar1D(Experiment):
         qubit_pi,
         qubit_pi2,
         delay,
-        fit_fn=None,
+        fit_fn='exponential_cosine_scale',
         measure_real=True,
         **other_params
     ):
@@ -71,10 +71,9 @@ class ECDchar1D(Experiment):
         if 0:
             cav.play("constant_cos_cohstate_1", phase=0)
             qua.align()  # align measurement
-        
-        
+
         if 1:
-            qubit.play(self.qubit_pi, phase=0.25)  # play pi to flip qubit around X
+            # qubit.play(self.qubit_pi, phase=0.25)  # play pi to flip qubit around X
             qua.align()
             # ECD Gate
             ECD(
@@ -86,6 +85,8 @@ class ECDchar1D(Experiment):
                 phase=0,
                 delay=self.delay,
             )
+            qubit.play(self.qubit_pi)
+            
 
         if 0:
 
@@ -139,24 +140,24 @@ class ECDchar1D(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-    x_start = -1.2
-    x_stop = 1.2
+    x_start = -1.15
+    x_stop = 1.15
     x_step = 0.02
-    
+
     u_amp_scale = 1
-    ecd_amp_scale = 1
+    ecd_amp_scale = 1 #0.752
 
     parameters = {
         "modes": ["QUBIT", "CAV", "RR"],
-        "reps": 800 ,
+        "reps": 200,
         "wait_time": 4e6,
         "fetch_period": 2,  # time between data fetching rounds in sec
         "delay": 80,  # pi/chi
         "x_sweep": (x_start, x_stop + x_step / 2, x_step),
         "qubit_pi2": "pi2",
         "qubit_pi": "pi",
-        "char_func_displacement": "constant_cos_ECD_2_test",
-        "cav_ecd_displace": "constant_cos_ECD_2_test",
+        "char_func_displacement": "constant_cos_ECD_2",
+        "cav_ecd_displace": "constant_cos_ECD_2_alpha1",
         "single_shot": False,
         "plot_quad": "I_AVG",
         "measure_real": True,

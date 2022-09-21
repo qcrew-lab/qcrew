@@ -44,6 +44,11 @@ class Qubit_Pulse_Calibration(Experiment):
 
 
 if __name__ == "__main__":
+    '''
+    Idea: We will read out the ".npz" file previously generated, and play the pulse multiplied by
+    some amplitude scaling constant. We will sweep over this amplitude scaling constant, and find 
+    the point where the pi-pulse actually becomes a pi-pulse.
+    '''
 
     amp_start = 0
     amp_stop = 1.8

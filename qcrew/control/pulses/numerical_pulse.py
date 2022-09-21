@@ -16,8 +16,9 @@ class NumericalPulse(Pulse):
 
         Parameters
         -----------
-        path : Path obj????
-            To point to the ".npz" save file of the numerical pulse
+        path : String
+            To point to the ".npz" save file of the numerical pulse.
+            Will be converted to a Path object for some reason?
         ampx : float
             amplitude of the pulse
         pad : int

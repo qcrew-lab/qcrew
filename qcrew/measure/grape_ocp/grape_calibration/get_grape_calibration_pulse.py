@@ -15,8 +15,6 @@ from qcrew.qcrew.measure.grape_ocp.helper.hamiltonians_setup import *
 from qcrew.qcrew.measure.grape_ocp.helper.StateSetups import *
 
 from qutip import *
-import numpy as np
-import matplotlib.pyplot as plt
 
 # In GHz
 
@@ -134,7 +132,7 @@ if __name__ == '__main__':
         outdir = path,
         #freq_range = (-5e-3, 5e-3),
         #sigma_shape = 80,
-        n_proc = 2,
+        #n_proc = 2,
         **opts
     )
 

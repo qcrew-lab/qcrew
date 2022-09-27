@@ -124,7 +124,10 @@ class Plotter:
                     # Get z data corresponding to this trace
                     z_trace_data = z_data[:, indx]
                     x_trace_data = x_data[:, indx]
-                    err_trace_data = err[:, indx]
+                    if self.plot_setup["plot_err"]:
+                        err_trace_data = err[:, indx]
+                    else:
+                        err_trace_data = None
 
                     color = COLOR_LIST[indx]
                     self.plot_1D(

@@ -21,10 +21,11 @@ class Cavity_Pulse_Calibration(Experiment):
         "fit_fn",  # fit function
     }
 
-    def __init__(self, cav_op, qubit_op, **other_params):
+    def __init__(self, qubit_op, **other_params):
 
         self.cav_op = cav_op
         self.qubit_op = qubit_op
+        self.fit_fn = None
 
         super().__init__(**other_params)  # Passes other parameters to parent
 
@@ -63,8 +64,7 @@ if __name__ == "__main__":
         "reps": 10000,
         "wait_time": 1000000,
         "x_sweep": (amp_start, amp_stop + amp_step / 2, amp_step),
-        "qubit_op": "pi_selective",
-        "cav_op": "cavity_numerical_pulse",
+        "qubit_op": "optimal_pi",
     }
 
     plot_parameters = {

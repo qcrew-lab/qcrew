@@ -10,20 +10,19 @@ from qcrew.control.pulses.pulse import BASE_PULSE_AMP, Pulse
 class GrapeNumericalPulse(Pulse):
     """ """
 
-    def __init__(self, path: Path, ampx: float = 1.0, pad: int = 0) -> None:
-        """ 
+    def __init__(self, path: str, ampx: float = 1.0, pad: int = 0) -> None:
+        """
         To initialise the Numerical Pulse class
 
         Parameters
         -----------
-        path : String
-            To point to the ".npz" save file of the numerical pulse.
-            Will be converted to a Path object for some reason?
+        path : str
+            To point to the ".npz" save file of the numerical pulse
         ampx : float
             amplitude of the pulse
         pad : int
             padding of the pulse
-        
+
         return
         -----------
         NumericalPulse obj
@@ -74,6 +73,9 @@ class GrapeNumericalPulse(Pulse):
 
         i_wave = self.oct_pulse_X *  BASE_PULSE_AMP * self.ampx
         q_wave = self.oct_pulse_Y *  BASE_PULSE_AMP * self.ampx
+
+        i_wave = self.oct_pulse_X * BASE_PULSE_AMP * self.ampx
+        q_wave = self.oct_pulse_Y * BASE_PULSE_AMP * self.ampx
 
         if self.pad != 0:
             pad_zeros = np.zeros(self.pad)

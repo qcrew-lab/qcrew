@@ -7,7 +7,7 @@ import numpy as np
 from qcrew.control.pulses.pulse import BASE_PULSE_AMP, Pulse
 
 
-class NumericalPulse(Pulse):
+class GrapeNumericalPulse(Pulse):
     """ """
 
     def __init__(self, path: Path, ampx: float = 1.0, pad: int = 0) -> None:
@@ -28,22 +28,37 @@ class NumericalPulse(Pulse):
         -----------
         NumericalPulse obj
         """
+
         self.path = path
         self.pad = pad
 
         npzfile = np.load(Path(self.path))
-        self.oct_pulse_X = npzfile["pulseX"]
-        self.oct_pulse_Y = npzfile["pulseY"]
+
+        self.oct_pulse_X = npzfile["QubitI"]
+        self.oct_pulse_Y = npzfile["QubitQ"]
+
+        self.time_step = npzfile['dt']
+
+        # Checking if the specified time step is valid (in ns)
+        if int(self.time_step) != self.time_step:
+            raise Exception("The time step should be an integer in ns")
+        
+        self.time_step = int(self.time_step)
+
+        # For pulses with time step > 1, we make sure the pulse is extrapolated to the right length
+        self.oct_pulse_X = np.repeat(npzfile["QubitI"], self.time_step)
+        self.oct_pulse_Y = np.repeat(npzfile["QubitQ"], self.time_step)
 
         # Checking if the quadratures have the same pulse length
         quad_len_diff = len(self.oct_pulse_X) - len(self.oct_pulse_Y)
+
         if quad_len_diff != 0:
             print("Pulse Quadrature Lengths are Different: Padding Tail ... ")
 
             if quad_len_diff < 0:
-                self.oct_pulse_X = np.append(npzfile["pulseX"], [0]*(quad_len_diff*-1))
+                self.oct_pulse_X = np.append(npzfile["QubitI"], [0]*(quad_len_diff*-1))
             elif quad_len_diff > 0:
-                self.oct_pulse_Y = np.append(npzfile["pulseY"], [0]*quad_len_diff)
+                self.oct_pulse_Y = np.append(npzfile["QubitQ"], [0]*quad_len_diff)
 
         length = len(self.oct_pulse_X)
 
@@ -56,20 +71,9 @@ class NumericalPulse(Pulse):
     @property
     def samples(self):
         """ """
-        ########## REDACTED ##########
-
-        #i_wave = np.real(self.oct_pulse) * BASE_PULSE_AMP * self.ampx
-        #q_wave = np.imag(self.oct_pulse) * BASE_PULSE_AMP * self.ampx
-
-        ########## REDACTED ##########
 
         i_wave = self.oct_pulse_X *  BASE_PULSE_AMP * self.ampx
         q_wave = self.oct_pulse_Y *  BASE_PULSE_AMP * self.ampx
-
-        print(np.max(np.real(self.oct_pulse_X)))
-        print(np.max(np.imag(self.oct_pulse_Y)))
-        print(np.max(i_wave))
-        print(np.max(q_wave))
 
         if self.pad != 0:
             pad_zeros = np.zeros(self.pad)

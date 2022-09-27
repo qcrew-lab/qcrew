@@ -40,6 +40,7 @@ class CavityDisplacementCal(Experiment):
         qua.align(cav.name, qubit.name)  # align all modes
         qubit.play(self.qubit_op)  # play qubit pulse
         qua.align(qubit.name, rr.name)  # align all modes
+        # qua.align(cav.name, rr.name)  # align all modes
         rr.measure((self.I, self.Q))  # measure transmitted signal
         qua.wait(int(self.wait_time // 4), cav.name)
 
@@ -53,23 +54,25 @@ class CavityDisplacementCal(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-    x_start = -2
-    x_stop = 0
+    x_start = 0
+    x_stop = 2
     x_step = 0.04
     
     parameters = {
         "modes": ["QUBIT", "CAV", "RR"],
         "reps": 10000,
-        "wait_time": 1000000,
+        "wait_time": 1500000,
         "x_sweep": (x_start, x_stop + x_step / 2, x_step),
-        "qubit_op": "pi_selective3",
-        "cav_op": "cohstate_1",
-        "plot_quad": "I_AVG",
-        "fetch_period": 2,
+        "qubit_op": "gaussian_pi_selective_pulse3",
+        "cav_op": "cohstate1",
+        "plot_quad": "Z_AVG",
+        "fetch_period": 1,
+        
     }
 
     plot_parameters = {
         "xlabel": "Cavity pulse amplitude scaling",
+        "plot_err": None,
     }
 
     experiment = CavityDisplacementCal(**parameters)

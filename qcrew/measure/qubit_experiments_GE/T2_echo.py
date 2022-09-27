@@ -60,23 +60,25 @@ class T2_Echo(Experiment):
 
 if __name__ == "__main__":
     x_start = 10
-    x_stop = 5000
-    x_step = 5
-    detuning = 1e6
+    x_stop = 15000
+    x_step = 50
+    detuning = 0e6
 
     parameters = {
         "modes": ["QUBIT", "RR"],
-        "reps": 10000,
+        "reps": 20000,
         "wait_time": 100000,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
-        "qubit_pi2": "pi2",
-        "qubit_pi": "pi",
+        "qubit_pi2": "gaussian_pi2_pulse",
+        "qubit_pi": "gaussian_pi_pulse",
         "single_shot": False,
         "detuning": int(detuning)
     }
 
     plot_parameters = {
         "xlabel": "Relaxation time (clock cycles)",
+        # "plot_err": None,
+        
     }
 
     experiment = T2_Echo(**parameters)

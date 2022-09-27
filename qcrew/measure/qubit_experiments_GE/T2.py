@@ -58,23 +58,24 @@ if __name__ == "__main__":
     # x_step = 200
 
     x_start = 2
-    x_stop = 1000
-    x_step = 5
-    detuning = 0e6
+    x_stop = 5000
+    x_step = 20
+    detuning = 0.5e6
 
     parameters = {
         "modes": ["QUBIT", "RR"],
-        "reps": 8000,
-        "wait_time": 100000,
+        "reps": 50000,
+        "wait_time": 200000,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
-        "qubit_op": "constant_cos_pi2",
+        "qubit_op": "gaussian_pi2_pulse",
         "detuning": int(detuning),
         "single_shot": False,
-        "plot_quad": "I_AVG",
+        "plot_quad": "Z_AVG",
     }
 
     plot_parameters = {
         "xlabel": "Relaxation time (clock cycles)",
+        "plot_err": None,
     }
 
     experiment = T2(**parameters)

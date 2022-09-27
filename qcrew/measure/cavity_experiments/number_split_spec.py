@@ -63,8 +63,8 @@ if __name__ == "__main__":
         "reps": 4000,
         "wait_time": 50e3,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
-        "qubit_op": "pi_selective3",
-        "cav_op": "cohstate_1",
+        "qubit_op": "gaussian_pi_selective_pulse3",
+        "cav_op": "cohstate1",
         "cav_amp": 0,
     }
 

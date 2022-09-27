@@ -1,6 +1,6 @@
 """
-A python class describing a photon-number split spectroscopy sweeping the number of 
-photons in the cavity using QM.
+A python class describing a readout resonator spectroscopy with qubit in ground and 
+excited state using QM.
 This class serves as a QUA script generator with user-defined parameters.
 """
 
@@ -16,7 +16,7 @@ from qm import qua
 
 class RRSpecDispersiveShift(Experiment):
 
-    name = "shift_rr_cavity"
+    name = "rr_spec_dispersive_shift"
 
     _parameters: ClassVar[set[str]] = Experiment._parameters | {
         "fit_fn",  # fit function
@@ -33,11 +33,11 @@ class RRSpecDispersiveShift(Experiment):
         """
         Defines pulse sequence to be played inside the experiment loop
         """
-        (rr, cav) = self.modes  # get the modes
+        (rr, cav_a) = self.modes  # get the modes
 
         qua.update_frequency(rr.name, self.x)  # update resonator pulse frequency
-        cav.play(self.cav_op, ampx=self.y)
-        qua.align(rr.name, cav.name)
+        cav_a.play(self.cav_op, ampx=self.y)
+        qua.align(rr.name, cav_a.name)
         rr.measure((self.I, self.Q))  # measure transmitted signal
         qua.wait(int(self.wait_time // 4), rr.name)  # wait system reset
 
@@ -48,26 +48,25 @@ class RRSpecDispersiveShift(Experiment):
 
 if __name__ == "__main__":
 
-    x_start = -54e6
-    x_stop = -46e6
-    x_step = 0.1e6
+    x_start = -52e6
+    x_stop = -48e6
+    x_step = 0.04e6
 
     parameters = {
-        "modes": ["RR", "CAV"],
-        "reps": 20000,
-        "wait_time": 1000000,
+        "modes": ["RR", "CAV_Alice"],
+        "reps": 10000,
+        "wait_time": 100000,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
-        "y_sweep": [0, 1.0],
-        "cav_op": "gaussian_pulse",
+        "y_sweep": [0.0, 1.0],
+        "cav_op": "gaussian_pi_selective_pulse3",
+        "plot_quad": "Z_AVG",
     }
 
     plot_parameters = {
         "xlabel": "Resonator pulse frequency (Hz)",
-        "trace_labels": ["<n> = 0", "<n> = 1", "<n> = 2"],
     }
 
     experiment = RRSpecDispersiveShift(**parameters)
     experiment.setup_plot(**plot_parameters)
 
     prof.run(experiment)
-

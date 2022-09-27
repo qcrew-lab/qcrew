@@ -58,22 +58,23 @@ class T1EF(Experiment):
 if __name__ == "__main__":
 
     x_start = 4
-    x_stop = 3000
-    x_step = 50
+    x_stop = 20000
+    x_step = 100
 
     parameters = {
         "modes": ["QUBIT", "RR"],
-        "reps": 40000,
-        "wait_time": 100000,
+        "reps": 10000,
+        "wait_time": 300000,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
-        "qubit_ge_pi": "pi",
-        "qubit_ef_pi": "pi_ef_selective1",
-        "ef_int_freq": int(-57e6),
-        "plot_quad": "I_AVG",
+        "qubit_ge_pi": "gaussian_pi_pulse",
+        "qubit_ef_pi": "gaussian_pi_pulse_ef",
+        "ef_int_freq": int(34.84e6),
+        "plot_quad": "Z_AVG",
     }
 
     plot_parameters = {
         "xlabel": "Relaxation time (clock cycles)",
+        # "plot_err": None
     }
 
     experiment = T1EF(**parameters)

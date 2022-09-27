@@ -34,16 +34,16 @@ class QSwitch2D(Experiment):
         """
         Defines pulse sequence to be played inside the experiment loop
         """
-        qubit, cav, rr = self.modes  # get the modes
+        qubit, cav, rr= self.modes  # get the modes
 
         # qua.update_frequency(cav.name, cav.int_freq)
-        cav.play(self.cav_op)  # play pi qubit pulse
+        cav.play(self.cav_op)  
 
         qua.update_frequency(cav.name, cav.int_freq + self.cav_drive_detuning)
         qua.update_frequency(rr.name, rr.int_freq + self.cav_drive_detuning + self.x)
         qua.align(rr.name, cav.name)
-        rr.play("constant_pulse", duration=self.y)  # play pi qubit pulse
-        cav.play("constant_pulse", duration=self.y)  # play pi qubit pulse
+        rr.play("qswitch_pulse", duration=self.y)  # play pi qubit pulse
+        cav.play("qswitch_pulse", duration=self.y)  # play pi qubit pulse
         qua.align(rr.name, cav.name, qubit.name)
         qua.update_frequency(qubit.name, qubit.int_freq)
         qubit.play(self.qubit_op)  # play qubit pulse
@@ -64,16 +64,23 @@ class QSwitch2D(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
+    x_start = -10e6
+    x_stop = 10e6
+    x_step = 0.5e6
+    
+    y_start = 64 // 4
+    y_stop = 40e3 // 4
+    y_step = 4e3 // 4
 
     parameters = {
         "modes": ["QUBIT", "CAV", "RR"],
         "reps": 50000,
-        "wait_time": 400000,
-        "x_sweep": (int(-30e6), int(20e6 + 1e6 / 2), int(1e6)),
-        "y_sweep": (int(16), int(2e4 + 1000 / 2), int(1000)),
-        "qubit_op": "pi_selective3",
-        "cav_op": "cohstate_1",
-        "cavity_drive_detuning": int(120e6),
+        "wait_time": 1500e3,
+        "x_sweep": (int(x_start), int(x_stop + x_step/2), int(x_step)),
+        "y_sweep": (int(y_start), int(y_stop + y_step/2), int(y_step)),
+        "qubit_op": "gaussian_pi_selective_pulse3",
+        "cav_op": "cohstate1",
+        "cavity_drive_detuning": int(100e6),
         "fetch_period": 4,
         "single_shot": False,
     }

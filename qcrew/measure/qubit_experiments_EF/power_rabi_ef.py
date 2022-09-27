@@ -58,16 +58,15 @@ if __name__ == "__main__":
     amp_step = 0.05
 
     parameters = {
-        "modes": ["QUBIT", "RR"],
+        "modes": ["QUBIT","QUBIT_EF","RR"],
         "reps": 10000,
-        "wait_time": 50000,
-        "ef_int_freq": int(
-            -57e6
-        ),  # We are only loading the mode QUBIT, not the mode QUBIT_EF, so we have to specify the EF_int frequency manually
-        "qubit_pi_pulse_name": "pi",
+        "wait_time": 200000,
+
+        "qubit_pi_pulse_name": "gaussian_pi_selective_pulse3",
         "x_sweep": (amp_start, amp_stop + amp_step / 2, amp_step),
-        "qubit_op": "pi_ef",
-        "plot_quad": "I_AVG",
+
+        "qubit_ef_op": "gaussian_pi_pulse_ef",
+        "plot_quad": "Z_AVG",
     }
 
     plot_parameters = {

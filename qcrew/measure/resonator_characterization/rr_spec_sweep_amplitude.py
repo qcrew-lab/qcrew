@@ -44,15 +44,15 @@ class RRSpecSweepAmplitude(Experiment):
 
 if __name__ == "__main__":
     x_start = -55e6
-    x_stop = -45e6
+    x_stop = -47.5e6
     x_step = 0.1e6
 
     parameters = {
         "modes": ["RR", "QUBIT"],
-        "reps": 10000,
+        "reps": 5000,
         "wait_time": 50000,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
-        "y_sweep": ( 0.1, 0.2, 0.3, 0.4),
+        "y_sweep": (0.1, 0.15, 0.2, 0.25, 0.3),
         # "y_sweep": (0, 0.5 + 0.05/2, 0.05),
     }
     plot_parameters = {

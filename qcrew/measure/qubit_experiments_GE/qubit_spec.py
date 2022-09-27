@@ -44,22 +44,24 @@ class QubitSpectroscopy(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-    x_start = 155e6
-    x_stop = 165e6
-    x_step = 0.1e6
+    x_start = 160e6
+    x_stop = 162e6
+    x_step = 0.01e6  
 
     parameters = {
         "modes": ["QUBIT", "RR"],
-        "reps": 20000,
-        "wait_time": 50000,
+        "reps": 10000,
+        "wait_time": 150000,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
         "qubit_op": "gaussian_pi_pulse",
         "fit_fn": None,
         "plot_quad": "Z_AVG",
+        "fetch_period": 1,        
     }
 
     plot_parameters = {
         "xlabel": "Qubit pulse frequency (Hz)",
+        # "plot_err": False
     }
 
     experiment = QubitSpectroscopy(**parameters)

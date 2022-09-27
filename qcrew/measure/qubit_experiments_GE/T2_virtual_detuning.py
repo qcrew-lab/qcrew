@@ -72,10 +72,10 @@ if __name__ == "__main__":
 
     parameters = {
         "modes": ["QUBIT", "RR"],
-        "reps": 2000,
+        "reps": 20000,
         "wait_time": 80000,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
-        "qubit_op": "pi2",
+        "qubit_op": "gaussian_pi_selective_pulse3",
         "detuning": int(detuning_),
         "single_shot": False,
         "extra_vars": {

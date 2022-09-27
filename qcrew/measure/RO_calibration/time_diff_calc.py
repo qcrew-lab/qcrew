@@ -14,8 +14,8 @@ if __name__ == "__main__":
 
         qmm = QuantumMachinesManager()
         old_config = stage.QM.get_config()
-        qubit, qubit_name = stage.modes[0], stage.modes[0].name
-        rr, rr_name = stage.modes[2], stage.modes[2].name
+        qubit, qubit_name = stage.QUBIT, stage.QUBIT.name
+        rr, rr_name = stage.RR, stage.RR.name
 
         timediff = TimeDiffCalibrator(qmm, old_config, rr_name, reps=1)
         timediff.calibrate(simulate=False)

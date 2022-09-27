@@ -11,17 +11,19 @@ from qm import qua
 # ---------------------------------- Class -------------------------------------
 
 
-class Qubit_Pulse_Calibration(Experiment):
+class Cavity_Pulse_Calibration(Experiment):
 
-    name = "qubit_pulse_calibration"
+    name = "cavity_pulse_calibration"
 
     _parameters: ClassVar[set[str]] = Experiment._parameters | {
+        "cav_op",  # operation for displacing the cavity
         "qubit_op",  # operation used for exciting the qubit
         "fit_fn",  # fit function
     }
 
     def __init__(self, qubit_op, **other_params):
 
+        self.cav_op = cav_op
         self.qubit_op = qubit_op
         self.fit_fn = None
 
@@ -31,12 +33,14 @@ class Qubit_Pulse_Calibration(Experiment):
         """
         Defines pulse sequence to be played inside the experiment loop
         """
-        qubit, rr = self.modes  # get the modes
+        qubit, cav, rr = self.modes  # get the modes
 
-        qubit.play(self.qubit_op, ampx=self.x)  # play qubit pulse
-        qua.align(qubit.name, rr.name)  # wait qubit pulse to end
-        rr.measure((self.I, self.Q))  # measure qubit state
-        qua.wait(int(self.wait_time // 4), rr.name)  # wait system reset
+        cav.play(self.cav_op, ampx=self.x)  # play displacement to cavity
+        qua.align(cav.name, qubit.name)  # align all modes
+        qubit.play(self.qubit_op)  # play qubit pulse
+        qua.align(qubit.name, rr.name)  # align all modes
+        rr.measure((self.I, self.Q))  # measure transmitted signal
+        qua.wait(int(self.wait_time // 4), cav.name)  # wait system reset
 
         self.QUA_stream_results()  # stream variables (I, Q, x, etc)
 
@@ -45,24 +49,34 @@ class Qubit_Pulse_Calibration(Experiment):
 
 
 if __name__ == "__main__":
+    '''
+    Idea: We will read out the ".npz" file previously generated, and play the pulse multiplied by
+    some amplitude scaling constant. We will sweep over this amplitude scaling constant, and find 
+    the point where the pi-pulse actually becomes a pi-pulse.
+    '''
 
     amp_start = 0
-    amp_stop = 2
+    amp_stop = 1.8
     amp_step = 0.1
 
     parameters = {
-        "modes": ["QUBIT", "RR"],
-        "reps": 50000,
+        "modes": ["QUBIT", "CAV", "RR"],
+        "reps": 10000,
         "wait_time": 1000000,
         "x_sweep": (amp_start, amp_stop + amp_step / 2, amp_step),
+<<<<<<< HEAD:qcrew/measure/grape_ocp/grape_calibration/qubit_pulse_calibration.py
         "qubit_op": "optimal_pi",
+=======
+        "qubit_op": "pi_selective",
+        "cav_op": "cavity_numerical_pulse",
+>>>>>>> 54c37c414d986a0f7921d8077d395027ec0224ad:qcrew/measure/grape_ocp/grape_calibration/cavity_pulse_calibration.py
     }
 
     plot_parameters = {
         "xlabel": "Pulse Amplitude",
     }
 
-    experiment = Qubit_Pulse_Calibration(**parameters)
+    experiment = Cavity_Pulse_Calibration(**parameters)
     experiment.setup_plot(**plot_parameters)
 
     prof.run(experiment)

@@ -1,7 +1,0 @@
-targets/
-*.pyc
-*.bak
-*.swp
-*.sconsign.dblite
-*.pgm
-*~

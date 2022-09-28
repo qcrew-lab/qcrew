@@ -22,9 +22,10 @@ class Qubit_Pulse_Calibration(Experiment):
         "fit_fn",  # fit function
     }
 
-    def __init__(self, qubit_op, **other_params):
+    def __init__(self, qubit_op, fit_fn = None, **other_params):
 
         self.qubit_op = qubit_op
+        self.fit_fn = "sine"
 
         super().__init__(**other_params)  # Passes other parameters to parent
 
@@ -53,15 +54,16 @@ if __name__ == "__main__":
 
     amp_start = -1.5
     amp_stop =  1.5
-    amp_step = 0.05
+    amp_step = 0.02
 
     parameters = {
         "modes": ["QUBIT", "RR"],
-        "reps": 5000,
-        "wait_time": 50000,
+        "reps": 20000,
+        "wait_time": 150000,
         "x_sweep": (amp_start, amp_stop + amp_step / 2, amp_step),
         "qubit_op": "qubit_numerical_pulse",
         "single_shot": False,
+        "plot_quad": "Z_AVG",
     }
 
     plot_parameters = {

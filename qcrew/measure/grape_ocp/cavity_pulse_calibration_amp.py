@@ -21,11 +21,11 @@ class Cavity_Pulse_Calibration(Experiment):
         "fit_fn",  # fit function
     }
 
-    def __init__(self, qubit_op, **other_params):
+    def __init__(self, cav_op, qubit_op, **other_params):
 
         self.cav_op = cav_op
         self.qubit_op = qubit_op
-        self.fit_fn = None
+        self.fit_fn = "displacement_cal"
 
         super().__init__(**other_params)  # Passes other parameters to parent
 
@@ -49,22 +49,25 @@ class Cavity_Pulse_Calibration(Experiment):
 
 
 if __name__ == "__main__":
-    '''
+    """
     Idea: We will read out the ".npz" file previously generated, and play the pulse multiplied by
-    some amplitude scaling constant. We will sweep over this amplitude scaling constant, and find 
+    some amplitude scaling constant. We will sweep over this amplitude scaling constant, and find
     the point where the pi-pulse actually becomes a pi-pulse.
-    '''
+    """
 
     amp_start = 0
     amp_stop = 1.8
-    amp_step = 0.1
+    amp_step = 0.04
 
     parameters = {
         "modes": ["QUBIT", "CAV", "RR"],
         "reps": 10000,
-        "wait_time": 1000000,
+        "wait_time": 1500000,
         "x_sweep": (amp_start, amp_stop + amp_step / 2, amp_step),
-        "qubit_op": "optimal_pi",
+        "qubit_op": "gaussian_pi_selective_pulse3",
+        "cav_op": "cavity_numerical_pulse",
+        "plot_quad": "Z_AVG",
+        "fetch_period": 2,
     }
 
     plot_parameters = {

@@ -64,7 +64,7 @@ if __name__ == "__main__":
         "wait_time": 1500000,
         "x_sweep": (x_start, x_stop + x_step / 2, x_step),
         "qubit_op": "gaussian_pi_selective_pulse3",
-        "cav_op": "cohstate1",
+        "cav_op": "cohstate2",
         "plot_quad": "Z_AVG",
         "fetch_period": 1,
         

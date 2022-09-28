@@ -7,7 +7,7 @@ import numpy as np
 from qcrew.control.pulses.pulse import BASE_PULSE_AMP, Pulse
 
 
-class GrapeNumericalPulse(Pulse):
+class GrapeNumericalQubitPulse(Pulse):
     """ """
 
     def __init__(self, path: str, ampx: float = 1.0, pad: int = 0) -> None:
@@ -33,8 +33,8 @@ class GrapeNumericalPulse(Pulse):
 
         npzfile = np.load(Path(self.path), "r")
 
-        self.oct_pulse_X = npzfile["CavityI"]
-        self.oct_pulse_Y = npzfile["CavityQ"]
+        self.oct_pulse_X = npzfile["QubitI"]
+        self.oct_pulse_Y = npzfile["QubitQ"]
 
         self.time_step = npzfile["dt"]
 
@@ -45,8 +45,8 @@ class GrapeNumericalPulse(Pulse):
         self.time_step = int(self.time_step)
 
         # For pulses with time step > 1, we make sure the pulse is extrapolated to the right length
-        self.oct_pulse_X = np.repeat(npzfile["CavityI"], self.time_step)
-        self.oct_pulse_Y = np.repeat(npzfile["CavityQ"], self.time_step)
+        self.oct_pulse_X = np.repeat(npzfile["QubitI"], self.time_step)
+        self.oct_pulse_Y = np.repeat(npzfile["QubitQ"], self.time_step)
 
         # Checking if the quadratures have the same pulse length
         quad_len_diff = len(self.oct_pulse_X) - len(self.oct_pulse_Y)
@@ -56,10 +56,10 @@ class GrapeNumericalPulse(Pulse):
 
             if quad_len_diff < 0:
                 self.oct_pulse_X = np.append(
-                    npzfile["CavityI"], [0] * (quad_len_diff * -1)
+                    npzfile["QubitQ"], [0] * (quad_len_diff * -1)
                 )
             elif quad_len_diff > 0:
-                self.oct_pulse_Y = np.append(npzfile["CavityQ"], [0] * quad_len_diff)
+                self.oct_pulse_Y = np.append(npzfile["QubitQ"], [0] * quad_len_diff)
 
         length = len(self.oct_pulse_X)
 

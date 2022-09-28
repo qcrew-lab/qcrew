@@ -59,7 +59,7 @@ if __name__ == "__main__":
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
         "y_sweep": [0.0, 1.0],
         "qubit_op": "gaussian_pi_selective_pulse3",
-        "plot_quad": "Z_AVG",
+        "plot_quad": "I_AVG",
     }
 
     plot_parameters = {

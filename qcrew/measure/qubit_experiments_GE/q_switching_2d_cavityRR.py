@@ -34,21 +34,15 @@ class QSwitch2D(Experiment):
         """
         Defines pulse sequence to be played inside the experiment loop
         """
-        qubit, cav, rr= self.modes  # get the modes
+        qubit, cav, rr, cav_drive, rr_drive = self.modes  # get the modes
 
-        # qua.update_frequency(cav.name, cav.int_freq)
         cav.play(self.cav_op)  
-
-        qua.update_frequency(cav.name, cav.int_freq + self.cav_drive_detuning)
-        qua.update_frequency(rr.name, rr.int_freq + self.cav_drive_detuning + self.x)
-        qua.align(rr.name, cav.name)
-        rr.play("qswitch_pulse", duration=self.y)  # play pi qubit pulse
-        cav.play("qswitch_pulse", duration=self.y)  # play pi qubit pulse
-        qua.align(rr.name, cav.name, qubit.name)
-        qua.update_frequency(qubit.name, qubit.int_freq)
+        qua.align(cav.name, rr_drive.name)
+        rr_drive.play("qswitch_pulse", duration=self.y)  
+        cav_drive.play("qswitch_pulse", duration=self.y)  
+        qua.align(rr_drive.name, cav_drive.name, qubit.name)
         qubit.play(self.qubit_op)  # play qubit pulse
         qua.align(rr.name, qubit.name)
-        qua.update_frequency(rr.name, rr.int_freq)
         rr.measure((self.I, self.Q))  # measure qubit state
         
         
@@ -73,7 +67,7 @@ if __name__ == "__main__":
     y_step = 4e3 // 4
 
     parameters = {
-        "modes": ["QUBIT", "CAV", "RR"],
+        "modes": ["QUBIT", "CAV", "RR", "CAV_DRIVE", "RR_DRIVE"],
         "reps": 50000,
         "wait_time": 1500e3,
         "x_sweep": (int(x_start), int(x_stop + x_step/2), int(x_step)),

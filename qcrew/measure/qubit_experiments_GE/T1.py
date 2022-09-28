@@ -51,8 +51,8 @@ class T1(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-    x_start = int(16)
-    x_stop = int(40e3)
+    x_start = int(0)
+    x_stop = int(15e3)
     x_step = int(100)
 
     parameters = {

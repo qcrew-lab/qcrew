@@ -5,7 +5,7 @@ from qcrew.control import Stagehand
 from qm import qua
 import numpy as np
 
-reps = 1000
+reps = 2000
 
 
 def get_qua_program(rr):

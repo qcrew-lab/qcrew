@@ -43,19 +43,22 @@ class RRSpecSweepAmplitude(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
+    x_start = -53e6
+    x_stop = -46e6
+    x_step = 0.1e6
 
     parameters = {
         "modes": ["RR", "QUBIT"],
-        "reps": 2000,
-        "wait_time": 100000,
-        "x_sweep": (int(-55e6), int(-45e6 + 0.3e6 / 2), int(0.3e6)),
-        "y_sweep": (0.1, 1.5 + 0.01/2, 0.01),
+        "reps": 20000,
+        "wait_time": 50000,
+        "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
+        "y_sweep": [0.005, 0.007, 0.010],  # (0, 0.5 + 0.05 / 2, 0.05),
     }
     plot_parameters = {
         "xlabel": "Resonator pulse frequency (Hz)",
         "ylabel": "Resonator pulse amplitude scaling",
-        "plot_type": "2D",
-        #"zlog": True
+        "plot_type": "1D",
+        # "zlog": True
     }
 
     experiment = RRSpecSweepAmplitude(**parameters)

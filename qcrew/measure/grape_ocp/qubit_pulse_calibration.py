@@ -22,7 +22,7 @@ class Qubit_Pulse_Calibration(Experiment):
         "fit_fn",  # fit function
     }
 
-    def __init__(self, qubit_op, fit_fn = None, **other_params):
+    def __init__(self, qubit_op, fit_fn=None, **other_params):
 
         self.qubit_op = qubit_op
         self.fit_fn = "sine"
@@ -53,7 +53,7 @@ class Qubit_Pulse_Calibration(Experiment):
 if __name__ == "__main__":
 
     amp_start = -1.5
-    amp_stop =  1.5
+    amp_stop = 1.5
     amp_step = 0.02
 
     parameters = {

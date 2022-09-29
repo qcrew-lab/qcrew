@@ -66,8 +66,8 @@ class NSplitSpectroscopyFock_Grape(Experiment):
 
 if __name__ == "__main__":
     x_start = -40e6  # 145e6  # -51e6
-    x_stop = -35e6  # 155e6  # -49.76e6
-    x_step = 0.1e6
+    x_stop = -38e6  # 155e6  # -49.76e6
+    x_step = 0.04e6
 
     parameters = {
         "modes": ["QUBIT", "CAV", "RR", "CAV_DRIVE", "RR_DRIVE"],

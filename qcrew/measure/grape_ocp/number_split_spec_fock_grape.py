@@ -40,15 +40,11 @@ class NSplitSpectroscopyFock_Grape(Experiment):
         """
         qubit, cav, rr, cav_drive, rr_drive = self.modes  # get the modes
 
-        qua.update_frequency(
-            qubit.name, -38.8e6
-        )  # update qubit pulse frequency for actual pulse
-        cav.play(
-            self.grape_cav_op,
-        )  # prepare cavity state
-        qubit.play(
-            self.grape_qubit_op,
-        )  # prepare cavity state
+        qua.update_frequency(qubit.name, -38.8e6)  # update qubit pulse frequency for actual pulse
+        
+        cav.play(self.grape_cav_op,)  # prepare cavity state
+        qubit.play(self.grape_qubit_op,)  # prepare cavity state
+        
         qua.align(cav.name, qubit.name)  # align modes
         qua.update_frequency(qubit.name, self.x)  # sweep qubit pulse frequency
         qubit.play(self.qubit_op)  # play qubit pulse

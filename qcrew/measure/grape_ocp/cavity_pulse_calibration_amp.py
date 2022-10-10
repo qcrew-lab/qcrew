@@ -56,7 +56,7 @@ if __name__ == "__main__":
     """
 
     amp_start = 0
-    amp_stop = 1.8
+    amp_stop = 2
     amp_step = 0.04
 
     parameters = {
@@ -72,6 +72,7 @@ if __name__ == "__main__":
 
     plot_parameters = {
         "xlabel": "Pulse Amplitude",
+        "plot_err": None,
     }
 
     experiment = Cavity_Pulse_Calibration(**parameters)

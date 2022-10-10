@@ -33,10 +33,13 @@ class PowerRabi(Experiment):
         """
         Defines pulse sequence to be played inside the experiment loop
         """
-        qubit, rr = self.modes  # get the modes
+        qubit, rr, cav = self.modes  # get the modes
 
+        # cav.play("cohstate1")
+        # qua.align(cav.name, qubit.name)
         qubit.play(self.qubit_op, ampx=self.x)  # play qubit pulse
-
+        # qua.align(cav.name, qubit.name)
+        # cav.play("cohstate1", ampx=self.x)
         qua.align(qubit.name, rr.name)  # wait qubit pulse to end
         rr.measure((self.I, self.Q))  # measure qubit state
         qua.wait(int(self.wait_time // 4), rr.name)  # wait system reset
@@ -58,13 +61,13 @@ if __name__ == "__main__":
     amp_step = 0.05
 
     parameters = {
-        "modes": ["QUBIT", "RR"],
+        "modes": ["QUBIT", "RR","CAV_Alice"],
         "reps": 10000,
         "wait_time": 150000,
         "x_sweep": (amp_start, amp_stop + amp_step / 2, amp_step),
-        "qubit_op": "gaussian_pi_selective_pulse3",
+        "qubit_op": "gaussian_pi_pulse", #"gaussian_pi_selective_pulse3",
         # "single_shot": True,
-        "plot_quad": "Q_AVG",
+        "plot_quad": "Z_AVG",
     }
 
     plot_parameters = {

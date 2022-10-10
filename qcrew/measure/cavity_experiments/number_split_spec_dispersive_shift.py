@@ -51,13 +51,13 @@ class NSplitSpecDispersiveShift(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-    x_start = 159.5e6
-    x_stop = 162.0e6
-    x_step = 0.01e6
+    x_start = -45e6  # 159.5e6
+    x_stop = -35e6  # 162.0e6
+    x_step = 0.04e6
 
     parameters = {
         "modes": ["QUBIT", "CAV", "RR"],
-        "reps": 100000,
+        "reps": 10000,
         "wait_time": 1800000,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
         "y_sweep": [1.0],
@@ -71,8 +71,8 @@ if __name__ == "__main__":
     plot_parameters = {
         "xlabel": "Qubit pulse frequency (Hz)",
         # "trace_labels": ["<n> = 1", "<n> = 2" ],
-        "trace_labels": ["<n> = 1"],
-        # "plot_err": None,
+        # "trace_labels": ["<n> = 1"],
+        "plot_err": None,
     }
 
     experiment = NSplitSpecDispersiveShift(**parameters)

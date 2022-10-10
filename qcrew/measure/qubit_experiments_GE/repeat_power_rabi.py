@@ -60,12 +60,13 @@ if __name__ == "__main__":
 
     parameters = {
         "modes": ["QUBIT", "RR"],
-        "reps": 5000,
+        "reps": 10000,
         "wait_time": 100000,
         "x_sweep": (-1.6, 1.6 + 0.05 / 2, 0.05),
-        "qubit_op": "pi",
+        "qubit_op": "gaussian_pi2_pulse",
         "pulse_number": 2,
         "single_shot": False,
+        "plot_quad": "Q_AVG",
     }
 
     plot_parameters = {

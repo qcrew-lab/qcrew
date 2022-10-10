@@ -52,9 +52,9 @@ class Qubit_Pulse_Calibration(Experiment):
 
 if __name__ == "__main__":
 
-    amp_start = 0.8
+    amp_start = -1.4 #0.8
     amp_stop = 1.4
-    amp_step = 0.005
+    amp_step = 0.05
 
     parameters = {
         "modes": ["QUBIT", "RR"],

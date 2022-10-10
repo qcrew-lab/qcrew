@@ -50,17 +50,20 @@ class WignerFunction(Experiment):
         Defines pulse sequence to be played inside the experiment loop
         """
         qubit, cav, rr = self.modes  # get the modes
+        # path = r"C:\Users\qcrew\Desktop\qcrew\qcrew\config\GRAPE\fock_state_1.npz"
+        path = r"C:\Users\qcrew\Desktop\qcrew\qcrew\config\GRAPE\disp_cav.npz"
 
         qua.reset_frame(cav.name, qubit.name)
+        qua.align(cav.name, qubit.name)
 
         # Play GRAPE Pulses
-        #cav.play(self.grape_cav_op)
-        #qubit.play(self.grape_qubit_op)
+        cav.play(self.grape_cav_op, path=path)
+        # qubit.play(self.grape_qubit_op, path = path)
 
         qua.align(cav.name, qubit.name)
 
         cav.play(
-            self.cav_op, ampx=self.x, phase=0, sigma=10*40
+            self.cav_op, ampx=self.x, phase=0, sigma=2 * 40
         )  # displacement in I direction
 
         qua.align(cav.name, qubit.name)
@@ -99,7 +102,7 @@ if __name__ == "__main__":
 
     parameters = {
         "modes": ["QUBIT", "CAV", "RR"],
-        "reps": 20000,
+        "reps": 10000,
         "wait_time": 1500e3,
         "fetch_period": 2,  # time between data fetching rounds in sec
         "delay": 833,  # pi/chi

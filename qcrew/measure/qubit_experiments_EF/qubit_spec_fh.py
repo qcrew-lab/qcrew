@@ -63,9 +63,9 @@ class QubitSpectroscopyFG(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-    x_start = 90e6
-    x_stop = 130e6
-    xstep = 0.2e6
+    x_start = -100e6
+    x_stop = -80e6
+    xstep = 0.5e6
 
 
     parameters = {
@@ -73,9 +73,9 @@ if __name__ == "__main__":
         "reps": 20000,
         "wait_time": 200000,
         "x_sweep": (int(x_start), int(x_stop + xstep / 2), int(xstep)),
-        "qubit_ef_op": "gaussian_pi_pulse_ef",
+        "qubit_ef_op": "gaussian_pi_pulse",
         "qubit_op": "gaussian_pi_pulse",
-        "qubit_fh_op": "gaussian_pi_pulse",
+        "qubit_fh_op": "gaussian_pi_selective_pulse",
         "fit_fn": "gaussian",
         "plot_quad": "Z_AVG",
     }

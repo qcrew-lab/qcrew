@@ -26,10 +26,11 @@ if __name__ == "__main__":
 
     with Stagehand() as stage:
         # sa, qubit, qubit_ef, rr, cav = stage.SA, stage.QUBIT, stage.QUBIT_EF, stage.RR, stage.CAV
-        sa, qubit, rr = (
+        sa, qubit, rr, qubit_ef = (
             stage.SA,
             stage.QUBIT,
             stage.RR,
+            stage.QUBIT_EF,
         )
         # rr.int_freq = -50e6
         # rr.lo_freq = 7.5e9

@@ -99,11 +99,12 @@ if __name__ == "__main__":
 
     parameters = {
         "modes": ["QUBIT", "RR"],
-        "reps": 20000,
-        "wait_time": 100000,
+        "reps": 50000,
+        "wait_time": 20000,
         "qubit_pi_op": "pi",
         "qubit_pi2_op": "pi2",
         "single_shot": False,
+        "plot_quad": "I_AVG"
     }
 
     plot_parameters = {

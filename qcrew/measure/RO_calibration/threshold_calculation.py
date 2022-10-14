@@ -11,8 +11,8 @@ if __name__ == "__main__":
 
         params = {
             "reps": 20000,
-            "wait_time": 100000,  # ns
-            "qubit_pi_pulse": "constant_cos_pi",  # pulse to excite qubit
+            "wait_time": 10000,  # ns
+            "qubit_pi_pulse": "pi",  # pulse to excite qubit
         }
 
         ddrop_params = {
@@ -23,7 +23,7 @@ if __name__ == "__main__":
             "steady_state_wait": 2000,
         }
 
-        ro_trainer = ReadoutTrainer(rr, qubit, qm, ddrop_params=ddrop_params, **params)
+        ro_trainer = ReadoutTrainer(rr, qubit, qm, **params)
         threshold, data = ro_trainer.calculate_threshold()
 
         ## Save data

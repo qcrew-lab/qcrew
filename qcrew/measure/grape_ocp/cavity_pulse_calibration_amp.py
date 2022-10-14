@@ -35,7 +35,9 @@ class Cavity_Pulse_Calibration(Experiment):
         """
         qubit, cav, rr = self.modes  # get the modes
 
-        cav.play(self.cav_op, ampx=self.x)  # play displacement to cavity
+        cav.play(
+            self.cav_op, ampx= self.x
+        )  # play displacement to cavity
         qua.align(cav.name, qubit.name)  # align all modes
         qubit.play(self.qubit_op)  # play qubit pulse
         qua.align(qubit.name, rr.name)  # align all modes
@@ -56,7 +58,7 @@ if __name__ == "__main__":
     """
 
     amp_start = 0
-    amp_stop = 2
+    amp_stop = 1.8
     amp_step = 0.04
 
     parameters = {
@@ -64,7 +66,7 @@ if __name__ == "__main__":
         "reps": 10000,
         "wait_time": 1500000,
         "x_sweep": (amp_start, amp_stop + amp_step / 2, amp_step),
-        "qubit_op": "gaussian_pi_selective_pulse3",
+        "qubit_op": "gaussian_pi_pulse",
         "cav_op": "cavity_numerical_pulse",
         "plot_quad": "Z_AVG",
         "fetch_period": 2,

@@ -45,8 +45,8 @@ class GrapeNumericalPulse(Pulse):
         self.time_step = int(self.time_step)
 
         # For pulses with time step > 1, we make sure the pulse is extrapolated to the right length
-        self.oct_pulse_X = np.repeat(npzfile["CavityI"], self.time_step)
-        self.oct_pulse_Y = np.repeat(npzfile["CavityQ"], self.time_step)
+        self.oct_pulse_X = np.repeat(npzfile["CavityI"], self.time_step) * 20 / 0.7227
+        self.oct_pulse_Y = np.repeat(npzfile["CavityQ"], self.time_step) * 20 / 0.7227
 
         # Checking if the quadratures have the same pulse length
         quad_len_diff = len(self.oct_pulse_X) - len(self.oct_pulse_Y)

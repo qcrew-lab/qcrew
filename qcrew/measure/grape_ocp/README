@@ -1,7 +1,6 @@
-'''
 This folder contains the necessary files to run a GRAPE-optimised pulse
 
-Introduction
+##### Introduction
 -----------
     GRadient Ascent Pulse Engineering is a method to produce optimal control pulses, for 
     high-fidelity unitary transformations on cavity states. Besides GRAPE, there are also 
@@ -15,4 +14,25 @@ Introduction
     For a more detailed and updated reference, please consult the Notion page on GRAPE pulses
     **
 
-'''
+##### Available Experiments
+-------------
+qubit_pulse_calibration
+    Is essentially a power rabi experiment using a optimal qubit pi pulse
+
+cavity_pulse_calibration
+    Is essentially a displacement power calibration using a optimal displacement 1 pulse
+
+TOF_calibration
+    Performs a TOF sweep for the optimal state preparation using a selective qubit pi pulse
+
+number_split
+    Is essentially a number split measurement using the optimal state preparation
+    UNDER CONSIDERATION TO BE REMOVED
+        > Does not yield meaningful information
+        > Is identical to the standard number split
+
+wigner function
+    Is essentially a wigner measurement using the optimal state preparation
+    UNDER CONSIDERATION TO BE REMOVED
+        > Does not yield meaningful information
+        > Is identical to the standard wigner

@@ -38,6 +38,7 @@ class RepPowerRabi(Experiment):
 
         for k in range(self.pulse_number):  # play qubit pulse multiple times
             qubit.play(self.qubit_op, ampx=self.x)
+        
         qua.align(qubit.name, rr.name)  # wait qubit pulse to end
         rr.measure((self.I, self.Q))  # measure qubit state
         qua.wait(int(self.wait_time // 4), rr.name)  # wait system reset

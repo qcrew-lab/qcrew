@@ -1,4 +1,4 @@
-This folder contains the necessary files to run a GRAPE-optimised pulse
+This folder contains experiments pertaining the GRAPE experiments
 
 ##### Introduction
 -----------
@@ -6,9 +6,6 @@ This folder contains the necessary files to run a GRAPE-optimised pulse
     high-fidelity unitary transformations on cavity states. Besides GRAPE, there are also 
     SNAP gate and echo-conditional displacement methods to produce optimal unitary 
     transformations.
-
-    This series of code uses the `pygrape` module by YALE, which Yvonne got ahold of. The 
-    original code can be found in the QCREW drive, along with some example unitaries
 
     **
     For a more detailed and updated reference, please consult the Notion page on GRAPE pulses

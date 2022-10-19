@@ -11,34 +11,8 @@ Introduction
     This series of code uses the `pygrape` module by YALE, which Yvonne got ahold of. The 
     original code can be found in the QCREW drive, along with some example unitaries
 
-Installation
------------
-    Run 'pygrape_setup.py'
-
-How It Works
------------
-    As the optimisation process might take a long time for arbitrary high-fidelity transforms, 
-    it is better to run a simulation to obtain the pulses first, before using them on the real
-    thing.
-
-    The pulses will still have to be calibrated to account for attenuation down the line, by either
-    scaling the ampltude or the length of each numerical step. Note that ultimately, the pulse 
-    might not be able to be used due to the pulse sequence length exceeding the lifetime (T1) of
-    the qubit / cavity
-
-    Step 1:
-    Determine the key parameters of the system (chi, kerr, anharm, T1, T2, freq, etc.)
-
-    Step 2:
-    Build the Hamiltonian in QuTip, and load in the key parameters
-
-    Step 3:
-    Define the unitary of interest (For state preparation, define it from the ground state)
-
-    Step 4:
-    Run the simulation, and ensure the results are saved as ".npz"
-
-    Step 5:
-    tbc
+    **
+    For a more detailed and updated reference, please consult the Notion page on GRAPE pulses
+    **
 
 '''

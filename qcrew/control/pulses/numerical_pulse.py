@@ -55,15 +55,9 @@ class NumericalPulse(Pulse):
             raise Exception("The time step should be an integer (in ns)")
         self.time_step = int(self.time_step)
 
-        # For pulses with time step > 1, we make sure the pulse is extrapolated to the right length
+        # For pulses with time step > 1, we make sure numerical square pulse to the right length
         self.oct_pulse_X = np.repeat(self.oct_pulse_X, self.time_step)
         self.oct_pulse_Y = np.repeat(self.oct_pulse_Y, self.time_step)
-
-        # Adding the time delay to the pulse
-        self.oct_pulse_X = np.append(
-            [0,]*self.frontpad, self.oct_pulse_X)
-        self.oct_pulse_Y = np.append(
-            [0,]*self.frontpad, self.oct_pulse_Y)
 
         # Checking if the quadratures have the same pulse length
         quad_len_diff = len(self.oct_pulse_X) - len(self.oct_pulse_Y)
@@ -80,9 +74,10 @@ class NumericalPulse(Pulse):
                     self.oct_pulse_Y, [0] * quad_len_diff
                 )
 
-        length = len(self.oct_pulse_X)
 
         # Check if the pulse is a multiple of four, because QM works that way
+        length = len(self.oct_pulse_X) + abs(self.frontpad)
+
         if length % 4 != 0:
             self.pad = 4 - length % 4
             length += self.pad
@@ -91,11 +86,39 @@ class NumericalPulse(Pulse):
 
     @property
     def samples(self):
-        """ """
+        """
+        I assume this produces a sample of the pulse, and this is where we tune the parameters 
+        that will not be fixed during iterations or sweeps during experiments
 
+        Mutable Parameters
+        ------------------
+        self.ampx : float
+            Amplitude scale factor; contrained to between -2 and 2
+
+        self.frontpad : int
+            Time delay of the pulse, adds a pad to the front of the pulse
+
+        self.pas : int
+            Rear padding of the pulse
+        """
+        
+        # Adding the pulse amplitude scaling
         i_wave = self.oct_pulse_X * self.ampx
         q_wave = self.oct_pulse_Y * self.ampx
 
+        # Adding the time delay padding
+        if self.frontpad > 0:
+            i_wave = np.append(
+                [0,]*self.frontpad, i_wave)
+            q_wave = np.append(
+                [0,]*self.frontpad, q_wave)
+        elif self.frontpad < 0:
+            i_wave = np.append(
+                 i_wave, [0,]*self.frontpad)
+            q_wave = np.append(
+                q_wave, [0,]*self.frontpad)
+
+        # Adding the rear pulse padding
         if self.pad != 0:
             pad_zeros = np.zeros(self.pad)
             i_wave = np.concatenate((i_wave, pad_zeros), axis=0)

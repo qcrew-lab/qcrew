@@ -35,7 +35,11 @@ class QubitSpectroscopy(Experiment):
         qubit, rr = self.modes  # get the modes
 
         qua.update_frequency(qubit.name, self.x)  # update resonator pulse frequency
+<<<<<<< Updated upstream
         qubit.play(self.qubit_op, ampx=1)  # play qubit pulse
+=======
+        qubit.play(self.qubit_op)  # play qubit pulse
+>>>>>>> Stashed changes
         qua.align(qubit.name, rr.name)  # wait qubit pulse to end
         rr.measure((self.I, self.Q))  # measure transmitted signal
         qua.wait(int(self.wait_time // 4), rr.name)  # wait system reset
@@ -46,15 +50,24 @@ class QubitSpectroscopy(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
+<<<<<<< Updated upstream
 
     x_start = -100e6
+=======
+    x_start = -65e6
+>>>>>>> Stashed changes
     x_stop = -1e6
     x_step = 0.5e6
 
     parameters = {
         "modes": ["QUBIT", "RR"],
+<<<<<<< Updated upstream
         "reps": 30000,
         "wait_time": 400000,
+=======
+        "reps": 50000,
+        "wait_time": 50000,
+>>>>>>> Stashed changes
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
         "qubit_op": "constant_pulse",
     }

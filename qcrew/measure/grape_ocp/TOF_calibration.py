@@ -47,7 +47,11 @@ class TOFCalibration(Experiment):
 
         qua.update_frequency(qubit.name, self.detuning)  # update qubit pulse frequency for actual pulse
         
-        # Optimal State Preparation pulses
+        # Adding the time delay to the pulses
+        self.grape_cav_op.frontpad = self.x
+        self.grape_qubit_op.frontpad = -self.x
+
+        # Play the Optimal State Preparation pulses
         cav.play(self.grape_cav_op,) 
         qubit.play(self.grape_qubit_op,) 
         

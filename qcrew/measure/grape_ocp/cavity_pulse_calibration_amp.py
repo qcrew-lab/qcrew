@@ -35,9 +35,8 @@ class Cavity_Pulse_Calibration(Experiment):
         """
         qubit, cav, rr = self.modes  # get the modes
 
-        cav.play(
-            self.cav_op, ampx= self.x
-        )  # play displacement to cavity
+        cav.play(self.cav_op, ampx= self.x)  # play displacement to cavity
+
         qua.align(cav.name, qubit.name)  # align all modes
         qubit.play(self.qubit_op)  # play qubit pulse
         qua.align(qubit.name, rr.name)  # align all modes

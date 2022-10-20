@@ -1,5 +1,5 @@
 """
-A python class describing a power rabi measurement with repeated qubit pulses using QM.
+A python class describing a qubit pi pulse fidelity measurement.
 This class serves as a QUA script generator with user-defined parameters.
 """
 
@@ -7,41 +7,41 @@ from typing import ClassVar
 
 from qcrew.control import professor as prof
 from qcrew.measure.experiment import Experiment
-from qm import qua 
+from qm import qua
+
 
 # ---------------------------------- Class -------------------------------------
 
 
-class RepPowerRabi(Experiment):
+class Pi_Pulse_Fidelity(Experiment):
 
-    name = "repeat_power_rabi"
+    name = "pi_pulse_fidelity"
 
     _parameters: ClassVar[set[str]] = Experiment._parameters | {
         "qubit_op",  # operation used for exciting the qubit
         "fit_fn",  # fit function
-        "pulse_number",  # number of times qubit pulse is repeated
     }
 
-    def __init__(self, qubit_op, pulse_number, fit_fn="sine", **other_params):
+    def __init__(self, qubit_op, fit_fn="sine", **other_params):
 
         self.qubit_op = qubit_op
         self.fit_fn = fit_fn
-        self.pulse_number = pulse_number
 
         super().__init__(**other_params)  # Passes other parameters to parent
 
     def QUA_play_pulse_sequence(self):
         """
-        Defines pulse sequence to be played inside the experiment loop
+        Plays a qubit π pulse repeatedly and measures
         """
         qubit, rr = self.modes  # get the modes
 
-        for k in range(self.pulse_number):  # play qubit pulse multiple times
-            qubit.play(self.qubit_op, ampx=self.x)
-        
+        for number in range(self.x):
+            qubit.play(self.qubit_op,)  # play qubit pulse
+
         qua.align(qubit.name, rr.name)  # wait qubit pulse to end
         rr.measure((self.I, self.Q))  # measure qubit state
         qua.wait(int(self.wait_time // 4), rr.name)  # wait system reset
+
         if self.single_shot:  # assign state to G or E
             qua.assign(
                 self.state, qua.Cast.to_fixed(self.I < rr.readout_pulse.threshold)
@@ -53,28 +53,31 @@ class RepPowerRabi(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-    
-    amp_start = -1.05
-    amp_stop = 1.05
-    amp_step = 0.05
+    """
+    We will use a previously calibrated pi pulse and play it repeatedly, 
+    to determine the fidelity of the process. Every odd seqeuence should give
+    a state of |e>, and every even sequence should give a state of |g>
+    """
 
+    n_start = 0
+    n_stop = 20
+    n_step = 1
 
     parameters = {
         "modes": ["QUBIT", "RR"],
-        "reps": 10000,
-        "wait_time": 100000,
-        "x_sweep": (-1.6, 1.6 + 0.05 / 2, 0.05),
-        "qubit_op": "gaussian_pi2_pulse",
-        "pulse_number": 2,
+        "reps": 20000,
+        "wait_time": 150000,
+        "x_sweep": (n_start, n_stop + n_step // 2, n_step),
+        "qubit_op": "qubit_numerical_pulse",
         "single_shot": False,
-        "plot_quad": "Q_AVG",
+        "plot_quad": "Z_AVG",
     }
 
     plot_parameters = {
-        "xlabel": "Qubit pulse amplitude scaling",
+        "xlabel": "Number of π Pulses",
     }
 
-    experiment = RepPowerRabi(**parameters)
+    experiment = Pi_Pulse_Fidelity(**parameters)
     experiment.setup_plot(**plot_parameters)
 
     prof.run(experiment)

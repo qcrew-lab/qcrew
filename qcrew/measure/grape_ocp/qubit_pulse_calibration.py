@@ -1,5 +1,6 @@
 """
-A python class describing a power rabi measurement using QM.
+A python class describing a GRAPE qubit pulse measurement using QM. Is
+highly similar to the power Rabi experiments. 
 This class serves as a QUA script generator with user-defined parameters.
 """
 
@@ -51,8 +52,13 @@ class Qubit_Pulse_Calibration(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
+    """
+    Idea: We will read out the ".npz" file previously generated, and play the pulse multiplied by
+    some amplitude scaling constant. We will sweep over this amplitude scaling constant, and find
+    the point where the pi-pulse actually becomes a pi-pulse.
+    """
 
-    amp_start = -1.4 #0.8
+    amp_start = -1.4 
     amp_stop = 1.4
     amp_step = 0.05
 

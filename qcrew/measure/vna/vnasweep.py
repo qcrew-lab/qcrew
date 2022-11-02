@@ -101,7 +101,8 @@ if __name__ == "__main__":
         vna.connect()
 
         # the routine below can handle multiple measurement runs at once
-        fcenterlist = np.arange(3e9, 8e9, 10e6)
+        fcenterlist = [6.52316e9, 6.71602e9, 6.92891e9, 7.15804e9]
+        fspanlist = [500e3, 1e6, 500e3, 1e6]
 
         num_runs = len(fcenterlist)
         for idx in range(num_runs):
@@ -110,15 +111,15 @@ if __name__ == "__main__":
                 # frequency sweep center (Hz)
                 "fcenter": fcenterlist[idx],
                 # frequency sweep span (Hz)
-                "fspan": 10e6,
+                "fspan": fspanlist[idx],
                 # frequency sweep start value (Hz)
                 # "fstart": 4e9,
                 # frequency sweep stop value (Hz)
                 # "fstop": 8e9,
                 # IF bandwidth (Hz), [1, 500000]
-                "bandwidth": 1e3,
+                "bandwidth": 1e2,
                 # number of frequency sweep points, [2, 200001]
-                "sweep_points": 20001,
+                "sweep_points": 2001,
                 # delay (s) between successive sweep points, [0.0, 100.0]
                 "sweep_delay": 1e-3,
                 # trace data to be displayed and acquired, max traces = 16
@@ -135,7 +136,7 @@ if __name__ == "__main__":
             # these parameters are looped over during the measurement
             measurement_parameters = {
                 # Number of sweep averages, must be an integer > 0
-                "repetitions": 3,
+                "repetitions": 25,
                 # Input powers at (<port1>, <port2>) (dBm), range [-30.0, 15.0]
                 # <portX> (X=1,2) can be a set {a, b,...}, tuple (st, stop, step), or constant x
                 # use set for discrete sweep points a, b, ...
@@ -145,10 +146,10 @@ if __name__ == "__main__":
                 # eg 1: powers = ((-30, 15, 5), 0) will sweep port 1 power from -30dBm to 15dBm inclusive in steps of 5dBm with port 2 power remaining constant at 0 dBm
                 # eg 2: powers = ({-15, 0, 15}, {-5, 0}) will result in sweep points (-15, -5), (-15, 0), (0, -5), (0, 0), (15, -5), (15, 0)
                 # eg 3: powers = (0, 0) will set both port powers to 0, no power sweep happens
-                "powers": (-10, 0),
+                "powers": (0, 0),
                 # total physical attenuation added to VNA ports, if any
                 # (port_1_attenuation, port_2_attenuation) in dB
-                "attenuation": (20, 0),
+                "attenuation": (40.0, 0),
             }
 
             # create measurement instance with instruments and measurement_parameters
@@ -157,9 +158,11 @@ if __name__ == "__main__":
 
             # hdf5 file saved at:
             # {datapath} / {YYYYMMDD} / {HHMMSS}_{measurementname}_{usersuffix}.hdf5
+            reps = measurement_parameters["repetitions"]
+            power = measurement_parameters["powers"][0] - measurement_parameters["attenuation"][0]
             save_parameters = {
-                "datapath": pathlib.Path(stage.datapath) / "coaxline_ta-a1-13",
-                "usersuffix": f"_{idx}",
+                "datapath": pathlib.Path(stage.datapath) / "wheel",
+                "usersuffix": f"{fcenterlist[idx]:.3}"[:4] + "GHz" + f"_{power:.3}pow_{reps}reps",
                 "measurementname": measurement.__class__.__name__.lower(),
                 **measurement.dataspec,
             }

@@ -8,8 +8,8 @@ config = {
         "con1": {
             "type": "opx1",
             "analog_outputs": {
-                1: {"offset": +0.0},  # I
-                2: {"offset": +0.0},  # Q
+                7: {"offset": +0.0},  # I
+                8: {"offset": +0.0},  # Q
                 9: {"offset": +0.0},
             },
             "digital_outputs": {
@@ -20,10 +20,10 @@ config = {
     "elements": {
         "qubit": {
             "mixInputs": {
-                "I": ("con1", 1),
-                "Q": ("con1", 2),
+                "I": ("con1", 7),
+                "Q": ("con1", 8),
                 "mixer": "mixer1",
-                "lo_frequency": 5e9,
+                "lo_frequency": 6e9,
             },
             "intermediate_frequency": -50e6,
             "digitalInputs": {
@@ -70,7 +70,7 @@ config = {
         },
     },
     "waveforms": {
-        "wf_I": {"type": "constant", "sample": 0.01},
+        "wf_I": {"type": "constant", "sample": 0.2},
         "wf_Q": {"type": "constant", "sample": 0.0},
     },
     "digital_waveforms": {
@@ -80,7 +80,7 @@ config = {
         "mixer1": [
             {
                 "intermediate_frequency": -50e6,
-                "lo_frequency": 5e9,
+                "lo_frequency": 6e9,
                 "correction": [1, 0, 0, 1],
             }
         ],
@@ -89,11 +89,15 @@ config = {
 
 with qua.program() as play_constant_pulse:
     x = qua.declare(int)
-    with qua.for_(x, 0, x <= 100000, x + 1):
+    with qua.infinite_loop_():
         qua.play("pulse1", "qubit")
-        qua.wait(100000)
+    #with qua.for_(x, 0, x <= 100000, x + 1):
+    #    qua.play("pulse1", "qubit")
+    #    qua.wait(100000)
 
 qmm = QuantumMachinesManager()
 qm = qmm.open_qm(config)
 job = qm.execute(play_constant_pulse)
-job.result_handles.wait_for_all_values()
+#job.result_handles.wait_for_all_values()
+time.sleep(15)
+job.halt()

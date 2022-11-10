@@ -75,9 +75,10 @@ if __name__ == "__main__":
         "reps": 20000,
         "wait_time": 80000,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
-        "qubit_op": "gaussian_pi_selective_pulse3",
+        "qubit_op": "gaussian_pi_pulse",
         "detuning": int(detuning_),
         "single_shot": False,
+        "fit_fn": "ramsey_photon_fit",
         "extra_vars": {
             "phase": macros.ExpVariable(
                 var_type=qua.fixed,

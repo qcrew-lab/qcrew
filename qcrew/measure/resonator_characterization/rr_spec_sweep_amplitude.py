@@ -4,6 +4,7 @@ sweep using QM.
 This class serves as a QUA script generator with user-defined parameters.
 """
 
+from cmath import phase
 from typing import ClassVar
 
 from qcrew.control import professor as prof
@@ -31,7 +32,7 @@ class RRSpecSweepAmplitude(Experiment):
         """
         Defines pulse sequence to be played inside the experiment loop
         """
-        rr,  = self.modes  # get the modes
+        (rr,) = self.modes  # get the modes
 
         qua.update_frequency(rr.name, self.x)  # update resonator pulse frequency
         rr.measure((self.I, self.Q), ampx=self.y)  # measure transmitted signal
@@ -44,7 +45,7 @@ class RRSpecSweepAmplitude(Experiment):
 
 if __name__ == "__main__":
     x_start = -60e6
-    x_stop = -45e6
+    x_stop = -40e6
     x_step = 0.1e6
 
     parameters = {
@@ -52,8 +53,13 @@ if __name__ == "__main__":
         "reps": 10000,
         "wait_time": 50000,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
-        "y_sweep": (0.1,0.15,0.2),
-        # "y_sweep": (0, 0.5 + 0.05/2, 0.05),
+        "y_sweep": (
+            0.05,
+            0.2,
+            0.4,
+            1,
+        ),
+        "plot_quad": "Z_AVG",
     }
     plot_parameters = {
         "xlabel": "Resonator pulse frequency (Hz)",

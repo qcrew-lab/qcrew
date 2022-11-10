@@ -36,6 +36,8 @@ class T2(Experiment):
         """
         qubit, rr = self.modes  # get the modes
         qua.update_frequency(qubit.name, qubit.int_freq + self.detuning)  # detune
+        rr.play("constant_pulse", ampx=0.5)
+        qua.wait(100, rr.name)  # wait for partial qubit decay
         qubit.play(self.qubit_op)  # play half pi qubit pulse
         qua.wait(self.x, qubit.name)  # wait for partial qubit decay
         qubit.play(self.qubit_op)  # play half pi qubit pulse
@@ -67,7 +69,7 @@ if __name__ == "__main__":
         "reps": 50000,
         "wait_time": 200000,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
-        "qubit_op": "gaussian_pi2_pulse",
+        "qubit_op": "gaussian_pi_pulse",
         "detuning": int(detuning),
         "single_shot": False,
         "plot_quad": "Z_AVG",

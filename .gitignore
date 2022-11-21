@@ -32,3 +32,6 @@ pip-delete-this-directory.txt
 workspace.code-workspace
 data/
 *.npz
+*.ipynb
+*.pdf
+*.png

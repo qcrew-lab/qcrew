@@ -103,8 +103,8 @@ if __name__ == "__main__":
         "wait_time": 100000,
         "qubit_pi_op": "pi",
         "qubit_pi2_op": "pi2",
-        "single_shot": False,
-        "plot_quad": "I_AVG",
+        "single_shot": True,
+        #"plot_quad": "I_AVG",
     }
 
     plot_parameters = {

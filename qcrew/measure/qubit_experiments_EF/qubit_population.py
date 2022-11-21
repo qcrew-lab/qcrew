@@ -40,6 +40,7 @@ class QubitPopulation(Experiment):
         qubit.play(self.qubit_ge_pi, ampx=self.y)  # g->e
         qua.align(qubit.name, qubit_ef.name)
         qubit_ef.play(self.qubit_ef_pi, ampx=self.x)  # e-> f
+        qubit_ef.play(self.qubit_ef_pi, ampx=self.x)  # e-> f
         qua.align(qubit.name, qubit_ef.name)
         qubit.play(self.qubit_ge_pi)  # e->g
 
@@ -59,8 +60,8 @@ class QubitPopulation(Experiment):
 if __name__ == "__main__":
     # _ef_int_freq = -70.6e6
 
-    amp_start = -1.9
-    amp_stop = 1.9
+    amp_start = -1.2
+    amp_stop = 1.2
     amp_step = 0.05
 
     parameters = {
@@ -70,7 +71,7 @@ if __name__ == "__main__":
         "qubit_ge_pi": "pi",
         "qubit_ef_pi": "pi",
         "x_sweep": (amp_start, amp_stop + amp_step / 2, amp_step),
-        "y_sweep": [0.0, 1.0],
+        "y_sweep": [1.0],
         "plot_quad": "I_AVG",
     }
 

@@ -10,3 +10,4 @@ def guess(xs, ys):
     d = sine.guess(xs, ys)
     d['tau'] = (np.average(xs), 0, 10*xs[-1])
     return d
+ 

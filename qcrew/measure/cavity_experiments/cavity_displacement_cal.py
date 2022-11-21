@@ -74,7 +74,7 @@ if __name__ == "__main__":
         "x_sweep": (x_start, x_stop + x_step / 2, x_step),
         "qubit_op": "pi_selective_1",
         "cav_op": "constant_cos_cohstate_1",
-        "fetch_period": 2,
+        "fetch_period": 1,
         "single_shot": False,
         "plot_quad": "I_AVG",
     }

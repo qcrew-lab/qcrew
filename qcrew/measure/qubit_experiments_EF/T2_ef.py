@@ -70,18 +70,19 @@ class T2EF(Experiment):
 
 if __name__ == "__main__":
 
-    x_start = 4
+    x_start = 10
     x_stop = 4000
     x_step = 40
-    
+
     parameters = {
         "modes": ["QUBIT", "QUBIT_EF", "RR"],
-        "reps": 20000,
+        "reps": 2000,
         "wait_time": 100000,
         "qubit_ge_pi": "pi",
         "qubit_ef_pi2": "pi2",
-        "detuning": int(0.4e6),
+        "detuning": int(0.5e6),
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
+        "plot_quad": "I_AVG",
         "extra_vars": {
             "phase": macros.ExpVariable(
                 var_type=qua.fixed,
@@ -89,7 +90,7 @@ if __name__ == "__main__":
                 average=True,
                 buffer=True,
                 save_all=True,
-            )
+            ),
         },
     }
 

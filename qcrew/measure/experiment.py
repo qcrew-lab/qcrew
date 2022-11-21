@@ -6,6 +6,7 @@ import qcrew.measure.qua_macros as macros
 from typing import ClassVar
 import numpy as np
 import abc
+import lmfit
 
 # qua modules
 from qm import qua
@@ -35,6 +36,7 @@ class Experiment(Parametrized):
         fetch_period=1,
         single_shot=False,
         plot_quad=None,
+        cable_delay=0,
         extra_vars: dict[str, macros.ExpVariable] = None,
     ):
 
@@ -58,6 +60,9 @@ class Experiment(Parametrized):
 
         # Should plot quadratures instead of Z_AVG?
         self.plot_quad = plot_quad
+
+        # cable delay calibration for phase measurements
+        self.cable_delay = cable_delay
 
         # ExpVariable definitions. This list is updated in _configure_sweeps and after
         # stream and variable declaration.
@@ -252,7 +257,7 @@ class Experiment(Parametrized):
 
         if len(self.buffering) == 0:
             logger.warning("No sweep is configured")
-        
+
         logger.info(f"Set buffer dimensions: {self.buffering}")
         return
 
@@ -327,6 +332,9 @@ class Experiment(Parametrized):
         stderr = statistician.get_std_err(zs_raw, zs_raw_avg, num_results, *stderr)
 
         return stderr
+    
+    def get_raw_results(self):
+        return "checking"
 
     def plot_results(self, plotter, partial_results, num_results, stderr):
         """
@@ -335,6 +343,11 @@ class Experiment(Parametrized):
 
         indep_tags, dep_tags = self.results_tags
 
+        independent_data = []
+        for tag in indep_tags:
+            reshaped_data = partial_results[tag].reshape(self.buffering)
+            independent_data.append(reshaped_data)
+
         dependent_data = []
         for tag in dep_tags:
 
@@ -342,37 +355,19 @@ class Experiment(Parametrized):
                 # Take the square root of Z_AVG variables. This step is required for
                 # dependent values calculated as I^2 + Q^2 in stream processing.
                 data = np.sqrt(partial_results[tag])
+            elif tag == "PHASE":
+                freqs = independent_data[0]
+                data = np.average(
+                    partial_results["I"] + 1j * partial_results["Q"], axis=0
+                )
+                data = np.unwrap(np.angle(data))
+                data -= freqs * self.cable_delay
             else:
                 data = partial_results[tag]
 
             # Reshape the fetched data with buffer lengths
             reshaped_data = data.reshape(self.buffering)
             dependent_data.append(reshaped_data)
-
-        independent_data = []
-        for tag in indep_tags:
-            reshaped_data = partial_results[tag].reshape(self.buffering)
-            independent_data.append(reshaped_data)
-        # print(reshaped_data)
-
-        if 0:
-            # Phase information useful for troubleshooting and rr spectroscopy
-            freqs = independent_data[0]
-            # phase = (
-            #     np.arctan(partial_results["Q"] / partial_results["I"])
-            #     - 2 * np.pi * freqs * 31e-9 * 8
-            # )
-            phase = (
-                np.angle(partial_results["Q"] + 1j * partial_results["I"])
-                - 2 * np.pi * freqs * 32e-9 * 8
-            )
-
-            reshaped_phase_data = np.average(phase, axis=0)  # .reshape(self.buffering)
-            dependent_data.append(reshaped_phase_data)
-
-            # if an internal sweep is defined in the child experiment class, add its value
-            # as independent variable data. The values are repeated so the dimensions match
-            # the other independent data shapes.
 
         try:
             internal_sweep = self.internal_sweep

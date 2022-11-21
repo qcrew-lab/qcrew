@@ -35,6 +35,7 @@ class QubitSpectroscopy(Experiment):
         qubit, rr, cav = self.modes  # get the modes
 
         qua.update_frequency(qubit.name, self.x)  # update resonator pulse frequency
+        # cav.play('constant_cos_cohstate_1', ampx=self.y)
         qubit.play(self.qubit_op, ampx=1)  # play qubit pulse
         qua.align(qubit.name, rr.name)  # wait qubit pulse to end
         rr.measure((self.I, self.Q))  # measure transmitted signal
@@ -46,16 +47,17 @@ class QubitSpectroscopy(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-    x_start = 45e6 #45e6
-    x_stop = 55e6#55e6
+    x_start = -60e6  # 45e6
+    x_stop = -50e6  # 55e6
     x_step = 0.1e6
 
     parameters = {
         "modes": ["QUBIT", "RR", "CAV"],
         "reps": 10000,
-        "wait_time": 80e3,  # 80000,
+        "wait_time": 80e3,  # 80e3,  # 80000,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
-        "qubit_op": "pi_selective_1",
+        # "y_sweep": [0.0, 1, 1.5],
+        "qubit_op": "pi",
         "plot_quad": "I_AVG",
         "fetch_period": 2,
     }

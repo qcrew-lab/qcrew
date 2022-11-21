@@ -20,3 +20,4 @@ def guess(xs, ys):
         'ofs': (ofs, np.min(ys) - 0.3*yrange, np.max(ys) + 0.3*yrange),
         'amp': (amp, -3*yrange, 3*yrange),
     }
+ 

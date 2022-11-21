@@ -1,10 +1,20 @@
 import numpy as np
 
 # Note: we scale the fit_function
-def func(xs, f0, ofs, amp, scale=2):
-    return ofs + amp * np.cos(2 * scale * f0 * xs) * np.exp(
-        -np.abs(scale * xs) ** 2 / 2
-    )
+if 1:
+
+    def func(xs, f0, ofs, amp, scale=3):
+        return ofs + amp * np.cos(2 * scale * f0 * xs) * np.exp(
+            -np.abs(scale * xs) ** 2 / (2)
+        )
+
+
+if 0:
+
+    def func(xs, f0, ofs, amp, scale=2.5):
+        return ofs + amp * np.cos(2 * scale * f0 * xs) * np.exp(
+            -np.abs(scale * xs) ** 2 / (2 * 0.0)
+        )
 
 
 # if we add the imag part to the fit_function

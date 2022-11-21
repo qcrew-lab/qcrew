@@ -5,7 +5,7 @@ from qcrew.control import Stagehand
 from qm import qua
 import numpy as np
 
-reps = 50000
+reps = 1000000
 
 
 def get_qua_program(rr):
@@ -48,7 +48,9 @@ if __name__ == "__main__":
 
         axes[0].plot(results / 2 ** 12)
         axes[1].plot(freqs[5:200] / 1e6, amps[5:200])
-        
-    
+
+        # print(results)
+        # np.savetxt("C:/Users/qcrew/Desktop/tof.csv", results, delimiter=",")
+
         # Retrieving and plotting FFT data.
         plt.show()

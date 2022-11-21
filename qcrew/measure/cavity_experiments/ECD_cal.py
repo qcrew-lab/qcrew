@@ -11,7 +11,7 @@ from qcrew.control import professor as prof
 from qcrew.measure.experiment import Experiment
 from qm import qua
 import numpy as np
-from qcrew.measure.qua_macros import ECD, Char_1D
+from qcrew.measure.qua_macros import *
 
 
 # ---------------------------------- Class -------------------------------------
@@ -56,17 +56,19 @@ class ECDCalibration(Experiment):
         qubit, cav, rr = self.modes  # get the modes
 
         qua.reset_frame(cav.name)
+        ###################### do a first measurement  #####################
 
-        Char_1D(
+        ######################  charactristic function  1D measurement #####################
+        Char_1D_singledisplacement(
             cav,
             qubit,
-            self.ecd_displacement,
+            self.char_func_displacement,
             self.qubit_pi,
             self.qubit_pi2,
-            ampx=self.x,
-            phase=0.25,
+            ampx=0,
             delay=self.delay,
             measure_real=self.measure_real,
+            tomo_phase=-0.05,
         )
         # play pi/2 pulse around X or Y, to measure either the real or imaginary part of the characteristic function
         qua.align()  # align measurement
@@ -85,9 +87,9 @@ class ECDCalibration(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-    x_start = -1.1
-    x_stop = 1.1
-    x_step = 0.05
+    x_start = -1.4
+    x_stop = 1.4
+    x_step = 0.08
 
     parameters = {
         "modes": ["QUBIT", "CAV", "RR"],
@@ -98,15 +100,13 @@ if __name__ == "__main__":
         "x_sweep": (x_start, x_stop + x_step / 2, x_step),
         "qubit_pi2": "pi2",
         "qubit_pi": "pi",
-        "ecd_displacement": "constant_cos_ECD_2_alpha0.5",
-        "single_shot": False,
-        "plot_quad": "I_AVG",
-        "measure_real": True,
+        "ecd_displacement": "constant_cos_ECD_2",
+        "single_shot": True,
+        # "plot_quad": "I_AVG",
+        "measure_real": False,
     }
 
-    plot_parameters = {
-        "xlabel": "X",  # beta of (ECD(beta))
-    }
+    plot_parameters = {"xlabel": "X"}  # beta of (ECD(beta))
 
     experiment = ECDCalibration(**parameters)
     experiment.setup_plot(**plot_parameters)

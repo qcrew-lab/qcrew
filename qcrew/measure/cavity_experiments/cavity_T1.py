@@ -40,7 +40,7 @@ class CavityT1(Experiment):
         qubit, cav, rr = self.modes  # get the modes
         # qubit, cav, rr, cav_drive2, rr_drive = self.modes
 
-        cav.play(self.cav_op, ampx=1.5)  # play displacement to cavity
+        cav.play(self.cav_op, ampx=1.8)  # play displacement to cavity
         # qua.align(cav.name, qubit.name, rr.name, rr_drive.name, cav_drive2.name)
         qua.align(cav.name, qubit.name, rr.name)  # align all modes
         # cav_drive2.play("gaussian_pulse", duration=self.x, ampx=1.4)
@@ -55,6 +55,10 @@ class CavityT1(Experiment):
         qua.wait(int(self.wait_time // 4), cav.name)  # wait system reset
         # qua.align(    cav.name, qubit.name, rr.name, rr_drive.name, cav_drive2.name)  # align all modes
         qua.align(cav.name, qubit.name, rr.name)  # align all modes
+        if self.single_shot:  # assign state to G or E
+            qua.assign(
+                self.state, qua.Cast.to_fixed(self.I < rr.readout_pulse.threshold)
+            )
 
         self.QUA_stream_results()  # stream variables (I, Q, x, etc)
 
@@ -62,24 +66,26 @@ class CavityT1(Experiment):
         tau_ns = fit_params["tau"].value * 4
         fit_params.add("tau_ns", tau_ns)
         return fit_params
+
+
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
 
-    x_start = 4
-    x_stop = 1000e3
-    x_step = 20e3
+    x_start = 10
+    x_stop = 0.6e6
+    x_step = 4e3
     parameters = {
         "modes": ["QUBIT", "CAV", "RR"],
         # "modes": ["QUBIT", "CAV", "RR", "CAV_DRIVE2", "RR_DRIVE"],
         "reps": 5000,
-        "wait_time": 5e6,
+        "wait_time": 2e6,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
         "qubit_op": "pi_selective_1",
         "cav_op": "constant_cos_cohstate_1",
         "fetch_period": 4,
-        "plot_quad": "I_AVG",
-        
+        # "plot_quad": "I_AVG",
+        "single_shot": True,
     }
 
     plot_parameters = {

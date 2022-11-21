@@ -10,6 +10,7 @@ from qcrew.measure.experiment import Experiment
 import qcrew.measure.qua_macros as macros
 from qm import qua
 
+from qcrew.measure.qua_macros import *
 
 # ---------------------------------- Class -------------------------------------
 
@@ -28,6 +29,7 @@ class PowerRabi(Experiment):
         self.qubit_op = qubit_op
         self.fit_fn = fit_fn
         self.ddrop_params = ddrop_params
+        # self.internal_sweep = ["first", "second"]
 
         super().__init__(**other_params)  # Passes other parameters to parent
 
@@ -35,29 +37,43 @@ class PowerRabi(Experiment):
         """
         Defines pulse sequence to be played inside the experiment loop
         """
-        qubit, rr, qubit_ef = self.modes  # get the modes
+        qubit, rr, cav = self.modes  # get the modes
+        qua.reset_frame(qubit.name)
 
-        if self.ddrop_params:
-            macros.DDROP_reset(qubit, rr, **self.ddrop_params)
-            # Use qubit_ef if also resetting F state
-            # macros.DDROP_reset(qubit, rr, **self.ddrop_params, qubit_ef=qubit_ef)
+        if 0:
+            rr.measure((self.I, self.Q))  # measure transmitted signal
+            self.QUA_stream_results()  # stream variables (I, Q, x, etc)
+            qua.align()  # align measurement
+            qua.wait(int(50))
 
-        qua.align()
+            if self.ddrop_params:
+                macros.DDROP_reset(qubit, rr, **self.ddrop_params)
+                # Use qubit_ef if also resetting F state
+                # macros.DDROP_reset(qubit, rr, **self.ddrop_params, qubit_ef=qubit_ef)
 
-        qubit.play(self.qubit_op, ampx=self.x, phase=0)  # if checking a pi2 pulse
-        qubit.play(self.qubit_op, ampx=self.x, phase=0)  # if checking a pi2 pulse
-        qubit.play(self.qubit_op, ampx=self.x, phase=0)  # if checking a pi2 pulse
-        qubit.play(self.qubit_op, ampx=self.x, phase=0)  # if checking a pi2 pulse#
+            qua.align()
 
-        qua.align(qubit.name, rr.name)  # wait qubit pulse to end
+        num = 8
+        for n in range(num):
+            qua.align()
+            qubit.play(self.qubit_op, ampx=self.x, phase=0.0)  # if checking a pi2 pulse
+            qua.align()
+            # qubit.play(self.qubit_op, ampx=self.x, phase=0.0)  # if checking a pi2 pulse
+            # qua.align()
+
+        qua.align()  # wait qubit pulse to end
         rr.measure((self.I, self.Q))  # measure qubit state
-        qua.wait(int(self.wait_time // 4))  # wait system reset
 
         if self.single_shot:  # assign state to G or E
             qua.assign(
                 self.state, qua.Cast.to_fixed(self.I < rr.readout_pulse.threshold)
             )
 
+        # if self.single_shot:  # assign state to G or E
+        #     temp = (self.I < 0) & (self.Q > 0)
+        #     qua.assign(self.state, qua.Cast.to_fixed(temp))
+
+        qua.wait(int(self.wait_time // 4))  # wait system reset
         self.QUA_stream_results()  # stream variables (I, Q, x, etc)
 
 
@@ -65,21 +81,24 @@ class PowerRabi(Experiment):
 
 if __name__ == "__main__":
 
-    amp_start = -1
-    amp_stop = 1
+    amp_start = -1.1
+    amp_stop = 1.1
     amp_step = 0.05
     parameters = {
-        "modes": ["QUBIT", "RR", "QUBIT_EF"],
-        "reps": 3000,
-        "wait_time": 100000,  # 2000,
+        "modes": ["QUBIT", "RR", "CAV"],
+        "reps": 4000,
+        "wait_time": 100e3,
         "x_sweep": (amp_start, amp_stop + amp_step / 2, amp_step),
+        # "y_sweep": [0.0,1,],
         "qubit_op": "pi2",  # constant_cos_pi
-        # "single_shot": True,
-        "plot_quad": "I_AVG",
+        "single_shot": True,
+        "fetch_period": 2,
+        # "plot_quad": "I_AVG",
     }
 
     plot_parameters = {
         "xlabel": "Qubit pulse amplitude scaling",
+        "skip_plot": False,
     }
 
     ddrop_params = {

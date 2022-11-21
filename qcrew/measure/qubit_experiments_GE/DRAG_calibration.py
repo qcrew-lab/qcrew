@@ -76,9 +76,9 @@ class DRAGCalibration(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-    x_start = -0.04
-    x_stop = -0.01
-    x_step = 0.0005
+    x_start =0.75
+    x_stop = 1.5
+    x_step = 0.01
 
     parameters = {
         "modes": ["QUBIT", "RR"],

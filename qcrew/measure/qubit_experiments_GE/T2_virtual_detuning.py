@@ -88,21 +88,21 @@ class T2(Experiment):
 import time
 
 if __name__ == "__main__":
-    n_times = 1
+    n_times = 1000
     # x_start = 4
     # x_stop = 7200
     # x_step = 80
     # detuning_ = 200e3  # 1.12e6
     x_start = 4
-    x_stop = 3000
-    x_step = 20
-    detuning_ = 500e3
+    x_stop = 4000
+    x_step = 40
+    detuning_ = 0.5e6#0.5e6
 
     for k in range(n_times):
         parameters = {
             "modes": ["QUBIT", "RR", "QUBIT_EF"],
-            "reps": 5000,
-            "wait_time": 80000,
+            "reps": 2000,
+            "wait_time": 100000,
             "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
             "qubit_op": "pi2",
             "detuning": int(detuning_),
@@ -115,8 +115,9 @@ if __name__ == "__main__":
                     save_all=True,
                 )
             },
-            "single_shot": False,
+            # "single_shot": True,
             "plot_quad": "I_AVG",
+            "fetch_period": 2,
         }
 
         plot_parameters = {
@@ -133,79 +134,4 @@ if __name__ == "__main__":
         experiment.setup_plot(**plot_parameters)
 
         prof.run(experiment)
-        time.sleep(0)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# import time
-
-# if __name__ == "__main__":
-#     n_times = 3
-#     # x_start = 4
-#     # x_stop = 7200
-#     # x_step = 80
-#     # detuning_ = 200e3  # 1.12e6
-#     x_start = 4
-#     x_stop = 2000
-#     x_step = 20
-#     detuning_ = 500e3
-
-
-#     for k in range(n_times):
-#         try:
-#             parameters = {
-#                 "modes": ["QUBIT", "RR", "QUBIT_EF"],
-#                 "reps": 500,
-#                 "wait_time": 80000,
-#                 "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
-#                 "qubit_op": "pi2",
-#                 "detuning": int(detuning_),
-#                 "extra_vars": {
-#                     "phase": macros.ExpVariable(
-#                         var_type=qua.fixed,
-#                         tag="phase",
-#                         average=True,
-#                         buffer=True,
-#                         save_all=True,
-#                     )
-#                 },
-#                 "single_shot": False,
-#                 "plot_quad": "I_AVG",
-#             }
-
-#             plot_parameters = {
-#                 "xlabel": "Relaxation time (clock cycles)",
-#             }
-
-#             ddrop_params = {
-#                 "rr_ddrop_freq": int(-50.4e6),  # RR IF when playing the RR DDROP pulse
-#                 "rr_steady_wait": 2000,  # in nanoseconds
-#                 "ddrop_pulse": "ddrop_pulse",  # name of all ddrop pulses
-#             }
-
-#             experiment = T2(**parameters)
-#             experiment.setup_plot(**plot_parameters)
-
-#             prof.run(experiment)
-#             time.sleep(10)
-
-#         except Exception:
-#             print("EXCEPTION")
-#             time.sleep(10)
+        time.sleep(0)  # sec 5min = 300

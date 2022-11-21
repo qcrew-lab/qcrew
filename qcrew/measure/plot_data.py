@@ -25,33 +25,35 @@ from qcrew.analyze import fit
 
 
 
-# filepath = (
-#     "C:/Users/qcrew/Desktop/qcrew/data/panther_transmon/20220720/215742_panther_cavity_T1.h5"
-# )
-# file = h5py.File(filepath, "r")
-# data = file["data"]
-# x_vec = data["x"][:] * 4  # now x_vec is ns
-# I_avg = data["I_AVG"][:]
+filepath = (
+    "C:/Users/qcrew/Desktop/qcrew/data/squeezing/20220928/175619_panther_T2.h5"
+)
+file = h5py.File(filepath, "r")
+data = file["data"]
+x_vec = data["x"][:]*4  # now x_vec is ns
+I_avg = data["state"][:]
 
-# fit_func = 'cohstate_decay'
-# params = fit.do_fit(fit_func, x_vec, I_avg)
-# fit_ys = fit.eval_fit(fit_func, params, x_vec)
-# fig, ax = plt.subplots(figsize = (12, 8))
+fit_func = 'exp_decay_sine'
+params = fit.do_fit(fit_func, x_vec, I_avg)
+fit_ys = fit.eval_fit(fit_func, params, x_vec)
+fig, ax = plt.subplots(figsize = (12, 8))
 
-# ###calculate errorbar
-# i = data['I'][:]
-# q = data['Q'][:]
-# d = np.sqrt(i**2 + q**2)
-# err = np.std(d)/np.sqrt(d.shape[0])
+###calculate errorbar
+i = data['I'][:]
+q = data['Q'][:]
+d = np.sqrt(i**2 + q**2)
+err = np.std(d)/np.sqrt(d.shape[0])
 
-# plt.errorbar(np.array(x_vec), np.array(I_avg), yerr=err, fmt = 'o', color = 'blue', ecolor= 'blue' )
+plt.errorbar(np.array(x_vec), np.array(I_avg), yerr=err, fmt = 'o', color = 'blue', ecolor= 'blue' )
+plt.plot(x_vec, I_avg)
 # plt.plot(x_vec, fit_ys, color='black', lw=3)
-# plt.xlabel("Cavity relaxation time (ns)", fontsize = 18)
-# plt.ylabel("Signal (a.u.)", fontsize = 18)
-# plt.title("Cavity T1",fontsize = 18)
-# plt.xticks(fontsize=18)
-# plt.yticks(fontsize=18)
-# plt.savefig("C:/Users/qcrew/Desktop/Cavity_T1.pdf")
+plt.xlabel("Cavity relaxation time (ns)", fontsize = 18)
+plt.ylabel("Signal (a.u.)", fontsize = 18)
+plt.title(f"T2 = {np.around(params['tau'].value,1)}ns", fontsize = 18)
+plt.xticks(fontsize=18)
+plt.yticks(fontsize=18)
+plt.savefig("C:/Users/qcrew/Desktop/qubit_t2.pdf")
+params
 
 
 
@@ -155,23 +157,23 @@ from qcrew.analyze import fit
 # plt.savefig("C:/Users/qcrew/Desktop/characteristic_function.pdf")
 
 
-# ########################  1D plot ##################
-import h5py
-import matplotlib.pyplot as plt
-import numpy as np
+# ########################  1D plot with self.internal_sweep = ["first", "second"] ##################
+# import h5py
+# import matplotlib.pyplot as plt
+# import numpy as np
 
 
-filepath = (
-    "C:/Users/qcrew/Desktop/qcrew/data/panther_transmon/20220812/103308_panther_power_rabi.h5"
-)
-file = h5py.File(filepath, "r")
-data = file["data"]
-x = np.array(data['x'][:,0])
-state1 = np.array(data['state'][:,0])
-state2 = np.array(data['state'][:,1])
-print(state1)
-plt.plot(x, state1,'r*')
-plt.plot(x, state2, 'bo')
+# filepath = (
+#     "C:/Users/qcrew/Desktop/qcrew/data/squeezing/20220928/175619_panther_T2.h5"
+# )
+# file = h5py.File(filepath, "r")
+# data = file["data"]
+# x = np.array(data['x'][:,0])
+# state1 = np.array(data['state'][:,0])
+# state2 = np.array(data['state'][:,1])
+# print(state1)
+# plt.plot(x, state1,'r*')
+# plt.plot(x, state2, 'bo')
 
 # I_AVG = data["I_AVG"]
 # fig, ax = plt.subplots()

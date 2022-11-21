@@ -52,7 +52,8 @@ if __name__ == "__main__":
         "reps": 10000,
         "wait_time": 50000,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
-        "y_sweep": (0.1, 0.2, ),
+        "y_sweep": ( 0.15, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55 ),
+        "plot_quad": "Z_AVG",
         # "y_sweep": (0, 0.5 + 0.05/2, 0.05),
     }
     plot_parameters = {

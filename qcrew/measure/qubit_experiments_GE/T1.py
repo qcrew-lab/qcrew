@@ -37,8 +37,8 @@ class T1(Experiment):
         qubit, rr = self.modes  # get the modes
 
         qubit.play(self.qubit_op)  # play pi qubit pulse
-        qua.wait(self.x, qubit.name)  # wait for partial qubit decay
-        qua.align(qubit.name, rr.name)  # wait qubit pulse to end
+        qua.wait(self.x)  # wait for partial qubit decay
+        qua.align()  # wait qubit pulse to end
         rr.measure((self.I, self.Q))  # measure qubit state
         if self.single_shot:  # assign state to G or E
             qua.assign(
@@ -57,17 +57,17 @@ class T1(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-    x_start = 4
-    x_stop = 16000
-    x_step = 300
+    x_start = 10
+    x_stop = 20e3
+    x_step = 400
     parameters = {
         "modes": ["QUBIT", "RR"],
         "reps": 5000,
         "wait_time": 80000,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
         "qubit_op": "pi",
-        "single_shot": False,
-        "plot_quad": "I_AVG",
+        "single_shot": True,
+        #"plot_quad": "I_AVG",
     }
 
     plot_parameters = {

@@ -7,7 +7,7 @@ from typing import ClassVar
 
 from qcrew.control import professor as prof
 from qcrew.measure.experiment import Experiment
-from qm import qua 
+from qm import qua
 
 # ---------------------------------- Class -------------------------------------
 
@@ -52,11 +52,10 @@ class RepPowerRabi(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-    
+
     amp_start = -1.05
     amp_stop = 1.05
     amp_step = 0.05
-
 
     parameters = {
         "modes": ["QUBIT", "RR"],

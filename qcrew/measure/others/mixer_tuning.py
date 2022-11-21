@@ -24,7 +24,7 @@ if __name__ == "__main__":
         mixer_tuner = MixerTuner(sa, qm)
 
         # this is the mode whose mixerS's LO or SB leakage you are tuning
-        mode = qubit
+        mode = cav
 
         # minimize LO leakage
 
@@ -35,7 +35,7 @@ if __name__ == "__main__":
             # number of DC offset sweep points in the given range i.e. decide step size
             "num_points": 21,
             # number of iterations of the minimization you want to run
-            "num_iterations": 6,
+            "num_iterations": 11,
             # after each iteration, the sweep range will be reduced by this factor
             "range_divider": 2,
             # if you want the full minimization traceback, set this to True
@@ -44,7 +44,7 @@ if __name__ == "__main__":
             "plot": False,
         }
 
-        mixer_tuner.tune_lo(mode=mode, method="BF", **bf_params_lo)
+        # mixer_tuner.tune_lo(mode=mode, method="BF", **bf_params_lo)
 
         # user Nelder-Mead (NM) minimizer
         # mixer_tuner.tune_lo(mode=mode, method="NM")
@@ -54,7 +54,7 @@ if __name__ == "__main__":
         # use brute force (BF) minimizer
         bf_params_sb = {
             # range of DC offsets you want to sweep to tune LO
-            "offset_range": (-0.2, 0.2),  # (min = -0.5, max = 0.5)
+            "offset_range": (-0.1, 0.1),  # (min = -0.5, max = 0.5)
             # number of DC offset sweep points in the given range i.e. decide step size
             "num_points": 21,
             # number of iterations of the minimization you want to run

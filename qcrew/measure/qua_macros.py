@@ -18,6 +18,7 @@ class ExpVariable:
         average=True,
         buffer=True,
         save_all=True,
+        value=None,
     ):
 
         # QUA variable
@@ -32,6 +33,9 @@ class ExpVariable:
 
         # Memory tag for saving values
         self.tag = tag
+
+        # value to initialize variable with
+        self.value = value
 
         # sweep holds the sweep configuration of the variable
         # sweep_type defines the qua loop to be used for iterations
@@ -109,11 +113,14 @@ def declare_variables(var_list):
     returns it.
     """
 
-    for key in var_list.keys():
-        if var_list[key].type is None:
+    for var in var_list.values():
+        if var.type is None:
             continue
 
-        var_list[key].var = qua.declare(var_list[key].type)
+        if var.value is None:
+            var.var = qua.declare(var.type)
+        else:
+            var.var = qua.declare(var.type, value=var.value)
 
     return var_list
 
@@ -281,13 +288,15 @@ def DDROP_reset(qubit, rr, rr_ddrop_freq, rr_steady_wait, ddrop_pulse, qubit_ef=
     qua.update_frequency(rr.name, rr.int_freq)
 
 
-def ECD(cav, qubit, displacement_pulse, qubit_pi_pulse, ampx, delay, phase):
+def ECD(
+    cav, qubit, displacement_pulse, qubit_pi_pulse, ampx, delay, phase, qubit_phase
+):
     qua.align()  # wait for qubit pulse to end
     cav.play(displacement_pulse, ampx=ampx, phase=phase)  # First positive displacement
     qua.wait(int(delay // 4), cav.name)
     cav.play(displacement_pulse, ampx=-ampx, phase=phase)  # First negative displacement
     qua.align()
-    qubit.play(qubit_pi_pulse, phase=0.25)  # play pi to flip qubit around X
+    qubit.play(qubit_pi_pulse, phase=qubit_phase)  # play pi to flip qubit around X
     qua.align()  # wait for qubit pulse to end
     cav.play(
         displacement_pulse, ampx=-ampx, phase=phase
@@ -301,23 +310,108 @@ def U(cav, qubit, displacement_pulse, qubit_pi_pulse, qubit_pi2_pulse, ampx, del
     qua.align()
     qubit.play(qubit_pi2_pulse, phase=0.5)
 
-    ECD(cav, qubit, displacement_pulse, qubit_pi_pulse, ampx, delay, phase=0)
+    ECD(
+        cav,
+        qubit,
+        displacement_pulse,
+        qubit_pi_pulse,
+        ampx,
+        delay,
+        phase=0,
+        qubit_phase=0,
+    )
 
-    qubit.play(qubit_pi_pulse, phase=0.75)  # reverse pi flip in ECD
-    qubit.play(qubit_pi2_pulse, phase=0)
+    # qubit.play(qubit_pi_pulse, phase=0.75)  #0.25 in ECD and 0.75 to flip back
+    # qubit.play(qubit_pi2_pulse, phase=0)
+
+    qubit.play(qubit_pi2_pulse, phase=0.5)
     qua.align()
+
 
 def V(cav, qubit, displacement_pulse, qubit_pi_pulse, qubit_pi2_pulse, ampx, delay):
     qua.align()
     qubit.play(qubit_pi2_pulse, phase=0.25)
 
-    ECD(cav, qubit, displacement_pulse, qubit_pi_pulse, ampx, delay, phase=0.25)
+    ECD(
+        cav,
+        qubit,
+        displacement_pulse,
+        qubit_pi_pulse,
+        ampx,
+        delay,
+        phase=0.25,
+        qubit_phase=0.25,
+    )
 
-    qubit.play(qubit_pi_pulse, phase=0.75)  # reverse pi flip in ECD
-    qubit.play(qubit_pi2_pulse, phase=0.75)
+    # qubit.play(qubit_pi_pulse, phase=0.75)  # reverse pi flip in ECD
+    # qubit.play(qubit_pi2_pulse, phase=0.75)
+    qubit.play(qubit_pi2_pulse, phase=0.25)  # reverse pi flip in ECD
     qua.align()
 
-def Char_2D(
+
+def V_cat(
+    cav,
+    qubit,
+    displacement_pulse,
+    qubit_pi_pulse,
+    qubit_pi2_pulse,
+    ampx,
+    delay,
+    qubit_phase,
+):
+    qua.align()
+    qubit.play(qubit_pi2_pulse, phase=0.25)
+
+    ECD(
+        cav,
+        qubit,
+        displacement_pulse,
+        qubit_pi_pulse,
+        ampx,
+        delay,
+        phase=0,
+        qubit_phase=0.25,
+    )
+    ###
+    # qubit.play(qubit_pi_pulse, phase=0.75)  # reverse pi flip in ECD
+    # qubit.play(qubit_pi2_pulse, phase=0.75)
+    ###
+    qubit.play(qubit_pi2_pulse, phase=0.25)
+    qua.align()
+
+
+def U_cat(
+    cav,
+    qubit,
+    displacement_pulse,
+    qubit_pi_pulse,
+    qubit_pi2_pulse,
+    ampx,
+    delay,
+    qubit_phase,
+):
+    qua.align()
+    qubit.play(qubit_pi2_pulse, phase=0.5)
+
+    ECD(
+        cav,
+        qubit,
+        displacement_pulse,
+        qubit_pi_pulse,
+        ampx,
+        delay,
+        phase=0.25,
+        qubit_phase=0,
+    )
+
+    # qubit.play(qubit_pi_pulse, phase=0.75)  # reverse pi flip in ECD
+    # qubit.play(qubit_pi2_pulse, phase=0)
+    qubit.play(qubit_pi2_pulse, phase=0.5)
+    qua.align()
+
+
+# This function is meant to replace Char_2D() once it is working
+def Char_2D_singledisplacement(
     cav,
     qubit,
     displacement_pulse,
@@ -325,11 +419,11 @@ def Char_2D(
     qubit_pi2_pulse,
     ampx_x,
     ampx_y,
-    phase_x,
-    phase_y,
     delay,
     measure_real,
+    tomo_phase,
 ):
+
     # bring qubit into superposition
     qua.align(qubit.name, cav.name)
     qubit.play(qubit_pi2_pulse)
@@ -337,35 +431,103 @@ def Char_2D(
     # start ECD gate
     qua.align(cav.name, qubit.name)  # wait for qubit pulse to end
     # First positive displacement
-    cav.play(displacement_pulse, ampx=ampx_x, phase=phase_x)
-    cav.play(displacement_pulse, ampx=ampx_y, phase=phase_y)
+    cav.play(
+        displacement_pulse, ampx=(ampx_x, -ampx_y, ampx_y, ampx_x), phase=tomo_phase
+    )
 
     qua.wait(int(delay // 4), cav.name)
     # First negative displacement
-    cav.play(displacement_pulse, ampx=-ampx_x, phase=phase_x)
-    cav.play(displacement_pulse, ampx=-ampx_y, phase=phase_y)
+    cav.play(
+        displacement_pulse, ampx=(-ampx_x, ampx_y, -ampx_y, -ampx_x), phase=tomo_phase
+    )
 
     qua.align(qubit.name, cav.name)
     qubit.play(qubit_pi_pulse, phase=0.25)  # play pi to flip qubit around X
     qua.align(cav.name, qubit.name)  # wait for qubit pulse to end
 
     # Second negative displacement
-    cav.play(displacement_pulse, ampx=-ampx_x, phase=phase_x)
-    cav.play(displacement_pulse, ampx=-ampx_y, phase=phase_y)
+    cav.play(
+        displacement_pulse, ampx=(-ampx_x, ampx_y, -ampx_y, -ampx_x), phase=tomo_phase
+    )
 
     qua.wait(int(delay // 4), cav.name)
     # Second positive displacement
-    cav.play(displacement_pulse, ampx=ampx_x, phase=phase_x)
-    cav.play(displacement_pulse, ampx=ampx_y, phase=phase_y)
+    cav.play(
+        displacement_pulse, ampx=(ampx_x, -ampx_y, ampx_y, ampx_x), phase=tomo_phase
+    )
 
     qua.align(qubit.name, cav.name)
 
     qubit.play(
-        qubit_pi2_pulse, phase=0.0 if measure_real else 0.25
+        qubit_pi2_pulse, phase=0 if measure_real else 0.25
     )  # play pi/2 pulse around X or SY, to measure either the real or imaginary part of the characteristic function
 
 
-def Char_1D(
+def Char_1D_singledisplacement(
+    cav,
+    qubit,
+    displacement_pulse,
+    qubit_pi_pulse,
+    qubit_pi2_pulse,
+    ampx,
+    delay,
+    measure_real,
+    tomo_phase,
+):
+
+    # bring qubit into superposition
+    qua.align(qubit.name, cav.name)
+    qubit.play(qubit_pi2_pulse)
+
+    # start ECD gate
+    qua.align(cav.name, qubit.name)  # wait for qubit pulse to end
+    # First positive displacement
+    cav.play(displacement_pulse, ampx, phase=tomo_phase)
+
+    qua.wait(int(delay // 4), cav.name)
+    # First negative displacement
+    cav.play(displacement_pulse, -ampx, phase=tomo_phase)
+
+    qua.align(qubit.name, cav.name)
+    qubit.play(qubit_pi_pulse, phase=0.25)  # play pi to flip qubit around X
+    qua.align(cav.name, qubit.name)  # wait for qubit pulse to end
+
+    # Second negative displacement
+    cav.play(displacement_pulse, -ampx, phase=tomo_phase)
+
+    qua.wait(int(delay // 4), cav.name)
+    # Second positive displacement
+    cav.play(displacement_pulse, ampx, phase=tomo_phase)
+
+    qua.align(qubit.name, cav.name)
+
+    qubit.play(
+        qubit_pi2_pulse, phase=0 if measure_real else 0.25
+    )  # play pi/2 pulse around X or SY, to measure either the real or imaginary part of the characteristic function
+
+
+# def Char_1D(
+#     cav,
+#     qubit,
+#     displacement_pulse,
+#     qubit_pi_pulse,
+#     qubit_pi2_pulse,
+#     ampx,
+#     phase,
+#     delay,
+#     measure_real,
+#     qubit_phase,
+# ):
+# # bring qubit into superposition
+# qua.align(qubit.name, cav.name)
+# qubit.play(qubit_pi2_pulse)
+# ECD(cav, qubit, displacement_pulse, qubit_pi_pulse, ampx, delay, phase, qubit_phase)
+# qua.align(qubit.name, cav.name)
+
+# qubit.play(qubit_pi2_pulse, phase=0.0 if measure_real else 0.25)
+
+
+def Char_origin(
     cav,
     qubit,
     displacement_pulse,
@@ -383,3 +545,50 @@ def Char_1D(
     qua.align(qubit.name, cav.name)
 
     qubit.play(qubit_pi2_pulse, phase=0.0 if measure_real else 0.25)
+
+
+#     cav,
+#     qubit,
+#     displacement_pulse,
+#     qubit_pi_pulse,
+#     qubit_pi2_pulse,
+#     ampx_x,
+#     ampx_y,
+#     phase_x,
+#     phase_y,
+#     delay,
+#     measure_real,
+# ):
+#     # bring qubit into superposition
+#     qua.align(qubit.name, cav.name)
+#     qubit.play(qubit_pi2_pulse)
+
+#     # start ECD gate
+#     qua.align(cav.name, qubit.name)  # wait for qubit pulse to end
+#     # First positive displacement
+#     cav.play(displacement_pulse, ampx=ampx_x, phase=phase_x)
+#     cav.play(displacement_pulse, ampx=ampx_y, phase=phase_y)
+
+#     qua.wait(int(delay // 4), cav.name)
+#     # First negative displacement
+#     cav.play(displacement_pulse, ampx=-ampx_x, phase=phase_x)
+#     cav.play(displacement_pulse, ampx=-ampx_y, phase=phase_y)
+
+#     qua.align(qubit.name, cav.name)
+#     qubit.play(qubit_pi_pulse, phase=0.25)  # play pi to flip qubit around X
+#     qua.align(cav.name, qubit.name)  # wait for qubit pulse to end
+
+#     # Second negative displacement
+#     cav.play(displacement_pulse, ampx=-ampx_x, phase=phase_x)
+#     cav.play(displacement_pulse, ampx=-ampx_y, phase=phase_y)
+
+#     qua.wait(int(delay // 4), cav.name)
+#     # Second positive displacement
+#     cav.play(displacement_pulse, ampx=ampx_x, phase=phase_x)
+#     cav.play(displacement_pulse, ampx=ampx_y, phase=phase_y)
+
+#     qua.align(qubit.name, cav.name)
+
+#     qubit.play(
+#         qubit_pi2_pulse, phase=0.0 if measure_real else 0.25
+#     )  # play pi/2 pulse around X or SY, to measure either the real or imaginary part of the characteristic function

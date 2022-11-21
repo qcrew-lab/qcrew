@@ -78,6 +78,7 @@ class CavityDisplacementCalBerry(Experiment):
                 ampx=self.ecd_amp_scale,
                 phase=0,
                 delay=self.delay,
+                qubit_phase = 0.25
             )
 
             # revert pi pulse in ecd gate
@@ -97,6 +98,7 @@ class CavityDisplacementCalBerry(Experiment):
                 ampx=-self.ecd_amp_scale,
                 phase=0,
                 delay=self.delay,
+                qubit_phase = 0.25
             )
 
             # revert pi pulse in ecd gate
@@ -123,6 +125,7 @@ class CavityDisplacementCalBerry(Experiment):
                 ampx=self.x,
                 phase=0,
                 delay=self.delay,
+                qubit_phase = 0.25
             )
             # Second positive displacement
             # revert pi pulse in ecd gate
@@ -143,6 +146,7 @@ class CavityDisplacementCalBerry(Experiment):
                 ampx=-self.x,
                 phase=0,
                 delay=self.delay,
+                qubit_phase = 0.25
             )
 
             # revert pi pulse in ecd gate
@@ -170,8 +174,8 @@ class CavityDisplacementCalBerry(Experiment):
 
 if __name__ == "__main__":
     x_start = 0.1
-    x_stop = 1.3
-    x_step = 0.05
+    x_stop = 1.9
+    x_step = 0.03
 
     ecd_amp_scale = 1
     d_amp_scale = 1

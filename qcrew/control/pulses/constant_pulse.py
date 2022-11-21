@@ -5,6 +5,7 @@ import numpy as np
 from typing import ClassVar
 from qcrew.control.pulses import integration_weights
 from qcrew.control.pulses.pulse import BASE_PULSE_AMP, Pulse
+from pathlib import Path
 
 
 class ConstantPulse(Pulse):
@@ -101,4 +102,53 @@ class ReadoutPulse(Pulse):
             pad_zeros = np.zeros(self.pad)
             i_wave = np.concatenate((i_wave, pad_zeros), axis=0)
 
+        return i_wave, q_wave
+
+
+class NumericalReadoutPulse(ReadoutPulse):
+    """ """
+
+    def __init__(
+        self,
+        *,
+        path: str,
+        ampx: float = 1.0,
+        pad: int = 0,
+        threshold: float = None,
+        integration_weights=None,
+    ) -> None:
+        self.path = path
+        self.pad = pad
+        npzfile = np.load(Path(self.path))
+        self.pulse = npzfile["pulse"]
+        length = len(self.pulse)
+        if length % 4 != 0:
+            self.pad = 4 - length % 4
+            length += self.pad
+        self.threshold = threshold
+
+        # Saves the integration weights path as parameter if applicable
+        try:
+            self.iw_path = integration_weights.path
+        except AttributeError:
+            self.iw_path = None
+        super().__init__(
+            length=length,
+            ampx=ampx,
+            pad=self.pad,
+            const_length=length - self.pad,
+            threshold=threshold,
+            integration_weights=integration_weights,
+        )
+
+    @property
+    def samples(self):
+        """ """
+        i_wave = np.real(self.pulse) * BASE_PULSE_AMP * self.ampx
+        q_wave = np.imag(self.pulse) * BASE_PULSE_AMP * self.ampx
+
+        if self.pad != 0:
+            pad_zeros = np.zeros(self.pad)
+            i_wave = np.concatenate((i_wave, pad_zeros), axis=0)
+            q_wave = np.concatenate((q_wave, pad_zeros), axis=0)
         return i_wave, q_wave

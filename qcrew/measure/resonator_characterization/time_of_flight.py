@@ -15,7 +15,7 @@ def get_qua_program(rr):
 
         with qua.for_(n, 0, n < reps, n + 1):
             qua.reset_phase(rr.name)
-            qua.measure("readout_pulse" * qua.amp(1), rr.name, adc_stream)
+            qua.measure("readout_pulse" * qua.amp(0.6), rr.name, adc_stream)
             qua.wait(20000, rr.name)
 
         with qua.stream_processing():
@@ -48,6 +48,6 @@ if __name__ == "__main__":
 
         axes[0].plot(results / 2 ** 12)
         axes[1].plot(freqs[5:] / 1e6, amps[5:])
-    
+
         # Retrieving and plotting FFT data.
         plt.show()

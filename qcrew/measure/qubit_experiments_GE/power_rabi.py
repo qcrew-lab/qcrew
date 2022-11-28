@@ -33,7 +33,7 @@ class PowerRabi(Experiment):
         """
         Defines pulse sequence to be played inside the experiment loop
         """
-        qubit, rr, cav = self.modes  # get the modes
+        qubit, rr= self.modes  # get the modes
 
         # cav.play("cohstate1")
         # qua.align(cav.name, qubit.name)
@@ -41,19 +41,7 @@ class PowerRabi(Experiment):
         # qua.align(cav.name, qubit.name)
         # cav.play("cohstate1", ampx=self.x)
         qua.align(qubit.name, rr.name)  # wait qubit pulse to end
-        rr.play("constant_pulse", ampx=1)
-        rr.play("constant_pulse", ampx=1)
-        rr.play("constant_pulse", ampx=1)
-        rr.play("constant_pulse", ampx=1)
-        rr.play("constant_pulse", ampx=1)
-        rr.play("constant_pulse", ampx=-1)
-        rr.play("constant_pulse", ampx=-1)
-        rr.play("constant_pulse", ampx=-1)
-        rr.play("constant_pulse", ampx=-1)
-        rr.play("constant_pulse", ampx=-1)
-
-        # rr.mea
-        # sure((self.I, self.Q))  # measure qubit state
+        rr.measure((self.I, self.Q), ampx=1)
         qua.wait(int(self.wait_time // 4), rr.name)  # wait system reset
 
         if self.single_shot:  # assign state to G or E
@@ -68,17 +56,17 @@ class PowerRabi(Experiment):
 
 if __name__ == "__main__":
 
-    amp_start = -1.8
-    amp_stop = 1.8
+    amp_start = -1.2
+    amp_stop = 1.2
     amp_step = 0.05
 
     parameters = {
-        "modes": ["QUBIT", "RR", "CAV_Alice"],
+        "modes": ["QUBIT", "RR"],
         "reps": 100000,
-        "wait_time": 150000,
+        "wait_time": 300000,
         "x_sweep": (amp_start, amp_stop + amp_step / 2, amp_step),
-        "qubit_op": "constant_pulse",  # "gaussian_pi_selective_pulse3",
-        # "single_shot": True,
+        "qubit_op": "gaussian_pulse",  # "gaussian_pi_selective_pulse3",
+        "single_shot": False,
         "plot_quad": "Z_AVG",
     }
 

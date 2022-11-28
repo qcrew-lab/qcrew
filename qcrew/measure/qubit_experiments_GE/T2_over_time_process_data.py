@@ -13,7 +13,7 @@ from qcrew.analyze import fit
 
 
 # assign directory
-directory = 'C:/Users/qcrew/Desktop/qcrew/data/yabba/t2overnight'
+directory = 'C:/Users/qcrew/Desktop/qcrew/data/yabba/findingymon'
  
 # iterate over files in
 # that directory
@@ -22,26 +22,31 @@ files = Path(directory).glob('*')
 index = np.linspace(0, 1, 382)
 i = 0
 for file in files:
-    
+    file = 'C:/Users/qcrew/Desktop/qcrew/data/yabba/20221124/140352_yabba_qubit_spec.h5'
     curr = h5py.File(file, "r")
     data = curr["data"]
     try:
-        x_vec = data["x"][:] * 4  # now x_vec is ns
+        x_vec = data["x"][:]
     except KeyError:
         print(file)
         print("**************x error************")
     try:
-        i_avg = data["I_AVG"][:]
+        i_avg = data["Z_AVG"][:]
     except KeyError:
         print(file)
         print("*************iavg error************")
-    fit_func = 'exp_decay_sine'
-    params = fit.do_fit(fit_func, x_vec, i_avg)
-    fit_ys = fit.eval_fit(fit_func, params, x_vec)
+    # fit_func = 'exp_decay_sine'
+    # params = fit.do_fit(fit_func, x_vec, i_avg)
+    # fit_ys = fit.eval_fit(fit_func, params, x_vec)
     i += 1
-    plt.plot(x_vec, fit_ys, color=(0.1, 0.2, index[i]), lw=3, )
+    plt.plot(x_vec, i_avg, '-o' )
+
+    print(i)
+    plt.show()
+
+
     
-print(i)
+
 
 # file = h5py.File(filepath, "r")
 # data = file["data"]

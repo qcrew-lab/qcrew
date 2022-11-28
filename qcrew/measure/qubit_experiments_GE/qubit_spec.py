@@ -4,7 +4,7 @@ This class serves as a QUA script generator with user-defined parameters.
 """
 
 from typing import ClassVar
-
+from qcrew.control import Stagehand
 from qcrew.control import professor as prof
 from qcrew.measure.experiment import Experiment
 from qm import qua
@@ -33,7 +33,7 @@ class QubitSpectroscopy(Experiment):
         """
         qubit, rr = self.modes  # get the modes
         qua.update_frequency(qubit.name, self.x)  # update resonator pulse frequency
-        qubit.play(self.qubit_op, ampx=1.8)  # play qubit pulse
+        qubit.play(self.qubit_op, ampx=self.y)  # play qubit pulse
         qua.align(qubit.name, rr.name)  # wait qubit pulse to end
         rr.measure((self.I, self.Q))  # measure transmitted signal
         qua.wait(int(self.wait_time // 4), rr.name)  # wait system reset
@@ -44,27 +44,54 @@ class QubitSpectroscopy(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-    x_start = -80e6
-    x_stop = -55e6
-    x_step = 0.2e6
+    x_start = -200e6
+    x_stop = -0e6
+    x_step = 1e6
 
-    parameters = {
-        "modes": ["QUBIT", "RR"],
-        "reps": 10000,
-        "wait_time": 100000,
-        "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
-        "qubit_op": "constant_pulse",
-        "fit_fn": None,
-        "plot_quad": "Z_AVG",
-        "fetch_period": 2,
-    }
+    lo_freq_list = [
+        4.4e9,
+        4.6e9,
+        4.8e9,
+        5.0e9,
+        5.2e9,
+        5.4e9,
+        5.6e9,
+        5.8e9,
+        6.0e9,
+        7.8e9,
+        8.0e9
+    ]
+    for freq in lo_freq_list:
+        with Stagehand() as stage:
+            qubit = stage.QUBIT
+            qubit.lo_freq = freq
 
-    plot_parameters = {
-        "xlabel": "Qubit pulse frequency (Hz)",
-        # "plot_err": False
-    }
+        parameters = {
+            "modes": ["QUBIT", "RR"],
+            "reps": 10000,
+            "wait_time": 100000,
+            "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
+            "y_sweep": (
+                # 0.2,
+                # 0.4,
+                # 0.6,
+                # 0.8,
+                # 1.0,
+                # 1.2,
+                1.0,
+            ),
+            "qubit_op": "gaussian_pulse",
+            "fit_fn": None,
+            "plot_quad": "Z_AVG",
+            "fetch_period": 2,
+        }
 
-    experiment = QubitSpectroscopy(**parameters)
-    experiment.setup_plot(**plot_parameters)
+        plot_parameters = {
+            "xlabel": "Qubit pulse frequency (Hz)",
+            # "plot_err": False
+        }
 
-    prof.run(experiment)
+        experiment = QubitSpectroscopy(**parameters)
+        experiment.setup_plot(**plot_parameters)
+
+        prof.run(experiment)

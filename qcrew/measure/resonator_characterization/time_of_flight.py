@@ -5,7 +5,7 @@ from qcrew.control import Stagehand
 from qm import qua
 import numpy as np
 
-reps = 50000
+reps = 1000
 
 
 def get_qua_program(rr):
@@ -15,8 +15,10 @@ def get_qua_program(rr):
 
         with qua.for_(n, 0, n < reps, n + 1):
             qua.reset_phase(rr.name)
-            qua.measure("readout_pulse" * qua.amp(1), rr.name, adc_stream)
-            qua.wait(20000, rr.name)
+            #qua.wait(230, "QUBIT")
+            qua.play("constant_pulse" * qua.amp(1), "QUBIT")
+            qua.measure("readout_pulse" * qua.amp(0), rr.name, adc_stream)
+            qua.wait(500000, rr.name)
 
         with qua.stream_processing():
             adc_stream.input1().average().save("adc_results")
@@ -48,6 +50,7 @@ if __name__ == "__main__":
 
         axes[0].plot(results / 2 ** 12)
         axes[1].plot(freqs[5:] / 1e6, amps[5:])
-    
+        np.savez("y2", results)
+        print(results[996:1008] / 2 ** 12)
         # Retrieving and plotting FFT data.
         plt.show()

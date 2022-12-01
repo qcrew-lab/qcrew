@@ -11,11 +11,10 @@ if __name__ == "__main__":
     with Stagehand() as stage:
 
         # sa, qubit, qubit_ef, rr, cav= stage.SA, stage.QUBIT, stage.QUBIT_EF, stage.RR, stage.CAV
-        sa, qubit, rr, qubit_ef = (
+        sa, qubit, rr = (
             stage.SA,
             stage.QUBIT,
             stage.RR,
-            stage.QUBIT_EF,
         )
         qm = stage.QM
         mixer_tuner = MixerTuner(sa, qm)

@@ -39,7 +39,7 @@ if __name__ == "__main__":
 
         sweep_parameters = {  # set sweep parameters
             "center": mode.lo_freq,
-            "span": 400e6,
+            "span": 430e6,
             "rbw": Sa124.default_rbw,
             "ref_power": Sa124.default_ref_power,
         }

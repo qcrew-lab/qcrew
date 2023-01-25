@@ -76,6 +76,7 @@ if __name__ == "__main__":
     x_stop = 0.6e6
     x_step = 4e3
     parameters = {
+<<<<<<< Updated upstream
         "modes": ["QUBIT", "CAV", "RR"],
         # "modes": ["QUBIT", "CAV", "RR", "CAV_DRIVE2", "RR_DRIVE"],
         "reps": 5000,
@@ -86,6 +87,17 @@ if __name__ == "__main__":
         "fetch_period": 4,
         # "plot_quad": "I_AVG",
         "single_shot": True,
+=======
+        "modes": ["QUBIT", "CAVB", "RR"],
+        "reps": 40000,
+        "wait_time": 1000000,
+        "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
+        "qubit_op": "constant_pi_pulse3",
+        "cav_op": "cohstate1",
+        "plot_quad": "Z_AVG",
+        "fetch_period": 1.2,
+        
+>>>>>>> Stashed changes
     }
 
     plot_parameters = {

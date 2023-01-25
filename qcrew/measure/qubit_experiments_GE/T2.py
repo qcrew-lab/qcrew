@@ -36,6 +36,12 @@ class T2(Experiment):
         """
         qubit, rr = self.modes  # get the modes
         qua.update_frequency(qubit.name, qubit.int_freq + self.detuning)  # detune
+<<<<<<< Updated upstream
+=======
+        # rr.play("constant_pulse", ampx=0.5)
+        # qua.wait(100, rr.name)  # wait for partial qubit decay
+
+>>>>>>> Stashed changes
         qubit.play(self.qubit_op)  # play half pi qubit pulse
         qua.wait(self.x, qubit.name)  # wait for partial qubit decay
         qubit.play(self.qubit_op)  # play half pi qubit pulse
@@ -53,6 +59,7 @@ class T2(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
+<<<<<<< Updated upstream
     x_start = 4
     x_stop = 8000
     x_step = 40
@@ -64,6 +71,23 @@ if __name__ == "__main__":
         "wait_time": 100000,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
         "qubit_op": "constant_cos_pi2",
+=======
+    # x_start = 10
+    # x_stop = 14000
+    # x_step = 200
+
+    x_start = 2
+    x_stop = 1500
+    x_step = 6
+    detuning = 2e6
+
+    parameters = {
+        "modes": ["QUBIT", "RR"],
+        "reps": 50000,
+        "wait_time": 40000,
+        "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
+        "qubit_op": "constant_pi2_pulse",
+>>>>>>> Stashed changes
         "detuning": int(detuning),
         "plot_quad": "I_AVG"
         #"single_shot": True,

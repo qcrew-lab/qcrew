@@ -57,6 +57,7 @@ class T1(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
+<<<<<<< Updated upstream
     x_start = 10
     x_stop = 20e3
     x_step = 400
@@ -68,6 +69,20 @@ if __name__ == "__main__":
         "qubit_op": "pi",
         "single_shot": True,
         #"plot_quad": "I_AVG",
+=======
+    x_start = int(0)
+    x_stop = int(10e3)
+    x_step = int(100)
+
+    parameters = {
+        "modes": ["QUBIT", "RR"],
+        "reps": 60000,
+        "wait_time": 200000,
+        "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
+        "qubit_op": "constant_pi_pulse",
+        "single_shot": False,
+        "plot_quad": "Z_AVG"
+>>>>>>> Stashed changes
     }
 
     plot_parameters = {

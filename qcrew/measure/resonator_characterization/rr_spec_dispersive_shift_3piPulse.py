@@ -1,5 +1,6 @@
 """
-A python class describing a readout resonator spectroscopy using QM.
+A python class describing a readout resonator spectroscopy with qubit in ground and 
+excited state using QM.
 This class serves as a QUA script generator with user-defined parameters.
 """
 
@@ -13,17 +14,18 @@ from qm import qua
 # ---------------------------------- Class -------------------------------------
 
 
-class RRSpectroscopy(Experiment):
+class RRSpecDispersiveShift(Experiment):
 
-    name = "rr_spec"
+    name = "rr_spec_dispersive_shift"
 
     _parameters: ClassVar[set[str]] = Experiment._parameters | {
         "fit_fn",  # fit function
     }
 
-    def __init__(self, fit_fn="gaussian", **other_params):
+    def __init__(self, qubit_op, fit_fn=None, **other_params):
 
         self.fit_fn = fit_fn
+        self.qubit_op = qubit_op
 
         super().__init__(**other_params)  # Passes other parameters to parent
 
@@ -31,12 +33,17 @@ class RRSpectroscopy(Experiment):
         """
         Defines pulse sequence to be played inside the experiment loop
         """
-        (rr, qubit) = self.modes  # get the modes
+        (rr, qubit, qubit1, qubit2) = self.modes  # get the modes
 
         qua.update_frequency(rr.name, self.x)  # update resonator pulse frequency
+        qubit.play(self.qubit_op, ampx=self.y)
+        qua.align()
+        qubit1.play(self.qubit_op, ampx=self.y)
+        qua.align()
+        qubit2.play(self.qubit_op, ampx=self.y)
+        qua.align()
 
-        qubit.play("pi", ampx=1)  # play qubit pulse
-        qua.align()  # wait qubit pulse to end
+        # qua.align(rr.name, qubit.name)
         rr.measure((self.I, self.Q), ampx=1)  # measure transmitted signal
         qua.wait(int(self.wait_time // 4), rr.name)  # wait system reset
 
@@ -47,34 +54,25 @@ class RRSpectroscopy(Experiment):
 
 if __name__ == "__main__":
 
-<<<<<<< Updated upstream
-    x_start = -60e6  #
-    x_stop = -40e6  #
+    x_start = -52e6
+    x_stop = -48e6
     x_step = 0.05e6
-    # x_start = -51e6  #
-    # x_stop = -49e6  #
-    # x_step = 0.02e6
-=======
-    x_start = -52e6  # -105e6#+0.1e6  #-56e6 #-41e6
-    x_stop = -48e6  # -95e6#+0.1e6   #-48e6# -37e66
-    x_step = 0.01e6
->>>>>>> Stashed changes
 
     parameters = {
-        "modes": ["RR", "QUBIT"],
-        "reps": 80000,
-        "wait_time": 1000,
+        "modes": ["RR", "QUBIT", "QUBIT1", "QUBIT2" ],
+        "reps": 10000,
+        "wait_time": 200000,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
-        "plot_quad": "PHASE",
-        "fit_fn": "phase_atan_s",
-        "cable_delay": 1.8e-6,  # in 1 / freq units
+        "y_sweep": [0.0, 1.0],
+        "qubit_op": "constant_pi_pulse1",
+        "plot_quad": "Z_AVG",
     }
 
     plot_parameters = {
         "xlabel": "Resonator pulse frequency (Hz)",
     }
 
-    experiment = RRSpectroscopy(**parameters)
+    experiment = RRSpecDispersiveShift(**parameters)
     experiment.setup_plot(**plot_parameters)
 
     prof.run(experiment)

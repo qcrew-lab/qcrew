@@ -81,10 +81,16 @@ class PowerRabi(Experiment):
 
 if __name__ == "__main__":
 
+<<<<<<< Updated upstream
     amp_start = -1.1
     amp_stop = 1.1
+=======
+    amp_start = -1.4
+    amp_stop = 1.4
+>>>>>>> Stashed changes
     amp_step = 0.05
     parameters = {
+<<<<<<< Updated upstream
         "modes": ["QUBIT", "RR", "CAV"],
         "reps": 4000,
         "wait_time": 100e3,
@@ -94,6 +100,15 @@ if __name__ == "__main__":
         "single_shot": True,
         "fetch_period": 2,
         # "plot_quad": "I_AVG",
+=======
+        "modes": ["QUBIT", "RR"],
+        "reps": 200000,
+        "wait_time": 40000,
+        "x_sweep": (amp_start, amp_stop + amp_step / 2, amp_step),
+        "qubit_op": "constant_pi_pulse3",  # "gaussian_pi_selective_pulse3",
+        "single_shot": False,
+        "plot_quad": "Z_AVG",
+>>>>>>> Stashed changes
     }
 
     plot_parameters = {

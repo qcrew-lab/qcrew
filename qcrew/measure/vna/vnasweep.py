@@ -101,8 +101,9 @@ if __name__ == "__main__":
         vna.connect()
 
         # the routine below can handle multiple measurement runs at once
-        fcenterlist = [6.563419e9] #[6.563419e9, 6.792209e9, 6.874604e9, 7.057255e9]
-        fspanlist = [500e3] #[500e3, 1e6, 250e3, 1e6]
+        fcenterlist = [6.567982e9, 6.792847e9, 6.884662e9, 6.885641e9]
+        fspanlist = [60e3, 60e3, 50e3, 75e3]
+        pointslist = [1201, 1201, 1001, 1501]
 
         num_runs = len(fcenterlist)
         for idx in range(num_runs):
@@ -117,9 +118,9 @@ if __name__ == "__main__":
                 # frequency sweep stop value (Hz)
                 # "fstop": 8e9,
                 # IF bandwidth (Hz), [1, 500000]
-                "bandwidth": 1e2,
+                "bandwidth": 50,
                 # number of frequency sweep points, [2, 200001]
-                "sweep_points": 2501,
+                "sweep_points": pointslist[idx],
                 # delay (s) between successive sweep points, [0.0, 100.0]
                 "sweep_delay": 1e-3,
                 # trace data to be displayed and acquired, max traces = 16
@@ -136,7 +137,7 @@ if __name__ == "__main__":
             # these parameters are looped over during the measurement
             measurement_parameters = {
                 # Number of sweep averages, must be an integer > 0
-                "repetitions": 150,
+                "repetitions": 50,
                 # Input powers at (<port1>, <port2>) (dBm), range [-30.0, 15.0]
                 # <portX> (X=1,2) can be a set {a, b,...}, tuple (st, stop, step), or constant x
                 # use set for discrete sweep points a, b, ...
@@ -162,7 +163,7 @@ if __name__ == "__main__":
             power = measurement_parameters["powers"][0] - measurement_parameters["attenuation"][0]
             save_parameters = {
                 "datapath": pathlib.Path(stage.datapath) / "wheel",
-                "usersuffix": f"{fcenterlist[idx]:.3}"[:4] + "GHz" + f"_{power:.3}pow_{reps}reps",
+                "usersuffix": f"{fcenterlist[idx]:.5}" + f"_{power:.3}pow_{reps}reps",
                 "measurementname": measurement.__class__.__name__.lower(),
                 **measurement.dataspec,
             }

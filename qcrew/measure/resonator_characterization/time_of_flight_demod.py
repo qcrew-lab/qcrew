@@ -18,7 +18,7 @@ def get_qua_program(rr, qubit):
             qubit.play("constant_pulse")
             qua.align(qubit.name, rr.name)
             qua.measure("readout_pulse" * qua.amp(1.0), rr.name, adc_stream)
-            qua.wait(400000, rr.name)
+            qua.wait(20000, rr.name)
 
         with qua.stream_processing():
             adc_stream.input1().average().save("adc_results")

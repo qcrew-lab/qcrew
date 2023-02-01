@@ -1,5 +1,7 @@
 """ """
 
+import numpy as np
+import time
 from typing import ClassVar
 import pyvisa
 
@@ -9,6 +11,8 @@ from qcrew.helpers import logger
 
 class Yoko(Instrument):
     """ """
+
+    WAIT_TIME = 0.1
 
     _parameters: ClassVar[set[str]] = {"state", "source", "level"}
 
@@ -80,3 +84,17 @@ class Yoko(Instrument):
         """ """
         self.state = False
         self.handle.close()
+
+    def ramp(self, stop, start=None, step=1e-4) -> None:
+        """ """
+        if start is None:  # start from the current level set right now
+            start = self.level
+
+        if start > stop:  # ramp down
+            points = np.arange(stop, start + step / 2, step)[::-1]  # include endpoint
+        else:  # ramp up
+            points = np.arange(start, stop + step / 2, step)
+
+        for point in points:
+            self.level = point
+            time.sleep(Yoko.WAIT_TIME)

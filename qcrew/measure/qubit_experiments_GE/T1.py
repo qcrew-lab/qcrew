@@ -9,7 +9,7 @@ from qcrew.control import professor as prof
 from qcrew.measure.experiment import Experiment
 from qm import qua
 
-# ---------------------------------- Class -------------------------------------
+# ---------------------------------- Class --------------------------------------
 
 
 class T1(Experiment):
@@ -53,9 +53,9 @@ if __name__ == "__main__":
 
     parameters = {
         "modes": ["QUBIT", "RR"],
-        "reps": 20000,
-        "wait_time": 75000,
-        "x_sweep": (int(16), int(50e3 + 500 / 2), int(500)),
+        "reps": 3500,
+        "wait_time": 100000,
+        "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
         "qubit_op": "pi",
         "single_shot": False,
     }

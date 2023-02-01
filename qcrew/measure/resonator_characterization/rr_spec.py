@@ -2,7 +2,7 @@
 A python class describing a readout resonator spectroscopy using QM.
 This class serves as a QUA script generator with user-defined parameters.
 """
-
+                                                      
 from typing import ClassVar
 
 from qcrew.control import professor as prof
@@ -44,15 +44,16 @@ class RRSpectroscopy(Experiment):
 
 if __name__ == "__main__":
 
-    x_start = -53e6
-    x_stop = -47e6
-    x_step = 0.1e6
+    x_start = -50.5e6
+    x_stop = -49.5e6
+    x_step = 10e3
 
     parameters = {
         "modes": ["RR"],
-        "reps": 50000,
-        "wait_time": 40000,
+        "reps": 10000,
+        "wait_time": 100000,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
+        "fetch_period": 1,
     }
 
     plot_parameters = {

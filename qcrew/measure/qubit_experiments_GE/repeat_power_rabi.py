@@ -36,7 +36,7 @@ class RepPowerRabi(Experiment):
         """
         qubit, rr = self.modes  # get the modes
 
-        for k in range(self.pulse_number):  # play qubit pulse multiple times
+        for _ in range(self.pulse_number):  # play qubit pulse multiple times
             qubit.play(self.qubit_op, ampx=self.x)
         qua.align(qubit.name, rr.name)  # wait qubit pulse to end
         rr.measure((self.I, self.Q))  # measure qubit state
@@ -52,13 +52,18 @@ class RepPowerRabi(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
+    
+    amp_start = -1.05
+    amp_stop = 1.05
+    amp_step = 0.03
+
 
     parameters = {
         "modes": ["QUBIT", "RR"],
         "reps": 5000,
         "wait_time": 300000,
-        "x_sweep": (-1.8, 1.8 + 0.05 / 2, 0.05),
-        "qubit_op": "gaussian_pulse",
+        "x_sweep": (amp_start, amp_stop + amp_step / 2, amp_step),
+        "qubit_op": "rotation_pulse",
         "pulse_number": 2,
         "single_shot": True,
     }

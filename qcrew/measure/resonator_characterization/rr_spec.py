@@ -2,7 +2,7 @@
 A python class describing a readout resonator spectroscopy using QM.
 This class serves as a QUA script generator with user-defined parameters.
 """
-                                                      
+
 from typing import ClassVar
 
 from qcrew.control import professor as prof

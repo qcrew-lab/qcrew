@@ -5,7 +5,7 @@ from qcrew.control import Stagehand
 from qm import qua
 import numpy as np
 
-reps = 50000
+reps = 5000
 
 
 def get_qua_program(rr):
@@ -16,7 +16,7 @@ def get_qua_program(rr):
         with qua.for_(n, 0, n < reps, n + 1):
             qua.reset_phase(rr.name)
             qua.measure("readout_pulse" * qua.amp(1), rr.name, adc_stream)
-            qua.wait(20000, rr.name)
+            qua.wait(2000, rr.name)
 
         with qua.stream_processing():
             adc_stream.input1().average().save("adc_results")

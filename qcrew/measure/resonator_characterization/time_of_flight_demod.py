@@ -6,19 +6,17 @@ from qm import qua
 import numpy as np
 from scipy import signal
 
-reps = 5000
+reps = 500000
+wait_time = 50000
 
-
-def get_qua_program(rr, qubit):
+def get_qua_program(rr):
     with qua.program() as raw_adc_avg:
         adc_stream = qua.declare_stream(adc_trace=True)
         n = qua.declare(int)
 
         with qua.for_(n, 0, n < reps, n + 1):
-            qubit.play("constant_pulse")
-            qua.align(qubit.name, rr.name)
             qua.measure("readout_pulse" * qua.amp(1.0), rr.name, adc_stream)
-            qua.wait(20000, rr.name)
+            qua.wait(wait_time, rr.name)
 
         with qua.stream_processing():
             adc_stream.input1().average().save("adc_results")
@@ -31,10 +29,10 @@ if __name__ == "__main__":
 
     with Stagehand() as stage:
 
-        rr, qubit = stage.RR, stage.QUBIT
+        rr = stage.RR
 
         # Execute script
-        job = stage.QM.execute(get_qua_program(rr, qubit))  # play IF to mode
+        job = stage.QM.execute(get_qua_program(rr))  # play IF to mode
 
         handle = job.result_handles
         handle.wait_for_all_values()

@@ -38,12 +38,12 @@ class CavityT1(Experiment):
 
         cav.play(self.cav_op, ampx=1.4)  # play displacement to cavity
         qua.wait(self.x, cav.name)  # wait relaxation
-        qua.align(cav.name, qubit.name)  # align all modes
-        qubit.play(self.qubit_op)  # play qubit pulse
-        qua.align(qubit.name, rr.name)  # align all modes
+        qua.align(cav.name, rr.name)  # align all modes
+        # qua.align(cav.name, qubit.name)  # align all modes
+        # qubit.play(self.qubit_op)  # play qubit pulse
+        # qua.align(qubit.name, rr.name)  # align all modes
         rr.measure((self.I, self.Q))  # measure transmitted signal
         qua.wait(int(self.wait_time // 4), cav.name)  # wait system reset
-
         self.QUA_stream_results()  # stream variables (I, Q, x, etc)
 
 

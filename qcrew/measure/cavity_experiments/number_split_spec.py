@@ -35,7 +35,7 @@ class NSplitSpectroscopy(Experiment):
         """
         Defines pulse sequence to be played inside the experiment loop
         """
-        qubit, cav, rr, cav_drive, rr_drive = self.modes  # get the modes
+        qubit, cav, rr = self.modes  # get the modes
 
         qua.update_frequency(qubit.name, self.x)  # update qubit pulse frequency
         cav.play(self.cav_op, ampx=self.cav_amp)  # prepare cavity state
@@ -43,9 +43,7 @@ class NSplitSpectroscopy(Experiment):
         qubit.play(self.qubit_op)  # play qubit pulse
         qua.align(qubit.name, rr.name)  # align modes
         rr.measure((self.I, self.Q))  # measure transmitted signal
-        qua.align(cav.name, qubit.name, rr.name, cav_drive.name, rr_drive.name)
-        cav_drive.play("constant_cos", duration=200e3, ampx=1.6)
-        rr_drive.play("constant_cos", duration=200e3, ampx=1.4)
+        qua.align(cav.name, qubit.name, rr.name)
         qua.wait(int(self.wait_time // 4), cav.name)  # wait system reset
 
         self.QUA_stream_results()  # stream variables (I, Q, x, etc)
@@ -59,9 +57,9 @@ if __name__ == "__main__":
     x_step = 0.01e6
 
     parameters = {
-        "modes": ["QUBIT", "CAV", "RR", "CAV_DRIVE", "RR_DRIVE"],
-        "reps": 4000,
-        "wait_time": 50e3,
+        "modes": ["QUBIT", "CAV", "RR"],
+        "reps": 20000,
+        "wait_time": 1.3e6,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
         "qubit_op": "pi_selective_2",
         "cav_op": "constant_cos_cohstate_1",

@@ -19,7 +19,12 @@ class ConstantCosinePulse(Pulse):
     def __init__(
         self, length_ring: int, length_constant: int, ampx: float = None
     ) -> None:
-        """ """
+        """
+        How about some explanations?
+        I suppose that the length of the entire pulse is
+        2 * length_ring + length_constant
+        © Fernando
+        """
         self.length_ring = length_ring
         self.length_constant = length_constant
         self.ampx = ampx

@@ -1,5 +1,6 @@
 """
-A python class describing a cavity spectroscopy using QM.
+A python class describing a photon-number dependent Readout Resonator frequency sweeping the number of 
+photons in the cavity using QM.
 This class serves as a QUA script generator with user-defined parameters.
 """
 
@@ -12,20 +13,18 @@ from qm import qua
 # ---------------------------------- Class -------------------------------------
 
 
-class CavitySpectroscopy(Experiment):
+class NCavityResonatorShift(Experiment):
 
-    name = "cavity_spec"
+    name = "cavity_resonator_shift"
 
     _parameters: ClassVar[set[str]] = Experiment._parameters | {
         "cav_op",  # operation for displacing the cavity
-        "qubit_op",  # operation used for exciting the qubit
         "fit_fn",  # fit function
     }
 
-    def __init__(self, cav_op, qubit_op, fit_fn="gaussian", **other_params):
+    def __init__(self, cav_op, fit_fn=None, **other_params):
 
         self.cav_op = cav_op
-        self.qubit_op = qubit_op
         self.fit_fn = fit_fn
 
         super().__init__(**other_params)  # Passes other parameters to parent
@@ -34,15 +33,12 @@ class CavitySpectroscopy(Experiment):
         """
         Defines pulse sequence to be played inside the experiment loop
         """
-        qubit, cav, rr = self.modes  # get the modes
+        cav, rr = self.modes  # get the modes
 
-        qua.update_frequency(cav.name, self.x)  # update resonator pulse frequency
-        qua.align(cav.name, qubit.name)
-        cav.play(self.cav_op, ampx=1)  # play displacement to cavity
-        qua.align(cav.name, qubit.name)  # align all modes
-        # qubit.play(self.qubit_op)  # play qubit pulse
-        qua.align(qubit.name, rr.name)  # align all modes
-        rr.measure((self.I, self.Q))  # measure transmitted signal
+        qua.update_frequency(rr.name, self.x)  # update resonator pulse frequency
+        cav.play(self.cav_op, ampx=self.y)  # prepare cavity state
+        qua.align(cav.name, rr.name)  # align modes
+        rr.measure((self.I, self.Q), ampx=1)  # measure transmitted signal
         qua.wait(int(self.wait_time // 4), cav.name)  # wait system reset
 
         self.QUA_stream_results()  # stream variables (I, Q, x, etc)
@@ -50,26 +46,27 @@ class CavitySpectroscopy(Experiment):
 
 # -------------------------------- Execution -----------------------------------
 
-
 if __name__ == "__main__":
+    x_start = -50.175e6
+    x_stop = -50.1e6
+    x_step = 0.005e6
 
-    x_start = -53e6
-    x_stop = -47e6
-    x_step = 0.1e6
     parameters = {
-        "modes": ["QUBIT", "CAV", "RR"],
-        "reps": 50000,
-        "wait_time": 1000000,
+        "modes": ["CAV", "RR"],
+        "reps": 100000,
+        "wait_time": 1.3e6,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
-        "qubit_op": "pi_selective_2",
-        "cav_op": "pi",
+        "y_sweep": [0, 1.],
+        "cav_op": "const_cos_pulse",
+        "fetch_period": 7,
     }
 
     plot_parameters = {
-        "xlabel": "Cavity pulse frequency (Hz)",
+        "xlabel": "Resonator pulse frequency (Hz)",
+        "trace_labels": ["<n> = 0", "<n> = 1"],
     }
 
-    experiment = CavitySpectroscopy(**parameters)
+    experiment = NCavityResonatorShift(**parameters)
     experiment.setup_plot(**plot_parameters)
 
     prof.run(experiment)

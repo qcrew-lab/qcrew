@@ -326,6 +326,44 @@ class Experiment(Parametrized):
 
         return stderr
 
+    def preprocess_dependent_data(self, tag, independent_data, partial_results):
+
+        if tag == "Z_AVG":
+            # Take the square root of Z_AVG variables. This step is required for
+            # dependent values calculated as I^2 + Q^2 in stream processing.
+            data = np.sqrt(partial_results[tag])
+            processed_parital_results = data.reshape(self.buffering)
+        elif tag == "PHASE":
+
+            phase = np.angle(
+                np.exp(+2 * 1j * np.pi * -50e6 * 34.9e-9 * 8)
+                * (partial_results["Q_AVG"] + 1j * partial_results["I_AVG"])
+            )
+
+            processed_parital_results = phase
+
+        elif tag == "PHASE_SWEEP":
+            # Phase information useful for troubleshooting and rr spectroscopy
+            freqs = independent_data[0]
+            # phase = (
+            #     np.arctan(partial_results["Q"] / partial_results["I"])
+            #     - 2 * np.pi * freqs * 300e-9 * 8
+            # )
+            phase = np.angle(
+                np.exp(+2 * 1j * np.pi * freqs * 34.9e-9 * 8)
+                * (partial_results["Q_AVG"] + 1j * partial_results["I_AVG"])
+            )
+
+            processed_parital_results = phase
+            # processed_parital_results = np.average(phase, axis=0).reshape(
+            #     self.buffering
+            # )
+
+        else:
+            processed_parital_results = partial_results[tag]
+
+        return processed_parital_results
+
     def plot_results(self, plotter, partial_results, num_results, stderr):
         """
         Retrieves, reorganizes the data and sends it to the plotter.
@@ -333,19 +371,23 @@ class Experiment(Parametrized):
 
         indep_tags, dep_tags = self.results_tags
 
+        independent_data = []
+        for tag in indep_tags:
+            reshaped_data = partial_results[tag].reshape(self.buffering)
+            independent_data.append(reshaped_data)
+
         dependent_data = []
         for tag in dep_tags:
 
-            if tag == "Z_AVG":
-                # Take the square root of Z_AVG variables. This step is required for
-                # dependent values calculated as I^2 + Q^2 in stream processing.
-                data = np.sqrt(partial_results[tag])
-            else:
-                data = partial_results[tag]
+            processed_data = self.preprocess_dependent_data(
+                tag, independent_data, partial_results
+            )
 
-            # Reshape the fetched data with buffer lengths
-            reshaped_data = data.reshape(self.buffering)
-            dependent_data.append(reshaped_data)
+            dependent_data.append(processed_data)
+
+        # if an internal sweep is defined in the child experiment class, add its value
+        # as independent variable data. The values are repeated so the dimensions match
+        # the other independent data shapes.
 
         independent_data = []
         for tag in indep_tags:

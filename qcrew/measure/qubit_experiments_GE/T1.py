@@ -36,6 +36,7 @@ class T1(Experiment):
         qubit, rr = self.modes  # get the modes
 
         qubit.play(self.qubit_op)  # play pi qubit pulse
+
         qua.wait(self.x, qubit.name)  # wait for partial qubit decay
         qua.align(qubit.name, rr.name)  # wait qubit pulse to end
         rr.measure((self.I, self.Q))  # measure qubit state
@@ -51,15 +52,16 @@ class T1(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-    x_start = 4
-    x_stop = 25e3
-    x_step = 300
+
+    x_start = 100
+    x_stop = 4000
+    x_step = 25
     parameters = {
         "modes": ["QUBIT", "RR"],
-        "reps": 20000,
-        "wait_time": 100000,
+        "reps": 80000,
+        "wait_time": 20000,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
-        "qubit_op": "pi",
+        "qubit_op": "const_cos_pulse",
         "single_shot": False,
     }
 

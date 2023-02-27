@@ -53,9 +53,6 @@ class T2(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-    x_start = 10
-    x_stop = 14000
-    x_step = 200
 
     x_start = 4
     x_stop = 6000

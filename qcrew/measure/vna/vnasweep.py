@@ -9,17 +9,13 @@ from qcrew.control.stage.stagehand import Stagehand
 from qcrew.helpers import logger
 from vnasavedata import VNADataSaver
 
-
 class VNASweep:
     """ """
 
-    def __init__(
-        self, vna, repetitions: int, powers: tuple, attenuation: tuple
-    ) -> None:
+    def __init__(self, vna, repetitions: int, powers: tuple) -> None:
         """ """
         self.repetitions = repetitions
         self.vna = vna
-        self.port1_attenuation, self.port2_attenuation = attenuation
         if self.vna.is_averaging:
             self.vna.sweep_repetitions = repetitions
 
@@ -77,8 +73,8 @@ class VNASweep:
         """ """
         # save power data since its already available
         powers = np.array(tuple(self.powers)).T
-        port1_powers = powers[0] - self.port1_attenuation
-        port2_powers = powers[1] - self.port2_attenuation
+        port1_powers = powers[0]
+        port2_powers = powers[1]
         saver.save_data({"power": port1_powers, "power2": port2_powers})
 
         # for each power tuple in self.powers, do fsweep, for n reps
@@ -101,6 +97,7 @@ if __name__ == "__main__":
         vna.connect()
 
         # the routine below can handle multiple measurement runs at once
+<<<<<<< Updated upstream
         fcenterlist = [6.2035056e9, 4.67654e9, 6.644832e9]
         fspanlist = [10e6, 5e6, 5e6]
         powerspeclist = [
@@ -108,7 +105,19 @@ if __name__ == "__main__":
             ({-20.0, -10.0}, 0),
             ({0.0, 10.0, -10.0}, 0),
         ]
+=======
+<<<<<<< Updated upstream
+        fcenterlist = [6.874604e9] #[6.563419e9, 6.792209e9, 6.874604e9, 7.057255e9]
+        fspanlist = [0.1e6] #[0.5e6, 1e6, 0.25e6, 1e6]
+>>>>>>> Stashed changes
 
+=======
+        fcenterlist = [6.98132e9]
+        fspanlist = [0.5e6]
+        pointslist = [1001]
+        powerslist = [-15]
+        repslist = [200]
+>>>>>>> Stashed changes
         num_runs = len(fcenterlist)
         for idx in range(num_runs):
             # these parameters are set on VNA and do not change during a measurement run
@@ -122,9 +131,17 @@ if __name__ == "__main__":
                 # frequency sweep stop value (Hz)
                 # "fstop": 8e9,
                 # IF bandwidth (Hz), [1, 500000]
-                "bandwidth": 1e2,
+                "bandwidth": 100,
                 # number of frequency sweep points, [2, 200001]
+<<<<<<< Updated upstream
                 "sweep_points": 2501,
+=======
+<<<<<<< Updated upstream
+                "sweep_points": 401,
+=======
+                "sweep_points": pointslist[idx],
+>>>>>>> Stashed changes
+>>>>>>> Stashed changes
                 # delay (s) between successive sweep points, [0.0, 100.0]
                 "sweep_delay": 1e-3,
                 # trace data to be displayed and acquired, max traces = 16
@@ -141,7 +158,15 @@ if __name__ == "__main__":
             # these parameters are looped over during the measurement
             measurement_parameters = {
                 # Number of sweep averages, must be an integer > 0
+<<<<<<< Updated upstream
                 "repetitions": 400,
+=======
+<<<<<<< Updated upstream
+                "repetitions": 1500,
+=======
+                "repetitions": repslist[idx],
+>>>>>>> Stashed changes
+>>>>>>> Stashed changes
                 # Input powers at (<port1>, <port2>) (dBm), range [-30.0, 15.0]
                 # <portX> (X=1,2) can be a set {a, b,...}, tuple (st, stop, step), or constant x
                 # use set for discrete sweep points a, b, ...
@@ -151,10 +176,21 @@ if __name__ == "__main__":
                 # eg 1: powers = ((-30, 15, 5), 0) will sweep port 1 power from -30dBm to 15dBm inclusive in steps of 5dBm with port 2 power remaining constant at 0 dBm
                 # eg 2: powers = ({-15, 0, 15}, {-5, 0}) will result in sweep points (-15, -5), (-15, 0), (0, -5), (0, 0), (15, -5), (15, 0)
                 # eg 3: powers = (0, 0) will set both port powers to 0, no power sweep happens
+<<<<<<< Updated upstream
                 "powers": powerspeclist[idx],
                 # total physical attenuation added to VNA ports, if any
                 # (port_1_attenuation, port_2_attenuation) in dB
                 "attenuation": (70.0, 0),
+=======
+<<<<<<< Updated upstream
+                "powers": (-30, 0),
+                # total physical attenuation added to VNA ports, if any
+                # (port_1_attenuation, port_2_attenuation) in dB
+                "attenuation": (140.0, 0),
+=======
+                "powers": (powerslist[idx], 0),
+>>>>>>> Stashed changes
+>>>>>>> Stashed changes
             }
 
             # create measurement instance with instruments and measurement_parameters
@@ -164,8 +200,18 @@ if __name__ == "__main__":
             # hdf5 file saved at:
             # {datapath} / {YYYYMMDD} / {HHMMSS}_{measurementname}_{usersuffix}.hdf5
             save_parameters = {
+<<<<<<< Updated upstream
                 "datapath": pathlib.Path(stage.datapath) / "coaxmux",
                 "usersuffix": f"{fcenterlist[idx]:.3}"[:4] + "GHz",
+=======
+<<<<<<< Updated upstream
+                "datapath": pathlib.Path(stage.datapath) / "wheel",
+                "usersuffix": f"{fcenterlist[idx]:.3}"[:4] + "GHz" + f"_{power:.3}pow_{reps}reps",
+=======
+                "datapath": pathlib.Path(stage.datapath) / "fastflux_rr",
+                "usersuffix": f"{fcenterlist[idx]:.5}_{powerslist[idx]}_{repslist[idx]}",
+>>>>>>> Stashed changes
+>>>>>>> Stashed changes
                 "measurementname": measurement.__class__.__name__.lower(),
                 **measurement.dataspec,
             }

@@ -37,7 +37,8 @@ class QubitSpectroscopy(Experiment):
         qua.update_frequency(qubit.name, self.x)  # update resonator pulse frequency
 
         qubit.play(self.qubit_op, ampx=1)  # play qubit pulse
-        qua.align(qubit.name, rr.name)  # wait qubit pulse to end
+        # qua.align(qubit.name, rr.name)  # wait qubit pulse to end
+        qua.wait(875, rr.name)
         rr.measure((self.I, self.Q))  # measure transmitted signal
         qua.wait(int(self.wait_time // 4), rr.name)  # wait system reset
 
@@ -47,14 +48,14 @@ class QubitSpectroscopy(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-    x_start = -200e6  # 181.25e6
-    x_stop = -180e6  # 181.5e6
-    x_step = 0.01e6
+    x_start = -125e6  # 181.25e6
+    x_stop = -24.5e6  # 181.5e6
+    x_step = 0.1e6
 
     parameters = {
         "modes": ["QUBIT", "RR"],
-        "reps": 1000000,
-        "wait_time": 5000,
+        "reps": 200000,
+        "wait_time": 20000,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
         "qubit_op": "const_cos_pulse",
         "plot_quad": "PHASE",

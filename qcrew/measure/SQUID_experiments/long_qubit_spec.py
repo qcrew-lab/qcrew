@@ -15,9 +15,9 @@ import numpy as np
 
 if __name__ == "__main__":
 
-    qubit_lo_start = 1.6e9
-    qubit_lo_stop = 3.5e9
-    qubit_lo_step = 200e6
+    qubit_lo_start = 0.2e9
+    qubit_lo_stop = 3.0e9
+    qubit_lo_step = 400e6
     qubit_lo_sweep = np.arange(qubit_lo_start, qubit_lo_stop, qubit_lo_step)
 
     # Store information in lists to print later
@@ -44,20 +44,20 @@ if __name__ == "__main__":
                 stage.QUBIT.lo_freq = qubit_lo
 
                 x_start = -200e6
-                x_stop = 0e6
-                x_step = 0.1e6
+                x_stop = 200e6
+                x_step = 0.05e6
 
                 qubit_spec_parameters = {
                     "modes": ["QUBIT", "RR"],
-                    "reps": 200000,
-                    "wait_time": 4000,
+                    "reps": 20000,
+                    "wait_time": 3000,
                     "x_sweep": (
                         int(x_start),
                         int(x_stop + x_step / 2),
                         int(x_step),
                     ),
                     "qubit_op": "const_cos_pulse",
-                    "fetch_period": 4,
+                    "fetch_period": 6,
                     "plot_quad": "PHASE",
                 }
 

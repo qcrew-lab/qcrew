@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 filepath_list = [
-    "C:/Users/qcrew/Desktop/qcrew/data/fastflux/20230224/161413_somerset-exitB_qubit_spec.h5",
+    "C:/Users/qcrew/Desktop/qcrew/data/exitB/20230307/200709_somerset_qubit_spec.h5",
 ]
 plt.figure(figsize=(8, 5))
 for i, filepath in enumerate(filepath_list):
@@ -13,5 +13,5 @@ for i, filepath in enumerate(filepath_list):
     x = data["x"]
     plt.plot(np.array(x), np.array(z_avg))
     plt.ylabel("phase")
-    plt.xlabel("IF frequency (Hz). Qubit LO = 2.4GHz")
-    plt.show()  
+    plt.xlabel("IF frequency (Hz). Qubit LO = 2.6 GHz")
+    plt.show()

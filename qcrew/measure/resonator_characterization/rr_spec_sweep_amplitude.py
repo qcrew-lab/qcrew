@@ -31,7 +31,7 @@ class RRSpecSweepAmplitude(Experiment):
         """
         Defines pulse sequence to be played inside the experiment loop
         """
-        rr, qubit = self.modes  # get the modes
+        (rr,) = self.modes  # get the modes
 
         qua.update_frequency(rr.name, self.x)  # update resonator pulse frequency
         rr.measure((self.I, self.Q), ampx=self.y)  # measure transmitted signal
@@ -43,16 +43,16 @@ class RRSpecSweepAmplitude(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-    x_start = -51e6
-    x_stop = -49e6
+    x_start = -50.3e6
+    x_stop = -49.7e6
     x_step = 0.01e6
 
     parameters = {
         "modes": ["RR"],
-        "reps": 40000,
+        "reps": 20000,
         "wait_time": 5000,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
-        "y_sweep": (0.1, 0.2),
+        "y_sweep": (1.0, 0.5, 0.3),
         # "y_sweep": (0, 0.5 + 0.05/2, 0.05),
     }
     plot_parameters = {

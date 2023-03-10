@@ -95,6 +95,10 @@ class Yoko(Instrument):
         else:  # ramp up
             points = np.arange(start, stop + step / 2, step)
 
-        for point in points:
+        # round points to 4 decimal places to avoid floating point errors
+        # we use 4dp here since that is the max resolution of Yoko
+        rounded_points = np.around(points, 4)
+
+        for point in rounded_points:
             self.level = point
             time.sleep(Yoko.WAIT_TIME)

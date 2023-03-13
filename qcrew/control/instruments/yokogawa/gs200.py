@@ -93,7 +93,7 @@ class Yoko(Instrument):
         if start > stop:  # ramp down
             points = np.arange(stop, start + step / 2, step)[::-1]  # include endpoint
         else:  # ramp up
-            points = np.arange(start, stop + step / 2, step)
+                                                                                                                                                                                                              
 
         # round points to 4 decimal places to avoid floating point errors
         # we use 4dp here since that is the max resolution of Yoko

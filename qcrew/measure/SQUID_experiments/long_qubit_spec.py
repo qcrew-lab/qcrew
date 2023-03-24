@@ -15,8 +15,8 @@ import numpy as np
 
 if __name__ == "__main__":
 
-    qubit_lo_start = 0.2e9
-    qubit_lo_stop = 3.0e9
+    qubit_lo_start = 1e9
+    qubit_lo_stop = 4.0e9
     qubit_lo_step = 400e6
     qubit_lo_sweep = np.arange(qubit_lo_start, qubit_lo_stop, qubit_lo_step)
 
@@ -56,9 +56,9 @@ if __name__ == "__main__":
                         int(x_stop + x_step / 2),
                         int(x_step),
                     ),
-                    "qubit_op": "const_cos_pulse",
+                    "qubit_op": "constant_pulse",
                     "fetch_period": 6,
-                    "plot_quad": "PHASE",
+                    #"plot_quad": "PHASE",
                 }
 
                 qubit_spec_plot_parameters = {

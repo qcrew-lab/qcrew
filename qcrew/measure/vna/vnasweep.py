@@ -54,7 +54,7 @@ class VNASweep:
             "datagroup": "data",
             "datasets": vna.datakeys,  # each group will have datasets of these names
             "datashape": datashape,
-            "datatype": "f4",
+            "datatype": "f8",
         }
 
     def run(self, saver) -> None:
@@ -96,30 +96,31 @@ if __name__ == "__main__":
         vna.connect()
 
         # the routine below can handle multiple measurement runs at once
-        fcenterlist = [6.0450928e9, 5.30789225e9, 5.4769153e9, 6.0450928e9]
-        fspanlist = [75e3, 60e3, 60e3, 75e3]
-        pointslist = [1501, 1201, 1201, 1501]
-        repslist = [400, 500, 500, 500]
-        powerlist = [-15, -20, -20, -20]
+        #fcenterlist = []
+        #fspanlist = [20e3, 20e3, 20e3, 20e3, 20e3, 20e3, 20e3, 10e3, 10e3, 10e3]
+        #pointslist = [401, 401, 401, 401, 401, 401, 401, 651, 651, 651]
+        repslist = [200, 200, 200, 200]
+        powerlist = [-15, -20, -25, -30]
+        #ifbwlist = [100, 100, 100, 100, 100, 100, 100, 30, 30, 30]
 
-        num_runs = len(fcenterlist)
+        num_runs = len(repslist)
         for idx in range(num_runs):
             # these parameters are set on VNA and do not change during a measurement run
             vna_parameters = {
                 # frequency sweep center (Hz)
-                "fcenter": fcenterlist[idx],
+                "fcenter": 6.418082672e9,
                 # frequency sweep span (Hz)
-                "fspan": fspanlist[idx],
+                "fspan": 75e3,
                 # frequency sweep start value (Hz)
                 # "fstart": 4e9,
                 # frequency sweep stop value (Hz)
                 # "fstop": 8e9,
                 # IF bandwidth (Hz), [1, 500000]
-                "bandwidth": 50,
+                "bandwidth": 200,
                 # number of frequency sweep points, [2, 200001]
-                "sweep_points": pointslist[idx],
+                "sweep_points": 751,
                 # delay (s) between successive sweep points, [0.0, 100.0]
-                "sweep_delay": 1e-3,
+                "sweep_delay": 1e-2,
                 # trace data to be displayed and acquired, max traces = 16
                 # each tuple in the list is (<S parameter>, <trace format>)
                 # valid S parameter keys = ("s11", "s12", "s21", "s22")
@@ -144,7 +145,7 @@ if __name__ == "__main__":
                 # eg 1: powers = ((-30, 15, 5), 0) will sweep port 1 power from -30dBm to 15dBm inclusive in steps of 5dBm with port 2 power remaining constant at 0 dBm
                 # eg 2: powers = ({-15, 0, 15}, {-5, 0}) will result in sweep points (-15, -5), (-15, 0), (0, -5), (0, 0), (15, -5), (15, 0)
                 # eg 3: powers = (0, 0) will set both port powers to 0, no power sweep happens
-                "powers": (powerlist[idx], 0),
+                "powers": (powerlist[idx], powerlist[idx]),
             }
 
             # create measurement instance with instruments and measurement_parameters
@@ -155,9 +156,10 @@ if __name__ == "__main__":
             # {datapath} / {YYYYMMDD} / {HHMMSS}_{measurementname}_{usersuffix}.hdf5
             reps = measurement_parameters["repetitions"]
             power = measurement_parameters["powers"][0]
+            frq = vna_parameters["fcenter"]
             save_parameters = {
                 "datapath": pathlib.Path(stage.datapath) / "wheel",
-                "usersuffix": f"{fcenterlist[idx]:.5e}" + f"_{power}pow_{reps}reps",
+                "usersuffix": f"{frq:.5e}" + f"_{power}pow_{reps}reps",
                 "measurementname": measurement.__class__.__name__.lower(),
                 **measurement.dataspec,
             }

@@ -349,9 +349,13 @@ class Experiment(Parametrized):
             #     np.arctan(partial_results["Q"] / partial_results["I"])
             #     - 2 * np.pi * freqs * 300e-9 * 8
             # )
+
             phase = np.angle(
                 np.exp(+2 * 1j * np.pi * freqs * 34.9e-9 * 8)
-                * (partial_results["Q_AVG"] + 1j * partial_results["I_AVG"])
+                * (
+                    partial_results["Q_AVG"].reshape(-1, 2)
+                    + 1j * partial_results["I_AVG"].reshape(-1, 2)
+                )
             )
 
             processed_parital_results = phase

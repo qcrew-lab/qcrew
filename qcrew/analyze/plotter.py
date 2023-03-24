@@ -102,6 +102,7 @@ class Plotter:
                     x_data,
                     z_data,
                     fit_fn,
+                    0,
                     label=label,
                     err=err,
                     data_analysis=data_analysis,
@@ -131,6 +132,7 @@ class Plotter:
                         x_trace_data,
                         z_trace_data,
                         fit_fn,
+                        indx,
                         label=label,
                         err=err_trace_data,
                         color=color,
@@ -186,7 +188,7 @@ class Plotter:
         cbar.set_label(self.plot_setup["zlabel"])
 
     def plot_1D(
-        self, x, z, fit_fn, label=None, err=None, color="b", data_analysis=None
+        self, x, z, fit_fn, indx, label=None, err=None, color="b", data_analysis=None
     ):
 
         ax = self.fig.gca()
@@ -201,7 +203,7 @@ class Plotter:
         if fit_fn:
             # plot the fit curve
             fit_text, fit_z = self.fit(x, z, fit_fn=fit_fn, data_analysis=data_analysis)
-            left = 0
+            left = indx * 0.25
             bottom = -0.1
             ax.text(
                 left,

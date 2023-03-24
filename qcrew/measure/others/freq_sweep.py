@@ -34,10 +34,10 @@ if __name__ == "__main__":
         # rr.int_freq = -50e6
         # rr.lo_freq = 7.5e9
 
-        mode = qubit  # select the mode whose spectrum you want to sweep
+        mode = rr  # select the mode whose spectrum you want to sweep
 
         sweep_parameters = {  # set sweep parameters
-            "center": mode.lo_freq,
+            "center": 1e9,  # mode.lo_freq,
             "span": 400e6,
             "rbw": Sa124.default_rbw,
             "ref_power": Sa124.default_ref_power,

@@ -33,3 +33,5 @@ workspace.code-workspace
 data/
 *.npz
 qcrew/analyze/data_analysis
+*.h5
+*.pdf

@@ -3,6 +3,7 @@ A python class describing a qubit spectroscopy using QM.
 This class serves as a QUA script generator with user-defined parameters.
 """
 
+from cmath import phase
 from typing import ClassVar
 
 from qcrew.control import professor as prof
@@ -46,16 +47,18 @@ class QubitSpectroscopy(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-    x_start = 0e6
-    x_stop = 190e6
-    x_step = 0.2e6
+    x_start = -200e6
+    x_stop = -2e6
+    x_step = 0.08e6
 
     parameters = {
         "modes": ["QUBIT", "RR"],
-        "reps": 30000,
-        "wait_time": 5000,
+        "reps":2000,
+        "wait_time": 8000,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
         "qubit_op": "constant_pulse",
+        "fetch_period": 2,
+        #"plot_quad": "PHASE"
     }
 
     plot_parameters = {

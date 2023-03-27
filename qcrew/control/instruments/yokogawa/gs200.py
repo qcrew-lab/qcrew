@@ -75,7 +75,7 @@ class Yoko(Instrument):
         return float(self.handle.query(":source:level?"))
 
     @level.setter
-    def level(self, value):
+    def level(self, value: float):
         """ """
         # TODO bound, error handle
         self.handle.write(f":source:level:auto {value}")
@@ -87,18 +87,20 @@ class Yoko(Instrument):
 
     def ramp(self, stop, start=None, step=1e-4) -> None:
         """ """
+        logger.info(f"Setting yoko level to {stop}")
         if start is None:  # start from the current level set right now
             start = self.level
 
         if start > stop:  # ramp down
             points = np.arange(stop, start + step / 2, step)[::-1]  # include endpoint
         else:  # ramp up
-                                                                                                                                                                                                              
-
+            points = np.arange(stop, start + step / 2, step)
         # round points to 4 decimal places to avoid floating point errors
         # we use 4dp here since that is the max resolution of Yoko
         rounded_points = np.around(points, 4)
 
-        for point in rounded_points:
-            self.level = point
+        for point in points:
+            # self.level = point
+            self.handle.write(f":source:level:auto {point}")
             time.sleep(Yoko.WAIT_TIME)
+        logger.info(f"Yoko level set to {self.level}")

@@ -31,11 +31,8 @@ class RRSpectroscopy(Experiment):
         """
         Defines pulse sequence to be played inside the experiment loop
         """
-        (rr, qubit) = self.modes  # get the modes
+        (rr,) = self.modes  # get the modes
 
-        # qubit.play("const_cos_pulse")  # play qubit pulse
-        # qua.align(qubit.name, rr.name)  # wait qubit pulse to end
-        # qua.wait(875, rr.name)
         qua.update_frequency(rr.name, self.x)  # update resonator pulse frequency
         rr.measure((self.I, self.Q))  # measure transmitted signal
         qua.wait(int(self.wait_time // 4), rr.name)  # wait system reset
@@ -47,16 +44,16 @@ class RRSpectroscopy(Experiment):
 
 if __name__ == "__main__":
 
-    x_start = -50.3e6
-    x_stop = -49.7e6
-    x_step = 0.01e6
+    x_start = -50.06e6
+    x_stop = -49.98e6
+    x_step = 0.005e6
 
     parameters = {
-        "modes": ["RR", "QUBIT"],
+        "modes": ["RR"],
         "reps": 100000,
-        "wait_time": 5000,
+        "wait_time": 10000,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
-        #"plot_quad": "PHASE_SWEEP"
+        # "plot_quad": "PHASE_SWEEP"
     }
 
     plot_parameters = {

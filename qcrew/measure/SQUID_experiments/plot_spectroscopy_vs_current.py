@@ -48,7 +48,9 @@ def read_results(filepath):
     return freqs_total, currents_total, np.array(z_matrix)
 
 
-filepath_list = "C:/Users/qcrew/Desktop/qcrew/data/cc1_nusquid/20220511/165834_cc1_qubit_spec_current_sweep.h5"  # 234732_cc2_qubit_spec_current_sweep.h5"#
+#filepath_list = "C:/Users/qcrew/Desktop/qcrew/data/cc1_nusquid/20220511/165834_cc1_qubit_spec_current_sweep.h5"  # 234732_cc2_qubit_spec_current_sweep.h5"#
+filepath_list = "C:/Users/qcrew/Desktop/qcrew/data/somerset/20230327/201946_somerset_qubit_spec.h5"  # 234732_cc2_qubit_spec_current_sweep.h5"#
+
 freqs, currents_1, z_matrix_1 = read_results(filepath_list)
 
 # currents = np.concatenate((np.array(currents_1), currents_2, currents_3), axis=0)

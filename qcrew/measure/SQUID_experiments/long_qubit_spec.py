@@ -45,12 +45,12 @@ if __name__ == "__main__":
 
                 x_start = -200e6
                 x_stop = 200e6
-                x_step = 0.05e6
+                x_step = 0.08e6
 
                 qubit_spec_parameters = {
                     "modes": ["QUBIT", "RR"],
                     "reps": 20000,
-                    "wait_time": 3000,
+                    "wait_time": 10000,
                     "x_sweep": (
                         int(x_start),
                         int(x_stop + x_step / 2),

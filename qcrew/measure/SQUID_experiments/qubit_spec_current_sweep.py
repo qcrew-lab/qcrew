@@ -24,13 +24,13 @@ import time
 
 if __name__ == "__main__":
 
-    current_start = 10e-3
+    current_start = -4e-3
     current_stop = -10e-3
-    current_step = -0.5e-3
+    current_step = -0.25e-3
     current_sweep = np.arange(current_start, current_stop, current_step)
 
-    qubit_lo_start = 5.4084e9
-    qubit_lo_stop = 4e9
+    qubit_lo_start = 3e9
+    qubit_lo_stop = 1e9
     qubit_lo_step = -200e6
     qubit_lo_sweep = np.arange(qubit_lo_start, qubit_lo_stop, qubit_lo_step)
 
@@ -56,15 +56,14 @@ if __name__ == "__main__":
 
                 # Change value of current source
                 yoko = stage.YOKO
-                yoko.source = "current"
-                yoko.level = current  # set output to nominal value
-                yoko.state = True
+                #yoko.source = "current"
+                yoko.ramp(current, yoko.level, 0.02e-3)  # set output to nominal value
 
                 # Find resonator resonant frequency
                 ## Do RR spectroscopy
-                x_start = -60e6
-                x_stop = -46e6
-                x_step = 0.05e6
+                x_start = -50.5e6
+                x_stop = -49.5e6
+                x_step = 0.001e6
 
                 rr_spec_parameters = {
                     "modes": [stage.RR],
@@ -127,12 +126,12 @@ if __name__ == "__main__":
 
                     x_start = -200e6
                     x_stop = 0e6
-                    x_step = 0.5e6
+                    x_step = 0.15e6
 
                     qubit_spec_parameters = {
                         "modes": [stage.QUBIT, stage.RR],
-                        "reps": 500,
-                        "wait_time": 50000,
+                        "reps": 30000,
+                        "wait_time": 10000,
                         "x_sweep": (
                             int(x_start),
                             int(x_stop + x_step / 2),
@@ -140,7 +139,7 @@ if __name__ == "__main__":
                         ),
                         "qubit_op": "constant_pulse",
                         "fit_fn": None,
-                        "fetch_period": 2,
+                        "fetch_period": 6,
                     }
 
                     qubit_spec_plot_parameters = {

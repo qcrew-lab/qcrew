@@ -31,3 +31,6 @@ pip-log.txt
 pip-delete-this-directory.txt
 workspace.code-workspace
 data/
+*.npz
+*.pdf
+*.h5

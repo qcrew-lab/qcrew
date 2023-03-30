@@ -82,7 +82,8 @@ class LocalStage(Stage):
             raise RuntimeError(
                 "Please set 'qm' to True in stage.yml to connect to QM and re-run 'setup_stage'"
             )
-        qm = self._qmm.open_qm(self._qcb.config)
+        cfg = self._qcb.config
+        qm = self._qmm.open_qm(cfg)
         return qm
 
 

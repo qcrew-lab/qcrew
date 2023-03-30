@@ -38,8 +38,10 @@ class Readout(Mode):
         super().__init__(**parameters)
 
         if "readout_pulse" not in self._operations:
-            integration_weights = qcp.ConstantIntegrationWeights()
-            readout_pulse = qcp.ConstantPulse(integration_weights=integration_weights)
+            # integration_weights = qcp.ConstantIntegrationWeights()
+            integration_weights = qcp.OptimizedIntegrationWeights()
+            readout_pulse = qcp.ReadoutPulse(integration_weights=integration_weights)
+            # readout_pulse = qcp.ConstantPulse(integration_weights=integration_weights)
             self.operations = {"readout_pulse": readout_pulse}
 
         self.omega: float = omega

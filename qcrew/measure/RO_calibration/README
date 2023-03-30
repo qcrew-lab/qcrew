@@ -1,0 +1,15 @@
+This folder contains 3 scripts to:
+    1. Calibrate the DC offset of the acquired readout pulse (calibrate_dc_offset)
+    2. Get optimal integration weights for a given readout pulse (int_weight_training)
+    3. Calculate discrimination threshold between G and E states (threshold_calculation)
+
+These three scripts must be ran *in this order* every time the length or amplitude of the readout pulse is adjusted or when the time of flight is changed.
+
+The time_diff_calc script calculates the time offset that is hardcoded on the ReadoutTrainer. This value is a parameter of the OPX and doesn't change with time.
+
+To reset to constant integration weights, use the following script in setup_modes.py:
+
+integration_weights = qcp.OptimizedIntegrationWeights(
+    length=int(rr.readout_pulse.length / 4)
+)
+rr.readout_pulse.integration_weights = integration_weights

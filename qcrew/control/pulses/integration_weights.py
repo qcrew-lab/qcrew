@@ -64,22 +64,21 @@ class OptimizedIntegrationWeights(Parametrized, Yamlizable):
 
     def __call__(self, path) -> None:
         self.path = str(path)
-
         self.weights = np.load(Path(self.path))
         self.length = len(self.weights["I"][0])
 
     @property  # integration weights samples getter
     def samples(self) -> dict[str, dict[str, list]]:
         """ """
-        if self.weights is not None:
+        if self.weights:
             return {
                 self.keys[0]: {
                     "cosine": self.weights["I"][0],
-                    "sine": self.weights["Q"][1],
+                    "sine": self.weights["I"][1],
                 },
                 self.keys[1]: {
                     "cosine": self.weights["Q"][0],
-                    "sine": self.weights["Q"][0],
+                    "sine": self.weights["Q"][1],
                 },
             }
         else:

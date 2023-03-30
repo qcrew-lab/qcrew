@@ -28,15 +28,16 @@ class ReadoutPulse(Pulse):
         "pad",
         "const_length",
         "threshold",
+        "iw_path",
     }
 
     def __init__(
         self,
         *,
-        length: int = None,
-        ampx: float = None,
-        pad: int = None,
-        const_length: int = None,
+        length: int = 400,
+        ampx: float = 1.0,
+        pad: int = 0,
+        const_length: int = 400,
         threshold: float = None,
         integration_weights=None,
     ) -> None:
@@ -53,6 +54,11 @@ class ReadoutPulse(Pulse):
             length = pad + const_length
 
         self.threshold = threshold
+        # Saves the integration weights path as parameter if applicable
+        try:
+            self.iw_path = integration_weights.path
+        except AttributeError:
+            self.iw_path = None
 
         super().__init__(
             length=length, ampx=ampx, integration_weights=integration_weights

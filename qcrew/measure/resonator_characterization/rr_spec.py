@@ -44,14 +44,18 @@ class RRSpectroscopy(Experiment):
 
 if __name__ == "__main__":
 
-    x_start = -50.5e6
-    x_stop = -49.5e6
-    x_step = 10e3
+    fcenter = -50e6
+    fspan = 1e6
+    npoints = 200
+
+    x_start = fcenter - fspan / 2
+    x_stop = fcenter + fspan / 2
+    x_step = fspan / npoints
 
     parameters = {
         "modes": ["RR"],
         "reps": 10000,
-        "wait_time": 100000,
+        "wait_time": 75000,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
         "fetch_period": 1,
     }

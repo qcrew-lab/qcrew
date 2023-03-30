@@ -6,8 +6,8 @@ from qm import qua
 import numpy as np
 from scipy import signal
 
-reps = 500000
-wait_time = 50000
+reps = 1000
+wait_time = 75000
 
 def get_qua_program(rr):
     with qua.program() as raw_adc_avg:

@@ -5,8 +5,8 @@ from qcrew.control import Stagehand
 from qm import qua
 import numpy as np
 
-reps = 100000
-wait_time = 100000
+reps = 10000
+wait_time = 75000
 
 def get_qua_program(rr):
     with qua.program() as raw_adc_avg:

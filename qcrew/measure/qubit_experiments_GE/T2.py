@@ -57,14 +57,14 @@ if __name__ == "__main__":
     x_start = 4
     x_stop = 6000
     x_step = 40
-    detuning = 400e3
+    detuning = 0
 
     parameters = {
         "modes": ["QUBIT", "RR"],
         "reps": 8000,
-        "wait_time": 100000,
+        "wait_time": 60000,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
-        "qubit_op": "constant_cos_pi2",
+        "qubit_op": "pi",
         "detuning": int(detuning),
         "single_shot": False,
     }

@@ -66,9 +66,9 @@ class T2(Experiment):
 if __name__ == "__main__":
 
     x_start = 4
-    x_stop = 800
-    x_step = 3
-    detuning_ = 5e6  # 1.12e6
+    x_stop = 6000
+    x_step = 40
+    detuning_ = 6e6  # 1.12e6
 
     parameters = {
         "modes": ["QUBIT", "RR"],

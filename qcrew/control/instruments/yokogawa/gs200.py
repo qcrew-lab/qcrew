@@ -1,19 +1,19 @@
 """ """
 
-import numpy as np
-import time
 from typing import ClassVar
 import pyvisa
 
 from qcrew.control.instruments.instrument import Instrument
 from qcrew.helpers import logger
 
+import time
+import numpy as np
+
 
 class Yoko(Instrument):
     """ """
 
     WAIT_TIME = 0.1
-
     _parameters: ClassVar[set[str]] = {"state", "source", "level"}
 
     def __init__(self, id: str, name="") -> None:
@@ -75,7 +75,7 @@ class Yoko(Instrument):
         return float(self.handle.query(":source:level?"))
 
     @level.setter
-    def level(self, value: float):
+    def level(self, value):
         """ """
         # TODO bound, error handle
         self.handle.write(f":source:level:auto {value}")
@@ -87,20 +87,14 @@ class Yoko(Instrument):
 
     def ramp(self, stop, start=None, step=1e-4) -> None:
         """ """
-        logger.info(f"Setting yoko level to {stop}")
         if start is None:  # start from the current level set right now
             start = self.level
 
         if start > stop:  # ramp down
             points = np.arange(stop, start + step / 2, step)[::-1]  # include endpoint
         else:  # ramp up
-            points = np.arange(stop, start + step / 2, step)
-        # round points to 4 decimal places to avoid floating point errors
-        # we use 4dp here since that is the max resolution of Yoko
-        rounded_points = np.around(points, 4)
+            points = np.arange(start, stop + step / 2, step)
 
         for point in points:
-            # self.level = point
-            self.handle.write(f":source:level:auto {point}")
+            self.level = point
             time.sleep(Yoko.WAIT_TIME)
-        logger.info(f"Yoko level set to {self.level}")

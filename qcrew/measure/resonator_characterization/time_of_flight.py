@@ -15,8 +15,6 @@ def get_qua_program(rr):
 
         with qua.for_(n, 0, n < reps, n + 1):
             qua.reset_phase(rr.name)
-            #qua.wait(230, "QUBIT")
-            #qua.play("constant_pulse" * qua.amp(1), "QUBIT")
             qua.measure("readout_pulse" * qua.amp(1), rr.name, adc_stream)
             qua.wait(10000, rr.name)
 

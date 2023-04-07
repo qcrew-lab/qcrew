@@ -20,7 +20,7 @@ if __name__ == "__main__":
         mixer_tuner = MixerTuner(sa, qm)
 
         # this is the mode whose mixer's LO or SB leakage you are tuning
-        mode = qubit
+        mode = rr
 
         # minimize LO leakage
 
@@ -40,7 +40,7 @@ if __name__ == "__main__":
             "plot": False,
         }
 
-        #mixer_tuner.tune_lo(mode=mode, method="BF", **bf_params_lo)
+        # mixer_tuner.tune_lo(mode=mode, method="BF", **bf_params_lo)
 
         # user Nelder-Mead (NM) minimizer
         mixer_tuner.tune_lo(mode=mode, method="NM")
@@ -63,7 +63,7 @@ if __name__ == "__main__":
             "plot": False,
         }
 
-        mixer_tuner.tune_sb(mode=mode, method="BF", **bf_params_lo)
+        # mixer_tuner.tune_sb(mode=mode, method="BF", **bf_params_lo)
 
         # user Nelder-Mead (NM) minimizer
         mixer_tuner.tune_sb(mode=mode, method="NM")

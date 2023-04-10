@@ -13,13 +13,10 @@ from vnasavedata import VNADataSaver
 class VNASweep:
     """ """
 
-    def __init__(
-        self, vna, repetitions: int, powers: tuple, attenuation: tuple
-    ) -> None:
+    def __init__(self, vna, repetitions: int, powers: tuple) -> None:
         """ """
         self.repetitions = repetitions
         self.vna = vna
-        self.port1_attenuation, self.port2_attenuation = attenuation
         if self.vna.is_averaging:
             self.vna.sweep_repetitions = repetitions
 
@@ -57,7 +54,7 @@ class VNASweep:
             "datagroup": "data",
             "datasets": vna.datakeys,  # each group will have datasets of these names
             "datashape": datashape,
-            "datatype": "f4",
+            "datatype": "f8",
         }
 
     def run(self, saver) -> None:
@@ -77,9 +74,7 @@ class VNASweep:
         """ """
         # save power data since its already available
         powers = np.array(tuple(self.powers)).T
-        port1_powers = powers[0] - self.port1_attenuation
-        port2_powers = powers[1] - self.port2_attenuation
-        saver.save_data({"power": port1_powers, "power2": port2_powers})
+        saver.save_data({"power": powers[0], "power2": powers[1]})
 
         # for each power tuple in self.powers, do fsweep, for n reps
         for power_count, (p1, p2) in enumerate(self.powers):  # p1, p2 = port powers
@@ -101,9 +96,93 @@ if __name__ == "__main__":
         vna.connect()
 
         # the routine below can handle multiple measurement runs at once
-        fcenterlist = [6.567982e9, 6.792847e9, 6.884662e9, 6.885641e9]
-        fspanlist = [60e3, 60e3, 50e3, 75e3]
-        pointslist = [1201, 1201, 1001, 1501]
+        fcenterlist = [
+            6.459327468e9,
+            6.4216833e9,
+            5.958239974e9,
+            6.459327468e9,
+            6.4216833e9,
+            5.958239974e9,
+            6.459327468e9,
+            6.4216833e9,
+            5.958239974e9,
+            6.459327468e9,
+            6.4216833e9,
+            5.958239974e9,
+            6.459327468e9,
+            6.4216833e9,
+            5.958239974e9,
+        ]
+        fspanlist = [
+            40e3,
+            100e3,
+            40e3,
+            40e3,
+            100e3,
+            40e3,
+            40e3,
+            100e3,
+            40e3,
+            40e3,
+            100e3,
+            40e3,
+            40e3,
+            100e3,
+            40e3,
+        ]
+        pointslist = [
+            801,
+            1001,
+            801,
+            801,
+            1001,
+            801,
+            801,
+            1001,
+            801,
+            801,
+            1001,
+            801,
+            801,
+            1001,
+            801,
+        ]
+        ifbwlist = [
+            100,
+            200,
+            100,
+            100,
+            200,
+            100,
+            100,
+            200,
+            100,
+            100,
+            200,
+            100,
+            100,
+            200,
+            100,
+        ]
+
+        powerslist = [10, 10, 10, 0, 0, 0, -10, -10, -10, -20, -20, -20, -30, -30, -30]
+        repslist = [
+            50,
+            50,
+            50,
+            100,
+            100,
+            100,
+            200,
+            200,
+            200,
+            350,
+            350,
+            350,
+            500,
+            500,
+            500,
+        ]
 
         num_runs = len(fcenterlist)
         for idx in range(num_runs):
@@ -118,11 +197,11 @@ if __name__ == "__main__":
                 # frequency sweep stop value (Hz)
                 # "fstop": 8e9,
                 # IF bandwidth (Hz), [1, 500000]
-                "bandwidth": 50,
+                "bandwidth": ifbwlist[idx],
                 # number of frequency sweep points, [2, 200001]
                 "sweep_points": pointslist[idx],
                 # delay (s) between successive sweep points, [0.0, 100.0]
-                "sweep_delay": 1e-3,
+                "sweep_delay": 1e-2,
                 # trace data to be displayed and acquired, max traces = 16
                 # each tuple in the list is (<S parameter>, <trace format>)
                 # valid S parameter keys = ("s11", "s12", "s21", "s22")
@@ -137,7 +216,7 @@ if __name__ == "__main__":
             # these parameters are looped over during the measurement
             measurement_parameters = {
                 # Number of sweep averages, must be an integer > 0
-                "repetitions": 50,
+                "repetitions": repslist[idx],
                 # Input powers at (<port1>, <port2>) (dBm), range [-30.0, 15.0]
                 # <portX> (X=1,2) can be a set {a, b,...}, tuple (st, stop, step), or constant x
                 # use set for discrete sweep points a, b, ...
@@ -147,10 +226,7 @@ if __name__ == "__main__":
                 # eg 1: powers = ((-30, 15, 5), 0) will sweep port 1 power from -30dBm to 15dBm inclusive in steps of 5dBm with port 2 power remaining constant at 0 dBm
                 # eg 2: powers = ({-15, 0, 15}, {-5, 0}) will result in sweep points (-15, -5), (-15, 0), (0, -5), (0, 0), (15, -5), (15, 0)
                 # eg 3: powers = (0, 0) will set both port powers to 0, no power sweep happens
-                "powers": (10, 0),
-                # total physical attenuation added to VNA ports, if any
-                # (port_1_attenuation, port_2_attenuation) in dB
-                "attenuation": (80.0, 0),
+                "powers": (powerslist[idx], 0),
             }
 
             # create measurement instance with instruments and measurement_parameters
@@ -160,10 +236,10 @@ if __name__ == "__main__":
             # hdf5 file saved at:
             # {datapath} / {YYYYMMDD} / {HHMMSS}_{measurementname}_{usersuffix}.hdf5
             reps = measurement_parameters["repetitions"]
-            power = measurement_parameters["powers"][0] - measurement_parameters["attenuation"][0]
+            power = measurement_parameters["powers"][0]
             save_parameters = {
                 "datapath": pathlib.Path(stage.datapath) / "wheel",
-                "usersuffix": f"{fcenterlist[idx]:.5}" + f"_{power:.3}pow_{reps}reps",
+                "usersuffix": f"{fcenterlist[idx]:.3}" + f"_{power}pow_{reps}reps",
                 "measurementname": measurement.__class__.__name__.lower(),
                 **measurement.dataspec,
             }

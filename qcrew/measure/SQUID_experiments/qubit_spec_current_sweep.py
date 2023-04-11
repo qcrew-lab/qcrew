@@ -29,7 +29,7 @@ if __name__ == "__main__":
     current_step = -0.25e-3
     current_sweep = np.arange(current_start, current_stop, current_step)
 
-    qubit_lo_start = 3e9
+    qubit_lo_start = 5e9
     qubit_lo_stop = 1e9
     qubit_lo_step = -200e6
     qubit_lo_sweep = np.arange(qubit_lo_start, qubit_lo_stop, qubit_lo_step)

@@ -53,9 +53,9 @@ class T1(Experiment):
 
 if __name__ == "__main__":
 
-    x_start = 100
-    x_stop = 15000
-    x_step = 250
+    x_start = 20
+    x_stop = 1000
+    x_step = 10
     parameters = {
         "modes": ["QUBIT", "RR"],
         "reps": 1000000,
@@ -63,7 +63,7 @@ if __name__ == "__main__":
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
         "qubit_op": "constant_pulse",
         "single_shot": False,
-        #"plot_quad": "PHASE"
+        "plot_quad": "PHASE"
     }
 
     plot_parameters = {

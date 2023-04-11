@@ -353,8 +353,8 @@ class Experiment(Parametrized):
             phase = np.angle(
                 np.exp(+2 * 1j * np.pi * freqs * 34.9e-9 * 8)
                 * (
-                    partial_results["Q_AVG"].reshape(-1, 2)
-                    + 1j * partial_results["I_AVG"].reshape(-1, 2)
+                    partial_results["Q_AVG"]  # .reshape(-1, 2)
+                    + 1j * partial_results["I_AVG"]  # .reshape(-1, 2)
                 )
             )
 

@@ -96,93 +96,7 @@ if __name__ == "__main__":
         vna.connect()
 
         # the routine below can handle multiple measurement runs at once
-        fcenterlist = [
-            6.459327468e9,
-            6.4216833e9,
-            5.958239974e9,
-            6.459327468e9,
-            6.4216833e9,
-            5.958239974e9,
-            6.459327468e9,
-            6.4216833e9,
-            5.958239974e9,
-            6.459327468e9,
-            6.4216833e9,
-            5.958239974e9,
-            6.459327468e9,
-            6.4216833e9,
-            5.958239974e9,
-        ]
-        fspanlist = [
-            40e3,
-            100e3,
-            40e3,
-            40e3,
-            100e3,
-            40e3,
-            40e3,
-            100e3,
-            40e3,
-            40e3,
-            100e3,
-            40e3,
-            40e3,
-            100e3,
-            40e3,
-        ]
-        pointslist = [
-            801,
-            1001,
-            801,
-            801,
-            1001,
-            801,
-            801,
-            1001,
-            801,
-            801,
-            1001,
-            801,
-            801,
-            1001,
-            801,
-        ]
-        ifbwlist = [
-            100,
-            200,
-            100,
-            100,
-            200,
-            100,
-            100,
-            200,
-            100,
-            100,
-            200,
-            100,
-            100,
-            200,
-            100,
-        ]
-
-        powerslist = [10, 10, 10, 0, 0, 0, -10, -10, -10, -20, -20, -20, -30, -30, -30]
-        repslist = [
-            50,
-            50,
-            50,
-            100,
-            100,
-            100,
-            200,
-            200,
-            200,
-            350,
-            350,
-            350,
-            500,
-            500,
-            500,
-        ]
+        fcenterlist = np.linspace(5e9, 7e9, 1001)
 
         num_runs = len(fcenterlist)
         for idx in range(num_runs):
@@ -191,17 +105,17 @@ if __name__ == "__main__":
                 # frequency sweep center (Hz)
                 "fcenter": fcenterlist[idx],
                 # frequency sweep span (Hz)
-                "fspan": fspanlist[idx],
+                "fspan": 2e6,
                 # frequency sweep start value (Hz)
                 # "fstart": 4e9,
                 # frequency sweep stop value (Hz)
                 # "fstop": 8e9,
                 # IF bandwidth (Hz), [1, 500000]
-                "bandwidth": ifbwlist[idx],
+                "bandwidth": 1e3,
                 # number of frequency sweep points, [2, 200001]
-                "sweep_points": pointslist[idx],
+                "sweep_points": 20001,
                 # delay (s) between successive sweep points, [0.0, 100.0]
-                "sweep_delay": 1e-2,
+                "sweep_delay": 1e-4,
                 # trace data to be displayed and acquired, max traces = 16
                 # each tuple in the list is (<S parameter>, <trace format>)
                 # valid S parameter keys = ("s11", "s12", "s21", "s22")
@@ -216,7 +130,7 @@ if __name__ == "__main__":
             # these parameters are looped over during the measurement
             measurement_parameters = {
                 # Number of sweep averages, must be an integer > 0
-                "repetitions": repslist[idx],
+                "repetitions": 1,
                 # Input powers at (<port1>, <port2>) (dBm), range [-30.0, 15.0]
                 # <portX> (X=1,2) can be a set {a, b,...}, tuple (st, stop, step), or constant x
                 # use set for discrete sweep points a, b, ...
@@ -226,7 +140,7 @@ if __name__ == "__main__":
                 # eg 1: powers = ((-30, 15, 5), 0) will sweep port 1 power from -30dBm to 15dBm inclusive in steps of 5dBm with port 2 power remaining constant at 0 dBm
                 # eg 2: powers = ({-15, 0, 15}, {-5, 0}) will result in sweep points (-15, -5), (-15, 0), (0, -5), (0, 0), (15, -5), (15, 0)
                 # eg 3: powers = (0, 0) will set both port powers to 0, no power sweep happens
-                "powers": (powerslist[idx], 0),
+                "powers": (0, 0),
             }
 
             # create measurement instance with instruments and measurement_parameters

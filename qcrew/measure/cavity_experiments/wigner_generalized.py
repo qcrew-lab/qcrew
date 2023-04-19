@@ -1,10 +1,9 @@
 """
-A python class describing a qubit spectroscopy using QM.
+A python class describing a generalized Wigner measurement using QM.
 This class serves as a QUA script generator with user-defined parameters.
 """
 
 from typing import ClassVar
-
 from qcrew.control import professor as prof
 from qcrew.measure.experiment import Experiment
 from qm import qua
@@ -12,11 +11,9 @@ import numpy as np
 
 
 # ---------------------------------- Class -------------------------------------
-
-
 class WignerFunction(Experiment):
 
-    name = "wigner_function"
+    name = "Generalized_Wigner_function"
 
     _parameters: ClassVar[set[str]] = Experiment._parameters | {
         "cav_op",  # operation for displacing the cavity
@@ -25,8 +22,7 @@ class WignerFunction(Experiment):
         "delay",  # describe...
     }
 
-    def __init__(self, cav_op, qubit_op, fit_fn="gaussian", delay=4, **other_params):
-
+    def __init__(self, cav_op, qubit_op, fit_fn=None, delay=4, **other_params):
         self.cav_op = cav_op
         self.qubit_op = qubit_op
         self.fit_fn = fit_fn
@@ -41,10 +37,9 @@ class WignerFunction(Experiment):
         qubit, cav, rr = self.modes  # get the modes
 
         qua.reset_frame(cav.name)
-
-        cav.play(self.cav_op, ampx=0.0, phase=0.0)       
-
-        cav.play(self.cav_op, ampx=self.x, phase=0)  # displacement in I direction
+        cav.play(self.cav_op, ampx=0, phase=0.5)  # state to be imaged
+        cav.play(self.cav_op, ampx=np.real(self.x), phase=0)  # I displacement
+        cav.play(self.cav_op, ampx=np.imag(self.x), phase=0.25)  # Q displacement
         qua.align(cav.name, qubit.name)
         qubit.play(self.qubit_op)  # play pi/2 pulse around X
         qua.wait(
@@ -53,44 +48,30 @@ class WignerFunction(Experiment):
             qubit.name,
         )  # conditional phase gate on even, odd Fock state
         qubit.play(self.qubit_op)  # play pi/2 pulse around X
-
-        # Measure cavity state
         qua.align(qubit.name, rr.name)  # align measurement
         rr.measure((self.I, self.Q))  # measure transmitted signal
-        
-        # wait system reset
+
+        # Wait system reset
         qua.align(cav.name, qubit.name, rr.name)
-        # rr.play("constant_pulse", duration=5e3, ampx=1)
-        # cav.play("constant_pulse", duration=5e3, ampx=0.04)
         qua.wait(int(self.wait_time // 4), cav.name)
-        
 
         if self.single_shot:  # assign state to G or E
             qua.assign(
                 self.state, qua.Cast.to_fixed(self.I < rr.readout_pulse.threshold)
             )
-
         self.QUA_stream_results()  # stream variables (I, Q, x, etc)
 
-
 # -------------------------------- Execution -----------------------------------
-
 if __name__ == "__main__":
-    x_start = -2
-    x_stop = 2
-    x_step = 0.2
+    phase_points = (1 + 1j, 1.5 + 1.5j)
 
     parameters = {
         "modes": ["QUBIT", "CAVB", "RR"],
         "reps": 5000,
-        "wait_time": 1000e3,
+        "wait_time": 1200e3,
         "fetch_period": 4,  # time between data fetching rounds in sec
-        "delay": 150,  # pi/chi
-        "x_sweep": (
-            x_start,
-            x_stop + x_step / 2,
-            x_step,
-        ),  # ampitude sweep of the displacement pulses in the ECD
+        "delay": 750,  # pi/chi for a regular Wigner
+        "x_sweep": phase_points,  # ampitudes of the displacement pulses
         "qubit_op": "gaussian_pi2_pulse",
         "cav_op": "gaussian_coh1_long",
         "single_shot": False,
@@ -99,9 +80,10 @@ if __name__ == "__main__":
 
     plot_parameters = {
         "xlabel": "X",
-        "ylabel": "Y",
+        # "ylabel": "Y",
         "plot_type": "1D",
         "cmap": "bwr",
+        "plot_err": False,
     }
 
     experiment = WignerFunction(**parameters)

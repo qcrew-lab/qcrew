@@ -1,4 +1,4 @@
-"""
+  """
 A python class describing a qubit spectroscopy using QM.
 This class serves as a QUA script generator with user-defined parameters.
 """

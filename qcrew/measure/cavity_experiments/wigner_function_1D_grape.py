@@ -25,12 +25,15 @@ class WignerFunction(Experiment):
         "delay",  # describe...
     }
 
-    def __init__(self, cav_op, qubit_op, fit_fn="gaussian", delay=4, **other_params):
+    def __init__(self, cav_op, qubit_op, qubit_grape, cav_grape, fit_fn=None, delay=4, **other_params):
 
         self.cav_op = cav_op
         self.qubit_op = qubit_op
         self.fit_fn = fit_fn
         self.delay = delay
+        self.qubit_grape = qubit_grape
+        self.cav_grape = cav_grape
+
 
         super().__init__(**other_params)  # Passes other parameters to parent
 
@@ -42,9 +45,13 @@ class WignerFunction(Experiment):
 
         qua.reset_frame(cav.name)
 
-        cav.play(self.cav_op, ampx=0.0, phase=0.0)       
-
-        cav.play(self.cav_op, ampx=self.x, phase=0)  # displacement in I direction
+        # cav.play(self.cav_op, ampx=0, phase=0)
+        qubit.play(self.qubit_grape,)
+        cav.play(self.cav_grape,)
+        
+        qua.align()
+        qua.wait(int(20 // 4))
+        cav.play(self.cav_op, ampx=(self.x)/1.5, phase=0)  # displacement in I direction
         qua.align(cav.name, qubit.name)
         qubit.play(self.qubit_op)  # play pi/2 pulse around X
         qua.wait(
@@ -57,13 +64,12 @@ class WignerFunction(Experiment):
         # Measure cavity state
         qua.align(qubit.name, rr.name)  # align measurement
         rr.measure((self.I, self.Q))  # measure transmitted signal
-        
+
         # wait system reset
         qua.align(cav.name, qubit.name, rr.name)
         # rr.play("constant_pulse", duration=5e3, ampx=1)
         # cav.play("constant_pulse", duration=5e3, ampx=0.04)
         qua.wait(int(self.wait_time // 4), cav.name)
-        
 
         if self.single_shot:  # assign state to G or E
             qua.assign(
@@ -76,23 +82,25 @@ class WignerFunction(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-    x_start = -2
-    x_stop = 2
-    x_step = 0.2
+    x_start = -2.8
+    x_stop = 2.8
+    x_step = 0.04
 
     parameters = {
         "modes": ["QUBIT", "CAVB", "RR"],
-        "reps": 5000,
-        "wait_time": 1000e3,
-        "fetch_period": 4,  # time between data fetching rounds in sec
-        "delay": 150,  # pi/chi
+        "reps": 1000,
+        "wait_time": 3000e3,
+        "fetch_period": 2,  # time between data fetching rounds in sec
+        "delay": 700,  # pi/chi
         "x_sweep": (
             x_start,
             x_stop + x_step / 2,
             x_step,
         ),  # ampitude sweep of the displacement pulses in the ECD
-        "qubit_op": "gaussian_pi2_pulse",
-        "cav_op": "gaussian_coh1_long",
+        "qubit_op": "constant_cosine_pi2_pulse",
+        "cav_op": "gaussian_coh1",
+        "qubit_grape": "grape_fock02_pulse",
+        "cav_grape": "grape_fock02_pulse",
         "single_shot": False,
         "plot_quad": "I_AVG",
     }

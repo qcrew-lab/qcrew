@@ -10,7 +10,15 @@ from qcrew.control.pulses.pulse import BASE_PULSE_AMP, Pulse
 class NumericalPulse(Pulse):
     """ """
 
-    def __init__(self, path: str, I_quad : str, Q_quad : str, ampx: float = 1.0, pad: int = 0, frontpad: int = 0) -> None:
+    def __init__(
+        self,
+        path: str,
+        I_quad: str,
+        Q_quad: str,
+        ampx: float = 1.0,
+        pad: int = 0,
+        frontpad: int = 0,
+    ) -> None:
         """
         To initialise the Numerical Pulse class
 
@@ -21,7 +29,7 @@ class NumericalPulse(Pulse):
 
         I_quad : str
             The dictionary hash of the I_quadrature of the pulse
-        
+
         Q_quad : str
             The dictionary hash of the Q_quadrature
 
@@ -39,16 +47,19 @@ class NumericalPulse(Pulse):
         NumericalPulse obj
         """
 
+        self.I_quad = I_quad
+        self.Q_quad = Q_quad
+
         self.path = path
         self.pad = pad
         self.frontpad = frontpad
-        
+
         npzfile = np.load(Path(self.path), "r")
 
-        self.oct_pulse_X = npzfile[I_quad]     # First Quadrature
-        self.oct_pulse_Y = npzfile[Q_quad]     # second Quadrature
+        self.oct_pulse_X = npzfile[I_quad]  # First Quadrature
+        self.oct_pulse_Y = npzfile[Q_quad]  # second Quadrature
 
-        self.time_step = npzfile["dt"]         # Time Step between Specified Pulse Amplitudes
+        self.time_step = npzfile["dt"]  # Time Step between Specified Pulse Amplitudes
 
         # Checking if the specified time step is valid (in ns)
         if int(self.time_step) != self.time_step:
@@ -70,10 +81,7 @@ class NumericalPulse(Pulse):
                     self.oct_pulse_X, [0] * (quad_len_diff * -1)
                 )
             elif quad_len_diff > 0:
-                self.oct_pulse_Y = np.append(
-                    self.oct_pulse_Y, [0] * quad_len_diff
-                )
-
+                self.oct_pulse_Y = np.append(self.oct_pulse_Y, [0] * quad_len_diff)
 
         # Check if the pulse is a multiple of four, because QM works that way
         length = len(self.oct_pulse_X) + abs(self.frontpad)
@@ -87,7 +95,7 @@ class NumericalPulse(Pulse):
     @property
     def samples(self):
         """
-        I assume this produces a sample of the pulse, and this is where we tune the parameters 
+        I assume this produces a sample of the pulse, and this is where we tune the parameters
         that will not be fixed during iterations or sweeps during experiments
 
         Mutable Parameters
@@ -101,7 +109,7 @@ class NumericalPulse(Pulse):
         self.pas : int
             Rear padding of the pulse
         """
-        
+
         # Adding the pulse amplitude scaling
         i_wave = self.oct_pulse_X * self.ampx
         q_wave = self.oct_pulse_Y * self.ampx
@@ -109,14 +117,34 @@ class NumericalPulse(Pulse):
         # Adding the time delay padding
         if self.frontpad > 0:
             i_wave = np.append(
-                [0,]*self.frontpad, i_wave)
+                [
+                    0,
+                ]
+                * self.frontpad,
+                i_wave,
+            )
             q_wave = np.append(
-                [0,]*self.frontpad, q_wave)
+                [
+                    0,
+                ]
+                * self.frontpad,
+                q_wave,
+            )
         elif self.frontpad < 0:
             i_wave = np.append(
-                 i_wave, [0,]*self.frontpad)
+                i_wave,
+                [
+                    0,
+                ]
+                * self.frontpad,
+            )
             q_wave = np.append(
-                q_wave, [0,]*self.frontpad)
+                q_wave,
+                [
+                    0,
+                ]
+                * self.frontpad,
+            )
 
         # Adding the rear pulse padding
         if self.pad != 0:

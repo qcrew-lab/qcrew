@@ -35,7 +35,6 @@ class Experiment(Parametrized):
         fetch_period=1,
         single_shot=False,
         plot_quad=None,
-        cable_delay=None,
         extra_vars: dict[str, macros.ExpVariable] = None,
     ):
 
@@ -59,9 +58,6 @@ class Experiment(Parametrized):
 
         # Should plot quadratures instead of Z_AVG?
         self.plot_quad = plot_quad
-
-        # in 1/freq units, typical 2e-6
-        self.cable_delay = cable_delay
 
         # ExpVariable definitions. This list is updated in _configure_sweeps and after
         # stream and variable declaration.
@@ -159,9 +155,6 @@ class Experiment(Parametrized):
         else:
             dep_tags = [self.Z_AVG_tag]
 
-        # dep_tags = ["state" if self.single_shot else self.Z_AVG_tag]
-        # dep_tags = ["I_AVG"]  # toggle here if you want to just look at one quadrature
-        # dep_tags = []
         return indep_tags, dep_tags
 
     def setup_plot(
@@ -181,19 +174,14 @@ class Experiment(Parametrized):
         """
         Updates self.plot_setup dictionary with the parameters to be used by the
         plotter.
-
         The x and y labels are set up independently if the corresponding sweep exists.
-
         plot_type identifies how the plotter should arrange the data. If "1D" and x,y
         sweeps are configured, one x sweep trace is plotted for every value of y. If
         the user wants to plot a colormesh instead, pass plot_type = '2D'.
-
         trace_labels is a list of labels for each trace. If plot_type = "1D" and a y
         sweep is
         configured, each label will correspond to a value of y.
-
         plot_err toggles errorbar plotting.
-
         """
 
         # title is updated later with the filename, experiment name and number of
@@ -333,6 +321,68 @@ class Experiment(Parametrized):
 
         return stderr
 
+    def preprocess_dependent_data(self, tag, independent_data, partial_results):
+
+        if tag == "Z_AVG":
+            # Take the square root of Z_AVG variables. This step is required for
+            # dependent values calculated as I^2 + Q^2 in stream processing.
+            data = np.sqrt(partial_results[tag])
+            processed_parital_results = data.reshape(self.buffering)
+
+        elif tag == "PHASE":
+            rr_if = -50e6  # NOTE manually input rr_if here
+            cable_delay_guess = (
+                34.8e-9 * 8
+            )  # NOTE manually input cable delay guess (ns) here, should be around 200-300ns
+            phase = np.angle(
+                np.exp(1j * 2 * np.pi * rr_if * cable_delay_guess)
+                * (partial_results["Q_AVG"] + 1j * partial_results["I_AVG"])
+            )
+
+            processed_parital_results = np.unwrap(phase)
+
+        elif tag == "PHASE_RR_SPEC":
+            # Phase information useful for troubleshooting and rr spectroscopy
+            freqs = independent_data[0]
+            cable_delay_guess = 34.8e-9 * 8
+
+            phase = np.angle(
+                np.exp(1j * 2 * np.pi * freqs * cable_delay_guess)
+                * (partial_results["Q_AVG"] + 1j * partial_results["I_AVG"])
+            )
+
+            processed_parital_results = np.unwrap(phase)
+
+        elif tag == "PHASE_SWEEP":
+            # Phase information useful for troubleshooting and rr spectroscopy
+            freqs = independent_data[0]
+            cable_delay_guess = 34.8e-9 * 8
+            # phase = (
+            #     np.arctan(partial_results["Q"] / partial_results["I"])
+            #     - 2 * np.pi * freqs * 300e-9 * 8
+            # )
+            y_values = np.shape(freqs)[1]
+
+            phase = np.angle(
+                np.exp(1j * 2 * np.pi * freqs * cable_delay_guess)
+                * (
+                    partial_results["Q_AVG"].reshape(-1, y_values)
+                    + 1j * partial_results["I_AVG"].reshape(-1, y_values)
+                )
+            )
+
+            processed_parital_results = np.unwrap(phase)
+            # processed_parital_results = np.average(phase, axis=0).reshape(
+            #     self.buffering
+            # )
+
+        else:
+            # processed_parital_results = partial_results[tag]
+            data = partial_results[tag]
+            processed_parital_results = data.reshape(self.buffering)
+
+        return processed_parital_results
+
     def plot_results(self, plotter, partial_results, num_results, stderr):
         """
         Retrieves, reorganizes the data and sends it to the plotter.
@@ -344,32 +394,43 @@ class Experiment(Parametrized):
         for tag in indep_tags:
             reshaped_data = partial_results[tag].reshape(self.buffering)
             independent_data.append(reshaped_data)
-            
+
         dependent_data = []
         for tag in dep_tags:
 
-            if tag == "Z_AVG":
-                # Take the square root of Z_AVG variables. This step is required for
-                # dependent values calculated as I^2 + Q^2 in stream processing.
-                data = np.sqrt(partial_results[tag])
-            elif tag == "PHASE":
-                freqs = independent_data[0]
-                # data = np.average(
-                #     partial_results["I"] + 1j * partial_results["Q"], axis=0
-                # )
-                data_complex = partial_results["I"] + 1j * partial_results["Q"]
+            processed_data = self.preprocess_dependent_data(
+                tag, independent_data, partial_results
+            )
 
-                data = np.unwrap(np.angle(data_complex))
-                data -= freqs * self.cable_delay
-                data = np.average(data, axis=0)
-                # print(np.shape(data))
-            else:
-                data = partial_results[tag]
+            dependent_data.append(processed_data)
 
-            # Reshape the fetched data with buffer lengths
-            # print(self.buffering)
-            reshaped_data = data.reshape(self.buffering)  
-            dependent_data.append(reshaped_data)
+        # if an internal sweep is defined in the child experiment class, add its value
+        # as independent variable data. The values are repeated so the dimensions match
+        # the other independent data shapes.
+
+        independent_data = []
+        for tag in indep_tags:
+            reshaped_data = partial_results[tag].reshape(self.buffering)
+            independent_data.append(reshaped_data)
+
+        if 0:
+            # Phase information useful for troubleshooting and rr spectroscopy
+            freqs = independent_data[0]
+            # phase = (
+            #     np.arctan(partial_results["Q"] / partial_results["I"])
+            #     - 2 * np.pi * freqs * 31e-9 * 8
+            # )
+            phase = (
+                np.angle(partial_results["Q"] + 1j * partial_results["I"])
+                - 2 * np.pi * freqs * 37e-9 * 8
+            )
+
+            reshaped_phase_data = np.average(phase, axis=0).reshape(self.buffering)
+            dependent_data.append(reshaped_phase_data)
+
+            # if an internal sweep is defined in the child experiment class, add its value
+            # as independent variable data. The values are repeated so the dimensions match
+            # the other independent data shapes.
 
         try:
             internal_sweep = self.internal_sweep
@@ -415,91 +476,3 @@ class Experiment(Parametrized):
         }
 
         return dep_data_dict | indep_data_dict | internal_sweep_dict
-
-    # # def plot_results(self, plotter, partial_results, num_results, stderr):
-    # """
-    #     Retrieves, reorganizes the data and sends it to the plotter.
-    #     """
-
-    # indep_tags, dep_tags = self.results_tags
-
-    # dependent_data = []
-    # for tag in dep_tags:
-
-    #     if tag == "Z_AVG":
-    #         # Take the square root of Z_AVG variables. This step is required for
-    #         # dependent values calculated as I^2 + Q^2 in stream processing.
-    #         data = np.sqrt(partial_results[tag])
-    #     else:
-    #         data = partial_results[tag]
-
-    #     # Reshape the fetched data with buffer lengths
-    #     reshaped_data = data.reshape(self.buffering)
-    #     dependent_data.append(reshaped_data)
-
-    # independent_data = []
-    # for tag in indep_tags:
-    #     reshaped_data = partial_results[tag].reshape(self.buffering)
-    #     independent_data.append(reshaped_data)
-
-    # if 0:
-    #     # Phase information useful for troubleshooting and rr spectroscopy
-    #     freqs = independent_data[0]
-    #     # phase = (
-    #     #     np.arctan(partial_results["Q"] / partial_results["I"])
-    #     #     - 2 * np.pi * freqs * 31e-9 * 8
-    #     # )
-    #     phase = (
-    #         np.angle(partial_results["Q"] + 1j * partial_results["I"])
-    #         - 2 * np.pi * freqs * 32e-9 * 8
-    #     )
-
-    #     reshaped_phase_data = np.average(phase, axis=0).reshape(self.buffering)
-    #     dependent_data.append(reshaped_phase_data)
-
-    #     # if an internal sweep is defined in the child experiment class, add its value
-    #     # as independent variable data. The values are repeated so the dimensions match
-    #     # the other independent data shapes.
-
-    # try:
-    #     internal_sweep = self.internal_sweep
-    #     # Repeat the values
-    #     for indx in range(len(self.buffering) - 1):
-    #         internal_sweep = [internal_sweep] * self.buffering[indx]
-
-    #     independent_data.append(internal_sweep)
-    #     internal_sweep_dict = {"internal sweep": internal_sweep}
-    # except AttributeError:
-    #     internal_sweep_dict = {}
-    #     pass
-
-    # # Estimate standard error
-    # if self.single_shot and self.plot_setup["plot_err"]:
-    #     # Variance of the binomial variable assuming our estimate for probabilities
-    #     # are accurate.
-    #     error_data = np.sqrt(dependent_data[0] * (1 - dependent_data[0]) / num_results)
-
-    # elif self.plot_setup["plot_err"]:
-    #     # Retrieve and reshape standard error estimation
-    #     error_data = stderr[0].reshape(self.buffering)
-
-    # else:
-    #     error_data = None
-
-    # if not self.plot_setup["skip_plot"]:
-    #     plotter.live_plot(
-    #         independent_data,
-    #         dependent_data,
-    #         num_results,
-    #         fit_fn=self.fit_fn,
-    #         err=error_data,
-    #         data_analysis=self.data_analysis,
-    #     )
-
-    # # build data dictionary for final save
-    # dep_data_dict = {dep_tags[i]: dependent_data[i] for i in range(len(dep_tags))}
-    # indep_data_dict = {
-    #     indep_tags[i]: independent_data[i] for i in range(len(indep_tags))
-    # }
-
-    # return dep_data_dict | indep_data_dict | internal_sweep_dict

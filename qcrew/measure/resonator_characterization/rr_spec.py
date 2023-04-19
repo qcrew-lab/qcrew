@@ -33,9 +33,8 @@ class RRSpectroscopy(Experiment):
         """
         (rr,) = self.modes  # get the modes
 
-
         qua.update_frequency(rr.name, self.x)  # update resonator pulse frequency
-        rr.measure((self.I, self.Q), ampx=1)  # measure transmitted signal
+        rr.measure((self.I, self.Q), ampx=0.7)  # measure transmitted signal
         qua.wait(int(self.wait_time // 4), rr.name)  # wait system reset
 
         self.QUA_stream_results()  # stream variables (I, Q, x, etc)
@@ -45,18 +44,18 @@ class RRSpectroscopy(Experiment):
 
 if __name__ == "__main__":
 
-    x_start = -51.5e6  # -105e6#+0.1e6  #-56e6 #-41e6
-    x_stop = -48.5e6  # -95e6#+0.1e6   #-48e6# -37e66
-    x_step = 0.05e6
+    x_start = -51e6 
+    x_stop = -49e6 
+    x_step = 0.01e6
 
     parameters = {
         "modes": ["RR"],
         "reps": 5000,
-        "wait_time": 8000,
+        "wait_time": 50000,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
         "plot_quad": "Z_AVG",
         # "cable_delay": 0.5e-6,#5e-6,
-        # "fit_fn": "phase_atan_s",
+        "fit_fn": None,
     }
 
     plot_parameters = {

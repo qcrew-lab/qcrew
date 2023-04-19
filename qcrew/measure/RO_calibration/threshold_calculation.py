@@ -10,8 +10,8 @@ if __name__ == "__main__":
         qm = stage.QM
 
         params = {
-            "reps": 50000,
-            "wait_time": 100000,  # ns
+            "reps": 40000,
+            "wait_time": 300000,  # ns
             "qubit_pi_pulse": "gaussian_pi_pulse",  # pulse to excite qubit
         }
 

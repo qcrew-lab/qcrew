@@ -3,28 +3,39 @@ A python class describing a T2 measurement using QM.
 This class serves as a QUA script generator with user-defined parameters.
 """
 
+from cmath import phase
+from re import X
 from typing import ClassVar
+
+from betterproto import T
 
 from qcrew.control import professor as prof
 from qcrew.measure.experiment import Experiment
 from qm import qua
+import qcrew.measure.qua_macros as macros
+
+import numpy as np
 
 # ---------------------------------- Class -------------------------------------
 
 
 class T2(Experiment):
 
-    name = "T2"
+    name = "T2_echo"
 
     _parameters: ClassVar[set[str]] = Experiment._parameters | {
-        "qubit_op",  # operation used for exciting the qubit
+        "qubit_pi2",  # operation used for exciting the qubit
+        "qubit_pi",  # operation used for reversing the dynamics
         "fit_fn",  # fit function
         "detuning",  # qubit pulse detuning
     }
 
-    def __init__(self, qubit_op, detuning=0, fit_fn="exp_decay_sine", **other_params):
+    def __init__(
+        self, qubit_pi, qubit_pi2, detuning=0, fit_fn="exp_decay_sine", **other_params
+    ):
 
-        self.qubit_op = qubit_op  # half pi pulse
+        self.qubit_pi2 = qubit_pi2  # half pi pulse
+        self.qubit_pi = qubit_pi  # half pi pulse
         self.fit_fn = fit_fn
         self.detuning = detuning  # frequency detuning of qubit operation
 
@@ -34,13 +45,19 @@ class T2(Experiment):
         """
         Defines pulse sequence to be played inside the experiment loop
         """
+        factor = qua.declare(qua.fixed)
+        qua.assign(factor, self.detuning * 4 * 1e-9)
+
         qubit, rr = self.modes  # get the modes
-        qua.update_frequency(qubit.name, qubit.int_freq + self.detuning)  # detune
-        rr.play("constant_pulse", ampx=0.5)
-        qua.wait(100, rr.name)  # wait for partial qubit decay
-        qubit.play(self.qubit_op)  # play half pi qubit pulse
-        qua.wait(self.x, qubit.name)  # wait for partial qubit decay
-        qubit.play(self.qubit_op)  # play half pi qubit pulse
+        qua.reset_frame(qubit.name)
+        qubit.play(self.qubit_pi2)  # play half pi qubit pulse
+
+        qua.wait(self.x / 2, qubit.name)  # wait for partial qubit decay
+        qubit.play(self.qubit_pi)  # play half pi qubit pulse
+        qua.wait(self.x / 2, qubit.name)  # wait for partial qubit decay
+
+        qua.assign(self.phase, qua.Cast.mul_fixed_by_int(factor, self.x))
+        qubit.play(self.qubit_pi2, phase=self.phase)  # play half pi qubit pulse
         qua.align(qubit.name, rr.name)  # wait last qubit pulse to end
         rr.measure((self.I, self.Q))  # measure qubit state
         if self.single_shot:  # assign state to G or E
@@ -55,29 +72,37 @@ class T2(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-    # x_start = 10
-    # x_stop = 14000
-    # x_step = 200
 
-    x_start = 2
-    x_stop = 1000
-    x_step = 4
-    detuning = 5e6
+    x_start = 4
+    x_stop = 5000
+    x_step = 20
+    detuning_ = 1e6  # 1.12e6
 
     parameters = {
         "modes": ["QUBIT", "RR"],
-        "reps": 1000,
-        "wait_time": 50000,
+        "reps": 20000,
+        "wait_time": 200000,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
-        "qubit_op": "constant_pi2_pulse",
-        "detuning": int(detuning),
+        "qubit_pi2": "gaussian_pi2_pulse",
+        "qubit_pi": "gaussian_pi_pulse",
+        "detuning": int(detuning_),
         "single_shot": False,
+        # "fit_fn": "ramsey_photon_fit",
+        "extra_vars": {
+            "phase": macros.ExpVariable(
+                var_type=qua.fixed,
+                tag="phase",
+                average=True,
+                buffer=True,
+                save_all=True,
+            )
+        },
         "plot_quad": "Z_AVG",
+        "fetch_period": 2,
     }
 
     plot_parameters = {
         "xlabel": "Relaxation time (clock cycles)",
-        "plot_err": None,
     }
 
     experiment = T2(**parameters)

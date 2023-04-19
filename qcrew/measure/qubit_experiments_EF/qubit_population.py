@@ -24,13 +24,12 @@ class QubitPopulation(Experiment):
     }
 
     def __init__(
-        self, qubit_ge_pi, qubit_ef_pi, ef_int_freq, fit_fn="sine", **other_params
+        self, qubit_ge_pi, qubit_ef_pi, fit_fn="sine", **other_params
     ):
 
         self.qubit_ge_pi = qubit_ge_pi
         self.fit_fn = fit_fn
         self.qubit_ef_pi = qubit_ef_pi
-        self.ef_int_freq = ef_int_freq
 
         super().__init__(**other_params)  # Passes other parameters to parent
 
@@ -38,12 +37,14 @@ class QubitPopulation(Experiment):
         """
         Defines pulse sequence to be played inside the experiment loop
         """
-        qubit, rr = self.modes  # get the modes
+        qubit, qubit_ef, rr = self.modes  # get the modes
 
         qubit.play(self.qubit_ge_pi, ampx=self.y)
-        qua.update_frequency(qubit.name, self.ef_int_freq)
-        qubit.play(self.qubit_ef_pi, ampx=self.x)  # e-> f
-        qua.update_frequency(qubit.name, qubit.int_freq)
+        qua.align(qubit.name, qubit_ef.name)
+
+        qubit_ef.play(self.qubit_ef_pi, ampx=self.x)  # e-> f
+        qua.align(qubit.name, qubit_ef.name)
+
         qubit.play(self.qubit_ge_pi)  # e-> g
 
         qua.align(qubit.name, rr.name)  # wait qubit pulse to end
@@ -66,16 +67,15 @@ if __name__ == "__main__":
     amp_step = 0.05
 
     parameters = {
-        "modes": ["QUBIT", "RR"],
-        "reps": 20000,
-        "wait_time": 120000,
-        "ef_int_freq": int(123e6),
-        "qubit_ge_pi": "gaussian_pi_pulse",
-        "qubit_ef_pi": "gaussian_pi_pulse_ef",
+        "modes": ["QUBIT", "QUBIT_EF", "RR"],
+        "reps": 5000,
+        "wait_time": 150000,
+        "qubit_ge_pi": "constant_pi_pulse",
+        "qubit_ef_pi": "constant_pi_pulse",
         "x_sweep": (amp_start, amp_stop + amp_step / 2, amp_step),
         "y_sweep": [0.0, 1.0],
         "single_shot": False,
-        "plot_quad": "Z_AVG",
+        "plot_quad": "I_AVG",
     }
 
     plot_parameters = {

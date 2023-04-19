@@ -15,7 +15,7 @@ def get_qua_program(rr):
 
         with qua.for_(n, 0, n < reps, n + 1):
             qua.reset_phase(rr.name)
-            qua.measure("readout_pulse" * qua.amp(0.6), rr.name, adc_stream)
+            qua.measure("readout_pulse" * qua.amp(1), rr.name, adc_stream)
             qua.wait(20000, rr.name)
 
         with qua.stream_processing():
@@ -41,8 +41,9 @@ if __name__ == "__main__":
         results_fft = handle.get("adc_fft").fetch_all()
         pulse_len = rr.readout_pulse.length
         results_fft = np.sqrt(np.sum(np.squeeze(results_fft) ** 2, axis=1)) / pulse_len
-        freqs = np.arange(0, 0.5, 1 / pulse_len)[:] * 1e9
+
         amps = results_fft[: int(np.ceil(pulse_len / 2))]
+        freqs = np.linspace(0, 0.5, len(amps)) * 1e9
 
         fig, axes = plt.subplots(2, 1)
 

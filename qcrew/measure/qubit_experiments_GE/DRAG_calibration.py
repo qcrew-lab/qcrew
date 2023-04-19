@@ -76,23 +76,29 @@ class DRAGCalibration(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-    x_start = -0.15
-    x_stop = 0.15
-    x_step = 0.01
+    x_start = -0.2
+    x_stop = 0.2
+    x_step = 0.02
+
+    # x_start = -0.1
+    # x_stop = 0.1
+    # x_step = 0.005
 
     parameters = {
         "modes": ["QUBIT", "RR"],
         "reps": 60000,
-        "wait_time": 150000,
+        "wait_time": 300000,
         "x_sweep": (x_start, x_stop + x_step / 2, x_step),
         "qubit_pi_op": "gaussian_pi_pulse",
         "qubit_pi2_op": "gaussian_pi2_pulse",
         "single_shot": False,
+        "plot_quad": "I_AVG"
         #"fetch_period": 3,
     }
 
     plot_parameters = {
         "xlabel": "DRAG pulse amplitude scaling",
+        "plot_type" : "1D",
     }
 
     experiment = DRAGCalibration(**parameters)

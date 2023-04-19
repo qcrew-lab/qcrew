@@ -30,13 +30,13 @@ class CavitySpectroscopy(Experiment):
         rr_ddrop,
         steady_state_wait,
         rr_ddrop_freq,
-        fit_fn="gaussian",
+        fit_fn,
         **other_params
     ):
 
         self.cav_op = cav_op
         self.qubit_op = qubit_op
-        self.fit_fn = None
+        self.fit_fn = fit_fn
         self.qubit_ddrop = qubit_ddrop
         self.rr_ddrop = rr_ddrop
         self.steady_state_wait = steady_state_wait
@@ -73,26 +73,28 @@ class CavitySpectroscopy(Experiment):
 
 if __name__ == "__main__":
 
-    x_start = 2e6
-    x_stop = 6e6
+    x_start = -51e6
+    x_stop = -49e6
     x_step = 0.01e6
     parameters = {
-        "modes": ["QUBIT", "CAV_Alice", "RR"],
-        "reps": 20000,
-        "wait_time": 200000,
+        "modes": ["QUBIT", "CAVB", "RR"],
+        "reps": 1000,
+        "wait_time": 3000e3,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
-        "qubit_op": "gaussian_pi_selective_pulse3",
-        "cav_op": "gaussian_pulse",
+        "qubit_op": "constant_cosine_pi_pulse",
+        "cav_op": "coherent1",
         "qubit_ddrop": "ddrop_pulse",
         "rr_ddrop": "ddrop_pulse",
         "rr_ddrop_freq": int(-50e6),
         "steady_state_wait": 2000,
-        "plot_quad": "Z_AVG",
+        "fit_fn": "gaussian",
+        "plot_quad": "I_AVG",
         
     }
 
     plot_parameters = {
         "xlabel": "Cavity pulse frequency (Hz)",
+
         # "plot_err": None,
     }
 

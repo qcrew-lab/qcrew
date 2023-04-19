@@ -2,7 +2,6 @@
 
 import itertools
 import pathlib
-
 import numpy as np
 
 from qcrew.control.stage.stagehand import Stagehand
@@ -57,7 +56,7 @@ class VNASweep:
             "datagroup": "data",
             "datasets": vna.datakeys,  # each group will have datasets of these names
             "datashape": datashape,
-            "datatype": "f4",
+            "datatype": "f8",
         }
 
     def run(self, saver) -> None:
@@ -101,27 +100,28 @@ if __name__ == "__main__":
         vna.connect()
 
         # the routine below can handle multiple measurement runs at once
-        fcenterlist = [6.874604e9] #[6.563419e9, 6.792209e9, 6.874604e9, 7.057255e9]
-        fspanlist = [0.1e6] #[0.5e6, 1e6, 0.25e6, 1e6]
+        fcenterlist = [7.4563e9]  # [6.563419e9, 6.792209e9, 6.874604e9, 7.057255e9]
+        fspanlist = [1e6]  # [0.5e6, 1e6, 0.25e6, 1e6]
+        powerlist = [-15,-10,-5,0,5,10]
 
-        num_runs = len(fcenterlist)
+        num_runs = len(powerlist)
         for idx in range(num_runs):
             # these parameters are set on VNA and do not change during a measurement run
             vna_parameters = {
                 # frequency sweep center (Hz)
-                "fcenter": fcenterlist[idx],
+                "fcenter": fcenterlist[0],
                 # frequency sweep span (Hz)
-                "fspan": fspanlist[idx],
+                "fspan": fspanlist[0],
                 # frequency sweep start value (Hz)
                 # "fstart": 4e9,
                 # frequency sweep stop value (Hz)
                 # "fstop": 8e9,
                 # IF bandwidth (Hz), [1, 500000]
-                "bandwidth": 1e2,
+                "bandwidth": 500,
                 # number of frequency sweep points, [2, 200001]
-                "sweep_points": 401,
+                "sweep_points": 1001,
                 # delay (s) between successive sweep points, [0.0, 100.0]
-                "sweep_delay": 1e-3,
+                "sweep_delay": 1e-2,
                 # trace data to be displayed and acquired, max traces = 16
                 # each tuple in the list is (<S parameter>, <trace format>)
                 # valid S parameter keys = ("s11", "s12", "s21", "s22")
@@ -136,7 +136,7 @@ if __name__ == "__main__":
             # these parameters are looped over during the measurement
             measurement_parameters = {
                 # Number of sweep averages, must be an integer > 0
-                "repetitions": 1500,
+                "repetitions": 25,
                 # Input powers at (<port1>, <port2>) (dBm), range [-30.0, 15.0]
                 # <portX> (X=1,2) can be a set {a, b,...}, tuple (st, stop, step), or constant x
                 # use set for discrete sweep points a, b, ...
@@ -146,10 +146,10 @@ if __name__ == "__main__":
                 # eg 1: powers = ((-30, 15, 5), 0) will sweep port 1 power from -30dBm to 15dBm inclusive in steps of 5dBm with port 2 power remaining constant at 0 dBm
                 # eg 2: powers = ({-15, 0, 15}, {-5, 0}) will result in sweep points (-15, -5), (-15, 0), (0, -5), (0, 0), (15, -5), (15, 0)
                 # eg 3: powers = (0, 0) will set both port powers to 0, no power sweep happens
-                "powers": (-30, 0),
+                "powers":(powerlist[idx], 0),
                 # total physical attenuation added to VNA ports, if any
                 # (port_1_attenuation, port_2_attenuation) in dB
-                "attenuation": (140.0, 0),
+                "attenuation": (0.0, 0),
             }
 
             # create measurement instance with instruments and measurement_parameters
@@ -159,10 +159,15 @@ if __name__ == "__main__":
             # hdf5 file saved at:
             # {datapath} / {YYYYMMDD} / {HHMMSS}_{measurementname}_{usersuffix}.hdf5
             reps = measurement_parameters["repetitions"]
-            power = measurement_parameters["powers"][0] - measurement_parameters["attenuation"][0]
+            power = (
+                measurement_parameters["powers"][0]
+                - measurement_parameters["attenuation"][0]
+            )
             save_parameters = {
-                "datapath": pathlib.Path(stage.datapath) / "wheel",
-                "usersuffix": f"{fcenterlist[idx]:.3}"[:4] + "GHz" + f"_{power:.3}pow_{reps}reps",
+                "datapath": pathlib.Path(stage.datapath) / "yabba",
+                "usersuffix": f"{fcenterlist[0]:.3}"[:4]
+                + "GHz"
+                + f"_{powerlist[idx]}pow_{reps}reps",
                 "measurementname": measurement.__class__.__name__.lower(),
                 **measurement.dataspec,
             }

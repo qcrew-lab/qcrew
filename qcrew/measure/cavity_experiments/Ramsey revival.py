@@ -51,21 +51,24 @@ class Ramseyrevival(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-    x_start = 4
-    x_stop = 1600
-    x_step = 10
+    x_start = 0
+    x_stop = 400
+    x_step = 2
 
     parameters = {
-        "modes": ["QUBIT", "CAV", "RR"],
-        "reps": 4000,
-        "wait_time": 2e6,
+        "modes": ["QUBIT", "CAVB", "RR"],
+        "reps": 40000,
+        "wait_time": 1000e3,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
-        "qubit_op": "constant_cos_pi2",
-        "cav_op": "constant_cos_cohstate_1",
+        "qubit_op": "constant_cosine_pi2_pulse",
+        "cav_op": "gaussian_coh1_long",
+        "plot_quad": "I_AVG",
+        "fetch_period": 4
     }
 
     plot_parameters = {
         "xlabel": "Wait time (clock)",
+      
     }
 
     experiment = Ramseyrevival(**parameters)

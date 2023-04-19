@@ -16,7 +16,7 @@ import numpy as np
 
 class WignerFunction(Experiment):
 
-    name = "wigner_function"
+    name = "wigner_function_pi_vacuum"
 
     _parameters: ClassVar[set[str]] = Experiment._parameters | {
         "cav_op",  # operation for displacing the cavity
@@ -38,11 +38,11 @@ class WignerFunction(Experiment):
         """
         Defines pulse sequence to be played inside the experiment loop
         """
-        qubit, cav, rr, cav_drive, rr_drive = self.modes  # get the modes
+        qubit, cav, rr = self.modes  # get the modes
 
         qua.reset_frame(cav.name)
 
-        cav.play(self.cav_op, ampx=1, phase=0)
+        cav.play(self.cav_op, ampx=0, phase=0.5)
 
         cav.play(self.cav_op, ampx=self.x, phase=0)  # displacement in I direction
         cav.play(self.cav_op, ampx=self.y, phase=0.25)  # displacement in Q direction
@@ -50,9 +50,7 @@ class WignerFunction(Experiment):
         qubit.play(self.qubit_op)  # play pi/2 pulse around X
         qua.wait(
             int(self.delay // 4),
-            cav.name,
-            qubit.name,
-        )  # conditional phase gate on even, odd Fock state
+            cav.name,qubit.name,)  # conditional phase gate on even, odd Fock state
         qubit.play(self.qubit_op)  # play pi/2 pulse around X
 
         # Measure cavity state
@@ -60,9 +58,7 @@ class WignerFunction(Experiment):
         rr.measure((self.I, self.Q))  # measure transmitted signal
 
         # wait system reset
-        qua.align(cav.name, qubit.name, rr.name, cav_drive.name, rr_drive.name)
-        cav_drive.play("constant_cos", duration=200e3, ampx=1.6)
-        rr_drive.play("constant_cos", duration=200e3, ampx=1.4)
+        qua.align(cav.name, qubit.name, rr.name)
         qua.wait(int(self.wait_time // 4), cav.name)
 
         if self.single_shot:  # assign state to G or E
@@ -76,37 +72,40 @@ class WignerFunction(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-    x_start = -1.5
-    x_stop = 1.5
-    x_step = 0.1
+    x_start = -2
+    x_stop = 2
+    x_step = 0.2
 
-    y_start = -1.5
-    y_stop = 1.5
-    y_step = 0.1
+    y_start = -2
+    y_stop = 2
+    y_step = 0.2
 
     parameters = {
-        "modes": ["QUBIT", "CAV", "RR", "CAV_DRIVE", "RR_DRIVE"],
-        "reps": 1000,
-        "wait_time": 50e3,
-        "fetch_period": 2,  # time between data fetching rounds in sec
-        "delay": 1392,  # pi/chi
+        "modes": ["QUBIT", "CAVB", "RR"],
+        "reps": 5000,
+        "wait_time": 1000e3,
+        "fetch_period": 4,  # time between data fetching rounds in sec
+        "delay": 600, #750/8,  # pi/chi
         "x_sweep": (
             x_start,
             x_stop + x_step / 2,
             x_step,
         ),  # ampitude sweep of the displacement pulses in the ECD
         "y_sweep": (y_start, y_stop + y_step / 2, y_step),
-        "qubit_op": "constant_cos_pi2",
-        "cav_op": "constant_cos_cohstate_1",
-        "single_shot": True,
+        # "y_sweep": (-2.0, 0.0),
+        "qubit_op": "gaussian_pi2_pulse",
+        "cav_op": "gaussian_coh1_long",
+        "single_shot": False,
+        "plot_quad":"I_AVG"
     }
 
     plot_parameters = {
         "xlabel": "X",
         "ylabel": "Y",
         "plot_type": "2D",
-        "err": False,
         "cmap": "bwr",
+        "plot_err": False,
+
     }
 
     experiment = WignerFunction(**parameters)

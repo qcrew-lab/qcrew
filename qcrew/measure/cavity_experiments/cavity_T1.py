@@ -22,11 +22,11 @@ class CavityT1(Experiment):
         "fit_fn",  # fit function
     }
 
-    def __init__(self, cav_op, qubit_op, fit_fn="cohstate_decay", **other_params):
+    def __init__(self, cav_op, qubit_op, fit_fn, **other_params):
 
         self.cav_op = cav_op
         self.qubit_op = qubit_op
-        self.fit_fn = None
+        self.fit_fn = fit_fn
 
         super().__init__(**other_params)  # Passes other parameters to parent
 
@@ -51,24 +51,24 @@ class CavityT1(Experiment):
 
 if __name__ == "__main__":
 
-    x_start = 100
-    x_stop = 400e3
+    x_start = 32
+    x_stop = 800e3
     x_step = 4e3
     parameters = {
-        "modes": ["QUBIT", "CAV", "RR"],
+        "modes": ["QUBIT", "CAVB", "RR"],
         "reps": 40000,
-        "wait_time": 3000000,
+        "wait_time": 1000e3,   
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
-        "qubit_op": "gaussian_pi_selective_pulse3",
-        "cav_op": "cohstate1",
-        "plot_quad": "Z_AVG",
-        "fetch_period": 1.2,
-        
+        "qubit_op": "gaussian_pi_selective_pulse",
+        "cav_op": "gaussian_coh1",
+        "plot_quad": "I_AVG",
+        "fit_fn": "cohstate_decay",
+        "fetch_period": 10,
     }
 
     plot_parameters = {
         "xlabel": "Cavity relaxation time (clock cycles)",
-        "plot_err": None
+        # "plot_err": None
     }
 
     experiment = CavityT1(**parameters)

@@ -27,13 +27,13 @@ class MixerTuner:
     """
 
     # parameters common to both Nelder-Mead and Brute-Force minimization
-    threshold: float = 3.0  # in dBm
+    threshold: float = 1.0  # 20.0  # 3.0  # in dBm
     ref_power: float = 0.0
 
     # Nelder-Mead (NM) parameters
     simplex: np.ndarray = np.array([[0.0, 0.0], [0.0, 0.1], [0.1, 0.0]])
     maxiter: int = 100
-    span: float = 2e6
+    span: float = 1e6
     rbw: float = 50e3
 
     def __init__(self, sa: Sa124, qm: QuantumMachine) -> None:
@@ -88,6 +88,7 @@ class MixerTuner:
 
     def _setup(self, mode):
         """Play carrier frequency and intermediate frequency to mode and check current tuning"""
+        print("mode frequency", mode.lo_freq)
         try:
             mode.lo.rf = True
         except AttributeError:
@@ -107,6 +108,7 @@ class MixerTuner:
             return None, None, None  # dummy values, they don't matter
         elif method == "NM":
             span, rbw, ref_pow = self.span, self.rbw, self.ref_power
+            print(center, span, mode.lo_freq)
             fs, amps = self._sa.sweep(
                 center=center, span=span, rbw=rbw, ref_power=ref_pow
             )
@@ -117,7 +119,10 @@ class MixerTuner:
             contrast = amps[center_idx] - floor
             is_tuned = contrast < self.threshold
             real_center = fs[center_idx]
-            logger.info(f"Tune check at {real_center:7E}: {contrast = :.5}dBm")
+            feature_amplitude = amps[center_idx]
+            logger.info(
+                f"Tune check at {real_center:7E}: {contrast = :.5}dBm, {feature_amplitude = :.5}dBm, {floor = :.5}dBm"
+            )
             self._initial_contrast = contrast
             return is_tuned, center_idx, floor
         else:

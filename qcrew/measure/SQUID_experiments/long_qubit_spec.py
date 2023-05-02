@@ -15,14 +15,13 @@ import numpy as np
 
 if __name__ == "__main__":
 
-    qubit_lo_start = 4.2e9
-    qubit_lo_stop = 5.5e9
-    qubit_lo_step = 400e6
+    qubit_lo_start = 6.6e9
+    qubit_lo_stop = 1e9
+    qubit_lo_step = -400e6
     qubit_lo_sweep = np.arange(qubit_lo_start, qubit_lo_stop, qubit_lo_step)
 
     # Store information in lists to print later
     filename_list = []
-    current_list = []
     lo_list = []
     rr_if_list = []
 
@@ -30,7 +29,7 @@ if __name__ == "__main__":
     with Stagehand() as stage:
 
         db = initialise_database(
-            exp_name="qubit_spec_current_sweep",
+            exp_name="long_qubit_spec",
             sample_name=stage.sample_name,
             project_name=stage.project_name,
             path=stage.datapath,
@@ -45,12 +44,12 @@ if __name__ == "__main__":
 
                 x_start = -200e6
                 x_stop = 200e6
-                x_step = 0.08e6
+                x_step = 0.25e6
 
                 qubit_spec_parameters = {
                     "modes": ["QUBIT", "RR"],
-                    "reps": 20000,
-                    "wait_time": 10000,
+                    "reps": 70000,
+                    "wait_time": 15000,
                     "x_sweep": (
                         int(x_start),
                         int(x_stop + x_step / 2),
@@ -58,7 +57,7 @@ if __name__ == "__main__":
                     ),
                     "qubit_op": "constant_pulse",
                     "fetch_period": 6,
-                    "plot_quad": "PHASE",
+                    # "plot_quad": "PHASE",
                 }
 
                 qubit_spec_plot_parameters = {
@@ -70,3 +69,6 @@ if __name__ == "__main__":
                 qubit_spec.setup_plot(**qubit_spec_plot_parameters)
 
                 prof.run(qubit_spec)
+
+        yoko = stage.YOKO
+        # yoko.ramp(0e-3, yoko.level, 0.1e-3)

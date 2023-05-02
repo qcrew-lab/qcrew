@@ -6,7 +6,7 @@ from qm import qua
 import numpy as np
 from scipy import signal
 
-reps = 5000
+reps = 50000
 
 
 def get_qua_program(rr, qubit):
@@ -15,10 +15,11 @@ def get_qua_program(rr, qubit):
         n = qua.declare(int)
 
         with qua.for_(n, 0, n < reps, n + 1):
-            qubit.play("constant_pulse")
+            qua.reset_phase(rr.name)
+            qubit.play("constant_pi_pulse")
             qua.align(qubit.name, rr.name)
             qua.measure("readout_pulse" * qua.amp(1.0), rr.name, adc_stream)
-            qua.wait(5000, rr.name)
+            qua.wait(20000, rr.name)
 
         with qua.stream_processing():
             adc_stream.input1().average().save("adc_results")

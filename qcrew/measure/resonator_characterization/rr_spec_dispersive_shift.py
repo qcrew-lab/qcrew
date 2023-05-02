@@ -22,7 +22,7 @@ class RRSpecDispersiveShift(Experiment):
         "fit_fn",  # fit function
     }
 
-    def __init__(self, qubit_op, fit_fn="linear", **other_params):
+    def __init__(self, qubit_op, fit_fn=None, **other_params):
 
         self.fit_fn = fit_fn
         self.qubit_op = qubit_op
@@ -48,18 +48,18 @@ class RRSpecDispersiveShift(Experiment):
 
 if __name__ == "__main__":
 
-    x_start = -50.02e6
-    x_stop = -49.98e6
-    x_step = 0.001e6
+    x_start = -50.4e6
+    x_stop = -49.4e6
+    x_step = 0.01e6
 
     parameters = {
         "modes": ["RR", "QUBIT"],
-        "reps": 1000000,
-        "wait_time": 10000,
+        "reps": 100000,
+        "wait_time": 20000,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
         "y_sweep": [0.0, 1.0],
-        "qubit_op": "constant_pulse",
-        "plot_quad": "PHASE_SWEEP",
+        "qubit_op": "constant_pi_pulse",
+        #"plot_quad": "PHASE_SWEEP",
     }
 
     plot_parameters = {

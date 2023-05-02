@@ -44,8 +44,8 @@ class RRSpecSweepAmplitude(Experiment):
 
 if __name__ == "__main__":
     x_start = -52e6
-    x_stop = -50e6
-    x_step = 0.02e6
+    x_stop = -49e6
+    x_step = 0.05e6
     # x_start = -50.04e6
     # x_stop = -49.95e6
     # x_step = 0.005e6
@@ -55,7 +55,7 @@ if __name__ == "__main__":
         "reps": 50000,
         "wait_time": 10000,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
-        "y_sweep": (0.12, 0.6),
+        "y_sweep": (0.03, 0.04, 0.05, 0.06),
     }
     plot_parameters = {
         "xlabel": "Resonator pulse frequency (Hz)",

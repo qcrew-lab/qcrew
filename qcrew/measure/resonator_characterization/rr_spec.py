@@ -21,9 +21,10 @@ class RRSpectroscopy(Experiment):
         "fit_fn",  # fit function
     }
 
-    def __init__(self, fit_fn=None, **other_params):
+    def __init__(self, qubit_op, fit_fn=None, **other_params):
 
         self.fit_fn = fit_fn
+        self.qubit_op = qubit_op
 
         super().__init__(**other_params)  # Passes other parameters to parent
 
@@ -31,9 +32,14 @@ class RRSpectroscopy(Experiment):
         """
         Defines pulse sequence to be played inside the experiment loop
         """
-        (rr,) = self.modes  # get the modes
-
-        qua.update_frequency(rr.name, self.x)  # update resonator pulse frequency
+        (
+            rr,
+            qubit,
+        ) = self.modes  # get the modes
+        qua.update_frequency(rr.name, self.x)  # update resonator pulse frequenc
+        #qubit.play(self.qubit_op)  # play qubit pulse
+        #qua.align()
+        #qua.wait(750, rr.name)
         rr.measure((self.I, self.Q))  # measure transmitted signal
         qua.wait(int(self.wait_time // 4), rr.name)  # wait system reset
 
@@ -44,16 +50,17 @@ class RRSpectroscopy(Experiment):
 
 if __name__ == "__main__":
 
-    x_start = -50.9e6
-    x_stop = -49.1e6
+    x_start = -50.5e6
+    x_stop = -49.5e6
     x_step = 0.01e6
 
     parameters = {
-        "modes": ["RR"],
+        "modes": ["RR", "QUBIT"],
         "reps": 10000,
         "wait_time": 10000,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
-        "plot_quad": "PHASE_SWEEP"
+        "qubit_op": "constant_pulse",
+        # "plot_quad": "PHASE_SWEEP"
     }
 
     plot_parameters = {

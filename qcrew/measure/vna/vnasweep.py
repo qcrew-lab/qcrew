@@ -96,27 +96,50 @@ if __name__ == "__main__":
         vna.connect()
 
         # the routine below can handle multiple measurement runs at once
-        powerslist = [-30]
-        repslist = [1500]
+        fcenters = [
+            5.99990875e9,
+            5.99990875e9,
+            5.99990875e9,
+            5.99990875e9,
+            5.99990875e9,
+            6.249689007e9,
+            6.249689007e9,
+            6.249689007e9,
+            6.249689007e9,
+            6.249689007e9,
+            6.47062285e9,
+            6.47062285e9,
+            6.47062285e9,
+            6.47062285e9,
+            6.47062285e9,
+            6.63046203e9,
+            6.63046203e9,
+            6.63046203e9,
+            6.63046203e9,
+            6.63046203e9,
+        ]
+
+        powerslist = [10, 0, -10, -20, -30, 10, 0, -10, -20, -30, 10, 0, -10, -20, -30, 10, 0, -10, -20, -30]
+        repslist = [25, 50, 100, 250, 500, 25, 50, 100, 250, 500, 25, 50, 100, 250, 500, 25, 50, 100, 250, 500]
 
         num_runs = len(repslist)
         for idx in range(num_runs):
             # these parameters are set on VNA and do not change during a measurement run
             vna_parameters = {
                 # frequency sweep center (Hz)
-                "fcenter": 5.368196539e9,
+                "fcenter": fcenters[idx],
                 # frequency sweep span (Hz)
-                "fspan": 150e3,
+                "fspan": 25e3,
                 # frequency sweep start value (Hz)
                 # "fstart": 4e9,
                 # frequency sweep stop value (Hz)
                 # "fstop": 8e9,
                 # IF bandwidth (Hz), [1, 500000]
-                "bandwidth": 200,
+                "bandwidth": 100,
                 # number of frequency sweep points, [2, 200001]
-                "sweep_points": 1501,
+                "sweep_points": 501,
                 # delay (s) between successive sweep points, [0.0, 100.0]
-                "sweep_delay": 1e-2,
+                "sweep_delay": 1e-3,
                 # trace data to be displayed and acquired, max traces = 16
                 # each tuple in the list is (<S parameter>, <trace format>)
                 # valid S parameter keys = ("s11", "s12", "s21", "s22")

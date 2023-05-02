@@ -63,7 +63,7 @@ if __name__ == "__main__":
         "x_sweep": (amp_start, amp_stop + amp_step / 2, amp_step),
         "qubit_op": "constant_pulse",
         "single_shot": False,
-        "plot_quad": "PHASE"
+        "plot_quad": "I_AVG"
     }
 
     plot_parameters = {

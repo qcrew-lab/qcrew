@@ -52,17 +52,17 @@ class PowerRabiEF(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-    amp_start = -1.5
-    amp_stop = 1.5
+    amp_start = -1.8
+    amp_stop = 1.8
     amp_step = 0.01
 
     parameters = {
         "modes": ["QUBIT", "QUBIT_EF", "RR"],
-        "reps": 3000,
-        "wait_time": 100000,
-        "qubit_pi_pulse_name": "pi",
+        "reps": 30000,
+        "wait_time": 20000,
+        "qubit_pi_pulse_name": "constant_pi_pulse",
         "x_sweep": (amp_start, amp_stop + amp_step / 2, amp_step),
-        "qubit_ef_op": "ddrop_pulse",
+        "qubit_ef_op": "constant_pulse",
     }
 
     plot_parameters = {

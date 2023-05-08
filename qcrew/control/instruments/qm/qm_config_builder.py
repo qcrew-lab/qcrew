@@ -42,6 +42,7 @@ class QMConfig(InfinitelyNestableDict):
         "operations": "set_operations",
         "time_of_flight": "set_time_of_flight",
         "smearing": "set_smearing",
+        "digital_ports": "set_digital_inputs",
     }
 
     def set_version(self) -> None:
@@ -51,6 +52,7 @@ class QMConfig(InfinitelyNestableDict):
     def set_controllers(self) -> None:
         """ """
         self["controllers"][CONTROLLER_NAME]["type"] = CONTROLLER_TYPE
+        # self.set_digital_output_port(1)
 
     def get_mixer_name(self, mode_name: str) -> str:
         """ """
@@ -66,7 +68,7 @@ class QMConfig(InfinitelyNestableDict):
                     mixer_config_schema = {key: None for key in mixer_config_keys}
                     self["mixers"][mixer_name] = [mixer_config_schema]
                     self["elements"][mode.name]["mixInputs"]["mixer"] = mixer_name
-                    logger.debug(f"Set '{mixer_name}' for {mode}") 
+                    logger.debug(f"Set '{mixer_name}' for {mode}")
 
             except AttributeError:
                 logger.error(f"Failed to set mixer, cant tell if {mode} has mix inputs")
@@ -105,15 +107,23 @@ class QMConfig(InfinitelyNestableDict):
         digital_ports = mode.digital_ports
 
         if digital_ports is None:
-            logger.debug(f"{mode} has no digital ports")
+            logger.info(f"{mode} has no digital ports")
             return
-        
+
         for digital_port_name in digital_ports:
             curr_port = digital_ports[digital_port_name]
-            self["elements"][mode.name]["digitalInputs"][digital_port_name]["port"] = (CONTROLLER_NAME, curr_port["port"])
-            self["elements"][mode.name]["digitalInputs"][digital_port_name]["delay"] = curr_port["delay"]
-            self["elements"][mode.name]["digitalInputs"][digital_port_name]["buffer"] = curr_port["buffer"]
-            logger.debug(f"Set digital port {digital_port_name} for {mode}")
+            self.set_digital_output_port(curr_port["port"])
+            self["elements"][mode.name]["digitalInputs"][digital_port_name]["port"] = (
+                CONTROLLER_NAME,
+                curr_port["port"],
+            )
+            self["elements"][mode.name]["digitalInputs"][digital_port_name][
+                "delay"
+            ] = curr_port["delay"]
+            self["elements"][mode.name]["digitalInputs"][digital_port_name][
+                "buffer"
+            ] = curr_port["buffer"]
+            logger.success(f"Set digital port {digital_port_name} for {mode}")
 
     def set_ports(self, mode: qcm.Mode, old_ports: dict[str, int] = None) -> None:
         """ """
@@ -135,18 +145,18 @@ class QMConfig(InfinitelyNestableDict):
                 self.set_element_port(mode, key, port_num)
 
     def set_digital_output_port(self, number: int) -> None:
-        """ TODO """
-        #self.check_output_port_bounds(number, "Digital output port")
-        controllers_config = self["controllers"][QMConfig.CONTROLLER_NAME]
+        """TODO"""
+        # self.check_output_port_bounds(number, "Digital output port")
+        controllers_config = self["controllers"][CONTROLLER_NAME]
         controllers_config["digital_outputs"][number] = {}
         logger.debug(f"Set controller digital output port {number = }.")
 
     def set_controller_port(self, mode: qcm.Mode, key: str, port_num: int) -> None:
         """ """
         controllers_config = self["controllers"][CONTROLLER_NAME]
-        offset = mode.mixer_offsets[key]
 
         if key in ("I", "Q"):
+            offset = mode.mixer_offsets[key]
             if not AO_MIN <= port_num <= AO_MAX:
                 logger.error(f"AO port value {port_num} out of bounds")
                 raise ValueError(f"Out of bounds [{AO_MIN}, {AO_MAX}]")
@@ -155,6 +165,7 @@ class QMConfig(InfinitelyNestableDict):
             logger.debug(f"Set {mode} AO port {port_num} with {offset = }")
 
         elif key == "out":
+            offset = mode.mixer_offsets[key]
             if not AI_MIN <= port_num <= AI_MAX:
                 logger.error(f"AI port value {port_num} out of bounds")
                 raise ValueError(f"Out of bounds [{AI_MIN}, {AI_MAX}]")
@@ -163,7 +174,7 @@ class QMConfig(InfinitelyNestableDict):
             logger.debug(f"Set {mode} AI port {port_num} with {offset = }")
 
         # elif key == "digital":
-        #     self.set_digital_output_port(rf_switch.port)
+        #     self.set_digital_output_port(port_num)
         # rf_switch = element.rf_switch
         # if rf_switch is not None:
 
@@ -270,6 +281,7 @@ class QMConfig(InfinitelyNestableDict):
 
     def set_operations(self, mode: qcm.Mode, old_ops: dict[str, Any] = None) -> None:
         """ """
+        logger.info("Setting opertations")
         ops = {name: pulse.parameters for name, pulse in mode.operations.items()}
         ops_config = self["elements"][mode.name]["operations"]
 
@@ -307,6 +319,7 @@ class QMConfig(InfinitelyNestableDict):
     ) -> None:
         """ """
         pulse_config = self["pulses"][pulse_name]
+        logger.info(f"Setting pulse {pulse}")
 
         if pulse.type_ != pulse_config["operation"]:
             logger.error(f"Forbidden to change {pulse_name} pulse type")
@@ -378,7 +391,10 @@ class QMConfig(InfinitelyNestableDict):
     def set_waveforms(self, pulse: qcp.Pulse, pulse_name: str) -> None:
         """ """
         # Digital markers have the same type of waveform as constant pulses
-        if isinstance(pulse, qcp.ConstantPulse) or isinstance(pulse, qcp.DigitalMarkerPulse):
+
+        if isinstance(pulse, qcp.ConstantPulse) or isinstance(
+            pulse, qcp.DigitalMarkerPulse
+        ):
             wf_type, samples_key = "constant", "sample"
             pulse_samples = (BASE_PULSE_AMP * pulse.ampx, 0.0)
         else:

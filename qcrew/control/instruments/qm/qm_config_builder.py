@@ -66,7 +66,8 @@ class QMConfig(InfinitelyNestableDict):
                     mixer_config_schema = {key: None for key in mixer_config_keys}
                     self["mixers"][mixer_name] = [mixer_config_schema]
                     self["elements"][mode.name]["mixInputs"]["mixer"] = mixer_name
-                    logger.debug(f"Set '{mixer_name}' for {mode}")
+                    logger.debug(f"Set '{mixer_name}' for {mode}") 
+
             except AttributeError:
                 logger.error(f"Failed to set mixer, cant tell if {mode} has mix inputs")
                 raise
@@ -100,6 +101,20 @@ class QMConfig(InfinitelyNestableDict):
             self["mixers"][mixer_name][0]["intermediate_frequency"] = int_freq
             logger.debug(f"Set {mode} int freq from {old_value} to {int_freq}")
 
+    def set_digital_inputs(self, mode: qcm.Mode, old_ports) -> None:
+        digital_ports = mode.digital_ports
+
+        if digital_ports is None:
+            logger.debug(f"{mode} has no digital ports")
+            return
+        
+        for digital_port_name in digital_ports:
+            curr_port = digital_ports[digital_port_name]
+            self["elements"][mode.name]["digitalInputs"][digital_port_name]["port"] = (CONTROLLER_NAME, curr_port["port"])
+            self["elements"][mode.name]["digitalInputs"][digital_port_name]["delay"] = curr_port["delay"]
+            self["elements"][mode.name]["digitalInputs"][digital_port_name]["buffer"] = curr_port["buffer"]
+            logger.debug(f"Set digital port {digital_port_name} for {mode}")
+
     def set_ports(self, mode: qcm.Mode, old_ports: dict[str, int] = None) -> None:
         """ """
         new_ports = mode.ports
@@ -118,6 +133,13 @@ class QMConfig(InfinitelyNestableDict):
                 raise
             else:
                 self.set_element_port(mode, key, port_num)
+
+    def set_digital_output_port(self, number: int) -> None:
+        """ TODO """
+        #self.check_output_port_bounds(number, "Digital output port")
+        controllers_config = self["controllers"][QMConfig.CONTROLLER_NAME]
+        controllers_config["digital_outputs"][number] = {}
+        logger.debug(f"Set controller digital output port {number = }.")
 
     def set_controller_port(self, mode: qcm.Mode, key: str, port_num: int) -> None:
         """ """
@@ -139,6 +161,11 @@ class QMConfig(InfinitelyNestableDict):
 
             controllers_config["analog_inputs"][port_num]["offset"] = offset
             logger.debug(f"Set {mode} AI port {port_num} with {offset = }")
+
+        # elif key == "digital":
+        #     self.set_digital_output_port(rf_switch.port)
+        # rf_switch = element.rf_switch
+        # if rf_switch is not None:
 
     def set_element_port(self, mode: qcm.Mode, key: str, port_num: int) -> None:
         """ """
@@ -301,14 +328,22 @@ class QMConfig(InfinitelyNestableDict):
     def add_pulse(self, pulse: qcp.Pulse, pulse_name: str) -> None:
         """ """
         pulse_config = self["pulses"][pulse_name]
-        pulse_config["operation"] = pulse.type_
+        # I changed this to match Atharv's code. qcp.DigitalMarkerPulse should be understood as "control"
+        pulse_type = "measurement" if isinstance(pulse, qcp.ReadoutPulse) else "control"
+        pulse_config["operation"] = pulse_type
         wf_config = pulse_config["waveforms"]
 
         if pulse.has_mix_waveforms:
             wf_config["I"] = self.get_wf_name(pulse_name, "I")
             wf_config["Q"] = self.get_wf_name(pulse_name, "Q")
         else:
+            # This should be the case for DigitalMarkerPulse
             wf_config["single"] = self.get_wf_name(pulse_name, "single")
+        if isinstance(pulse, qcp.DigitalMarkerPulse):
+            # Add digital marker name and waveform
+            marker_name = pulse_name + "." + "marker"
+            pulse_config["digital_marker"] = marker_name
+            self["digital_waveforms"][marker_name]["samples"] = pulse.samples
 
         if pulse_config["operation"] == "measurement":
             pulse_config["digital_marker"] = RO_DIGITAL_MARKER
@@ -342,7 +377,8 @@ class QMConfig(InfinitelyNestableDict):
 
     def set_waveforms(self, pulse: qcp.Pulse, pulse_name: str) -> None:
         """ """
-        if isinstance(pulse, qcp.ConstantPulse):
+        # Digital markers have the same type of waveform as constant pulses
+        if isinstance(pulse, qcp.ConstantPulse) or isinstance(pulse, qcp.DigitalMarkerPulse):
             wf_type, samples_key = "constant", "sample"
             pulse_samples = (BASE_PULSE_AMP * pulse.ampx, 0.0)
         else:

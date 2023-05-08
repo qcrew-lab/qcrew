@@ -18,6 +18,7 @@ class Mode(Parametrized, Yamlizable):
         "lo_freq",  # local oscillator frequency driving the Mode
         "int_freq",  # intermediate frequency driving the Mode
         "ports",  # OPX ports connected to this Mode
+        "digital_ports", # Digital ports connected to this Mode
         "mixer_offsets",  # offsets used to tune the Mode's IQ mixer
         "operations",  # dict[str, Pulse] of operations that can be played to the Mode
     }
@@ -31,6 +32,7 @@ class Mode(Parametrized, Yamlizable):
         lo: qci.LabBrick,
         int_freq: float,
         ports: dict[str, int],
+        digital_ports: dict[dict[int,int,int]] = None,
         mixer_offsets: dict[str, float] = None,
         operations: dict[str, qcp.Pulse] = None,
     ) -> None:
@@ -42,6 +44,10 @@ class Mode(Parametrized, Yamlizable):
 
         self._ports: dict[str, int] = {key: None for key in self._ports_keys}
         self.ports = ports
+
+        self._digital_ports: dict[dict[int,int,int]] = dict()
+        if digital_ports is not None:
+            self._digital_ports = digital_ports
 
         self._mixer_offsets: dict[str, float] = dict()
         if mixer_offsets is not None:
@@ -111,6 +117,24 @@ class Mode(Parametrized, Yamlizable):
                     logger.warning(f"Ignored invalid key '{key}', {valid_keys = }")
         except (AttributeError, TypeError):
             logger.error(f"Setter expects {dict[str, int]} with {valid_keys = }")
+            raise
+    
+    @property  # digital ports getter
+    def digital_ports(self) -> dict[str, int]:
+        """ """
+        return self._digital_ports.copy()
+
+    @ports.setter
+    def digital_ports(self, new_ports: dict[dict[int,int,int]]) -> None:
+        """ """
+        try:
+            for new_port_name, new_port in new_ports.items():
+                self._digital_ports[new_port_name]["port"] = new_port["port"]
+                self._digital_ports[new_port_name]["delay"] = new_port["delay"]
+                self._digital_ports[new_port_name]["buffer"] = new_port["buffer"]
+                logger.success(f"Set {self} '{new_port_name}' {new_port = }")
+        except TypeError:
+            logger.error(f"Setter expects {dict[dict[int,int,int]]}")
             raise
 
     @property  # mixer_offsets getter

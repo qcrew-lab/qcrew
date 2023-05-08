@@ -24,14 +24,14 @@ import time
 
 if __name__ == "__main__":
 
-    current_start = -4e-3
-    current_stop = -10e-3
-    current_step = -0.25e-3
+    current_start = -10.5e-3
+    current_stop = -13e-3
+    current_step = -0.1e-3
     current_sweep = np.arange(current_start, current_stop, current_step)
 
-    qubit_lo_start = 5e9
-    qubit_lo_stop = 1e9
-    qubit_lo_step = -200e6
+    qubit_lo_start = 5.8e9 #6.57e9
+    qubit_lo_stop = 5.1e9
+    qubit_lo_step = -400e6
     qubit_lo_sweep = np.arange(qubit_lo_start, qubit_lo_stop, qubit_lo_step)
 
     # Store information in lists to print later
@@ -56,18 +56,18 @@ if __name__ == "__main__":
 
                 # Change value of current source
                 yoko = stage.YOKO
-                #yoko.source = "current"
+                # yoko.source = "current"
                 yoko.ramp(current, yoko.level, 0.02e-3)  # set output to nominal value
 
                 # Find resonator resonant frequency
                 ## Do RR spectroscopy
-                x_start = -50.5e6
-                x_stop = -49.5e6
-                x_step = 0.001e6
+                x_start = -53e6
+                x_stop = -48.5e6
+                x_step = 0.1e6
 
                 rr_spec_parameters = {
                     "modes": [stage.RR],
-                    "reps": 2000,
+                    "reps": 3000,
                     "wait_time": 10000,
                     "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
                     "fit_fn": None,
@@ -125,19 +125,19 @@ if __name__ == "__main__":
                     stage.QUBIT.lo_freq = qubit_lo
 
                     x_start = -200e6
-                    x_stop = 0e6
-                    x_step = 0.15e6
+                    x_stop = 200e6
+                    x_step = 0.6e6
 
                     qubit_spec_parameters = {
                         "modes": [stage.QUBIT, stage.RR],
-                        "reps": 30000,
+                        "reps": 4000,
                         "wait_time": 10000,
                         "x_sweep": (
                             int(x_start),
                             int(x_stop + x_step / 2),
                             int(x_step),
                         ),
-                        "qubit_op": "constant_pulse",
+                        "qubit_op": "constant_pi_pulse",
                         "fit_fn": None,
                         "fetch_period": 6,
                     }
@@ -210,4 +210,5 @@ if __name__ == "__main__":
                     experiment_no += 1
 
             yoko = stage.YOKO
-            yoko.state = False
+            # yoko.ramp(0e-3, yoko.level, 0.02e-3)
+            # yoko.state = False

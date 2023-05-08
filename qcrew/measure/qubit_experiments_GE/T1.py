@@ -54,8 +54,8 @@ class T1(Experiment):
 if __name__ == "__main__":
 
     x_start = 12
-    x_stop = 400
-    x_step = 8
+    x_stop = 1.5e3
+    x_step = 16
     parameters = {
         "modes": ["QUBIT", "RR"],
         "reps": 1000000,

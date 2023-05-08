@@ -48,8 +48,8 @@ class RRSpecDispersiveShift(Experiment):
 
 if __name__ == "__main__":
 
-    x_start = -50.4e6
-    x_stop = -49.4e6
+    x_start = -52e6
+    x_stop = -50.5e6
     x_step = 0.01e6
 
     parameters = {

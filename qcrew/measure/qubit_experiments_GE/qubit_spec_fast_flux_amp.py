@@ -57,11 +57,11 @@ class QubitSpectroscopyFastFlux(Experiment):
         #     flux_ampx, rr_freq = params
         #     qua.align()
         #     qua.update_frequency(rr.name, int(rr_freq))
-        qua.update_frequency(qubit.name, self.x)  # update resonator pulse frequency
+        #qua.update_frequency(qubit.name, self.x)  # update resonator pulse frequency
         qua.wait(self.y, qubit.name)
         qubit.play(self.qubit_op)  # play qubit pulse
         qua.wait(100, flux.name)
-        flux.play("constant_pulse", ampx=0.2)
+        flux.play("constant_pulse", ampx=self.x)
         qua.wait(200, rr.name)
         rr.measure((self.I, self.Q))  # measure transmitted signal
         qua.wait(int(self.wait_time // 4), flux.name)  # wait system reset
@@ -72,27 +72,27 @@ class QubitSpectroscopyFastFlux(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-    x_start = -200e6  # 181.25e6
-    x_stop = 0e6  # 181.5e6
-    x_step = 1e6
-    
-    y_start = 80  # 181.25e6
-    y_stop = 120  # 181.5e6
+    y_start = 60  # 181.25e6
+    y_stop = 160  # 181.5e6
     y_step = 1
+    
+    x_start = 0.01  # 181.25e6
+    x_stop = 0.3  # 181.5e6
+    x_step = 0.01
 
 
     parameters = {
         "modes": ["QUBIT", "FLUX", "RR"],
-        "reps": 100000,
+        "reps": 500000,
         "wait_time": 20000,
-        "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
         "y_sweep": (int(y_start), int(y_stop + y_step / 2), int(y_step)),
+        "x_sweep": ((x_start), (x_stop + x_step / 2), (x_step)),
         "qubit_op": "constant_pi_pulse",
         #"plot_quad": "I_AVG",
     }
 
     plot_parameters = {
-        "xlabel": "Qubit pulse frequency (Hz)",
+        "xlabel": "flux pulse amp",
         "plot_type": "2D"
     }
 

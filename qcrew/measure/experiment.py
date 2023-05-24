@@ -364,7 +364,7 @@ class Experiment(Parametrized):
             # )
 
         else:
-            processed_parital_results = partial_results[tag]
+            processed_parital_results = partial_results[tag].reshape(self.buffering)
 
         return processed_parital_results
 

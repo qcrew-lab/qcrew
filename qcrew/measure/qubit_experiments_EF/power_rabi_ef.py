@@ -40,7 +40,6 @@ class PowerRabiEF(Experiment):
         qua.align(qubit.name, qubit_ef.name)
         qubit_ef.play(self.qubit_ef_op, ampx=self.x)  # e-> f
         qua.align(qubit.name, qubit_ef.name)
-        qua.update_frequency(qubit.name, qubit.int_freq)
         qubit.play(self.qubit_pi_pulse_name)  # e->g
         qua.align(qubit.name, rr.name)  # wait qubit pulse to end
         rr.measure((self.I, self.Q))  # measure qubit state
@@ -52,17 +51,18 @@ class PowerRabiEF(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-    amp_start = -1.8
-    amp_stop = 1.8
-    amp_step = 0.01
+    amp_start = -1.9
+    amp_stop = 1.9
+    amp_step = 0.05
 
     parameters = {
         "modes": ["QUBIT", "QUBIT_EF", "RR"],
         "reps": 30000,
-        "wait_time": 20000,
+        "wait_time": 80000,
         "qubit_pi_pulse_name": "constant_pi_pulse",
         "x_sweep": (amp_start, amp_stop + amp_step / 2, amp_step),
-        "qubit_ef_op": "constant_pulse",
+        "qubit_ef_op": "constant_pi_pulse",
+        "plot_quad": "I_AVG",
     }
 
     plot_parameters = {

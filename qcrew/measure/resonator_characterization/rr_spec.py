@@ -55,6 +55,7 @@ if __name__ == "__main__":
         "wait_time": 10000,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
         # "plot_quad": "PHASE_SWEEP"
+        "fit_fn": "gaussian"
     }
 
     plot_parameters = {

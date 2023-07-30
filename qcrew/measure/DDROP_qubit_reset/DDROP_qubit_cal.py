@@ -48,6 +48,11 @@ class DDROPQubitCal(Experiment):
         qubit, rr = self.modes  # get the modes
 
         # Excite qubit
+
+        # flux.play("predist_constcos_reset_pulse", ampx=0.4)
+        # qua.wait(200, flux.name)
+        # qua.align()
+
         qubit.play(self.qubit_pi)  # prepare qubit in excited state
         qua.align(qubit.name, rr.name)
         # Play RR ddrop pulse
@@ -77,20 +82,20 @@ class DDROPQubitCal(Experiment):
 if __name__ == "__main__":
 
     amp_start = 0.0
-    amp_stop = 1.5
-    amp_step = 0.1
+    amp_stop = 1.8
+    amp_step = 0.05
 
     parameters = {
         "modes": ["QUBIT", "RR"],
         "reps": 50000,
         "wait_time": 100000,
         "x_sweep": (amp_start, amp_stop + amp_step / 2, amp_step),
-        "qubit_pi": "pi",
+        "qubit_pi": "gaussian_pi",
         "ddrop_pulse": "ddrop_pulse",
-        "rr_ddrop_freq": int(-49.8e6),
-        "rr_steady_wait": 2000,
+        "rr_ddrop_freq": int(-50e6),
+        "rr_steady_wait": 3000,
         "single_shot": False,
-        "plot_quad": "I_AVG",
+        # "plot_quad": "I_AVG",
     }
 
     plot_parameters = {

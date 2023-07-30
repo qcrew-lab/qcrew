@@ -46,9 +46,10 @@ class DDROPRRCal(Experiment):
 
         # Play qubit ddrop pulse
         qua.wait(int(self.rr_steady_wait // 4), qubit.name)  # wait steady state of rr
-        qubit.play(self.ddrop_pulse, self.x)
+        qubit.play("ddrop_pulse", self.x)
         qua.wait(int(self.rr_steady_wait // 4), qubit.name)  # wait steady state of rr
         qua.align(qubit.name, rr.name)  # wait pulses to end
+        qua.wait(int(self.rr_steady_wait // 4), rr.name)  # wait steady state of rr
 
         qua.update_frequency(rr.name, rr.int_freq)
         rr.measure((self.I, self.Q))  # measure qubit state
@@ -66,25 +67,21 @@ class DDROPRRCal(Experiment):
 
 if __name__ == "__main__":
 
-    amp_start = -1
-    amp_stop = 0
+    amp_start = -0.3
+    amp_stop = 0.3
     amp_step = 0.01
 
     parameters = {
         "modes": ["QUBIT", "RR"],
         "reps": 50000,
-        "wait_time": 100000,
+        "wait_time": 60000,
         "x_sweep": (amp_start, amp_stop + amp_step / 2, amp_step),
-        "y_sweep": (
-            0.2,
-            0.3,
-            0.4,
-        ),
+        "y_sweep": (0.0, 1, 1.3),
         "ddrop_pulse": "ddrop_pulse",
-        "rr_ddrop_freq": int(-50.13e6),
-        "rr_steady_wait": 2000,
+        "rr_ddrop_freq": int(-50e6),
+        "rr_steady_wait": 3000,
         "single_shot": False,
-        "plot_quad": "I_AVG",
+        # "plot_quad": "I_AVG",
     }
 
     plot_parameters = {

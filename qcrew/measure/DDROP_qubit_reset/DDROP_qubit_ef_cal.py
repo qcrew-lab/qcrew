@@ -19,27 +19,24 @@ class DDROPQubitEFCal(Experiment):
 
     _parameters: ClassVar[set[str]] = Experiment._parameters | {
         "qubit_pi",  # qubit pi operation
-        "qubit_ddrop",  # qubit pulse used in ddrop algorithm
-        "rr_ddrop",  # rr pulse used in ddrop algorithm
-        "steady_state_wait",  # Time for resonator to reach steady state
+        "ddrop_pulse",  # qubit pulse used in ddrop algorithm=
+        "rr_steady_wait",  # Time for resonator to reach steady state
         "fit_fn",  # fit function
     }
 
     def __init__(
         self,
         qubit_pi,
-        qubit_ddrop,
-        rr_ddrop,
-        steady_state_wait,
+        ddrop_pulse,
+        rr_steady_wait,
         rr_ddrop_freq,
         fit_fn=None,
         **other_params
     ):
 
         self.qubit_pi = qubit_pi
-        self.qubit_ddrop = qubit_ddrop
-        self.rr_ddrop = rr_ddrop
-        self.steady_state_wait = steady_state_wait
+        self.ddrop_pulse = ddrop_pulse
+        self.rr_steady_wait = rr_steady_wait
         self.rr_ddrop_freq = rr_ddrop_freq
         self.fit_fn = fit_fn
 
@@ -49,20 +46,32 @@ class DDROPQubitEFCal(Experiment):
         """
         Defines pulse sequence to be played inside the experiment loop
         """
-        qubit, qubit_ef, rr = self.modes  # get the modes
+        qubit, qubit_ef, rr, flux = self.modes  # get the modes
 
         # Excite qubit
-        qubit.play(self.qubit_pi)  # prepare qubit in excited state
+
+        flux.play("predist_constcos_reset_pulse", ampx=0.5)
+        qua.wait(200, flux.name)
+        qua.align()
+
+        # qubit.play(self.qubit_pi)  # prepare qubit in excited state
+        # qua.align(qubit.name, qubit_ef.name)
+        # qubit_ef.play(self.qubit_pi)  # prepare qubit in excited state
+        # qua.align()
 
         # Play RR ddrop pulse
         qua.update_frequency(rr.name, self.rr_ddrop_freq)
-        rr.play(self.ddrop_pulse) 
+        rr.play(self.ddrop_pulse)
 
         # Play qubit and qubit_ef ddrop pulses
-        qua.wait(int(self.rr_steady_wait // 4), qubit.name, qubit_ef.name)  # wait steady state of rr
-        qubit.play(self.ddrop_pulse, qubit_ef.name) 
-        qubit_ef.play(self.ddrop_pulse, ampx = self.x)  # play qubit ef ddrop excitation
-        qua.wait(int(self.rr_steady_wait // 4), qubit.name, qubit_ef.name)  # wait steady state of rr
+        qua.wait(
+            int(self.rr_steady_wait // 4), qubit.name, qubit_ef.name
+        )  # wait steady state of rr
+        qubit.play(self.ddrop_pulse)
+        qubit_ef.play(self.ddrop_pulse, ampx=self.x)  # play qubit ef ddrop excitation
+        qua.wait(
+            int(self.rr_steady_wait // 4), qubit.name, qubit_ef.name
+        )  # wait steady state of rr
         qua.align(qubit.name, rr.name, qubit_ef.name)  # wait pulses to end
 
         qua.update_frequency(rr.name, rr.int_freq)
@@ -86,11 +95,11 @@ if __name__ == "__main__":
     amp_step = 0.01
 
     parameters = {
-        "modes": ["QUBIT", "QUBIT_EF", "RR"],
+        "modes": ["QUBIT", "QUBIT_EF", "RR", "FLUX"],
         "reps": 50000,
         "wait_time": 100000,
         "x_sweep": (amp_start, amp_stop + amp_step / 2, amp_step),
-        "qubit_pi": "pi",
+        "qubit_pi": "gaussian_pi",
         "ddrop_pulse": "ddrop_pulse",
         "rr_ddrop_freq": int(-50e6),
         "rr_steady_wait": 2000,

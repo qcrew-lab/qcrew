@@ -162,7 +162,6 @@ class Plotter:
         self.hdisplay.update(self.fig)
 
     def plot_2D(self, x, y, z):
-
         if self.plot_setup["zlog"]:
             if self.plot_setup["zlimits"]:
                 vmin = self.plot_setup["zlimits"][0]
@@ -179,6 +178,7 @@ class Plotter:
                 norm = None
 
         ax = self.fig.gca()
+        # ax.set_aspect("equal")
         im = ax.pcolormesh(
             x, y, z, norm=norm, shading="auto", cmap=self.plot_setup["cmap"]
         )

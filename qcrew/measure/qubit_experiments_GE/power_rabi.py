@@ -26,17 +26,18 @@ class PowerRabi(Experiment):
 
         self.qubit_op = qubit_op
         self.fit_fn = fit_fn
-
         super().__init__(**other_params)  # Passes other parameters to parent
 
     def QUA_play_pulse_sequence(self):
         """
         Defines pulse sequence to be played inside the experiment loop
         """
-        qubit, rr = self.modes  # get the modes
+        qubit, rr, cav = self.modes  # get the modes
 
         qubit.play(self.qubit_op, ampx=self.x)  # play qubit pulse
-        qubit.play(self.qubit_op, ampx=self.x)  # play qubit pulse pi/2
+        qubit.play(self.qubit_op, ampx=self.x)  # play qubit pulse
+        # qubit.play(self.qubit_op, ampx=self.x)  # play qubit pulse
+        # qubit.play(self.qubit_op, ampx=self.x)  # play qubit pulse
         qua.align(qubit.name, rr.name)  # wait qubit pulse to end
         rr.measure((self.I, self.Q))  # measure qubit state
         qua.wait(int(self.wait_time // 4), rr.name)  # wait system reset
@@ -49,21 +50,21 @@ class PowerRabi(Experiment):
         self.QUA_stream_results()  # stream variables (I, Q, x, etc)
 
 
-# -------------------------------- Execution -----------------------------------
+# -------------------------------- Execution ----------------------------------
 
 if __name__ == "__main__":
 
-    amp_start = -1.8
-    amp_stop = 1.8
+    amp_start = -1.2
+    amp_stop = 1.2
     amp_step = 0.05
     parameters = {
-        "modes": ["QUBIT", "RR"],
-        "reps": 1000000,
-        "wait_time": 20000,
+        "modes": ["QUBIT", "RR", "CAVITY"],
+        "reps": 100000,
+        "wait_time": 60000,
         "x_sweep": (amp_start, amp_stop + amp_step / 2, amp_step),
-        "qubit_op": "constant_pi2_pulse",
-        "single_shot": False,
-        "plot_quad": "I_AVG"
+        "qubit_op": "gaussian_pi",
+        # "single_shot": True,
+        "plot_quad": "I_AVG",
     }
 
     plot_parameters = {

@@ -96,40 +96,19 @@ if __name__ == "__main__":
         vna.connect()
 
         # the routine below can handle multiple measurement runs at once
-        fcenters = [
-            5.99990875e9,
-            5.99990875e9,
-            5.99990875e9,
-            5.99990875e9,
-            5.99990875e9,
-            6.249689007e9,
-            6.249689007e9,
-            6.249689007e9,
-            6.249689007e9,
-            6.249689007e9,
-            6.47062285e9,
-            6.47062285e9,
-            6.47062285e9,
-            6.47062285e9,
-            6.47062285e9,
-            6.63046203e9,
-            6.63046203e9,
-            6.63046203e9,
-            6.63046203e9,
-            6.63046203e9,
-        ]
+        fcenters = [6.663523615e9, 6.88327455e9, 6.663523615e9, 6.88327455e9, 6.663523615e9, 6.88327455e9, 6.663523615e9, 6.88327455e9]
+        fspans = [10e3, 25e3, 10e3, 25e3, 10e3, 25e3, 10e3, 25e3]
+        powers = [10, 10, 0, 0, -15, -15, -30, -30]
+        repetitions = [25, 25, 50, 50, 200, 200, 500, 500]
 
-        powerslist = [10, 0, -10, -20, -30, 10, 0, -10, -20, -30, 10, 0, -10, -20, -30, 10, 0, -10, -20, -30]
-        repslist = [25, 50, 100, 250, 500, 25, 50, 100, 250, 500, 25, 50, 100, 250, 500, 25, 50, 100, 250, 500]
-
-        num_runs = len(repslist)
+        num_runs = len(fcenters)
         for idx in range(num_runs):
             # these parameters are set on VNA and do not change during a measurement run
             vna_parameters = {
                 # frequency sweep center (Hz)
                 "fcenter": fcenters[idx],
                 # frequency sweep span (Hz)
-                "fspan": 25e3,
+                "fspan": fspans[idx],
                 # frequency sweep start value (Hz)
                 # "fstart": 4e9,
                 # frequency sweep stop value (Hz)
@@ -137,7 +116,7 @@ if __name__ == "__main__":
                 # IF bandwidth (Hz), [1, 500000]
                 "bandwidth": 100,
                 # number of frequency sweep points, [2, 200001]
-                "sweep_points": 501,
+                "sweep_points": 1001,
                 # delay (s) between successive sweep points, [0.0, 100.0]
                 "sweep_delay": 1e-3,
                 # trace data to be displayed and acquired, max traces = 16
@@ -154,7 +133,7 @@ if __name__ == "__main__":
             # these parameters are looped over during the measurement
             measurement_parameters = {
                 # Number of sweep averages, must be an integer > 0
-                "repetitions": repslist[idx],
+                "repetitions": repetitions[idx],
                 # Input powers at (<port1>, <port2>) (dBm), range [-30.0, 15.0]
                 # <portX> (X=1,2) can be a set {a, b,...}, tuple (st, stop, step), or constant x
                 # use set for discrete sweep points a, b, ...
@@ -164,7 +143,7 @@ if __name__ == "__main__":
                 # eg 1: powers = ((-30, 15, 5), 0) will sweep port 1 power from -30dBm to 15dBm inclusive in steps of 5dBm with port 2 power remaining constant at 0 dBm
                 # eg 2: powers = ({-15, 0, 15}, {-5, 0}) will result in sweep points (-15, -5), (-15, 0), (0, -5), (0, 0), (15, -5), (15, 0)
                 # eg 3: powers = (0, 0) will set both port powers to 0, no power sweep happens
-                "powers": (powerslist[idx], 0),
+                "powers": (powers[idx], 0),
             }
 
             # create measurement instance with instruments and measurement_parameters
@@ -178,7 +157,7 @@ if __name__ == "__main__":
             fcenter = vna_parameters["fcenter"]
             save_parameters = {
                 "datapath": pathlib.Path(stage.datapath) / "wheel",
-                "usersuffix": f"{fcenter:.3}" + f"_{power}pow_{reps}reps",
+                "usersuffix": f"{fcenter:.3}",
                 "measurementname": measurement.__class__.__name__.lower(),
                 **measurement.dataspec,
             }

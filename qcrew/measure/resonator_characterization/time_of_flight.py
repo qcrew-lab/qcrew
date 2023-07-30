@@ -17,7 +17,7 @@ def get_qua_program(rr):
             qua.reset_phase(rr.name)
             qua.measure("readout_pulse" * qua.amp(1), rr.name, adc_stream)
             # qua.play("constant_pulse" * qua.amp(0.3), "FLUX")
-            qua.wait(10000, rr.name)
+            qua.wait(60000, rr.name)
             qua.align()
 
         with qua.stream_processing():
@@ -50,6 +50,8 @@ if __name__ == "__main__":
 
         axes[0].plot(results / 2 ** 12)
         axes[1].plot(freqs[5:] / 1e6, amps[5:])
+        r = results / 2 ** 12
+        # np.savez("ZX8512G_biastee_10us_step_10kreps_DCblock", r)
 
         # Retrieving and plotting FFT data.
         plt.show()

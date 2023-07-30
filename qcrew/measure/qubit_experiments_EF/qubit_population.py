@@ -23,14 +23,11 @@ class QubitPopulation(Experiment):
         "fit_fn",  # fit function
     }
 
-    def __init__(
-        self, qubit_ge_pi, qubit_ef_pi, ef_int_freq, fit_fn="sine", **other_params
-    ):
+    def __init__(self, qubit_ge_pi, qubit_ef_pi, fit_fn="sine", **other_params):
 
         self.qubit_ge_pi = qubit_ge_pi
         self.fit_fn = fit_fn
         self.qubit_ef_pi = qubit_ef_pi
-        self.ef_int_freq = ef_int_freq
 
         super().__init__(**other_params)  # Passes other parameters to parent
 
@@ -38,13 +35,21 @@ class QubitPopulation(Experiment):
         """
         Defines pulse sequence to be played inside the experiment loop
         """
-        qubit, rr = self.modes  # get the modes
+        qubit, qubit_ef, rr = self.modes  # get the modes
+        if 1:
+            qua.align()
+            # Play RR ddrop pulse
+            rr.play("ddrop_pulse")
+            # Play qubit ddrop pulse
+            qua.wait(int(3000 // 4), qubit.name)  # wait steady state of rr
+            qubit.play("ddrop_pulse")
+            qua.wait(int(3000 // 4), qubit.name)  # wait steady state of rr
 
         qubit.play(self.qubit_ge_pi, ampx=self.y)
-        qua.update_frequency(qubit.name, self.ef_int_freq)
-        qubit.play(self.qubit_ef_pi, ampx=self.x)  # e-> f
-        qua.update_frequency(qubit.name, qubit.int_freq)
-        qubit.play(self.qubit_ge_pi)  # e-> f
+        qua.align(qubit.name, qubit_ef.name)
+        qubit_ef.play(self.qubit_ef_pi, ampx=self.x)
+        qua.align(qubit.name, qubit_ef.name)
+        qubit.play(self.qubit_ge_pi)
 
         qua.align(qubit.name, rr.name)  # wait qubit pulse to end
         rr.measure((self.I, self.Q))  # measure qubit state
@@ -67,12 +72,13 @@ if __name__ == "__main__":
 
     parameters = {
         "modes": ["QUBIT", "QUBIT_EF", "RR"],
-        "reps": 5000,
-        "wait_time": 300000,
-        "qubit_ge_pi": "pi",
-        "qubit_ef_pi": "pi",
+        "reps": 100000,
+        "wait_time": 100000,
+        "qubit_ge_pi": "gaussian_pi",
+        "qubit_ef_pi": "gaussian_pi",
         "x_sweep": (-1.8, 1.8 + 0.1 / 2, 0.1),
-        "y_sweep": [1.0],
+        "y_sweep": [0.0, 1.0],
+        # "plot_quad": "I_AVG",
     }
 
     plot_parameters = {

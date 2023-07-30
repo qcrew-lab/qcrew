@@ -18,8 +18,8 @@ if __name__ == "__main__":
 
         params = {
             "reps": 50000,
-            "wait_time": 20000,  # ns
-            "qubit_pi_pulse": "constant_pi_pulse",  # pulse to excite qubit
+            "wait_time": 60000,  # ns
+            "qubit_pi_pulse": "gaussian_pi",  # pulse to excite qubit
             "weights_file_path": file_path,
         }
 

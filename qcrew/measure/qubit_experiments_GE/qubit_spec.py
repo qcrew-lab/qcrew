@@ -25,6 +25,7 @@ class QubitSpectroscopy(Experiment):
 
         self.qubit_op = qubit_op
         self.fit_fn = fit_fn
+        # self.internal_sweep = ["28", "140", "280", "420"]
 
         super().__init__(**other_params)  # Passes other parameters to parent
 
@@ -32,33 +33,42 @@ class QubitSpectroscopy(Experiment):
         """
         Defines pulse sequence to be played inside the experiment loop
         """
-        qubit, rr = self.modes  # get the modes
+        qubit, rr, flux = self.modes  # get the modes
 
         qua.update_frequency(qubit.name, self.x)  # update resonator pulse frequency
         qubit.play(self.qubit_op)  # play qubit pulse
-        # qua.wait(1875, rr.name)
         qua.align(qubit.name, rr.name)  # wait qubit pulse to end
         rr.measure((self.I, self.Q))  # measure transmitted signal
         qua.wait(int(self.wait_time // 4), rr.name)  # wait system reset
 
-        self.QUA_stream_results()  # stream variables (I, Q, x, etc)
+        if self.single_shot:  # assign state to G or E
+            qua.assign(
+                self.state, qua.Cast.to_fixed(self.I < rr.readout_pulse.threshold)
+            )
+
+        self.QUA_stream_results()  # stream variables (I, 4Q, x, etc)
+        qua.align()
 
 
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-    x_start = -200e6
-    x_stop = 200e6
-    x_step = 1e6
+    x_start = -150e6
+    x_stop = -100e6
+    x_step = 0.5e6
+    # x_start = 45e6
+    # x_stop = 50e6
+    # x_step = 0.025e6
 
     parameters = {
-        "modes": ["QUBIT", "RR"],
-        "reps": 10000,
-        "wait_time": 10000,
+        "modes": ["QUBIT", "RR", "FLUX"],
+        "reps": 2000,
+        "wait_time": 60e3,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
-        "qubit_op": "constant_pi_pulse",
+        "qubit_op": "constant_pi",  # constant_pi2_short
         "plot_quad": "I_AVG",
-        "fit_fn":"gaussian"
+        # "single_shot": True,
+        "fit_fn": "gaussian",
     }
 
     plot_parameters = {

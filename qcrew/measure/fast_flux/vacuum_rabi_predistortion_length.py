@@ -9,6 +9,8 @@ from qcrew.control import professor as prof
 from qcrew.measure.experiment import Experiment
 from qm import qua
 
+import numpy as np
+
 # ---------------------------------- Class -------------------------------------
 # delete this comment
 
@@ -22,11 +24,10 @@ class VacuumRabi(Experiment):
         "fit_fn",  # fit function
     }
 
-    def __init__(self, flux_pulse, fit_fn="exp_decay", **other_params):
-
+    def __init__(self, qubit_op, fit_fn="", **other_params):
+        self.qubit_op = qubit_op  # pi pulse
         self.fit_fn = fit_fn
-        self.flux_pulse = flux_pulse
-
+        self.internal_sweep = list(np.arange(4, 120, 4))
         super().__init__(**other_params)  # Passes other parameters to parent
 
     def QUA_play_pulse_sequence(self):
@@ -35,38 +36,39 @@ class VacuumRabi(Experiment):
         """
         qubit, rr, flux = self.modes  # get the modes
 
-        flux.play(self.flux_pulse, ampx=self.x)  # tune qubit f and wait
-        qua.align(flux.name, rr.name)  # wait flux pulse to end
-        rr.measure((self.I, self.Q))  # measure qubit state
-        if self.single_shot:  # assign state to G or E
-            qua.assign(
-                self.state, qua.Cast.to_fixed(self.I < rr.readout_pulse.threshold)
-            )
-        qua.wait(int(self.wait_time // 4), rr.name)  # wait system reset
-
-        self.QUA_stream_results()  # stream variables (I, Q, x, etc)
+        for flux_len in self.internal_sweep:
+            qubit.play(self.qubit_op)  # play pi qubit pulse
+            qua.align(qubit.name, flux.name)
+            flux.play(f"square_{flux_len}", ampx=-0.3)
+            qua.wait(int((700 + flux_len) // 4), rr.name)  # cc
+            rr.measure((self.I, self.Q))  # measure qubit state
+            if self.single_shot:  # assign state to G or E7
+                qua.assign(
+                    self.state, qua.Cast.to_fixed(self.I < rr.readout_pulse.threshold)
+                )
+            qua.wait(int(self.wait_time // 4))  # wait system reset
+            self.QUA_stream_results()  # stream variables (I, Q, x, etc)
+            qua.align()
 
 
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
 
-    x_start = 0.0
-    x_stop = 1.0
-    x_step = 0.1
-
     parameters = {
         "modes": ["QUBIT", "RR", "FLUX"],
         "reps": 100000,
-        "wait_time": 100000,
-        "x_sweep": (x_start, x_stop + x_step / 2, x_step),
-        "flux_pulse": "predist_pulse",
-        "single_shot": False,
-        "plot_quad": "Z_AVG",
+        "wait_time": 1.25e6,
+        "qubit_op": "gaussian_pi",
+        # "flux_pulse": "constant_pulse",
+        # "single_shot": True,
+        "plot_quad": "I_AVG",
+        "fetch_period": 3,
     }
 
     plot_parameters = {
-        "xlabel": "Relaxation time (clock cycles)",
+        "xlabel": "Flux pulse length (ns)",
+        # "plot_type": "2D",
     }
 
     experiment = VacuumRabi(**parameters)

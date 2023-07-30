@@ -37,9 +37,11 @@ class QubitSpectroscopyEF(Experiment):
 
         qubit.play(self.qubit_pi_pulse_name)  # g->e
         qua.align(qubit.name, qubit_ef.name)
+        
         qua.update_frequency(qubit_ef.name, self.x)  # update to e->f (sweep variable)
         qubit_ef.play(self.qubit_ef_op)  # e->f
         qua.align(qubit.name, qubit_ef.name)
+        
         # qua.update_frequency(qubit.name, qubit.int_freq)  # update to g->e
         qubit.play(self.qubit_pi_pulse_name)  # g->e
         qua.align(qubit.name, rr.name)  # wait qubit pulse to end
@@ -52,17 +54,18 @@ class QubitSpectroscopyEF(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-    x_start = -200e6
-    x_stop = 0e6
+    x_start = -180e6
+    x_stop = -130e6
     xstep = 0.1e6
 
     parameters = {
         "modes": ["QUBIT", "QUBIT_EF", "RR"],
         "reps": 20000,
-        "wait_time": 20000,
+        "wait_time": 100000,
         "x_sweep": (int(x_start), int(x_stop + xstep / 2), int(xstep)),
-        "qubit_ef_op": "constant_pulse",
-        "qubit_pi_pulse_name": "constant_pi_pulse",
+        "qubit_ef_op": "gaussian_pi",
+        "qubit_pi_pulse_name": "gaussian_pi",
+        "fit_fn": "gaussian",
     }
 
     plot_parameters = {

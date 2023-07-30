@@ -24,13 +24,13 @@ import time
 
 if __name__ == "__main__":
 
-    current_start = -10.5e-3
-    current_stop = -13e-3
+    current_start = -1.54e-3
+    current_stop = -1.94e-3
     current_step = -0.1e-3
     current_sweep = np.arange(current_start, current_stop, current_step)
 
-    qubit_lo_start = 5.8e9 #6.57e9
-    qubit_lo_stop = 5.1e9
+    qubit_lo_start = 5.9e9 #6.57e9
+    qubit_lo_stop = 5.4e9
     qubit_lo_step = -400e6
     qubit_lo_sweep = np.arange(qubit_lo_start, qubit_lo_stop, qubit_lo_step)
 
@@ -130,14 +130,14 @@ if __name__ == "__main__":
 
                     qubit_spec_parameters = {
                         "modes": [stage.QUBIT, stage.RR],
-                        "reps": 4000,
-                        "wait_time": 10000,
+                        "reps": 25000,
+                        "wait_time": 60000,
                         "x_sweep": (
                             int(x_start),
                             int(x_stop + x_step / 2),
                             int(x_step),
                         ),
-                        "qubit_op": "constant_pi_pulse",
+                        "qubit_op": "constant_pulse",
                         "fit_fn": None,
                         "fetch_period": 6,
                     }

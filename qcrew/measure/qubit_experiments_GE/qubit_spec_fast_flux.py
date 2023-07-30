@@ -25,26 +25,6 @@ class QubitSpectroscopyFastFlux(Experiment):
 
         self.qubit_op = qubit_op
         self.fit_fn = fit_fn
-        # self.sweep_parameters = [
-        #     (0.0, -50.2e6),
-        #     (0.1, -50.2e6),
-        #     (0.3, -50.3e6),
-            # (0.5, -50.4e6),
-            # (0.6, -50.6e6),
-            # (0.8, -50.7e6),
-            # (1.0, -50.7e6),
-            #(1.5, -51.0e6),
-        
-        # self.internal_sweep = [
-        #     "0.0, -50.2e6",
-        #     "0.1, -50.2e6",
-        #     "0.3, -50.3e6",
-            # "0.5, -50.4e6",
-            # "0.6, -50.6e6",
-            # "0.8, -50.7e6",
-            # "1.0, -50.7e6",
-            #"1.5, -51.0e6",
-        # ]
 
         super().__init__(**other_params)  # Passes other parameters to parent
 
@@ -53,15 +33,11 @@ class QubitSpectroscopyFastFlux(Experiment):
         Defines pulse sequence to be played inside the experiment loop
         """
         qubit, flux, rr = self.modes  # get the modes
-        # for params in self.sweep_parameters:
-        #     flux_ampx, rr_freq = params
-        #     qua.align()
-        #     qua.update_frequency(rr.name, int(rr_freq))
         qua.update_frequency(qubit.name, self.x)  # update resonator pulse frequency
         qua.wait(self.y, qubit.name)
         qubit.play(self.qubit_op)  # play qubit pulse
         qua.wait(100, flux.name)
-        flux.play("constant_pulse", ampx=0.2)
+        flux.play("constant_pulse", ampx=-0.3)
         qua.wait(200, rr.name)
         rr.measure((self.I, self.Q))  # measure transmitted signal
         qua.wait(int(self.wait_time // 4), flux.name)  # wait system reset
@@ -75,11 +51,10 @@ if __name__ == "__main__":
     x_start = -200e6  # 181.25e6
     x_stop = 0e6  # 181.5e6
     x_step = 1e6
-    
+
     y_start = 80  # 181.25e6
     y_stop = 120  # 181.5e6
     y_step = 1
-
 
     parameters = {
         "modes": ["QUBIT", "FLUX", "RR"],
@@ -88,13 +63,10 @@ if __name__ == "__main__":
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
         "y_sweep": (int(y_start), int(y_stop + y_step / 2), int(y_step)),
         "qubit_op": "constant_pi_pulse",
-        #"plot_quad": "I_AVG",
+        # "plot_quad": "I_AVG",
     }
 
-    plot_parameters = {
-        "xlabel": "Qubit pulse frequency (Hz)",
-        "plot_type": "2D"
-    }
+    plot_parameters = {"xlabel": "Qubit pulse frequency (Hz)", "plot_type": "2D"}
 
     experiment = QubitSpectroscopyFastFlux(**parameters)
     experiment.setup_plot(**plot_parameters)

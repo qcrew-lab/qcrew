@@ -16,7 +16,7 @@ def get_qua_program(rr, qubit):
 
         with qua.for_(n, 0, n < reps, n + 1):
             qua.reset_phase(rr.name)
-            qubit.play("constant_pi_pulse")
+            # qubit.play("gaussian_pi")
             qua.align(qubit.name, rr.name)
             qua.measure("readout_pulse" * qua.amp(1.0), rr.name, adc_stream)
             qua.wait(20000, rr.name)
@@ -66,8 +66,8 @@ if __name__ == "__main__":
 
         # This is the envelope of the average trace. In ge-discriminator
         # we take the average of the envelopes of each single trace
-        axes[2].plot(np.real(demod_sig))
-        axes[2].plot(np.imag(demod_sig))
+        axes[2].plot(np.abs(demod_sig))
+        # axes[2].plot(np.imag(demod_sig))
 
         # Retrieving and plotting FFT data.
         plt.show()

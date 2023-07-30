@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 filepath = (
-    "C:/Users/qcrew/Desktop/qcrew/data/jonny/20220131/155337_vnasweep_4.5111GHz.hdf5"
+    "C:/Users/qcrew/Desktop/qcrew/data/djext/20230712/181013_ampfluxsweep_.hdf5" 
 )
 file = h5py.File(filepath, "r")
 data = file["data"]

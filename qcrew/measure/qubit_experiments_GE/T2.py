@@ -56,7 +56,7 @@ if __name__ == "__main__":
 
     x_start = 4
     x_stop = 500
-    x_step = 4
+    x_step = 10
     detuning = 0
 
     parameters = {
@@ -64,10 +64,10 @@ if __name__ == "__main__":
         "reps": 8000,
         "wait_time": 100000,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
-        "qubit_op": "constant_pi2_pulse",
+        "qubit_op": "gaussian_pi2",
         "detuning": int(detuning),
         "single_shot": False,
-        "plot_quad": "I_AVG",
+        #"plot_quad": "I_AVG",
     }
 
     plot_parameters = {

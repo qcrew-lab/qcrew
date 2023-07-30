@@ -152,4 +152,4 @@ class NumericalPulse(Pulse):
             i_wave = np.concatenate((i_wave, pad_zeros), axis=0)
             q_wave = np.concatenate((q_wave, pad_zeros), axis=0)
 
-        return i_wave, q_wave
+        return BASE_PULSE_AMP * i_wave, BASE_PULSE_AMP * q_wave

@@ -34,16 +34,25 @@ class CavitySpectroscopy(Experiment):
         """
         Defines pulse sequence to be played inside the experiment loop
         """
-        qubit, cav, rr = self.modes  # get the modes
+        qubit, cav, rr, flux = self.modes  # get the modes
 
+        # Fock satae preparation
+        # flux.play("predist_constcos_rpad_pulse", ampx=-0.295)
+        # qua.wait(int(1500 // 4), qubit.name)
+        # qubit.play("gaussian_pi")  # play qubit pulse
         qua.update_frequency(cav.name, self.x)  # update resonator pulse frequency
         qua.align(cav.name, qubit.name)
-        cav.play(self.cav_op, ampx=1)  # play displacement to cavity
+        cav.play(self.cav_op)  # play displacement to cavity
         qua.align(cav.name, qubit.name)  # align all modes
-        # qubit.play(self.qubit_op)  # play qubit pulse
+        qubit.play(self.qubit_op)  # play qubit pulse
         qua.align(qubit.name, rr.name)  # align all modes
         rr.measure((self.I, self.Q))  # measure transmitted signal
         qua.wait(int(self.wait_time // 4), cav.name)  # wait system reset
+
+        if self.single_shot:  # assign state to G or E
+            qua.assign(
+                self.state, qua.Cast.to_fixed(self.I < rr.readout_pulse.threshold)
+            )
 
         self.QUA_stream_results()  # stream variables (I, Q, x, etc)
 
@@ -53,16 +62,18 @@ class CavitySpectroscopy(Experiment):
 
 if __name__ == "__main__":
 
-    x_start = -53e6
-    x_stop = -47e6
-    x_step = 0.1e6
+    x_start = -52e6
+    x_stop = -46e6
+    x_step = 0.02e6
     parameters = {
-        "modes": ["QUBIT", "CAV", "RR"],
+        "modes": ["QUBIT", "CAVITY", "RR", "FLUX"],
         "reps": 50000,
-        "wait_time": 1000000,
+        "wait_time": 700e3,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
-        "qubit_op": "pi_selective_2",
-        "cav_op": "pi",
+        "qubit_op": "gaussian_pi_420",
+        "fetch_period": 3,
+        # "single_shot": True,
+        "cav_op": "spectroscopy_pulse",
     }
 
     plot_parameters = {

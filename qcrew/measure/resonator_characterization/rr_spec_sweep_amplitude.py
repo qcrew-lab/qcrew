@@ -48,8 +48,8 @@ if __name__ == "__main__":
         "modes": ["RR", "QUBIT"],
         "reps": 2000,
         "wait_time": 100000,
-        "x_sweep": (int(-55e6), int(-49e6 + 0.3e6 / 2), int(0.3e6)),
-        "y_sweep": [0.01, 0.015, 0.02],
+        "x_sweep": (int(-54e6), int(-48e6 + 0.1e6 / 2), int(0.1e6)),
+        "y_sweep": [.1,.4,.7, 1,1.3,1.6,1.9],
     }
     plot_parameters = {
         "xlabel": "Resonator pulse frequency (Hz)",

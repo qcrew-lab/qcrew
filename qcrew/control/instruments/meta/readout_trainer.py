@@ -2,6 +2,8 @@
 
 import numpy as np
 from scipy import signal
+from scipy.optimize import curve_fit
+from scipy import special
 
 import qcrew.control.modes as qcm
 import qcrew.control.pulses as qcp
@@ -39,6 +41,7 @@ class ReadoutTrainer(Parametrized):
         reps,
         wait_time,
         qubit_pi_pulse,
+        ddrop_params=None,
         weights_file_path=None,
     ):
         """ """
@@ -50,6 +53,7 @@ class ReadoutTrainer(Parametrized):
         self.reps = reps
         self.wait_time = wait_time
         self.qubit_pi_pulse = qubit_pi_pulse
+        self.ddrop_params = ddrop_params
         self.weights_file_path = weights_file_path
 
         logger.info(f"Initialized ReadoutTrainer with {self._rr} and {self._qubit}")
@@ -135,12 +139,20 @@ class ReadoutTrainer(Parametrized):
 
             with qua.for_(n, 0, n < reps, n + 1):
 
-                qua.measure(readout_pulse, self._rr.name, adc)
-                qua.wait(wait_time, self._rr.name)
+                # if self.ddrop_params:
+                #     self._macro_DDROP_reset()
+
+                # qua.measure(readout_pulse, self._rr.name, adc)
+                # qua.wait(wait_time, self._rr.name)
                 # qua.reset_phase(self._rr.name)
 
+                # qua.play("predist_square_plusminus_pulse" * qua.amp(-0.28), "FLUX")
+                # qua.wait(int(2500 // 4), self._qubit.name, self._rr.name)
+                if self.ddrop_params:
+                    self._macro_DDROP_reset()
+
                 if excite_qubit:
-                    qua.align(self._rr.name, self._qubit.name)
+                    # qua.align("FLUX", self._qubit.name)
                     self._qubit.play(qubit_pi_pulse)
                     qua.align(self._rr.name, self._qubit.name)
 
@@ -203,6 +215,24 @@ class ReadoutTrainer(Parametrized):
 
         return weights
 
+    def _fit_hist_double_gaussian(self, guess, data_g):
+        """
+        The E population is estimated from the amplitudes of the two gaussians
+        fitted from the G state blob.
+        """
+
+        p0 = [
+            guess["x0"],
+            guess["x1"],
+            guess["a0"],
+            guess["a1"],
+            guess["ofs"],
+            guess["sigma"],
+        ]
+
+        popt, _ = curve_fit(double_gaussian, data_g["xs"], data_g["ys"], p0=p0)
+        return popt
+
     def calculate_threshold(self):
 
         # Get IQ for qubit in ground state
@@ -222,11 +252,20 @@ class ReadoutTrainer(Parametrized):
         Qe_list = handle.get("Q").fetch_all()["value"]
 
         # Fit each blob to a 2D gaussian and retrieve the center
-        IQ_center_g, data_g = self._fit_IQ_blob(Ig_list, Qg_list)
-        IQ_center_e, data_e = self._fit_IQ_blob(Ie_list, Qe_list)
+        params_g, data_g = self._fit_IQ_blob(Ig_list, Qg_list)
+        params_e, data_e = self._fit_IQ_blob(Ie_list, Qe_list)
+
+        IQ_center_g = (params_g["x0"], params_g["y0"])  # G blob center
+        IQ_center_e = (params_e["x0"], params_e["y0"])  # E blob center
 
         # Calculate threshold
         threshold = (IQ_center_g[0] + IQ_center_e[0]) / 2
+
+        # Update readout with optimal threshold
+        self._update_threshold(threshold)
+
+        # Calculates the confusion matrix of the readout
+        conf_matrix = self._calculate_confusion_matrix(Ig_list, Ie_list, threshold)
 
         # Plot scatter and contour of each blob
         fig, ax = plt.subplots(figsize=(7, 7))
@@ -263,20 +302,36 @@ class ReadoutTrainer(Parametrized):
 
         # Plot I histogram
         fig, ax = plt.subplots(figsize=(7, 4))
-        ax.hist(Ig_list, bins=50)
-        ax.hist(Ie_list, bins=50)
+        n_g, bins_g, _ = ax.hist(Ig_list, bins=50, alpha=1)
+        n_e, bins_e, _ = ax.hist(Ie_list, bins=50, alpha=0.8)
+
+        # Estimate excited state population from G blob double gaussian fit
+
+        pge = conf_matrix["pge"]  # first estimate of excited state population
+        guess = {
+            "x0": params_g["x0"],
+            "x1": params_e["x0"],
+            "a0": max(n_g),
+            "a1": max(n_g) * pge / (1 - pge),
+            "ofs": 0.0,
+            "sigma": params_g["sigma"],
+        }
+        data_hist_g = {"xs": (bins_g[1:] + bins_g[:-1]) / 2, "ys": n_g}
+
+        popt = self._fit_hist_double_gaussian(guess, data_hist_g)
+        print(popt)
+        a0 = popt[2]
+        a1 = popt[3]
+        e_population = a1 / (a1 + a0)
+        print("Excited state population: ", e_population)
+
+        ax.plot(bins_g, [double_gaussian(x, *popt) for x in bins_g])
 
         ax.set_title("Projection of the IQ blobs onto the I axis")
         ax.set_ylabel("counts")
         ax.set_xlabel("I")
         ax.legend()
         plt.show()
-
-        # Update readout with optimal threshold
-        self._update_threshold(threshold)
-
-        # Calculates the confusion matrix of the readout
-        self._calculate_confusion_matrix(Ig_list, Ie_list, threshold)
 
         # Organize the raw I and Q data for each G and E measurement
         data = {
@@ -285,6 +340,32 @@ class ReadoutTrainer(Parametrized):
             "Ie": Ie_list,
             "Qe": Qe_list,
         }
+
+        # Plot manual threshold selectiveness on |g>
+        fig, ax = plt.subplots(figsize=(7, 5))
+        ax.set_title("Is qubit really in ground state if state = 0?")
+        ax.set_ylabel("Certainty")
+        ax.set_xlabel("Threshold")
+        popt
+        p_pass_if_g = lambda t: 0.5 * special.erfc((t - popt[0]) / 2 ** 0.5 / popt[-1])
+        p_pass_if_e = lambda t: 0.5 * special.erfc((t - popt[1]) / 2 ** 0.5 / popt[-1])
+        p_g = popt[2] / (popt[2] + popt[3])
+        p_e = popt[3] / (popt[2] + popt[3])
+        certainty = (
+            lambda t: p_pass_if_g(t)
+            * p_g
+            / (p_pass_if_e(t) * p_e + p_pass_if_g(t) * p_g)
+        )
+        t_rng = np.linspace(bins_g[0], bins_g[-1], 1000)
+        ax.plot(t_rng, [certainty(t) for t in t_rng])
+        ax.plot(
+            [threshold, threshold],
+            [0.4, 1.1],
+            linestyle="--",
+            label="calculated threshold",
+        )
+        ax.legend()
+        plt.show()
 
         return threshold, data
 
@@ -304,7 +385,6 @@ class ReadoutTrainer(Parametrized):
         # Get fit to 2D gaussian
         xs_grid, ys_grid = np.meshgrid(xs, ys)
         params = fit.do_fit(fit_fn, xs_grid.T, ys_grid.T, zs=zs)
-        IQ_center = (params["x0"], params["y0"])  # gaussian center
         fit_zs = fit.eval_fit(fit_fn, params, xs_grid.T, ys_grid.T).T
 
         data = {
@@ -314,7 +394,7 @@ class ReadoutTrainer(Parametrized):
             "counts_fit": fit_zs,
         }
 
-        return IQ_center, data
+        return params, data
 
     def _get_QUA_IQ_acquisition(self, excite_qubit: bool = False):
         """ """
@@ -329,8 +409,14 @@ class ReadoutTrainer(Parametrized):
 
             with qua.for_(n, 0, n < reps, n + 1):
 
+                # qua.play("predist_square_plusminus_pulse" * qua.amp(-0.3), "FLUX")
+                # qua.wait(int(2500 // 4), self._qubit.name, self._rr.name)
+
+                if self.ddrop_params:
+                    self._macro_DDROP_reset()
+
                 if excite_qubit:
-                    qua.align(self._rr.name, self._qubit.name)
+                    # qua.align(self._rr.name, self._qubit.name)
                     self._qubit.play(qubit_pi_pulse)
                     qua.align(self._rr.name, self._qubit.name)
 
@@ -355,3 +441,41 @@ class ReadoutTrainer(Parametrized):
         print("State prepared in |e>")
         print(f"   Measured in |e>: {pee}%")
         print(f"   Measured in |g>: {peg}%")
+        return {"pgg": pgg, "pge": pge, "pee": pee, "peg": peg}
+
+    def _macro_DDROP_reset(self):
+
+        rr_ddrop_freq = self.ddrop_params["rr_ddrop_freq"]
+        rr_ddrop = self.ddrop_params["rr_ddrop"]
+        qubit_ddrop = self.ddrop_params["qubit_ddrop"]
+        steady_state_wait = self.ddrop_params["steady_state_wait"]
+        qubit_ef = self.ddrop_params["qubit_ef_mode"]
+
+        qua.align(
+            self._qubit.name, self._rr.name, qubit_ef.name
+        )  # wait qubit pulse to end
+        qua.update_frequency(self._rr.name, rr_ddrop_freq)
+        self._rr.play(rr_ddrop)  # play rr ddrop excitation
+        qua.wait(
+            int(steady_state_wait // 4), self._qubit.name, qubit_ef.name
+        )  # wait resonator in steady state
+        self._qubit.play(qubit_ddrop)  # play qubit ddrop excitation
+        qubit_ef.play("ddrop_pulse")  # play qubit ddrop excitation
+        qua.wait(
+            int(steady_state_wait // 4), self._qubit.name, qubit_ef.name
+        )  # wait resonator in steady state
+        qua.align(
+            self._qubit.name, self._rr.name, qubit_ef.name
+        )  # wait qubit pulse to end
+        qua.update_frequency(self._rr.name, self._rr.int_freq)
+
+
+def double_gaussian(xs, x0, x1, a0, a1, ofs, sigma):
+    """
+    Gaussian defined by it's area <area>, sigma <s>, position <x0> and
+    y-offset <ofs>.
+    """
+    r0 = (xs - x0) ** 2
+    r1 = (xs - x1) ** 2
+    ys = ofs + a0 * np.exp(-0.5 * r0 / sigma ** 2) + a1 * np.exp(-0.5 * r1 / sigma ** 2)
+    return ys

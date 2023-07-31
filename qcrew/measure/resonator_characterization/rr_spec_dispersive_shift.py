@@ -48,8 +48,8 @@ class RRSpecDispersiveShift(Experiment):
 
 if __name__ == "__main__":
 
-    x_start = -51e6
-    x_stop = -49e6
+    x_start = -52e6
+    x_stop = -48e6
     x_step = 0.03e6
 
     parameters = {
@@ -58,7 +58,7 @@ if __name__ == "__main__":
         "wait_time": 60000,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
         "y_sweep": [0.0, 1.0],
-        "qubit_op": "gaussian_pi",
+        "qubit_op": "pi",
         # "plot_quad": "I_AVG",
         "fit_fn": "gaussian",
     }

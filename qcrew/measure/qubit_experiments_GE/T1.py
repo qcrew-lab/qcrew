@@ -57,10 +57,10 @@ if __name__ == "__main__":
     x_step = 500
     parameters = {
         "modes": ["QUBIT", "RR"],
-        "reps": 1000000,
-        "wait_time": 60e3,
+        "reps": 50000,
+        "wait_time": 70e3,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
-        "qubit_op": "gaussian_pi",
+        "qubit_op": "pi",
         # "single_shot": True,
         "plot_quad": "I_AVG",
     }

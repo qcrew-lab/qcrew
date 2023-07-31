@@ -75,7 +75,7 @@ if __name__ == "__main__":
         "reps": 100000,
         "wait_time": 60000,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
-        "qubit_op": "gaussian_pi2",
+        "qubit_op": "pi2",
         "detuning": int(detuning_),
         "single_shot": True,
         # "plot_quad": "I_AVG",

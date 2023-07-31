@@ -18,14 +18,13 @@ if __name__ == "__main__":
             stage.SA,
             stage.RR,
             stage.QUBIT,
-            stage.CAVB,
+            stage.CAV,
         )
         qm = stage.QM
         mixer_tuner = MixerTuner(sa, qm)
 
         # this is the mode whose mixer's LO or SB leakage you are tuning
         mode = cav
-
         # minimize LO leakage
 
         # use brute force (BF) minimizer
@@ -43,7 +42,7 @@ if __name__ == "__main__":
             # if you want a plot that shows minimization summary, set this to True
             "plot": False,
         }
-
+# 
         mixer_tuner.tune_lo(mode=mode, method="BF", **bf_params_lo)
 
         # user Nelder-Mead (NM) minimizer

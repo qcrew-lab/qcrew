@@ -52,20 +52,20 @@ class QubitSpectroscopyEF(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-    x_start = -170e6
-    x_stop = -158e6
-    xstep = 0.1e6
+    x_start = -200e6
+    x_stop = -110e6
+    xstep = 0.5e6
 
 
     parameters = {
         "modes": ["QUBIT", "QUBIT_EF", "RR"],
-        "reps": 20000,
-        "wait_time": 200000,
+        "reps": 10000,
+        "wait_time": 100e3,
         "x_sweep": (int(x_start), int(x_stop + xstep / 2), int(xstep)),
-        "qubit_ef_op": "constant_pi_pulse",
-        "qubit_pi_pulse_name": "gaussian_pi_pulse",
+        "qubit_ef_op": "constant_pulse",
+        "qubit_pi_pulse_name": "cc_40",
         "fit_fn": "gaussian",
-        "plot_quad": "I_AVG",
+        "plot_quad": "Z_AVG",
     }
 
     plot_parameters = {

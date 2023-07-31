@@ -22,11 +22,13 @@ class WignerFunction(Experiment):
         "delay",  # describe...
     }
 
-    def __init__(self, cav_op, qubit_op, fit_fn=None, delay=4, **other_params):
+    def __init__(self, cav_op, qubit_op, point, fit_fn=None, delay=4, **other_params):
         self.cav_op = cav_op
         self.qubit_op = qubit_op
         self.fit_fn = fit_fn
         self.delay = delay
+        self.point = point
+
 
         super().__init__(**other_params)  # Passes other parameters to parent
 
@@ -38,8 +40,17 @@ class WignerFunction(Experiment):
 
         qua.reset_frame(cav.name)
         cav.play(self.cav_op, ampx=0, phase=0.5)  # state to be imaged
-        cav.play(self.cav_op, ampx=np.real(self.x), phase=0)  # I displacement
-        cav.play(self.cav_op, ampx=np.imag(self.x), phase=0.25)  # Q displacement
+
+
+    
+        
+        # cav.play(self.cav_op, ampx=(self.x, -self.y, self.y, self.x), phase=0.5)
+        cav.play(self.cav_op, ampx=(np.real(point), -np.imag(point), np.imag(point), np.real(point)), phase=0.5)
+
+        
+
+
+       
         qua.align(cav.name, qubit.name)
         qubit.play(self.qubit_op)  # play pi/2 pulse around X
         qua.wait(
@@ -63,30 +74,35 @@ class WignerFunction(Experiment):
 
 # -------------------------------- Execution -----------------------------------
 if __name__ == "__main__":
-    phase_points = (1 + 1j, 1.5 + 1.5j)
 
-    parameters = {
-        "modes": ["QUBIT", "CAVB", "RR"],
-        "reps": 5000,
-        "wait_time": 1200e3,
-        "fetch_period": 4,  # time between data fetching rounds in sec
-        "delay": 750,  # pi/chi for a regular Wigner
-        "x_sweep": phase_points,  # ampitudes of the displacement pulses
-        "qubit_op": "gaussian_pi2_pulse",
-        "cav_op": "gaussian_coh1_long",
-        "single_shot": False,
-        "plot_quad": "I_AVG",
-    }
 
-    plot_parameters = {
-        "xlabel": "X",
-        # "ylabel": "Y",
-        "plot_type": "1D",
-        "cmap": "bwr",
-        "plot_err": False,
-    }
+    points_list = [0.1 + 0.2j, 0.2 + 0.3j, 0.4 + 0.4j, 0.5 + 0.5j]
 
-    experiment = WignerFunction(**parameters)
-    experiment.setup_plot(**plot_parameters)
+    for point in points_list:
 
-    prof.run(experiment)
+        parameters = {
+            "modes": ["QUBIT", "CAVB", "RR"],
+            "reps": 10,
+            "wait_time": 1200e3,
+            "fetch_period": 4,  # time between data fetching rounds in sec
+            "delay": 750,  # pi/chi for a regular Wigner
+            "x_sweep": [0, 1],#(x_start, x_stop + x_step / 2, x_step),
+            "point": point, 
+            "qubit_op": "gaussian_pi2_pulse",
+            "cav_op": "gaussian_coh1_long",
+            "single_shot": False,
+            "plot_quad": "I_AVG",
+        }
+
+        plot_parameters = {
+            "xlabel": "X",
+            "ylabel": "Y",
+            "plot_type": "1D",
+            "cmap": "bwr",
+            "plot_err": False,
+        }
+
+        experiment = WignerFunction(**parameters)
+        experiment.setup_plot(**plot_parameters)
+
+        prof.run(experiment)

@@ -31,12 +31,12 @@ class StarkShift(Experiment):
         """
         Defines pulse sequence to be played inside the experiment loop
         """
-        qubit, rr, qubit_drive = self.modes  # get the modes
+        qubit, rr, drive = self.modes  # get the modes
 
         qua.update_frequency(qubit.name, self.x)  # update qubit pulse frequency
-        qubit_drive.play("constant_pulse", ampx=self.y)  # Play continuous pump
+        drive.play("constant_cos_pulse", ampx=self.y)  # Play continuous pump
 
-        qua.wait(int((1000 - 960) / 4), qubit.name)
+        qua.wait(int(100 / 4), qubit.name)
         qubit.play(self.qubit_op)  # play qubit pi pulse
 
         # qua.align(qubit_drive.name, rr.name)
@@ -53,21 +53,21 @@ class StarkShift(Experiment):
 if __name__ == "__main__":
     amp_start = 0.0
     amp_stop = 1
-    amp_step = 0.05
+    amp_step = 0.1
 
-    freq_start = -42e6
-    freq_stop = -32e6
+    freq_start = 95e6
+    freq_stop = 105e6
     freq_step = 0.2e6
 
     parameters = {
-        "modes": ["QUBIT", "RR", "QUBIT_DRIVE"],
+        "modes": ["QUBIT", "RR", "DRIVE_RES"],
         "reps": 20000,
         "wait_time": 150000,
         "x_sweep": (int(freq_start), int(freq_stop + freq_step / 2), int(freq_step)),
-        "qubit_op": "gaussian_pi_selective_pulse",
+        "qubit_op": "gaussian_pi_pulse_selective",
         "fetch_period": 4,
         "y_sweep": (amp_start, amp_stop + amp_step / 2, amp_step),
-        "plot_quad": "Z_AVG",
+        "plot_quad": "I_AVG",
     }
 
     plot_parameters = {

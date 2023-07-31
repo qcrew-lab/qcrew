@@ -1,5 +1,5 @@
 """
-A python class describing a cavity T1 experiment using QM.
+A python class describing a cavity displacement calibration using QM.
 This class serves as a QUA script generator with user-defined parameters.
 """
 
@@ -12,9 +12,9 @@ from qm import qua
 # ---------------------------------- Class -------------------------------------
 
 
-class CavityT1(Experiment):
+class CavityDisplacementCal(Experiment):
 
-    name = "cavity_T1"
+    name = "cavity_displacement_cal_Bob"
 
     _parameters: ClassVar[set[str]] = Experiment._parameters | {
         "cav_op",  # operation for displacing the cavity
@@ -22,7 +22,7 @@ class CavityT1(Experiment):
         "fit_fn",  # fit function
     }
 
-    def __init__(self, cav_op, qubit_op, fit_fn, **other_params):
+    def __init__(self, cav_op, qubit_op, fit_fn="displacement_cal", **other_params):
 
         self.cav_op = cav_op
         self.qubit_op = qubit_op
@@ -34,48 +34,47 @@ class CavityT1(Experiment):
         """
         Defines pulse sequence to be played inside the experiment loop
         """
-        qubit, cav, rr, cav_drive, rr_drive = self.modes  # get the modes
+        qubit, cav, rr = self.modes  # get the modes
 
-        cav.play(self.cav_op)  # play displacement to cavity
-        qua.align()
-        rr_drive.play("constant_cos_pulse", duration=self.x)  
-        cav_drive.play("constant_cos_pulse", duration=self.x)
-        # qua.wait(self.x, cav_drive.name)  # wait relaxation
-        qua.align(cav_drive.name, rr_drive.name, qubit.name)  # align all modes
+        cav.play(self.cav_op, ampx=self.x)  # play displacement to cavity
+        qua.align(cav.name, qubit.name)  # align all modes
         qubit.play(self.qubit_op)  # play qubit pulse
         qua.align(qubit.name, rr.name)  # align all modes
+        # qua.align(cav.name, rr.name)  # align all modes
         rr.measure((self.I, self.Q))  # measure transmitted signal
-        qua.wait(int(self.wait_time // 4), cav.name)  # wait system reset
+        qua.wait(int(self.wait_time // 4), cav.name)
 
+        if self.single_shot:  # assign state to G or E
+            qua.assign(
+                self.state, qua.Cast.to_fixed(self.I < rr.readout_pulse.threshold)
+            )
         self.QUA_stream_results()  # stream variables (I, Q, x, etc)
 
 
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
+    x_start = 0
+    x_stop = 2.0
+    x_step = 0.02
 
-    x_start = 32
-    x_stop = 4000e3
-    x_step = 40e3   
     parameters = {
-        "modes": ["QUBIT", "CAVB", "RR", "DRIVE_RES", "DRIVE_CAV"],
-        "reps": 2000,
-        "wait_time": 5000e3,
-        "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
-        "qubit_op": "gaussian_pi_pulse_selective",
-        "cav_op": "gaussian_coh_big",
-        "plot_quad": "I_AVG",
-        "fit_fn": "cohstate_decay",
-        "fetch_period": 60,
-        
+        "modes": ["QUBIT", "CAVB", "RR"],
+        "reps": 5000,
+        "wait_time": 1000e3,
+        "x_sweep": (x_start, x_stop + x_step / 2, x_step),
+        "qubit_op": "cc_160",
+        "cav_op": "coh2",
+        "plot_quad": "Z_AVG",
+        "fetch_period": 4,
     }
 
     plot_parameters = {
-        "xlabel": "Cavity relaxation time (clock cycles)",
-        "plot_err": None
+        "xlabel": "Cavity pulse amplitude scaling",
+        # "plot_err": None,
     }
 
-    experiment = CavityT1(**parameters)
+    experiment = CavityDisplacementCal(**parameters)
     experiment.setup_plot(**plot_parameters)
 
     prof.run(experiment)

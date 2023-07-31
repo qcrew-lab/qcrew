@@ -15,7 +15,6 @@ from qm import qua
 
 
 class RRSpecDispersiveShift(Experiment):
-
     name = "rr_spec_dispersive_shift"
 
     _parameters: ClassVar[set[str]] = Experiment._parameters | {
@@ -23,7 +22,6 @@ class RRSpecDispersiveShift(Experiment):
     }
 
     def __init__(self, qubit_op, fit_fn=None, **other_params):
-
         self.fit_fn = fit_fn
         self.qubit_op = qubit_op
 
@@ -47,20 +45,20 @@ class RRSpecDispersiveShift(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-
-    x_start = -51.5e6  
-    x_stop = -49e6
-    x_step = 0.01e6
+    x_start = 49e6
+    x_stop = 51e6
+    x_step = 0.02e6
 
     parameters = {
         "modes": ["RR", "QUBIT"],
-        "reps": 5000,
-        "wait_time": 50000,
+        "reps": 10000,
+        "wait_time": 400e3,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
         "y_sweep": [0.0, 1.0],
-        "qubit_op": "gaussian_pi_pulse",
+        "qubit_op": "qubit_gaussian_pi_pulse",
         "plot_quad": "I_AVG",
-        "fit_fn" : None,
+        # 'plot_quad' : 'Z_AVG',
+        "fit_fn": None,
     }
 
     plot_parameters = {

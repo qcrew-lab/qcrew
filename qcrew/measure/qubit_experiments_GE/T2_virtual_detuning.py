@@ -67,17 +67,17 @@ class T2(Experiment):
 
 if __name__ == "__main__":
 
-    x_start = 10
-    x_stop = 4000
-    x_step = 20
-    detuning_ = 0.8e6  # 1.12e6
+    x_start = 4
+    x_stop = 15000
+    x_step = 100
+    detuning_ = 0.2e6  # 1.12e6
 
     parameters = {
         "modes": ["QUBIT", "RR"],
-        "reps": 2000,
-        "wait_time": 200e3,
+        "reps": 10_000,
+        "wait_time": 500e3,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
-        "qubit_op": "constant_cosine_pi2_pulse",
+        "qubit_op": "qubit_gaussian_pi2_pulse",
         "detuning": int(detuning_),
         "single_shot": False,
         # "fit_fn": "ramsey_photon_fit",
@@ -91,7 +91,7 @@ if __name__ == "__main__":
             )
         },
         "plot_quad": "I_AVG",
-        "fetch_period": 2,
+        # "fetch_period": 2,
     }
 
     plot_parameters = {

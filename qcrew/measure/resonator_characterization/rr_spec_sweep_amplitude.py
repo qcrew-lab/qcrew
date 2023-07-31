@@ -44,27 +44,25 @@ class RRSpecSweepAmplitude(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-    x_start = -51e6
-    x_stop = -49e6
-    x_step = 0.01e6
+    x_start = 40e6
+    x_stop = 60e6
+    x_step = 0.2e6
 
     parameters = {
         "modes": ["RR"],
-        "reps": 10000,
+        "reps": 2000,
         "wait_time": 20000,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
-        "y_sweep": (
-            0.4,
-            0.5,
-            0.6
-        ),
-        "plot_quad": "I_AVG",
+        "y_sweep": [0.1, 0.2, 0.4, 0.6],
+        "plot_quad": "Z_AVG",
+        # "plot_quad": "PHASE_SWEEP",
     }
     plot_parameters = {
         "xlabel": "Resonator pulse frequency (Hz)",
         "ylabel": "Resonator pulse amplitude scaling",
         "plot_type": "1D",
         # "zlog": True
+        # "plot_err" : None,
     }
 
     experiment = RRSpecSweepAmplitude(**parameters)

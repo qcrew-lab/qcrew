@@ -14,7 +14,7 @@ from qm import qua
 
 class NSplitSpectroscopy(Experiment):
 
-    name = "number_split_spec"
+    name = "number_split_spec_grape"
 
     _parameters: ClassVar[set[str]] = Experiment._parameters | {
         "cav_op",  # operation for displacing the cavity
@@ -49,14 +49,14 @@ class NSplitSpectroscopy(Experiment):
         qubit, cav, rr = self.modes  # get the modes
 
         qua.update_frequency(qubit.name, 60e6)
-        qubit.play(self.qubit_grape,)
-        cav.play(self.cav_grape,)
+        qubit.play(self.qubit_grape, ampx=1)
+        cav.play(self.cav_grape, ampx=1)
 
-        # cav.play(self.cav_op, ampx=self.cav_amp)  # prepare cavity state
         qua.align(cav.name, qubit.name)  # align modes
 
+
         qua.update_frequency(qubit.name, self.x)  # update qubit pulse frequency
-        qubit.play(self.qubit_op)  # play qubit pulse
+        qubit.play(self.qubit_op, ampx=1)  # play qubit pulse
         qua.align(qubit.name, rr.name)  # align modes
 
         rr.measure((self.I, self.Q))  # measure transmitted signal
@@ -69,26 +69,27 @@ class NSplitSpectroscopy(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-    x_start = 58e6  # -51e6
-    x_stop = 60.5e6  # -49.76e6
+    x_start = 57e6  # -51e6
+    x_stop = 61e6  # -49.76e6
     x_step = 0.02e6
 
     parameters = {
         "modes": ["QUBIT", "CAVB", "RR"],
         "reps": 1000,
-        "wait_time": 2000e3,
+        "wait_time": 5000e3,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
-        "qubit_op": "constant_pi_selective_pulse2",
-        "cav_op": "grape_disp_pulse",
+        "qubit_op": "gaussian_pi_pulse_selective",
+        "cav_op": "gaussian_coh1",
         "cav_amp": 0,
         "plot_quad": "I_AVG",
-        "fetch_period": 2,
-        "qubit_grape": "grape_fock1_pulse",
-        "cav_grape": "grape_fock1_pulse",
+        "fetch_period": 5,
+        "qubit_grape": "qctrl_fock1_pulse",
+        "cav_grape": "qctrl_fock1_pulse",
     }
 
     plot_parameters = {
         "xlabel": "Qubit pulse frequency (Hz)",
+        # "plot_err" : None,
     }
 
     experiment = NSplitSpectroscopy(**parameters)

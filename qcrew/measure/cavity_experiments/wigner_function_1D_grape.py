@@ -46,8 +46,8 @@ class WignerFunction(Experiment):
         qua.reset_frame(cav.name)
 
         # cav.play(self.cav_op, ampx=0, phase=0)
-        qubit.play(self.qubit_grape,)
-        cav.play(self.cav_grape,)
+        # qubit.play(self.qubit_grape,)
+        # cav.play(self.cav_grape,)
         
         qua.align()
         qua.wait(int(20 // 4))

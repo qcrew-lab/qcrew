@@ -27,7 +27,7 @@ class MixerTuner:
     """
 
     # parameters common to both Nelder-Mead and Brute-Force minimization
-    threshold: float = 3.0  # in dBm
+    threshold: float = 1.0  # in dBm 3
     ref_power: float = 0.0
 
     # Nelder-Mead (NM) parameters

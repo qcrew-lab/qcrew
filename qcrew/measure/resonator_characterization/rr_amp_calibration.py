@@ -45,23 +45,26 @@ class RRAmpCalibration(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-    amp_start = 0.02
+    amp_start = 0.1
     amp_stop = 1
-    amp_step = 0.02
+    amp_step = 0.1
 
     parameters = {
         "modes": ["RR", "QUBIT"],
-        "reps": 10000,
-        "wait_time": 100000,
+        "reps": 10_000,
+        "wait_time": 300_000,
         "qubit_pi_pulse": "gaussian_pi_pulse",
         # "x_sweep": (.6, 0.7 + 0.0025 / 2, 0.0025),
         "x_sweep": (amp_start, amp_stop + amp_step / 2, amp_step),
         "y_sweep": (0.0, 1.0),
+        # "plot_quad": "I_AVG",
         "plot_quad": "Z_AVG",
+        # "plot_quad": "PHASE",
     }
     plot_parameters = {
         "xlabel": "Resonator pulse amplitude scaling",
         "ylabel": "Qubit state",
+        # "plot_err" : None,
     }
 
     experiment = RRAmpCalibration(**parameters)

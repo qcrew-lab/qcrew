@@ -35,6 +35,8 @@ class PowerRabi(Experiment):
         """
         qubit, rr = self.modes  # get the modes
         qubit.play(self.qubit_op, ampx=self.x)  # play qubit pulse
+        # qubit.play(self.qubit_op, ampx=self.x)  # play qubit pulse
+
 
         qua.align(qubit.name, rr.name)  # wait qubit pulse to end
         rr.measure((self.I, self.Q), ampx=1)
@@ -52,16 +54,16 @@ class PowerRabi(Experiment):
 
 if __name__ == "__main__":
 
-    amp_start = -1.8
-    amp_stop = 1.8
-    amp_step = 0.04
+    amp_start = -1.5
+    amp_stop = 1.5
+    amp_step = 0.05 
 
     parameters = {
         "modes": ["QUBIT", "RR"],
-        "reps": 10000,
-        "wait_time": 50000,
+        "reps": 500,
+        "wait_time": 500e3,
         "x_sweep": (amp_start, amp_stop + amp_step / 2, amp_step),
-        "qubit_op": "constant_cosine_pi_pulse",
+        "qubit_op": "qubit_gaussian_pi_sel_pulse2",
         "single_shot": False,
         "plot_quad": "I_AVG",
     }

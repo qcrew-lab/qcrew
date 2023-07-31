@@ -35,11 +35,12 @@ class QubitSpecNumbSplit(Experiment):
         """
         Defines pulse sequence to be played inside the experiment loop
         """
-        qubit, rr , cavb= self.modes  # get the modes
+        qubit, rr , cav= self.modes  # get the modes
 
         qua.update_frequency(qubit.name, self.x)  # update resonator pulse frequency
-        cavb.play(self.cav_op, ampx=1)
-        qua.align(qubit.name, cavb.name)
+        # cavb.play(self.cav_op, ampx = (-0.36999038, 0.20783834, -0.20783834, -0.36999038), phase = 0)
+        cav.play(self.cav_op, ampx = 1)
+        qua.align(qubit.name, cav.name)
         qubit.play(self.qubit_op)  # play qubit pulse
         qua.align(qubit.name, rr.name)  # wait qubit pulse to end 
         rr.measure((self.I, self.Q))  # measure transmitted signal
@@ -51,23 +52,25 @@ class QubitSpecNumbSplit(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-    x_start = -33e6
-    x_stop = -29e6
-    x_step = 0.02e6
+    x_start = 72e6
+    x_stop = 79e6
+    x_step = 0.05e6
 
     parameters = {
-        "modes": ["QUBIT", "RR", "CAVB"],
-        "reps": 50000,
-        "wait_time": 80000,
+        "modes": ["QUBIT", "RR", "CAV"],
+        "reps": 500,
+        "wait_time": 500e3,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
         # "y_sweep": (0,0.005,0.01,0.02),
-        "qubit_op": "gaussian_pi_selective_pulse",
-        "cav_op": "coherent1",
-        "plot_quad": "Q_AVG"
+        "qubit_op": "qubit_gaussian_pi_sel_pulse2",
+        "cav_op": "coherent_1",
+        "plot_quad": "I_AVG",
+        "fetch_period": 2,
     }   
 
     plot_parameters = {
         "xlabel": "Qubit pulse frequency (Hz)",
+        "plot_err": True,
     }
 
     experiment = QubitSpecNumbSplit(**parameters)

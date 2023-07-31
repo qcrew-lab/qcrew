@@ -100,9 +100,9 @@ if __name__ == "__main__":
         vna.connect()
 
         # the routine below can handle multiple measurement runs at once
-        fcenterlist = [7.4563e9]  # [6.563419e9, 6.792209e9, 6.874604e9, 7.057255e9]
-        fspanlist = [1e6]  # [0.5e6, 1e6, 0.25e6, 1e6]
-        powerlist = [-15,-10,-5,0,5,10]
+        fcenterlist = [7.4997e9]  # [6.563419e9, 6.792209e9, 6.874604e9, 7.057255e9]
+        fspanlist = [20e6]  # [0.5e6, 1e6, 0.25e6, 1e6]
+        powerlist = [-10,]
 
         num_runs = len(powerlist)
         for idx in range(num_runs):

@@ -174,14 +174,19 @@ class Experiment(Parametrized):
         """
         Updates self.plot_setup dictionary with the parameters to be used by the
         plotter.
+
         The x and y labels are set up independently if the corresponding sweep exists.
+
         plot_type identifies how the plotter should arrange the data. If "1D" and x,y
         sweeps are configured, one x sweep trace is plotted for every value of y. If
         the user wants to plot a colormesh instead, pass plot_type = '2D'.
+
         trace_labels is a list of labels for each trace. If plot_type = "1D" and a y
         sweep is
         configured, each label will correspond to a value of y.
+
         plot_err toggles errorbar plotting.
+
         """
 
         # title is updated later with the filename, experiment name and number of
@@ -328,46 +333,30 @@ class Experiment(Parametrized):
             # dependent values calculated as I^2 + Q^2 in stream processing.
             data = np.sqrt(partial_results[tag])
             processed_parital_results = data.reshape(self.buffering)
-
         elif tag == "PHASE":
-            rr_if = -50e6  # NOTE manually input rr_if here
-            cable_delay_guess = (
-                34.8e-9 * 8
-            )  # NOTE manually input cable delay guess (ns) here, should be around 200-300ns
-            phase = np.angle(
-                np.exp(1j * 2 * np.pi * rr_if * cable_delay_guess)
-                * (partial_results["Q_AVG"] + 1j * partial_results["I_AVG"])
-            )
-
-            processed_parital_results = np.unwrap(phase)
-
-        elif tag == "PHASE_RR_SPEC":
-            # Phase information useful for troubleshooting and rr spectroscopy
-            freqs = independent_data[0]
-            cable_delay_guess = 34.8e-9 * 8
+            rr_if = -50e6
+            cable_delay_guess = 34.9e-9 * 8
 
             phase = np.angle(
-                np.exp(1j * 2 * np.pi * freqs * cable_delay_guess)
-                * (partial_results["Q_AVG"] + 1j * partial_results["I_AVG"])
+                np.exp(-1j * 2 * np.pi * rr_if * cable_delay_guess)
+                * (partial_results["I_AVG"] + 1j * partial_results["Q_AVG"])
             )
 
-            processed_parital_results = np.unwrap(phase)
+            processed_parital_results = phase
 
         elif tag == "PHASE_SWEEP":
             # Phase information useful for troubleshooting and rr spectroscopy
             freqs = independent_data[0]
-            cable_delay_guess = 34.8e-9 * 8
+            cable_delay_guess = 34.9e-9 * 8
             # phase = (
             #     np.arctan(partial_results["Q"] / partial_results["I"])
             #     - 2 * np.pi * freqs * 300e-9 * 8
             # )
-            y_values = np.shape(freqs)[1]
-
             phase = np.angle(
-                np.exp(1j * 2 * np.pi * freqs * cable_delay_guess)
+                np.exp(-1j * 2 * np.pi * freqs * cable_delay_guess)
                 * (
-                    partial_results["Q_AVG"].reshape(-1, y_values)
-                    + 1j * partial_results["I_AVG"].reshape(-1, y_values)
+                    partial_results["I_AVG"]
+                    + 1j * partial_results["Q_AVG"]
                 )
             )
 
@@ -377,9 +366,7 @@ class Experiment(Parametrized):
             # )
 
         else:
-            # processed_parital_results = partial_results[tag]
-            data = partial_results[tag]
-            processed_parital_results = data.reshape(self.buffering)
+            processed_parital_results = partial_results[tag].reshape(self.buffering)
 
         return processed_parital_results
 
@@ -422,7 +409,7 @@ class Experiment(Parametrized):
             # )
             phase = (
                 np.angle(partial_results["Q"] + 1j * partial_results["I"])
-                - 2 * np.pi * freqs * 37e-9 * 8
+                - 2 * np.pi * freqs * 32e-9 * 8
             )
 
             reshaped_phase_data = np.average(phase, axis=0).reshape(self.buffering)

@@ -44,23 +44,24 @@ class QubitSpectroscopy(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-    x_start = 50e6
-    x_stop = 70e6
-    x_step = 0.1e6
+    x_start = 72e6
+    x_stop = 79e6
+    x_step = 0.05e6
 
     with Stagehand() as stage:
         qubit = stage.QUBIT
 
     parameters = {
         "modes": ["QUBIT", "RR"],
-        "reps": 20000,
-        "wait_time": 20000,
-        "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
-        # "y_sweep": (1.0,),
-        "qubit_op": "constant_cosine_pi_selective_pulse1",
-        "fit_fn": "gaussian",
+        "reps": 5000,
+        "wait_time": 500e3,
+        "x_sweep": (int(x_start), int(x_stop + x_step / 2) , int(x_step)),
+        "qubit_op" : "qubit_gaussian_pi_sel_pulse2",
+        # "qubit_op" : "cc_2000",
+        "fit_fn": 'gaussian',
         "plot_quad": "I_AVG",
-        "fetch_period": 1,
+        # "plot_quad": "PHASE",
+        "fetch_period": 2,
     }
 
     plot_parameters = {

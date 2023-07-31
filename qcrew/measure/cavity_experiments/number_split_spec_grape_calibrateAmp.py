@@ -76,21 +76,21 @@ if __name__ == "__main__":
     x_stop = 60.5e6  # -49.76e6
     x_step = 0.02e6
 
-    y_start = 0.9  # -51e6
-    y_stop = 1.1  # -49.76e6
+    y_start = 0.8  # -51e6
+    y_stop = 1.2  # -49.76e6
     y_step = 0.04
 
     parameters = {
         "modes": ["QUBIT", "CAVB", "RR"],
-        "reps": 200,
+        "reps": 1000,
         "wait_time": 2000e3,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
         "y_sweep": (y_start, y_stop + y_step / 2, y_step),
         "qubit_op": "constant_pi_selective_pulse2",
         "plot_quad": "I_AVG",
         "fetch_period": 10,
-        "qubit_grape": "grape_fock02_thermal_pulse",
-        "cav_grape": "grape_fock02_thermal_pulse",
+        "qubit_grape": "grape_fock02_pulse",
+        "cav_grape": "grape_fock02_pulse",
         "cav_op": None,
         "cav_amp": None,
     }

@@ -48,17 +48,17 @@ class RRSpecDispersiveShift(Experiment):
 
 if __name__ == "__main__":
 
-    x_start = -55e6
-    x_stop = -45e6
-    x_step = 0.04e6
+    x_start = 45e6
+    x_stop = 52e6
+    x_step = 0.1e6
 
     parameters = {
-        "modes": ["RR", "CAV_Alice"],
+        "modes": ["RR", "CAVB"],
         "reps": 10000,
-        "wait_time": 100000,
+        "wait_time": 400e3,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
-        "y_sweep": [0.0],
-        "cav_op": "constant_pulse",
+        "y_sweep": [1.0, 0.0],
+        "cav_op": "coh4",
         "plot_quad": "Z_AVG",
     }
 

@@ -14,7 +14,7 @@ from qm import qua
 
 class CavityDisplacementCal(Experiment):
 
-    name = "cavity_displacement_cal"
+    name = "cavity_displacement_cal_Alice"
 
     _parameters: ClassVar[set[str]] = Experiment._parameters | {
         "cav_op",  # operation for displacing the cavity
@@ -55,18 +55,18 @@ class CavityDisplacementCal(Experiment):
 
 if __name__ == "__main__":
     x_start = 0
-    x_stop = 2
-    x_step = 0.04
+    x_stop = 2.5
+    x_step = 0.02
     
     parameters = {
-        "modes": ["QUBIT", "CAV_Alice", "RR"],
-        "reps": 10000,
-        "wait_time": 400000,
+        "modes": ["QUBIT", "CAVA", "RR"],
+        "reps": 2000,
+        "wait_time": 800e3,
         "x_sweep": (x_start, x_stop + x_step / 2, x_step),
-        "qubit_op": "constant_pi_selective_pulse",
-        "cav_op": "cohstate1",
-        "plot_quad": "Z_AVG",
-        "fetch_period": 2,
+        "qubit_op": "g_1000",
+        "cav_op": "coherent1_gaussian",
+        "plot_quad": "I_AVG",
+        "fetch_period": 4,
         
     } 
 

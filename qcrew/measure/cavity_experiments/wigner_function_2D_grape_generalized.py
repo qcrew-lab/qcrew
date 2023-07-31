@@ -16,7 +16,7 @@ import numpy as np
 
 class WignerFunction(Experiment):
 
-    name = "wigner_function_2D_grape"
+    name = "wigner_function"
 
     _parameters: ClassVar[set[str]] = Experiment._parameters | {
         "cav_op",  # operation for displacing the cavity
@@ -53,35 +53,32 @@ class WignerFunction(Experiment):
 
         qua.reset_frame(cav.name)
 
-        '''State preparation'''
+        # cav.play(self.cav_op, ampx=0, phase=0)
 
-        if self.qubit_grape != None:
+        if self.qubit_grape != None and self.cav_grape != None:
             qubit.play(
-                self.qubit_grape,# ampx = 0,
+                self.qubit_grape,
             )
             cav.play(
-                self.cav_grape, #ampx = 0,
+                self.cav_grape,
             )
         else:
-            # EXAMPLE: 
-            # cav.play(self.cav_op, ampx=(self.x, -self.y, self.y, self.x), phase=0)
-            cav.play(self.cav_op, ampx=(0, -1, 1, 0), phase = 0)
+            cav.play(self.cav_op, phase=0.0)
 
-        '''Measurement'''
-      
+        # cav.play(self.cav_op)
         qua.align(cav.name, qubit.name)
-      
-        
-        ## single displacement
-        cav.play(self.cav_op, ampx=(self.x, -self.y, self.y, self.x), phase=0.5)        
-        qua.align(cav.name, qubit.name)
+        # qua.wait(int(20 // 4))
+        # cav.play(self.cav_op, ampx=(self.x)/1.5, phase=0)  # displacement in I direction
+        # cav.play(self.cav_op, ampx=(self.y)/1.5, phase=0.25)  # displacement in Q direction
 
+        cav.play(self.cav_op, ampx=(self.x, -self.y, self.y, self.x), phase=0)
+        qua.align(cav.name, qubit.name)
         qubit.play(self.qubit_op)  # play pi/2 pulse around X
         qua.wait(
             int(self.delay // 4),
             cav.name,
             qubit.name,
-        )  
+        )  # conditional phase gate on even, odd Fock state
         qubit.play(self.qubit_op)  # play pi/2 pulse around X
 
         # Measure cavity state
@@ -90,7 +87,8 @@ class WignerFunction(Experiment):
 
         # wait system reset
         qua.align(cav.name, qubit.name, rr.name)
-
+        # rr.play("constant_pulse", duration=5e3, ampx=1)
+        # cav.play("constant_pulse", duration=5e3, ampx=0.04)
         qua.wait(int(self.wait_time // 4), cav.name)
 
         if self.single_shot:  # assign state to G or E
@@ -104,19 +102,19 @@ class WignerFunction(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-    x_start = -1.8
-    x_stop = 1.8
-    x_step = 0.2
+    x_start = -1.9
+    x_stop = 1.9
+    x_step = 0.19
 
-    y_start = -1.8
-    y_stop = 1.8
-    y_step = 0.2
+    y_start = -1.9
+    y_stop = 1.9
+    y_step = 0.19
 
     # fock1
     parameters = {
         "modes": ["QUBIT", "CAVB", "RR"],
-        "reps": 20,
-        "wait_time": 5000e3,
+        "reps": 100,
+        "wait_time": 6000e3,
         "fetch_period": 10,  # time between data fetching rounds in sec
         "delay": 44,  # pi/chi
         "x_sweep": (
@@ -127,8 +125,8 @@ if __name__ == "__main__":
         "y_sweep": (y_start, y_stop + y_step / 2, y_step),
         "qubit_op": "constant_cosine_pi2_pulse",
         "cav_op": "gaussian_coh1",
-        "qubit_grape": None,
-        "cav_grape": None,
+        "qubit_grape": None,  # "grape_fock2_pulse",
+        "cav_grape": None,  # "grape_fock2_pulse",
         "single_shot": False,
         "plot_quad": "I_AVG",
     }
@@ -145,3 +143,71 @@ if __name__ == "__main__":
     experiment.setup_plot(**plot_parameters)
 
     prof.run(experiment)
+
+    # # fock 2
+    # parameters = {
+    #     "modes": ["QUBIT", "CAVB", "RR"],
+    #     "reps": 2000,
+    #     "wait_time": 1600e3,
+    #     "fetch_period": 20,  # time between data fetching rounds in sec
+    #     "delay": 854,  # pi/chi
+    #     "x_sweep": (
+    #         x_start,
+    #         x_stop + x_step / 2,
+    #         x_step,
+    #     ),  # ampitude sweep of the displacement pulses in the ECD
+    #     "y_sweep": (y_start, y_stop + y_step / 2, y_step),
+    #     "qubit_op": "constant_pi2_pulse",
+    #     "cav_op": "coherent1",
+    #     "qubit_grape": "grape_fock2_pulse",
+    #     "cav_grape": "grape_fock2_pulse",
+    #     "single_shot": False,
+    #     "plot_quad": "I_AVG",
+    # }
+
+    # plot_parameters = {
+    #     "xlabel": "X",
+    #     "ylabel": "Y",
+    #     "plot_type": "2D",
+    #     "cmap": "bwr",
+    #     # "plot_err": None
+    # }
+
+    # experiment = WignerFunction(**parameters)
+    # experiment.setup_plot(**plot_parameters)
+
+    # prof.run(experiment)
+
+    # #vacuum
+    # parameters = {
+    #     "modes": ["QUBIT", "CAVB", "RR"],
+    #     "reps": 2000,
+    #     "wait_time": 1600e3,
+    #     "fetch_period": 20,  # time between data fetching rounds in sec
+    #     "delay": 854,  # pi/chi
+    #     "x_sweep": (
+    #         x_start,
+    #         x_stop + x_step / 2,
+    #         x_step,
+    #     ),  # ampitude sweep of the displacement pulses in the ECD
+    #     "y_sweep": (y_start, y_stop + y_step / 2, y_step),
+    #     "qubit_op": "constant_pi2_pulse",
+    #     "cav_op": "coherent1",
+    #     "qubit_grape": None,
+    #     "cav_grape": None,
+    #     "single_shot": False,
+    #     "plot_quad": "I_AVG",
+    # }
+
+    # plot_parameters = {
+    #     "xlabel": "X",
+    #     "ylabel": "Y",
+    #     "plot_type": "2D",
+    #     "cmap": "bwr",
+    #     # "plot_err": None
+    # }
+
+    # experiment = WignerFunction(**parameters)
+    # experiment.setup_plot(**plot_parameters)
+
+    # prof.run(experiment)

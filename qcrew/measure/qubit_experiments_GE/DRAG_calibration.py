@@ -86,11 +86,11 @@ if __name__ == "__main__":
 
     parameters = {
         "modes": ["QUBIT", "RR"],
-        "reps": 60000,
-        "wait_time": 300000,
+        "reps": 1000,
+        "wait_time": 500e3,
         "x_sweep": (x_start, x_stop + x_step / 2, x_step),
-        "qubit_pi_op": "gaussian_pi_pulse",
-        "qubit_pi2_op": "gaussian_pi2_pulse",
+        "qubit_pi_op": "qubit_gaussian_pi_pulse",
+        "qubit_pi2_op": "qubit_gaussian_pi2_pulse",
         "single_shot": False,
         "plot_quad": "I_AVG"
         #"fetch_period": 3,

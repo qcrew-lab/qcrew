@@ -22,7 +22,7 @@ files = Path(directory).glob('*')
 index = np.linspace(0, 1, 382)
 i = 0
 for file in files:
-    file = 'C:/Users/qcrew/Desktop/qcrew/data/yabba/20221124/140352_yabba_qubit_spec.h5'
+    file = 'D:/data/YABBAv4/141532_YABBA_rr_amp_calibration.h5'
     curr = h5py.File(file, "r")
     data = curr["data"]
     try:

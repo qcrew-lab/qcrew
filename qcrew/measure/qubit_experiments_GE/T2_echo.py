@@ -69,8 +69,8 @@ if __name__ == "__main__":
         "reps": 20000,
         "wait_time": 200000,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
-        "qubit_pi2": "constant_pi2_pulse",
-        "qubit_pi": "constant_pi_pulse",
+        "qubit_pi2": "gaussian_pi2_pulse",
+        "qubit_pi": "gaussian_pi_pulse",
         "single_shot": False,
         "plot_quad": "I_AVG",
         "detuning": int(detuning)

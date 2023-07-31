@@ -16,7 +16,7 @@ def get_qua_program(rr, qubit):
 
         with qua.for_(n, 0, n < reps, n + 1):
             qua.reset_phase(rr.name)
-            qubit.play("gaussian_pi_pulse", ampx=1.0)
+            qubit.play("constant_cosine_pi_pulse", ampx=0)
             qua.align(qubit.name, rr.name)
             qua.measure("readout_pulse" * qua.amp(1.0), rr.name, adc_stream)
             qua.wait(100000, rr.name)
@@ -33,7 +33,7 @@ if __name__ == "__main__":
     with Stagehand() as stage:
 
         rr, qubit = stage.RR, stage.QUBIT
-
+    
         # Execute script
         job = stage.QM.execute(get_qua_program(rr, qubit))  # play IF to mode
 

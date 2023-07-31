@@ -99,10 +99,10 @@ if __name__ == "__main__":
 
     parameters = {
         "modes": ["QUBIT", "RR"],
-        "reps": 20000,
-        "wait_time": 200000,
-        "qubit_pi_op": "constant_cosine_pi_pulse",
-        "qubit_pi2_op": "constant_cosine_pi2_pulse",
+        "reps": 5000,
+        "wait_time": 500e3,
+        "qubit_pi_op": "qubit_gaussian_pi_pulse",
+        "qubit_pi2_op": "qubit_gaussian_pi2_pulse",
         "single_shot": False,
         "plot_quad": "I_AVG",
     }

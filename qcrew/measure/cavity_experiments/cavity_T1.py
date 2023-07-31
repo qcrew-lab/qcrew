@@ -13,7 +13,6 @@ from qm import qua
 
 
 class CavityT1(Experiment):
-
     name = "cavity_T1"
 
     _parameters: ClassVar[set[str]] = Experiment._parameters | {
@@ -23,7 +22,6 @@ class CavityT1(Experiment):
     }
 
     def __init__(self, cav_op, qubit_op, fit_fn, **other_params):
-
         self.cav_op = cav_op
         self.qubit_op = qubit_op
         self.fit_fn = fit_fn
@@ -36,7 +34,7 @@ class CavityT1(Experiment):
         """
         qubit, cav, rr = self.modes  # get the modes
 
-        cav.play(self.cav_op)  # play displacement to cavity
+        cav.play(self.cav_op, ampx=1.0)  # play displacement to cavity
         qua.wait(self.x, cav.name)  # wait relaxation
         qua.align(cav.name, qubit.name)  # align all modes
         qubit.play(self.qubit_op)  # play qubit pulse
@@ -50,25 +48,25 @@ class CavityT1(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-
-    x_start = 32
-    x_stop = 800e3
-    x_step = 4e3
+    x_start = 16
+    x_stop = 5000e3
+    x_step = 100e3
     parameters = {
-        "modes": ["QUBIT", "CAVB", "RR"],
-        "reps": 40000,
-        "wait_time": 1000e3,   
+        "modes": ["QUBIT", "CAV", "RR"],
+        "reps": 1000,
+        "wait_time": 3000e3,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
-        "qubit_op": "gaussian_pi_selective_pulse",
-        "cav_op": "gaussian_coh1",
+        "qubit_op": "qubit_gaussian_pi_sel_pulse2",
+        "cav_op": "coherent_1",
         "plot_quad": "I_AVG",
+        "fit_fn": None,
         "fit_fn": "cohstate_decay",
-        "fetch_period": 10,
+        "fetch_period": 2,
     }
 
     plot_parameters = {
         "xlabel": "Cavity relaxation time (clock cycles)",
-        # "plot_err": None
+        "plot_err": None,
     }
 
     experiment = CavityT1(**parameters)

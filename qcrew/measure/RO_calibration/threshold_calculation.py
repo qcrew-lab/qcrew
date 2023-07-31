@@ -10,9 +10,9 @@ if __name__ == "__main__":
         qm = stage.QM
 
         params = {
-            "reps": 40000,
-            "wait_time": 300000,  # ns
-            "qubit_pi_pulse": "gaussian_pi_pulse",  # pulse to excite qubit
+            "reps": 10_000,
+            "wait_time": 500_000,  # ns 
+            "qubit_pi_pulse": "qubit_gaussian_pi_pulse",  # pulse to excite qubit
         }
 
         # ddrop_params = {
@@ -35,7 +35,6 @@ if __name__ == "__main__":
             path=stage.datapath,
         )
         with DataSaver(db) as datasaver:
-
             # add metadata dictionary
             datasaver.add_metadata(ro_trainer.parameters)
 

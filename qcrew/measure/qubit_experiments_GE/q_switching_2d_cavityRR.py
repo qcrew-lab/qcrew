@@ -34,13 +34,22 @@ class QSwitch2D(Experiment):
         """
         Defines pulse sequence to be played inside the experiment loop
         """
-        qubit, cav, rr, cav_drive, rr_drive = self.modes  # get the modes
+        qubit, cav, rr, drive_cav, drive_res = self.modes  # get the modes
 
-        cav.play(self.cav_op)  
-        qua.align(cav.name, rr_drive.name)
-        rr_drive.play("qswitch_pulse", duration=self.y)  
-        cav_drive.play("qswitch_pulse", duration=self.y)  
-        qua.align(rr_drive.name, cav_drive.name, qubit.name)
+       
+
+        cav.play(self.cav_op)
+        qua.align()
+
+        qua.update_frequency(drive_res.name, self.x)
+        # drive_res.play("constant_pulse", duration=self.y)
+        # drive_cav.play("constant_pulse", duration=self.y)
+        drive_res.play("constant_cos_pulse", duration=200e3)
+        drive_cav.play("constant_cos_pulse", duration=200e3)
+        
+        qua.align()
+        # qua.wait(int(5000//4))
+
         qubit.play(self.qubit_op)  # play qubit pulse
         qua.align(rr.name, qubit.name)
         rr.measure((self.I, self.Q))  # measure qubit state
@@ -58,31 +67,32 @@ class QSwitch2D(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-    x_start = -10e6
-    x_stop = 10e6
-    x_step = 0.5e6
+    x_start = 105e6
+    x_stop = 110e6
+    x_step = 0.1e6
     
-    y_start = 64 // 4
-    y_stop = 40e3 // 4
-    y_step = 4e3 // 4
+    y_start = 80e3
+    y_stop = 110e3
+    y_step = 10e3
 
     parameters = {
-        "modes": ["QUBIT", "CAV", "RR", "CAV_DRIVE", "RR_DRIVE"],
-        "reps": 50000,
-        "wait_time": 1500e3,
+        "modes": ["QUBIT", "CAVB", "RR", "DRIVE_CAV", "DRIVE_RES"],
+        "reps":5000,
+        "wait_time": 5000e3,
         "x_sweep": (int(x_start), int(x_stop + x_step/2), int(x_step)),
-        "y_sweep": (int(y_start), int(y_stop + y_step/2), int(y_step)),
-        "qubit_op": "gaussian_pi_selective_pulse3",
-        "cav_op": "cohstate1",
+        # "y_sweep": (int(y_start), int(y_stop + y_step/2), int(y_step)),
+        "qubit_op": "gaussian_pi_pulse_selective",
+        "cav_op": "gaussian_coh1",
         "cavity_drive_detuning": int(100e6),
-        "fetch_period": 4,
+        "fetch_period": 30,
         "single_shot": False,
+        "plot_quad": "I_AVG",
     }
 
     plot_parameters = {
         "xlabel": "Frequency detuning (Hz)",
-        "ylabel": "Drive legnth (clock cycles)",
-        "plot_type": "2D",
+        "ylabel": "Drive length (clock cycles)",
+        "plot_type": "1D",
     }
 
     experiment = QSwitch2D(**parameters)

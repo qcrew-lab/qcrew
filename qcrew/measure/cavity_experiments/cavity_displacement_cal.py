@@ -58,7 +58,7 @@ class CavityDisplacementCal(Experiment):
 
 if __name__ == "__main__":
     x_start = 0
-    x_stop = 1.95
+    x_stop = 1.85
     x_step = 0.05
 
     parameters = {
@@ -66,8 +66,8 @@ if __name__ == "__main__":
         "reps": 20000,
         "wait_time": 2e6,
         "x_sweep": (x_start, x_stop + x_step / 2, x_step),
-        "qubit_op": "gaussian_pi_280",
-        "cav_op": "const_cohstate_1",
+        "qubit_op": "pi_selective",
+        "cav_op": "gaussian_pulse",
         # "fetch_period": 2,
         # "single_shot": True,
         "plot_quad": "I_AVG"

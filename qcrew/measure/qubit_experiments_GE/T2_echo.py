@@ -60,8 +60,8 @@ class T2_Echo(Experiment):
 
 if __name__ == "__main__":
     x_start = 4
-    x_stop = 2500
-    x_step = 20
+    x_stop = 8000
+    x_step = 80
     detuning = 0e6
 
     parameters = {
@@ -69,10 +69,11 @@ if __name__ == "__main__":
         "reps": 30000,
         "wait_time": 60000,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
-        "qubit_pi2": "gaussian_pi2",
-        "qubit_pi": "gaussian_pi",
+        "qubit_pi2": "pi2",
+        "qubit_pi": "pi",
         "single_shot": False,
-        "detuning": int(detuning)
+        "detuning": int(detuning),
+        "plot_quad": "I_AVG",
     }
 
     plot_parameters = {

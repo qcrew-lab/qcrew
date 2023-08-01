@@ -57,17 +57,19 @@ class CavityT1(Experiment):
 if __name__ == "__main__":
 
     x_start = 10
-    x_stop = 500e3
-    x_step = 10e3
+    x_stop = 200e3
+    x_step = 2e3
     parameters = {
         "modes": ["QUBIT", "CAVITY", "RR"],
         "reps": 50000,
-        "wait_time": 1000e3,
+        "wait_time": 300e3,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
-        "qubit_op": "gaussian_pi_560",
-        "cav_op": "const_cohstate_2",
-        "fetch_period": 20,
-        "single_shot": True,
+        "qubit_op": "pi_selective",
+        "cav_op": "alice_displace_1",
+        "fetch_period": 4,
+        "single_shot": False,
+        "plot_quad": "I_AVG"
+        
     }
 
     plot_parameters = {

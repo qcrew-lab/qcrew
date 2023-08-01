@@ -66,7 +66,7 @@ class T2(Experiment):
 if __name__ == "__main__":
 
     x_start = 4
-    x_stop = 1200
+    x_stop = 2000
     x_step = 10
     detuning_ = 2e6  # 1.12e6
 

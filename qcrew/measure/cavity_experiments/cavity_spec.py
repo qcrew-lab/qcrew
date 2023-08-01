@@ -34,7 +34,7 @@ class CavitySpectroscopy(Experiment):
         """
         Defines pulse sequence to be played inside the experiment loop
         """
-        qubit, cav, rr, flux = self.modes  # get the modes
+        qubit, cav, rr = self.modes  # get the modes
 
         # Fock satae preparation
         # flux.play("predist_constcos_rpad_pulse", ampx=-0.295)
@@ -62,18 +62,19 @@ class CavitySpectroscopy(Experiment):
 
 if __name__ == "__main__":
 
-    x_start = -52e6
-    x_stop = -46e6
-    x_step = 0.02e6
+    x_start = -53e6
+    x_stop = -47e6
+    x_step = 0.1e6
     parameters = {
-        "modes": ["QUBIT", "CAVITY", "RR", "FLUX"],
-        "reps": 50000,
-        "wait_time": 700e3,
+        "modes": ["QUBIT", "CAVITY", "RR"],
+        "reps": 5000,
+        "wait_time": 1.2e6,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
-        "qubit_op": "gaussian_pi_420",
-        "fetch_period": 3,
+        "qubit_op": "pi_selective",
+        "fetch_period": 2,
         # "single_shot": True,
-        "cav_op": "spectroscopy_pulse",
+        "cav_op": "gaussian_pulse",
+        "plot_quad": "I_AVG",
     }
 
     plot_parameters = {

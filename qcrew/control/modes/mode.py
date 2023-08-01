@@ -168,14 +168,14 @@ class Mode(Parametrized, Yamlizable):
         """ """
         try:
             for name, pulse in new_operations.items():
-                if isinstance(pulse, qcp.Pulse):
-                    if name in self._operations:  # needed for __setattr__ override
-                        del self._operations[name]
-                    setattr(self, name, pulse)  # for easy access
-                    self._operations[name] = pulse
-                    logger.success(f"Set {self} operation '{name}'")
-                else:
-                    logger.warning(f"Invalid value '{pulse}', must be {qcp.Pulse}")
+                # if isinstance(pulse, qcp.Pulse):
+                if name in self._operations:  # needed for __setattr__ override
+                    del self._operations[name]
+                setattr(self, name, pulse)  # for easy access
+                self._operations[name] = pulse
+                logger.success(f"Set {self} operation '{name}'")
+                # else:
+                #     logger.warning(f"Invalid value '{pulse}', must be {qcp.Pulse}")
             logger.success(f"Finished setting operations for {self}")
         except TypeError:
             logger.error(f"Setter expects {dict[str, qcp.Pulse]}")

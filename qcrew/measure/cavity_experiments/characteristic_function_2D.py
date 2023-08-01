@@ -115,18 +115,19 @@ if __name__ == "__main__":
 
 
     parameters = {
-        "modes": ["QUBIT", "CAV", "RR"],
+        "modes": ["QUBIT", "CAVITY", "RR"],
         "reps": 1000000,
-        "wait_time": 100000,
-        "fetch_period": 8,  # time between data fetching rounds in sec
+        "wait_time": 150e3,
+        "fetch_period": 3,  # time between data fetching rounds in sec
         "delay": 500,  # wait time between opposite sign displacements
         "x_sweep": (x_start, x_stop + x_step / 2, x_step),  # ampitude sweep of the displacement pulses in the ECD
         "y_sweep": (y_start, y_stop + y_step / 2, y_step),
-        "qubit_op1": "constant_cos_pi2",
-        "qubit_op2": "constant_cos_pi",
-        "cav_state_op": "cohstate_1",
-        "cav_op": "ECD_cali",
-        "measure_real": True,  # measure real part of char function if True, imag Part if false
+        "qubit_op1": "pi2",
+        "qubit_op2": "pi",
+        "cav_state_op": "alice_displace_1",
+        "cav_op": "alice_ecd_1",
+        "measure_real": True,
+        "plot_quad": "I_AVG",# measure real part of char function if True, imag Part if false
     }
 
     plot_parameters = {

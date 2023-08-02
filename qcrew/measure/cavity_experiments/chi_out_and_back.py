@@ -12,20 +12,26 @@ from qm import qua
 # ---------------------------------- Class -------------------------------------
 
 
-class CavityT1(Experiment):
+class ChiOutAndBack(Experiment):
 
-    name = "cavity_T1"
+    name = "chi_out_and_back"
 
     _parameters: ClassVar[set[str]] = Experiment._parameters | {
         "cav_op",  # operation for displacing the cavity
-        "qubit_op",  # operation used for exciting the qubit
+        "qubit_op1",
+        "qubit_op2",  # operation used for exciting the qubit
         "fit_fn",  # fit function
+        "tau",  # wait time
     }
 
-    def __init__(self, cav_op, qubit_op, fit_fn="cohstate_decay", **other_params):
+    def __init__(
+        self, cav_op, qubit_op1, qubit_op2, tau, fit_fn="gaussian", **other_params
+    ):
 
         self.cav_op = cav_op
-        self.qubit_op = qubit_op
+        self.qubit_op1 = qubit_op1
+        self.qubit_op2 = qubit_op2
+        self.tau = tau
         self.fit_fn = fit_fn
 
         super().__init__(**other_params)  # Passes other parameters to parent
@@ -36,10 +42,14 @@ class CavityT1(Experiment):
         """
         qubit, cav, rr = self.modes  # get the modes
 
-        cav.play(self.cav_op, ampx=1)  # play displacement to cavity
-        qua.wait(self.x, cav.name)  # wait relaxation
-        qua.align(cav.name, qubit.name)  # align all modes
-        qubit.play(self.qubit_op)  # play qubit pulse
+        cav.play(self.cav_op)  # play displacement to cavity
+        qua.align(qubit.name, cav.name)  # align all modes
+        qubit.play(self.qubit_op1)
+        qua.align(qubit.name, cav.name)
+        qua.wait(int(self.tau // 4), cav.name)  # wait rotation
+        cav.play(self.cav_op, phase=self.x)  # 0.5 for minus sign and then sweep
+        qua.align(qubit.name, cav.name)  # align all modes
+        qubit.play(self.qubit_op2)
         qua.align(qubit.name, rr.name)  # align all modes
         rr.measure((self.I, self.Q))  # measure transmitted signal
         qua.wait(int(self.wait_time // 4), cav.name)  # wait system reset
@@ -49,34 +59,35 @@ class CavityT1(Experiment):
                 self.state, qua.Cast.to_fixed(self.I < rr.readout_pulse.threshold)
             )
 
-        self.QUA_stream_results()  # stream variables (I, Q, x, etc)
+        self.QUA_stream_results()  # tream variables (I, Q, x, etc)
 
 
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
 
-    x_start = 10
-    x_stop = 200e3
-    x_step = 2e3
+    x_start = 0
+    x_stop = 2
+    x_step = 0.01
     parameters = {
         "modes": ["QUBIT", "CAVITY", "RR"],
         "reps": 50000,
-        "wait_time": 300e3,
-        "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
-        "qubit_op": "pi_selective",
-        "cav_op": "daddy_displace_1",
-        "fetch_period": 2,
+        "wait_time": 1.2e3,
+        "tau": 1600,
+        "x_sweep": ((x_start), (x_stop + x_step / 2), (x_step)),
+        "qubit_op1": "pi",
+        "qubit_op2": "pi_selective",
+        "cav_op": "alice_large_displacement",
+        "fetch_period": 4,
         "single_shot": False,
-        "plot_quad": "I_AVG"
-        
+        "plot_quad": "I_AVG",
     }
 
     plot_parameters = {
         "xlabel": "Cavity relaxation time (clock cycles)",
     }
 
-    experiment = CavityT1(**parameters)
+    experiment = ChiOutAndBack(**parameters)
     experiment.setup_plot(**plot_parameters)
 
     prof.run(experiment)

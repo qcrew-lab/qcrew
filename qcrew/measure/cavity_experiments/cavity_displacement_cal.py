@@ -64,10 +64,10 @@ if __name__ == "__main__":
     parameters = {
         "modes": ["QUBIT", "CAVITY", "RR"],
         "reps": 20000,
-        "wait_time": 2e6,
+        "wait_time": 500e3,
         "x_sweep": (x_start, x_stop + x_step / 2, x_step),
         "qubit_op": "pi_selective",
-        "cav_op": "gaussian_pulse",
+        "cav_op": "daddy_displace_1",
         # "fetch_period": 2,
         # "single_shot": True,
         "plot_quad": "I_AVG"

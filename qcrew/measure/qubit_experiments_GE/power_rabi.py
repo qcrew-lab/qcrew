@@ -59,7 +59,7 @@ if __name__ == "__main__":
     amp_step = 0.1
     parameters = {
         "modes": ["QUBIT", "RR"],
-        "reps": 5000,
+        "reps": 50000,
         "wait_time": 70000,
         "x_sweep": (amp_start, amp_stop + amp_step / 2, amp_step),
         "qubit_op": "pi_selective",

@@ -66,9 +66,9 @@ class T2(Experiment):
 if __name__ == "__main__":
 
     x_start = 4
-    x_stop = 2000
-    x_step = 10
-    detuning_ = 2e6  # 1.12e6
+    x_stop = 4000
+    x_step = 50
+    detuning_ = 500e3  # 1.12e6
 
     parameters = {
         "modes": ["QUBIT", "RR"],
@@ -77,8 +77,8 @@ if __name__ == "__main__":
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
         "qubit_op": "pi2",
         "detuning": int(detuning_),
-        "single_shot": True,
-        # "plot_quad": "I_AVG",
+        #"single_shot": True,
+         "plot_quad": "I_AVG",
         "extra_vars": {
             "phase": macros.ExpVariable(
                 var_type=qua.fixed,

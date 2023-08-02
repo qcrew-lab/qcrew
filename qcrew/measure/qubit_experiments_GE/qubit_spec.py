@@ -69,6 +69,7 @@ if __name__ == "__main__":
         "plot_quad": "I_AVG",
         # "single_shot": True,
         "fit_fn": "gaussian",
+        "plot_quad": "I_AVG",
     }
 
     plot_parameters = {

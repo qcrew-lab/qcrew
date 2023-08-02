@@ -62,13 +62,13 @@ class CavitySpectroscopy(Experiment):
 
 if __name__ == "__main__":
 
-    x_start = -53e6
-    x_stop = -47e6
+    x_start = -55e6
+    x_stop = -45e6
     x_step = 0.1e6
     parameters = {
         "modes": ["QUBIT", "CAVITY", "RR"],
         "reps": 5000,
-        "wait_time": 1.2e6,
+        "wait_time": 200e3,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
         "qubit_op": "pi_selective",
         "fetch_period": 2,

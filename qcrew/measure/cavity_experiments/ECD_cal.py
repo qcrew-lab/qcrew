@@ -87,16 +87,16 @@ class ECDCalibration(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-    x_start = -1.7
-    x_stop = 1.7
+    x_start = -1.9
+    x_stop = 1.9
     x_step = 0.05
 
     parameters = {
         "modes": ["QUBIT", "CAVITY", "RR"],
-        "reps": 1000,
+        "reps": 10000,
         "wait_time": 200e3,
         "fetch_period": 2,  # time between data fetching rounds in sec
-        "delay": 500,  # pi/chi
+        "delay": 100,  # pi/chi
         "x_sweep": (x_start, x_stop + x_step / 2, x_step),
         "qubit_pi2": "pi2",
         "qubit_pi": "pi",

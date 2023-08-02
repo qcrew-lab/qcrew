@@ -59,7 +59,7 @@ class CharacteristicFunction(Experiment):
 
         qua.reset_frame(cav.name)
 
-        cav.play(self.cav_state_op, ampx=0)  # to create a coherent state
+        #cav.play(self.cav_state_op, ampx=0)  # to create a coherent state
         qua.align(cav.name, qubit.name)
 
         qubit.play(self.qubit_op1)  # bring qubit into superposition
@@ -111,7 +111,7 @@ if __name__ == "__main__":
         "qubit_op1": "pi2",
         "qubit_op2": "pi",
         "cav_state_op": "daddy_displace_1",
-        "cav_op": "alice_ecd_1",
+        "cav_op": "daddy_ecd_1",
         # "ECD_phase": 0
         "measure_real": True,  # measure real part of char function if True, imag Part if false
         "plot_quad": "I_AVG",

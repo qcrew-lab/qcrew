@@ -252,3 +252,47 @@ def QUA_loop(qua_function, sweep_variables):
             with qua.for_each_(v1.var, v1.sweep):
                 with qua.for_each_(v2.var, v2.sweep):
                     qua_function()
+
+
+def Char_1D_singledisplacement(
+    cav,
+    qubit,
+    displacement_pulse,
+    qubit_pi_pulse,
+    qubit_pi2_pulse,
+    ampx,
+    delay,
+    measure_real,
+    tomo_phase,
+):
+
+    # bring qubit into superposition
+    qua.align(qubit.name, cav.name)
+
+    qubit.play(qubit_pi2_pulse)
+
+    # start ECD gate
+    qua.align(cav.name, qubit.name)  # wait for qubit pulse to end
+    # First positive displacement
+    cav.play(displacement_pulse, ampx, phase=tomo_phase)
+
+    qua.wait(int(delay // 4), cav.name)
+    # First negative displacement
+    cav.play(displacement_pulse, -ampx, phase=tomo_phase)
+
+    qua.align(qubit.name, cav.name)
+    qubit.play(qubit_pi_pulse, phase=0.0)  # play pi to flip qubit around X
+    qua.align(cav.name, qubit.name)  # wait for qubit pulse to end
+
+    # Second negative displacement
+    cav.play(displacement_pulse, -ampx, phase=tomo_phase)
+
+    qua.wait(int(delay // 4), cav.name)
+    # Second positive displacement
+    cav.play(displacement_pulse, ampx, phase=tomo_phase)
+
+    qua.align(qubit.name, cav.name)
+
+    qubit.play(
+        qubit_pi2_pulse, phase=0 if measure_real else 0.25
+    )  # play pi/2 pulse around X or SY, to measure either the real or imaginary part of the characteristic function

@@ -55,7 +55,7 @@ if __name__ == "__main__":
         "reps": 50000,
         "wait_time": 20000,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
-        "y_sweep": (0.1, 0.15, 0.2, 0.25, 0.3,0.35),
+        "y_sweep": (0.14, 1.0),
     }
     plot_parameters = {
         "xlabel": "Resonator pulse frequency (Hz)",

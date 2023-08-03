@@ -36,10 +36,6 @@ class CavitySpectroscopy(Experiment):
         """
         qubit, cav, rr, flux = self.modes  # get the modes
 
-        # Fock satae preparation
-        # flux.play("predist_constcos_rpad_pulse", ampx=-0.295)
-        # qua.wait(int(1500 // 4), qubit.name)
-        # qubit.play("gaussian_pi")  # play qubit pulse
         qua.update_frequency(cav.name, self.x)  # update resonator pulse frequency
         qua.align(cav.name, qubit.name)
         cav.play(self.cav_op)  # play displacement to cavity
@@ -62,15 +58,16 @@ class CavitySpectroscopy(Experiment):
 
 if __name__ == "__main__":
 
-    x_start = -52e6
-    x_stop = -46e6
-    x_step = 0.02e6
+    x_start = -51.0e6
+    x_stop = -48e6
+    x_step = 0.05e6
     parameters = {
         "modes": ["QUBIT", "CAVITY", "RR", "FLUX"],
         "reps": 50000,
-        "wait_time": 700e3,
+        "wait_time": 60e3,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
         "qubit_op": "gaussian_pi_420",
+        # "plot_quad": "PHASE",
         "fetch_period": 3,
         # "single_shot": True,
         "cav_op": "spectroscopy_pulse",

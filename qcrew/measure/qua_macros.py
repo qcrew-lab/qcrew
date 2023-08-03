@@ -329,7 +329,7 @@ def Char_2D_singledisplacement(
     )
 
     qua.align(qubit.name, cav.name)
-    qubit.play(qubit_pi_pulse, phase=0.25)  # play pi to flip qubit around X
+    qubit.play(qubit_pi_pulse, phase=0.0)  # was 0.25  play pi to flip qubit around X
     qua.align(cav.name, qubit.name)  # wait for qubit pulse to end
 
     # Second negative displacement

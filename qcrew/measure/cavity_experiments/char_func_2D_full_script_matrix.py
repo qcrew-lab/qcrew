@@ -16,7 +16,7 @@ import numpy as np
 # ---------------------------------- Class -------------------------------------
 
 
-class CharacteristicFunction(Experiment):
+class CharacteristicFunctionMatrix(Experiment):
 
     name = "characteristic_function"
 
@@ -65,27 +65,21 @@ class CharacteristicFunction(Experiment):
         # qua.reset_frame(cav.name)
         qubit.play(self.qubit_op1)  # bring qubit into superposition
         qua.align(cav.name, qubit.name)  # wait for qubit pulse to end
-        cav.play(self.char_func_displacement, ampx=self.x, phase=0)  # First positive displacement
-        cav.play(self.char_func_displacement, ampx=self.y, phase=0.25)
+        cav.play(self.char_func_displacement, ampx=(self.x, -self.y, self.y, self.x))
 
         # qua.reset_frame(cav.name)
         qua.wait(int(self.delay // 4), cav.name)
-        cav.play(self.char_func_displacement, ampx=-self.x, phase=0)  # First negative displacement
-        cav.play(self.char_func_displacement, ampx=-self.y, phase=0.25)
+        cav.play(self.char_func_displacement, ampx=(-self.x, self.y, -self.y, -self.x))
 
         # qua.reset_frame(cav.name)
         qua.align(qubit.name, cav.name)
         qubit.play(self.qubit_op2)  # play pi to flip qubit around X
         qua.align(cav.name, qubit.name)  # wait for qubit pulse to end
-        cav.play(self.char_func_displacement, ampx=-self.x, phase=0)  # Second negative displacement
-        cav.play(self.char_func_displacement, ampx=-self.y, phase=0.25)
+        cav.play(self.char_func_displacement, ampx=(-self.x, self.y, -self.y, -self.x))
 
         # qua.reset_frame(cav.name)
         qua.wait(int(self.delay // 4), cav.name)
-        cav.play(
-            self.char_func_displacement, ampx=(self.x), phase=0
-        )  # Second positive displacement
-        cav.play(self.char_func_displacement, ampx=self.y, phase=0.25)
+        cav.play(self.char_func_displacement, ampx=(self.x, -self.y, self.y, self.x))
 
         # qua.reset_frame(cav.name)
         qua.align(qubit.name, cav.name)
@@ -129,7 +123,7 @@ if __name__ == "__main__":
         "qubit_op1": "pi2",
         "qubit_op2": "pi",
         "char_func_displacement": "daddy_ecd_1",
-        "cav_state_op": "daddy_displace_1",
+        "cav_state_op": "daddy_ecd_1",
         "measure_real": True,
         "plot_quad": "I_AVG",  # measure real part of char function if True, imag Part if false
     }
@@ -141,7 +135,7 @@ if __name__ == "__main__":
         "cmap": "bwr",
     }
 
-    experiment = CharacteristicFunction(**parameters)
+    experiment = CharacteristicFunctionMatrix(**parameters)
     experiment.setup_plot(**plot_parameters)
 
     prof.run(experiment)

@@ -59,7 +59,7 @@ if __name__ == "__main__":
         # "y_sweep": (0.0, ),#0.5, 1.0, 1.5),
         # "plot_quad": "PHASE_SWEEP"
         "fit_fn": "gaussian",
-        "plot_quad": "I_AVG",
+        #"plot_quad": "I_AVG",
     }
 
     plot_parameters = {

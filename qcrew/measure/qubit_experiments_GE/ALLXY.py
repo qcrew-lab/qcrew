@@ -101,8 +101,8 @@ if __name__ == "__main__":
         "modes": ["QUBIT", "RR"],
         "reps": 20000,
         "wait_time": 60000,
-        "qubit_pi_op": "gaussian_pi",
-        "qubit_pi2_op": "gaussian_pi2",
+        "qubit_pi_op": "pi",
+        "qubit_pi2_op": "pi2",
         # "single_shot": True,
         "plot_quad": "I_AVG",
     }

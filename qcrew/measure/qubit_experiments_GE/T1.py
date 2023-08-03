@@ -60,7 +60,7 @@ if __name__ == "__main__":
         "reps": 100000,
         "wait_time": 70e3,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
-        "qubit_op": "pi_selective",
+        "qubit_op": "pi",
         # "single_shot": True,
         "plot_quad": "I_AVG",
     }

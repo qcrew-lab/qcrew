@@ -12,7 +12,7 @@ from qcrew.measure.experiment import Experiment
 from qm import qua
 import numpy as np
 from qcrew.measure.qua_macros import *
-
+import qcrew.measure.qua_macros as macros
 
 # ---------------------------------- Class -------------------------------------
 
@@ -104,7 +104,6 @@ if __name__ == "__main__":
         "single_shot": False,
         "plot_quad": "I_AVG",
         "measure_real": True,
-        "plot_quad": "I_AVG",
     }
 
     plot_parameters = {"xlabel": "X"}  # beta of (ECD(beta))

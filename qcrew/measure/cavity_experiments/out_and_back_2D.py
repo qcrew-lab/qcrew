@@ -12,26 +12,23 @@ from qm import qua
 # ---------------------------------- Class -------------------------------------
 
 
-class ChiOutAndBack(Experiment):
+class OutAndBack(Experiment):
 
-    name = "chi_out_and_back"
+    name = "out_and_back"
 
     _parameters: ClassVar[set[str]] = Experiment._parameters | {
-        "cav_op",  # operation for displacing the cavity
-        "qubit_op1",
-        "qubit_op2",  # operation used for exciting the qubit
+        "cav_displacement",  # operation for displacing the cavity
+        "qubit_pi",  # operation used for exciting the qubit
+        "qubit_pi_selective",
         "fit_fn",  # fit function
-        "tau",  # wait time
+
     }
 
-    def __init__(
-        self, cav_op, qubit_op1, qubit_op2, tau, fit_fn="gaussian", **other_params
-    ):
+    def __init__(self, cav_displacement, qubit_pi,qubit_pi_selective,  fit_fn="gaussian", **other_params):
 
-        self.cav_op = cav_op
-        self.qubit_op1 = qubit_op1
-        self.qubit_op2 = qubit_op2
-        self.tau = tau
+        self.cav_displacement = cav_displacement
+        self.qubit_pi_selective = qubit_pi_selective
+        self.qubit_pi = qubit_pi
         self.fit_fn = fit_fn
 
         super().__init__(**other_params)  # Passes other parameters to parent
@@ -40,17 +37,31 @@ class ChiOutAndBack(Experiment):
         """
         Defines pulse sequence to be played inside the experiment loop
         """
+        
+        factor = qua.declare(qua.fixed)
+        qua.assign(factor, self.detuning * 4 * 1e-9)
+        
+        qua.assign(self.phase, qua.Cast.mul_fixed_by_int(factor, self.x))
+        qubit.play(self.qubit_op, phase=self.phase)  # play half pi qubit pulse
+        
         qubit, cav, rr = self.modes  # get the modes
 
-        cav.play(self.cav_op)  # play displacement to cavity
+        cav.play(self.cav_displacement)  # displace cavity
         qua.align(qubit.name, cav.name)  # align all modes
-        qubit.play(self.qubit_op1)
+
+        qubit.play(self.qubit_pi)  # put qubit into excited state to start rotation
         qua.align(qubit.name, cav.name)
-        qua.wait(int(self.tau // 4), cav.name)  # wait rotation
-        cav.play(self.cav_op, phase=self.x)  # 0.5 for minus sign and then sweep
+
+        qua.wait(int(self.x // 4), cav.name)  # wait for state to rotate
+
+        cav.play(self.cav_displacement, phase=self.y)  # displace qubit back
         qua.align(qubit.name, cav.name)  # align all modes
-        qubit.play(self.qubit_op2)
+
+        qubit.play(
+            self.qubit_pi_selective
+        )  # play conditional pi pulse to flip qubit if cav is in vac or close to vac
         qua.align(qubit.name, rr.name)  # align all modes
+
         rr.measure((self.I, self.Q))  # measure transmitted signal
         qua.wait(int(self.wait_time // 4), cav.name)  # wait system reset
 
@@ -66,28 +77,42 @@ class ChiOutAndBack(Experiment):
 
 if __name__ == "__main__":
 
-    x_start = 0
-    x_stop = 2
-    x_step = 0.01
+    # wait time tau
+    x_start = 4
+    x_stop = 2000
+    x_step = 100
+
+    # disp_phase
+    y_start = 0
+    y_stop = 1
+    y_step = 0.01
+    default_ = 1
     parameters = {
         "modes": ["QUBIT", "CAVITY", "RR"],
         "reps": 50000,
         "wait_time": 1.2e3,
-        "tau": 1600,
         "x_sweep": ((x_start), (x_stop + x_step / 2), (x_step)),
-        "qubit_op1": "pi",
-        "qubit_op2": "pi_selective",
-        "cav_op": "alice_large_displacement",
+        "y_sweep": ((y_start), (y_stop + y_step / 2), (y_step)),
+        "qubit_pi": "pi",
+        "qubit_pi_selective": "pi_selective_500",
+        "cav_displacement": "alice_large_displacement",
         "fetch_period": 4,
         "single_shot": False,
         "plot_quad": "I_AVG",
+        "phase": macros.ExpVariable(
+                var_type=qua.fixed,
+                tag="phase",
+                average=True,
+                buffer=True,
+                save_all=True,
+            )
     }
 
     plot_parameters = {
         "xlabel": "Cavity relaxation time (clock cycles)",
     }
 
-    experiment = ChiOutAndBack(**parameters)
+    experiment = OutAndBack(**parameters)
     experiment.setup_plot(**plot_parameters)
 
     prof.run(experiment)

@@ -1,30 +1,24 @@
-"""
-A python class describing an ECD calibration experiment, following Campagne-Ibarq et al. 2020 Quantum Error correction of a qubit encoded in a grid....
-It is essentially a characteristic function (C(\beta)) measurement of the vacuum state.
-
-NOT FINISHED
-"""
-
 from typing import ClassVar
 
 from qcrew.control import professor as prof
 from qcrew.measure.experiment import Experiment
 from qm import qua
 import numpy as np
+from qcrew.measure.qua_macros import *
 
 
 # ---------------------------------- Class -------------------------------------
 
 
-class CharacteristicFunction(Experiment):
+class CharacteristicFunction2D(Experiment):
 
-    name = "characteristic_function"
+    name = "characteristic_function_2D"
 
     _parameters: ClassVar[set[str]] = Experiment._parameters | {
         "cav_state_op",
         "char_func_displacement",  # operation for displacing the cavity
-        "qubit_op1",
-        "qubit_op2",  # operation used for exciting the qubit
+        "qubit_pi",
+        "qubit_pi2",  # operation used for exciting the qubit
         "fit_fn",  # fit function
         "delay",  # describe...
         "measure_real",
@@ -34,8 +28,8 @@ class CharacteristicFunction(Experiment):
         self,
         cav_state_op,
         char_func_displacement,
-        qubit_op1,
-        qubit_op2,
+        qubit_pi,
+        qubit_pi2,
         fit_fn=None,
         delay=4,
         measure_real=True,
@@ -43,8 +37,8 @@ class CharacteristicFunction(Experiment):
     ):
         self.cav_state_op = cav_state_op
         self.char_func_displacement = char_func_displacement
-        self.qubit_op1 = qubit_op1
-        self.qubit_op2 = qubit_op2
+        self.qubit_pi = qubit_pi
+        self.qubit_pi2 = qubit_pi2
         self.fit_fn = fit_fn
         self.delay = delay
         self.measure_real = measure_real
@@ -61,39 +55,21 @@ class CharacteristicFunction(Experiment):
         cav.play(self.cav_state_op, phase=0.0)  # t o create a coherent state
         qua.align(cav.name, qubit.name)
 
-        # start ECD gate
-        # qua.reset_frame(cav.name)
-        qubit.play(self.qubit_op1)  # bring qubit into superposition
-        qua.align(cav.name, qubit.name)  # wait for qubit pulse to end
-        cav.play(self.char_func_displacement, ampx=self.x, phase=0)  # First positive displacement
-        cav.play(self.char_func_displacement, ampx=self.y, phase=0.25)
+        ######################  Measure the created state with charactristic function  #####################
+        Char_2D_singledisplacement(
+            cav,
+            qubit,
+            self.char_func_displacement,
+            self.qubit_pi,
+            self.qubit_pi2,
+            self.x,
+            self.y,
+            delay=self.delay,
+            measure_real=self.measure_real,
+            tomo_phase=0,
+        )
 
-        # qua.reset_frame(cav.name)
-        qua.wait(int(self.delay // 4), cav.name)
-        cav.play(self.char_func_displacement, ampx=-self.x, phase=0)  # First negative displacement
-        cav.play(self.char_func_displacement, ampx=-self.y, phase=0.25)
-
-        # qua.reset_frame(cav.name)
-        qua.align(qubit.name, cav.name)
-        qubit.play(self.qubit_op2)  # play pi to flip qubit around X
-        qua.align(cav.name, qubit.name)  # wait for qubit pulse to end
-        cav.play(self.char_func_displacement, ampx=-self.x, phase=0)  # Second negative displacement
-        cav.play(self.char_func_displacement, ampx=-self.y, phase=0.25)
-
-        # qua.reset_frame(cav.name)
-        qua.wait(int(self.delay // 4), cav.name)
-        cav.play(
-            self.char_func_displacement, ampx=(self.x), phase=0
-        )  # Second positive displacement
-        cav.play(self.char_func_displacement, ampx=self.y, phase=0.25)
-
-        # qua.reset_frame(cav.name)
-        qua.align(qubit.name, cav.name)
-
-        qubit.play(
-            self.qubit_op1, phase=0.0 if self.measure_real else 0.25
-        )  # play pi/2 pulse around X or SY, to measure either the real or imaginary part of the characteristic function
-
+        # Measure cavity state
         qua.align(qubit.name, rr.name)  # align measurement
         rr.measure((self.I, self.Q))  # measure transmitted signal
 
@@ -126,8 +102,8 @@ if __name__ == "__main__":
             x_step,
         ),  # ampitude sweep of the displacement pulses in the ECD
         "y_sweep": (y_start, y_stop + y_step / 2, y_step),
-        "qubit_op1": "pi2",
-        "qubit_op2": "pi",
+        "qubit_pi": "pi",
+        "qubit_pi2": "pi2",
         "char_func_displacement": "daddy_ecd_1",
         "cav_state_op": "daddy_displace_1",
         "measure_real": True,
@@ -141,7 +117,7 @@ if __name__ == "__main__":
         "cmap": "bwr",
     }
 
-    experiment = CharacteristicFunction(**parameters)
+    experiment = CharacteristicFunction2D(**parameters)
     experiment.setup_plot(**plot_parameters)
 
     prof.run(experiment)

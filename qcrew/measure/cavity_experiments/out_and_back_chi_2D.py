@@ -8,6 +8,7 @@ from typing import ClassVar
 from qcrew.control import professor as prof
 from qcrew.measure.experiment import Experiment
 from qm import qua
+import qcrew.measure.qua_macros as macros
 
 # ---------------------------------- Class -------------------------------------
 
@@ -21,10 +22,16 @@ class OutAndBack(Experiment):
         "qubit_pi",  # operation used for exciting the qubit
         "qubit_pi_selective",
         "fit_fn",  # fit function
-
     }
 
-    def __init__(self, cav_displacement, qubit_pi,qubit_pi_selective,  fit_fn="gaussian", **other_params):
+    def __init__(
+        self,
+        cav_displacement,
+        qubit_pi,
+        qubit_pi_selective,
+        fit_fn="gaussian",
+        **other_params
+    ):
 
         self.cav_displacement = cav_displacement
         self.qubit_pi_selective = qubit_pi_selective
@@ -37,26 +44,19 @@ class OutAndBack(Experiment):
         """
         Defines pulse sequence to be played inside the experiment loop
         """
-        
-        factor = qua.declare(qua.fixed)
-        qua.assign(factor, self.detuning * 4 * 1e-9)
-        
-        qua.assign(self.phase, qua.Cast.mul_fixed_by_int(factor, self.x))
-        qubit.play(self.qubit_op, phase=self.phase)  # play half pi qubit pulse
-        
+
         qubit, cav, rr = self.modes  # get the modes
 
         cav.play(self.cav_displacement)  # displace cavity
         qua.align(qubit.name, cav.name)  # align all modes
 
-        qubit.play(self.qubit_pi)  # put qubit into excited state to start rotation
+        #qubit.play(self.qubit_pi)  # put qubit into excited state to start rotation
         qua.align(qubit.name, cav.name)
 
-        qua.wait(int(self.x // 4), cav.name)  # wait for state to rotate
-
-        cav.play(self.cav_displacement, phase=self.y)  # displace qubit back
+        qua.wait(self.x, cav.name)  # wait for state to rotate
+        qua.assign(self.phase, self.y)
+        cav.play(self.cav_displacement, phase=self.phase)  # displace qubit back
         qua.align(qubit.name, cav.name)  # align all modes
-
         qubit.play(
             self.qubit_pi_selective
         )  # play conditional pi pulse to flip qubit if cav is in vac or close to vac
@@ -77,39 +77,43 @@ class OutAndBack(Experiment):
 
 if __name__ == "__main__":
 
-    # wait time tau
+    # wait time tau in clock cycle
     x_start = 4
     x_stop = 2000
-    x_step = 100
+    x_step = 124
 
     # disp_phase
-    y_start = 0
-    y_stop = 1
+    y_start = 0.4
+    y_stop = 0.7
     y_step = 0.01
-    default_ = 1
     parameters = {
         "modes": ["QUBIT", "CAVITY", "RR"],
         "reps": 50000,
-        "wait_time": 1.2e3,
-        "x_sweep": ((x_start), (x_stop + x_step / 2), (x_step)),
+        "wait_time": 200e3,
+        "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
         "y_sweep": ((y_start), (y_stop + y_step / 2), (y_step)),
         "qubit_pi": "pi",
         "qubit_pi_selective": "pi_selective_500",
-        "cav_displacement": "alice_large_displacement",
+        "cav_displacement": "daddy_large_displacement",
         "fetch_period": 4,
         "single_shot": False,
         "plot_quad": "I_AVG",
-        "phase": macros.ExpVariable(
+        "extra_vars": {
+            "phase": macros.ExpVariable(
                 var_type=qua.fixed,
                 tag="phase",
                 average=True,
                 buffer=True,
                 save_all=True,
             )
+        },
     }
 
     plot_parameters = {
-        "xlabel": "Cavity relaxation time (clock cycles)",
+        "xlabel": "delay in clockcycles",  # beta of (ECD(beta))
+        "ylabel": "displacement pulse phase",
+        "plot_type": "2D",
+        "cmap": "bwr",
     }
 
     experiment = OutAndBack(**parameters)

@@ -65,7 +65,7 @@ if __name__ == "__main__":
         "reps": 2000,
         "wait_time": 20e3,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
-        "qubit_op": "pi", 
+        "qubit_op": "constant_pulse", 
         "plot_quad": "I_AVG",
         # "single_shot": True,
         "fit_fn": "gaussian",

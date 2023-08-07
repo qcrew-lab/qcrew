@@ -52,15 +52,15 @@ class T1(Experiment):
 
 if __name__ == "__main__":
 
-    x_start = 12
-    x_stop = 20e3
-    x_step = 500
+    x_start = 10
+    x_stop = 5000
+    x_step = 100
     parameters = {
         "modes": ["QUBIT", "RR"],
         "reps": 1000000,
-        "wait_time": 60e3,
+        "wait_time": 10e3,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
-        "qubit_op": "gaussian_pi",
+        "qubit_op": "spectroscopy_pulse",
         # "single_shot": True,
         "plot_quad": "I_AVG",
     }

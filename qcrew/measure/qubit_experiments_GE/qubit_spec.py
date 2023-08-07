@@ -53,8 +53,8 @@ class QubitSpectroscopy(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-    x_start = -200e6
-    x_stop = 200e6
+    x_start = -120e6
+    x_stop = -103e6
     x_step = 0.5e6
     # x_start = 45e6
     # x_stop = 50e6
@@ -62,11 +62,11 @@ if __name__ == "__main__":
 
     parameters = {
         "modes": ["QUBIT", "RR", "FLUX"],
-        "reps": 10000,
+        "reps": 200000,
         "wait_time": 40e3,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
         "qubit_op": "spectroscopy_pulse",
-        "plot_quad": "PHASE",
+        "plot_quad": "I_AVG",
         # "single_shot": True,
         "fit_fn": "gaussian",
     }

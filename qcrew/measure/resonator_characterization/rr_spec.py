@@ -44,8 +44,8 @@ class RRSpectroscopy(Experiment):
 
 if __name__ == "__main__":
 
-    x_start = -56.0e6
-    x_stop = -44.0e6
+    x_start = -53.0e6
+    x_stop = -47.0e6
     x_step = 0.25e6
 
     parameters = {
@@ -53,12 +53,12 @@ if __name__ == "__main__":
             "RR",
         ],
         "reps": 200000,
-        "wait_time": 4000,  # 500ns*5 = 2.5us = 2500ns
+        "wait_time": 20000,  # 500ns*5 = 2.5us = 2500ns
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
         # "y_sweep":[0.,1.],
         # "y_sweep": (0.0, ),#0.5, 1.0, 1.5),
         # "plot_quad": "PHASE_SWEEP",
-        # "fit_fn": "gaussian",
+        "fit_fn": "gaussian",
         # "plot_quad": "I_AVG",
     }
 

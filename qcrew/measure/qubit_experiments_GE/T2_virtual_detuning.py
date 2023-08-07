@@ -66,19 +66,19 @@ class T2(Experiment):
 if __name__ == "__main__":
 
     x_start = 4
-    x_stop = 1200
-    x_step = 10
+    x_stop = 2000
+    x_step = 28
     detuning_ = 2e6  # 1.12e6
 
     parameters = {
         "modes": ["QUBIT", "RR"],
         "reps": 100000,
-        "wait_time": 60000,
+        "wait_time": 30000,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
-        "qubit_op": "gaussian_pi2",
+        "qubit_op": "spectroscopy_pulse_pi2",
         "detuning": int(detuning_),
-        "single_shot": True,
-        # "plot_quad": "I_AVG",
+        # "single_shot": True,
+        "plot_quad": "I_AVG",
         "extra_vars": {
             "phase": macros.ExpVariable(
                 var_type=qua.fixed,

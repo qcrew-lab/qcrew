@@ -64,7 +64,7 @@ if __name__ == "__main__":
         "reps": 50000,
         "wait_time": 300e3,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
-        "qubit_op": "pi_selective",
+        "qubit_op": "pi_selective_350",
         "cav_op": "daddy_displace_1",
         "fetch_period": 2,
         "single_shot": False,

@@ -117,7 +117,7 @@ if __name__ == "__main__":
     parameters = {
         "modes": ["QUBIT", "CAVITY", "RR"],
         "reps": 1000000,
-        "wait_time": 150e3,
+        "wait_time": 200e3,
         "fetch_period": 3,  # time between data fetching rounds in sec
         "delay": 100,  # wait time between opposite sign displacements
         "x_sweep": (

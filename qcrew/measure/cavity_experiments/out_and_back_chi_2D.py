@@ -51,7 +51,7 @@ class OutAndBack(Experiment):
         qua.align(qubit.name, cav.name)  # align all modes
 
         #qubit.play(self.qubit_pi)  # put qubit into excited state to start rotation
-        qua.align(qubit.name, cav.name)
+        #qua.align(qubit.name, cav.name)
 
         qua.wait(self.x, cav.name)  # wait for state to rotate
         qua.assign(self.phase, self.y)
@@ -66,7 +66,7 @@ class OutAndBack(Experiment):
         qua.wait(int(self.wait_time // 4), cav.name)  # wait system reset
 
         if self.single_shot:  # assign state to G or E
-            qua.assign(
+            qua.assign( 
                 self.state, qua.Cast.to_fixed(self.I < rr.readout_pulse.threshold)
             )
 
@@ -79,13 +79,13 @@ if __name__ == "__main__":
 
     # wait time tau in clock cycle
     x_start = 4
-    x_stop = 2000
-    x_step = 124
+    x_stop = 750
+    x_step = 12
 
     # disp_phase
-    y_start = 0.4
-    y_stop = 0.7
-    y_step = 0.01
+    y_start = 0
+    y_stop = 1
+    y_step = 0.03
     parameters = {
         "modes": ["QUBIT", "CAVITY", "RR"],
         "reps": 50000,
@@ -93,7 +93,7 @@ if __name__ == "__main__":
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
         "y_sweep": ((y_start), (y_stop + y_step / 2), (y_step)),
         "qubit_pi": "pi",
-        "qubit_pi_selective": "pi_selective_500",
+        "qubit_pi_selective": "pi_selective_350",
         "cav_displacement": "daddy_large_displacement",
         "fetch_period": 4,
         "single_shot": False,

@@ -53,8 +53,6 @@ class OutAndBackKerr(Experiment):
         cav.play(self.cav_displacement, ampx=self.x)  # displace cavity
         qua.align(qubit.name, cav.name)  # align all modes
 
-        qubit.play(self.qubit_pi)  # put qubit into excited state to start rotation
-        qua.align(qubit.name, cav.name)
 
         qua.wait(self.delay, cav.name)  # wait for state to rotate
         qua.assign(self.phase, self.y)
@@ -85,23 +83,23 @@ if __name__ == "__main__":
     # ampx
     x_start = 0.2
     x_stop = 1.2
-    x_step = 0.0
+    x_step = 0.025
 
     # disp_phase
-    y_start = 0.01
-    y_stop = 1
+    y_start = 0.1
+    y_stop = 0.8
     y_step = 0.01
 
     parameters = {
         "modes": ["QUBIT", "CAVITY", "RR"],
-        "reps": 50000,
+        "reps": 100000,
         "wait_time": 200e3,
         "x_sweep": ((x_start), (x_stop + x_step / 2), (x_step)),
         "y_sweep": ((y_start), (y_stop + y_step / 2), (y_step)),
-        "delay": 4,
+        "delay": 1000,
         "qubit_pi": "pi",
-        "qubit_pi_selective": "pi_selective_500",
-        "cav_displacement": "constant_pulse",
+        "qubit_pi_selective": "pi_selective_350",
+        "cav_displacement": "daddy_large_displacement",
         "fetch_period": 4,
         "single_shot": False,
         "plot_quad": "I_AVG",

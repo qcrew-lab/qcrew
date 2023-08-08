@@ -82,18 +82,18 @@ class CharacteristicFunction2D(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-    x_start = -1.4
-    x_stop = 1.4
+    x_start = -0.8
+    x_stop = 0.8
     x_step = 0.05
 
-    y_start = -1.4
-    y_stop = 1.4
+    y_start = -0.8
+    y_stop = 0.8
     y_step = 0.05
 
     parameters = {
         "modes": ["QUBIT", "CAVITY", "RR"],
         "reps": 1000000,
-        "wait_time": 150e3,
+        "wait_time": 200e3,
         "fetch_period": 3,  # time between data fetching rounds in sec
         "delay": 100,  # wait time between opposite sign displacements
         "x_sweep": (
@@ -104,7 +104,7 @@ if __name__ == "__main__":
         "y_sweep": (y_start, y_stop + y_step / 2, y_step),
         "qubit_pi": "pi",
         "qubit_pi2": "pi2",
-        "char_func_displacement": "daddy_ecd_1",
+        "char_func_displacement": "daddy_ecd_2",
         "cav_state_op": "daddy_displace_1",
         "measure_real": True,
         "plot_quad": "I_AVG",  # measure real part of char function if True, imag Part if false

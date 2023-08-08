@@ -21,7 +21,7 @@ if __name__ == "__main__":
         mixer_tuner = MixerTuner(sa, qm)
 
         # this is the mode whose mixer's LO or SB leakage you are tuning
-        mode = qubit
+        mode = cav
         # minimize LO leakage
 
         # use brute force (BF) minimizer

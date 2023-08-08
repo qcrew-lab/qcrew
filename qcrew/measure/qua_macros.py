@@ -348,3 +348,48 @@ def Char_2D_singledisplacement(
     qubit.play(
         qubit_pi2_pulse, phase=0 if measure_real else 0.25
     )  # play pi/2 pulse around X or SY, to measure either the real or imaginary part of the characteristic function
+
+
+def ECD(
+    cav, qubit, displacement_pulse, qubit_pi_pulse, ampx, delay, phase, qubit_phase
+):
+    qua.align()  # wait for qubit pulse to end
+    cav.play(displacement_pulse, ampx=ampx, phase=phase)  # First positive displacement
+    qua.wait(int(delay // 4), cav.name)
+    cav.play(displacement_pulse, ampx=-ampx, phase=phase)  # First negative displacement
+    qua.align()
+    qubit.play(qubit_pi_pulse, phase=qubit_phase)  # play pi to flip qubit around X
+    qua.align()  # wait for qubit pulse to end
+    cav.play(
+        displacement_pulse, ampx=-ampx, phase=phase
+    )  # Second negative displacement
+    qua.wait(int(delay // 4), cav.name)
+    cav.play(displacement_pulse, ampx=ampx, phase=phase)  # Second positive displacement
+    qua.align()
+
+
+def U(cav, qubit, displacement_pulse, qubit_pi_pulse, qubit_pi2_pulse, ampx, delay):
+    qua.align()
+    qubit.play(qubit_pi2_pulse, phase=0.5)
+
+    ECD(
+        cav,
+        qubit,
+        displacement_pulse,
+        qubit_pi_pulse,
+        ampx,
+        delay,
+        phase=0,
+        qubit_phase=0,
+    )
+
+    # qubit.play(qubit_pi_pulse, phase=0.75)  #0.25 in ECD and 0.75 to flip back
+    # qubit.play(qubit_pi2_pulse, phase=0)
+
+    qubit.play(qubit_pi2_pulse, phase=0.5)
+    qua.align()
+
+
+def V(cav, qubit, displacement_pulse, qubit_pi_pulse, qubit_pi2_pulse, ampx, delay):
+    qua.align()
+    qubit.play(qubit_pi2_pulse, phase=0.25)

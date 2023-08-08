@@ -68,8 +68,7 @@ if __name__ == "__main__":
         "cav_op": "daddy_displace_1",
         "fetch_period": 2,
         "single_shot": False,
-        "plot_quad": "I_AVG"
-        
+        "plot_quad": "I_AVG",
     }
 
     plot_parameters = {

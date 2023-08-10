@@ -87,8 +87,8 @@ class ECDCalibration(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-    x_start = -1.2
-    x_stop = 1.2
+    x_start = -1.1
+    x_stop = 1.1
     x_step = 0.05
 
     parameters = {
@@ -96,11 +96,11 @@ if __name__ == "__main__":
         "reps": 10000,
         "wait_time": 200e3,
         "fetch_period": 2,  # time between data fetching rounds in sec
-        "delay": 100,  # pi/chi
+        "delay": 200,  # pi/chi
         "x_sweep": (x_start, x_stop + x_step / 2, x_step),
         "qubit_pi2": "pi2",
         "qubit_pi": "pi",
-        "ecd_displacement": "daddy_ecd_2",
+        "ecd_displacement": "bob_ecd_1",
         "single_shot": False,
         "plot_quad": "I_AVG",
         "measure_real": True,

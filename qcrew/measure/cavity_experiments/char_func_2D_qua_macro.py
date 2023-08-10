@@ -56,6 +56,7 @@ class CharacteristicFunction2D(Experiment):
         qua.align(cav.name, qubit.name)
 
         ######################  Measure the created state with charactristic function  #####################
+        # this uses ampx matrixes. this somehow makes all pulses smaller by approx fac. sqrt2
         Char_2D_singledisplacement(
             cav,
             qubit,
@@ -82,12 +83,12 @@ class CharacteristicFunction2D(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-    x_start = -0.8
-    x_stop = 0.8
+    x_start = -1.0
+    x_stop = 1.0
     x_step = 0.05
 
-    y_start = -0.8
-    y_stop = 0.8
+    y_start = -1.0
+    y_stop = 1.0
     y_step = 0.05
 
     parameters = {
@@ -104,8 +105,8 @@ if __name__ == "__main__":
         "y_sweep": (y_start, y_stop + y_step / 2, y_step),
         "qubit_pi": "pi",
         "qubit_pi2": "pi2",
-        "char_func_displacement": "daddy_ecd_2",
-        "cav_state_op": "daddy_displace_1",
+        "char_func_displacement": "bob_ecd_3",
+        "cav_state_op": "bob_displace_1",
         "measure_real": True,
         "plot_quad": "I_AVG",  # measure real part of char function if True, imag Part if false
     }

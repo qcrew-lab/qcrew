@@ -1,4 +1,5 @@
 from typing import ClassVar
+from unicodedata import ucd_3_2_0
 
 from qcrew.control import professor as prof
 from qcrew.measure.experiment import Experiment
@@ -24,6 +25,10 @@ class UVCompression(Experiment):
         "ecd_displacement",
         "u1",
         "v1",
+        "u2",
+        "v2",
+        "u3",
+        "v3",
     }
 
     def __init__(
@@ -34,6 +39,10 @@ class UVCompression(Experiment):
         ecd_displacement,
         u1,
         v1,
+        u2,
+        v2,
+        u3,
+        v3,
         fit_fn=None,
         delay=4,
   
@@ -48,6 +57,10 @@ class UVCompression(Experiment):
         self.ecd_displacement = ecd_displacement
         self.u1 = u1
         self.v1 = v1
+        self.u2 = u2
+        self.v2 = v2
+        self.u3= u3
+        self.v3 = v3
         self.measure_real = measure_real
 
         super().__init__(**other_params)  # Passes other parameters to parent
@@ -85,6 +98,51 @@ class UVCompression(Experiment):
                 ampx=self.v1,
                 delay=self.delay,
             )
+            
+        if 0:
+
+          U(
+              cav,
+              qubit,
+              self.ecd_displacement,
+              self.qubit_pi,
+              self.qubit_pi2,
+              ampx=self.u2,
+              delay=self.delay,
+          )
+
+        if 0:
+            V(
+                cav,
+                qubit,
+                self.ecd_displacement,
+                self.qubit_pi,
+                self.qubit_pi2,
+                ampx=self.v2,
+                delay=self.delay,
+            )
+        if 0:
+
+          U(
+              cav,
+              qubit,
+              self.ecd_displacement,
+              self.qubit_pi,
+              self.qubit_pi2,
+              ampx=self.u3,
+              delay=self.delay,
+          )
+
+        if 0:
+            V(
+                cav,
+                qubit,
+                self.ecd_displacement,
+                self.qubit_pi,
+                self.qubit_pi2,
+                ampx=self.v3,
+                delay=self.delay,
+            )
 
         ######################  Measure the created state with charactristic function  #####################
         Char_2D_singledisplacement(
@@ -114,15 +172,21 @@ class UVCompression(Experiment):
 
 if __name__ == "__main__":
   
-    x_start = -0.8
-    x_stop = 0.8
+    x_start = -1.02
+    x_stop = 1.02
     x_step = 0.05
 
-    y_start = -0.8
-    y_stop = 0.8
+    y_start = -1.02
+    y_stop = 1.02
     y_step = 0.05
     
-    compression_3db_1step = [1, -0.6]
+    ecd_factor = 2
+    compression_3db_1step = np.array([1,
+                             -0.6,
+                             -0.48,
+                             1.04,
+                             -1.11,
+                             -0.32])/ecd_factor
 
     parameters = {
         "modes": ["QUBIT", "CAVITY", "RR"],
@@ -138,10 +202,14 @@ if __name__ == "__main__":
         "y_sweep": (y_start, y_stop + y_step / 2, y_step),
         "qubit_pi": "pi",
         "qubit_pi2": "pi2",
-        "char_func_displacement": "daddy_ecd_1",
-        "ecd_displacement" : "daddy_ecd_1",
+        "char_func_displacement": "bob_ecd_3",
+        "ecd_displacement" : "bob_ecd_1",
         "u1" : compression_3db_1step[0], 
-        "v1" : compression_3db_1step[1], 
+        "v1" : compression_3db_1step[1],
+        "u2" : compression_3db_1step[2], 
+        "v2" : compression_3db_1step[3],
+        "u3" : compression_3db_1step[4], 
+        "v3" : compression_3db_1step[5], 
         "measure_real": True,
         "plot_quad": "I_AVG",  # measure real part of char function if True, imag Part if false
     }

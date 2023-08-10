@@ -20,6 +20,7 @@ class PowerRabi(Experiment):
     _parameters: ClassVar[set[str]] = Experiment._parameters | {
         "qubit_op",  # operation used for exciting the qubit
         "fit_fn",  # fit function
+
     }
 
     def __init__(self, qubit_op, fit_fn="sine", **other_params):
@@ -32,10 +33,11 @@ class PowerRabi(Experiment):
         """
         Defines pulse sequence to be played inside the experiment loop
         """
-        qubit, rr = self.modes  # get the modes
+        qubit, rr= self.modes  # get the modes
+
 
         qubit.play(self.qubit_op, ampx=self.x)  # play qubit pulse
-        qubit.play(self.qubit_op, ampx=self.x)  # play qubit pulse
+        #qubit.play(self.qubit_op, ampx=self.x)  # play qubit pulse
         #qubit.play(self.qubit_op, ampx=self.x)  # play qubit pulse
         #qubit.play(self.qubit_op, ampx=self.x)  # play qubit pulse
         qua.align(qubit.name, rr.name)  # wait qubit pulse to end

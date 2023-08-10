@@ -393,3 +393,19 @@ def U(cav, qubit, displacement_pulse, qubit_pi_pulse, qubit_pi2_pulse, ampx, del
 def V(cav, qubit, displacement_pulse, qubit_pi_pulse, qubit_pi2_pulse, ampx, delay):
     qua.align()
     qubit.play(qubit_pi2_pulse, phase=0.25)
+
+    ECD(
+        cav,
+        qubit,
+        displacement_pulse,
+        qubit_pi_pulse,
+        ampx,
+        delay,
+        phase=0.25,
+        qubit_phase=0.25,
+    )
+
+    # qubit.play(qubit_pi_pulse, phase=0.75)  # reverse pi flip in ECD
+    # qubit.play(qubit_pi2_pulse, phase=0.75)
+    qubit.play(qubit_pi2_pulse, phase=0.25)  # reverse pi flip in ECD
+    qua.align()

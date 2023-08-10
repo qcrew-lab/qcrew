@@ -45,13 +45,16 @@ class OutAndBack(Experiment):
         Defines pulse sequence to be played inside the experiment loop
         """
 
+        
         qubit, cav, rr = self.modes  # get the modes
-
+        qua.reset_frame(cav.name)
+        qua.reset_phase(qubit.name)
+        qua.reset_phase(cav.name)
         cav.play(self.cav_displacement)  # displace cavity
         qua.align(qubit.name, cav.name)  # align all modes
 
-        #qubit.play(self.qubit_pi)  # put qubit into excited state to start rotation
-        #qua.align(qubit.name, cav.name)
+        qubit.play(self.qubit_pi)  # put qubit into excited state to start rotation
+        qua.align(qubit.name, cav.name)
 
         qua.wait(self.x, cav.name)  # wait for state to rotate
         qua.assign(self.phase, self.y)
@@ -79,13 +82,13 @@ if __name__ == "__main__":
 
     # wait time tau in clock cycle
     x_start = 4
-    x_stop = 750
-    x_step = 12
+    x_stop = 1224
+    x_step = 20
 
     # disp_phase
     y_start = 0
     y_stop = 1
-    y_step = 0.03
+    y_step = 0.01
     parameters = {
         "modes": ["QUBIT", "CAVITY", "RR"],
         "reps": 50000,
@@ -93,8 +96,8 @@ if __name__ == "__main__":
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
         "y_sweep": ((y_start), (y_stop + y_step / 2), (y_step)),
         "qubit_pi": "pi",
-        "qubit_pi_selective": "pi_selective_350",
-        "cav_displacement": "daddy_large_displacement",
+        "qubit_pi_selective": "pi_selective_500",
+        "cav_displacement": "bob_large_displacement",
         "fetch_period": 4,
         "single_shot": False,
         "plot_quad": "I_AVG",

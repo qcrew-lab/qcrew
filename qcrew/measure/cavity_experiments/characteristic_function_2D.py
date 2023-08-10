@@ -106,12 +106,12 @@ class CharacteristicFunction(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-    x_start = -1.4
-    x_stop = 1.4
+    x_start = -1.25
+    x_stop = 1.25
     x_step = 0.05
 
-    y_start = -1.4
-    y_stop = 1.4
+    y_start = -1.25
+    y_stop = 1.25
     y_step = 0.05
 
     parameters = {

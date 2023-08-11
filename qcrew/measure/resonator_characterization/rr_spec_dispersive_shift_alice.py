@@ -53,13 +53,15 @@ if __name__ == "__main__":
     x_step = 0.1e6
 
     parameters = {
-        "modes": ["RR", "CAVB"],
-        "reps": 10000,
-        "wait_time": 400e3,
+        "modes": ["RR", "CAV"],
+        "reps": 300,
+        "wait_time": 10e6,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
         "y_sweep": [1.0, 0.0],
-        "cav_op": "coh4",
+        "cav_op": "cc_2",
         "plot_quad": "Z_AVG",
+        "fetch_period": 4,
+        # "plot_quad": "PHASE_SWEEP",
     }
 
     plot_parameters = {

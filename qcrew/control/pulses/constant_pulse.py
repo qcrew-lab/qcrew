@@ -5,7 +5,7 @@ import numpy as np
 from typing import ClassVar
 from qcrew.control.pulses import integration_weights
 from qcrew.control.pulses.pulse import BASE_PULSE_AMP, Pulse
-
+from qcrew.helpers import logger
 
 class ConstantPulse(Pulse):
     """ """
@@ -56,8 +56,10 @@ class ReadoutPulse(Pulse):
         self.threshold = threshold
         # Saves the integration weights path as parameter if applicable
         try:
+            logger.info("try")
             self.iw_path = integration_weights.path
         except AttributeError:
+            logger.info("error")
             self.iw_path = None
 
         super().__init__(

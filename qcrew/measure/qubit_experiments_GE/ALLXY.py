@@ -66,30 +66,22 @@ class ALLXY(Experiment):
 
         for gate_pair in self.gate_list:
             gate1_rot, gate1_axis, gate2_rot, gate2_axis, _ = gate_pair
-
             qua.reset_frame(qubit.name)
-
             # Play the first gate
             if gate1_rot != "idle":
                 qubit.play(gate1_rot, phase=gate1_axis)
-
             # Play the second gate
             if gate2_rot != "idle":
                 qubit.play(gate2_rot, phase=gate2_axis)
 
             qua.align(qubit.name, rr.name)  # align gates to measurement pulse
-
             rr.measure((self.I, self.Q))  # measure transmitted signal
-
             if self.single_shot:  # assign state to G or E
                 qua.assign(
                     self.state, qua.Cast.to_fixed(self.I < rr.readout_pulse.threshold)
                 )
-
             qua.wait(int(self.wait_time // 4), rr.name)  # wait system reset
-
             qua.align(qubit.name, rr.name)  # align to the next gate pair
-
             self.QUA_stream_results()  # stream variables (I, Q, x, etc)
 
 
@@ -99,10 +91,10 @@ if __name__ == "__main__":
 
     parameters = {
         "modes": ["QUBIT", "RR"],
-        "reps": 5000,
+        "reps": 10000,
         "wait_time": 500e3,
-        "qubit_pi_op": "qubit_gaussian_pi_pulse",
-        "qubit_pi2_op": "qubit_gaussian_pi2_pulse",
+        "qubit_pi_op": "qubit_gaussian_sel_pi_pulse",
+        "qubit_pi2_op": "qubit_gaussian_sel_pi2_pulse",
         "single_shot": False,
         "plot_quad": "I_AVG",
     }

@@ -77,9 +77,9 @@ if __name__ == "__main__":
         "reps": 10_000,
         "wait_time": 500e3,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
-        "qubit_op": "qubit_gaussian_pi2_pulse",
+        "qubit_op": "qubit_gaussian_sel_pi2_pulse",
         "detuning": int(detuning_),
-        "single_shot": False,
+        "single_shot": True,
         # "fit_fn": "ramsey_photon_fit",
         "extra_vars": {
             "phase": macros.ExpVariable(
@@ -90,7 +90,7 @@ if __name__ == "__main__":
                 save_all=True,
             )
         },
-        "plot_quad": "I_AVG",
+        # "plot_quad": "I_AVG",
         # "fetch_period": 2,
     }
 

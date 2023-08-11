@@ -44,8 +44,8 @@ class RRSpecSweepAmplitude(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-    x_start = 40e6
-    x_stop = 60e6
+    x_start = 47e6
+    x_stop = 52e6
     x_step = 0.2e6
 
     parameters = {
@@ -53,7 +53,7 @@ if __name__ == "__main__":
         "reps": 2000,
         "wait_time": 20000,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
-        "y_sweep": [0.1, 0.2, 0.4, 0.6],
+        "y_sweep": [0.2, 0.5],
         "plot_quad": "Z_AVG",
         # "plot_quad": "PHASE_SWEEP",
     }

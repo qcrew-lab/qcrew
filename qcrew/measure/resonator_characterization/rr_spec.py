@@ -53,8 +53,8 @@ if __name__ == "__main__":
         "reps": 1000,
         "wait_time": 100000,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
-        "plot_quad": "PHASE_SWEEP",
-        # "plot_quad": "Z_AVG",
+        # "plot_quad": "PHASE_SWEEP",
+        "plot_quad": "I_AVG",
         # "fit_fn": "gaussian",
     }
 

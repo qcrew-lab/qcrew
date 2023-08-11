@@ -4,7 +4,6 @@ This class serves as a QUA script generator with user-defined parameters.
 """
 
 from typing import ClassVar
-
 from qcrew.control import professor as prof
 from qcrew.measure.experiment import Experiment
 from qm import qua
@@ -13,7 +12,6 @@ from qm import qua
 
 
 class Cavity_Qswitch(Experiment):
-
     name = "cavity_qswitch"
 
     _parameters: ClassVar[set[str]] = Experiment._parameters | {
@@ -23,7 +21,6 @@ class Cavity_Qswitch(Experiment):
     }
 
     def __init__(self, cav_op, qubit_op, fit_fn=None, **other_params):
-
         self.cav_op = cav_op
         self.qubit_op = qubit_op
         self.fit_fn = fit_fn
@@ -36,16 +33,23 @@ class Cavity_Qswitch(Experiment):
         """
         qubit, cav, rr, cav_drive, rr_drive = self.modes  # get the modes
 
-        cav.play(self.cav_op, ampx=1.4)  # play displacement to cavity
+        cav.play(self.cav_op, ampx=1)  # play displacement to cavity
+
         qua.update_frequency(rr_drive.name, self.x)  # update resonator pulse frequency
         qua.wait(int(8), cav.name, qubit.name, rr.name, cav_drive.name, rr_drive.name)
-        qua.align(cav.name, qubit.name, rr.name, cav_drive.name, rr_drive.name)
-        cav_drive.play("constant_cos", duration=200e3, ampx=1.6)
-        rr_drive.play("constant_cos", duration=200e3, ampx=1.3)
-        qua.align(cav.name, qubit.name, rr.name, cav_drive.name, rr_drive.name)
+        qua.align()
+        rr_drive.play("res_drive", duration=self.y, ampx=1.5)
+        cav_drive.play("cav_drive", duration=self.y, ampx=1)
+        qua.align()
         qubit.play(self.qubit_op)  # play qubit pulse
-        qua.align(cav.name, qubit.name, rr.name, cav_drive.name, rr_drive.name)
+        qua.align()
         rr.measure((self.I, self.Q))  # measure transmitted signal
+
+        if self.single_shot:  # assign state to G or E
+            qua.assign(
+                self.state, qua.Cast.to_fixed(self.I < rr.readout_pulse.threshold)
+            )
+
         qua.wait(
             int(self.wait_time // 4), cav.name, qubit.name, rr.name
         )  # wait system reset
@@ -56,34 +60,40 @@ class Cavity_Qswitch(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-
-    drive_freq_start = -67e6
-    drive_freq_stop = -64e6
+    drive_freq_start = 43.1e6
+    drive_freq_stop = 47.1e6
     drive_freq_step = 0.05e6
-
-    plen_start = 50e3  # clock cycle
-    plen_stop = 1e6
-    plen_step = 10e3
+    plen_start = 150e3
+    plen_stop = 300e3  # clock cycles
+    plen_step = 5e3
 
     parameters = {
         "modes": ["QUBIT", "CAV", "RR", "CAV_DRIVE", "RR_DRIVE"],
-        "reps": 500,
-        "wait_time": 0.5e6,
+        "reps": 1000,
+        "wait_time": 10e6,
         "x_sweep": (
             int(drive_freq_start),
             int(drive_freq_stop + drive_freq_step / 2),
             int(drive_freq_step),
         ),
+        "y_sweep": (
+            int(plen_start),
+            int(plen_stop + plen_step / 2),
+            int(plen_step),
+        ),
         # "x_sweep": (int(plen_start), int(plen_stop + plen_step / 2), int(plen_step)),
-        "qubit_op": "pi_selective_1",
-        "cav_op": "constant_cos_cohstate_1",
-        "fetch_period": 3,
+        "qubit_op": "qubit_gaussian_sel_pi_pulse",
+        "cav_op": "coherent_1_long",
+        "single_shot": False,
+        "fetch_period": 4,
+        "plot_quad": "I_AVG",
     }
 
     plot_parameters = {
-        # "ylabel": "drive duration",
+        "ylabel": "drive duration",
         "xlabel": "drive frequency",
-        # "plot_type": "2D",
+        "plot_type": "2D",
+        "plot_err": False,
     }
 
     experiment = Cavity_Qswitch(**parameters)

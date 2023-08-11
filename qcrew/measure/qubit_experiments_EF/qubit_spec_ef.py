@@ -13,20 +13,16 @@ from qm import qua
 
 
 class QubitSpectroscopyEF(Experiment):
-
     name = "qubit_spec_ef"
-
     _parameters: ClassVar[set[str]] = Experiment._parameters | {
         "qubit_ef_op",  # operation used for exciting the qubit
         "fit_fn",  # fit function
     }
 
     def __init__(self, qubit_ef_op, qubit_pi_pulse_name, fit_fn=None, **other_params):
-
         self.qubit_ef_op = qubit_ef_op
         self.fit_fn = fit_fn
         self.qubit_pi_pulse_name = qubit_pi_pulse_name
-
         super().__init__(**other_params)  # Passes other parameters to parent
 
     def QUA_play_pulse_sequence(self):
@@ -52,20 +48,20 @@ class QubitSpectroscopyEF(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-    x_start = -200e6
-    x_stop = -110e6
-    xstep = 0.5e6
+    x_start = 1e6
+    x_stop = 2.5e6
+    xstep = 0.05e6
 
 
     parameters = {
         "modes": ["QUBIT", "QUBIT_EF", "RR"],
-        "reps": 10000,
-        "wait_time": 100e3,
+        "reps": 1000,
+        "wait_time": 500e3,
         "x_sweep": (int(x_start), int(x_stop + xstep / 2), int(xstep)),
-        "qubit_ef_op": "constant_pulse",
-        "qubit_pi_pulse_name": "cc_40",
+        "qubit_ef_op": "gaussian_pulse",
+        "qubit_pi_pulse_name": "qubit_gaussian_short_pi_pulse",
         "fit_fn": "gaussian",
-        "plot_quad": "Z_AVG",
+        "plot_quad": "I_AVG",
     }
 
     plot_parameters = {

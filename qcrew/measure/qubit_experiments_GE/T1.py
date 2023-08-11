@@ -60,7 +60,7 @@ if __name__ == "__main__":
         "reps": 10000,
         "wait_time": 125e3,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
-        "qubit_op": "qubit_gaussian_pi_pulse",
+        "qubit_op": "qubit_gaussian_short_pi_pulse",
         "single_shot": False,
         "plot_quad": "I_AVG",
     }

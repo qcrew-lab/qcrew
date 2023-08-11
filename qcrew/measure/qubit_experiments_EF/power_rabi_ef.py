@@ -14,7 +14,6 @@ from qm import qua
 
 
 class PowerRabiEF(Experiment):
-
     name = "power_rabi_ef"
 
     _parameters: ClassVar[set[str]] = Experiment._parameters | {
@@ -23,7 +22,6 @@ class PowerRabiEF(Experiment):
     }
 
     def __init__(self, qubit_ef_op, qubit_pi_pulse_name, fit_fn="sine", **other_params):
-
         self.qubit_ef_op = qubit_ef_op
         self.fit_fn = fit_fn
         self.qubit_pi_pulse_name = qubit_pi_pulse_name
@@ -35,16 +33,16 @@ class PowerRabiEF(Experiment):
         Defines pulse sequence to be played inside the experiment loop
         """
         qubit, qubit_ef, rr = self.modes  # get the modes
-        
+
         qubit.play(self.qubit_pi_pulse_name)  # g-> e
         qua.align(qubit.name, qubit_ef.name)
-        
         qubit_ef.play(self.qubit_ef_op, ampx=self.x)  # e-> f
-        qua.align(qubit.name, qubit_ef.name)
+        qubit_ef.play(self.qubit_ef_op, ampx=self.x)  # e-> f
+        qubit_ef.play(self.qubit_ef_op, ampx=self.x)  # e-> f
         
+        qua.align(qubit.name, qubit_ef.name)
         # qua.update_frequency(qubit.name, qubit.int_freq)
         qubit.play(self.qubit_pi_pulse_name)  # e->g
-
         qua.align(qubit.name, rr.name)  # wait qubit pulse to end
         rr.measure((self.I, self.Q))  # measure qubit state
         qua.wait(int(self.wait_time // 4), rr.name)  # wait system reset
@@ -55,21 +53,18 @@ class PowerRabiEF(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-
     amp_start = -1.8
     amp_stop = 1.8
     amp_step = 0.05
 
     parameters = {
-        "modes": ["QUBIT","QUBIT_EF","RR"],
-        "reps": 10000,
-        "wait_time": 100e3,
-
-        "qubit_pi_pulse_name": "cc_40",
+        "modes": ["QUBIT", "QUBIT_EF", "RR"],
+        "reps": 1000,
+        "wait_time": 500e3,
+        "qubit_pi_pulse_name": "qubit_gaussian_short_pi_pulse",
         "x_sweep": (amp_start, amp_stop + amp_step / 2, amp_step),
-
-        "qubit_ef_op": "cc_40_ef",
-        "plot_quad": "Z_AVG",
+        "qubit_ef_op": "qubit_ef_gaussian_short_pi_pulse",
+        "plot_quad": "I_AVG",
     }
 
     plot_parameters = {

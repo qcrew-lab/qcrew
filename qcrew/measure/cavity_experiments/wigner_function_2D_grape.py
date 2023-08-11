@@ -2,9 +2,7 @@
 A python class describing a qubit spectroscopy using QM.
 This class serves as a QUA script generator with user-defined parameters.
 """
-
 from typing import ClassVar
-
 from qcrew.control import professor as prof
 from qcrew.measure.experiment import Experiment
 from qm import qua
@@ -12,12 +10,8 @@ import numpy as np
 
 
 # ---------------------------------- Class -------------------------------------
-
-
 class WignerFunction(Experiment):
-
     name = "wigner_function_2D_grape"
-
     _parameters: ClassVar[set[str]] = Experiment._parameters | {
         "cav_op",  # operation for displacing the cavity
         "qubit_op",  # operation used for exciting the qubit
@@ -64,8 +58,8 @@ class WignerFunction(Experiment):
             )
         else:
             # EXAMPLE: 
-            # cav.play(self.cav_op, ampx=(self.x, -self.y, self.y, self.x), phase=0)
-            cav.play(self.cav_op, ampx=(0, -1, 1, 0), phase = 0)
+            cav.play(self.cav_op, ampx=(self.x, self.y, -self.y, self.x), phase=-0.25)
+            # cav.play(self.cav_op, ampx=(0, -1, 1, 0), phase = 0)
 
         '''Measurement'''
       
@@ -73,7 +67,7 @@ class WignerFunction(Experiment):
       
         
         ## single displacement
-        cav.play(self.cav_op, ampx=(self.x, -self.y, self.y, self.x), phase=0.5)        
+        cav.play(self.cav_op, ampx=(self.x, self.y, -self.y, self.x), phase=0.25)        
         qua.align(cav.name, qubit.name)
 
         qubit.play(self.qubit_op)  # play pi/2 pulse around X
@@ -114,23 +108,23 @@ if __name__ == "__main__":
 
     # fock1
     parameters = {
-        "modes": ["QUBIT", "CAVB", "RR"],
-        "reps": 20,
-        "wait_time": 5000e3,
+        "modes": ["QUBIT", "CAV", "RR"],
+        "reps": 200,
+        "wait_time": 10e6,
         "fetch_period": 10,  # time between data fetching rounds in sec
-        "delay": 44,  # pi/chi
+        "delay": 289,  # pi/chi
         "x_sweep": (
             x_start,
             x_stop + x_step / 2,
             x_step,
         ),  # ampitude sweep of the displacement pulses in the ECD
         "y_sweep": (y_start, y_stop + y_step / 2, y_step),
-        "qubit_op": "constant_cosine_pi2_pulse",
-        "cav_op": "gaussian_coh1",
-        "qubit_grape": None,
-        "cav_grape": None,
-        "single_shot": False,
-        "plot_quad": "I_AVG",
+        "qubit_op": "qubit_gaussian_short_pi2_pulse",
+        "cav_op": "coherent_1_long",
+        "qubit_grape": "grape_fock7_pulse",
+        "cav_grape": "grape_fock7_pulse",
+        "single_shot": True,
+        # "plot_quad": "I_AVG",
     }
 
     plot_parameters = {

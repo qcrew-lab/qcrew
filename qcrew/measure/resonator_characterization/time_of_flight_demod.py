@@ -16,7 +16,7 @@ def get_qua_program(rr, qubit):
 
         with qua.for_(n, 0, n < reps, n + 1):
             qua.reset_phase(rr.name)
-            qubit.play("constant_cosine_pi_pulse", ampx=0)
+            qubit.play("qubit_gaussian_pi_pulse", ampx=1)
             qua.align(qubit.name, rr.name)
             qua.measure("readout_pulse" * qua.amp(1.0), rr.name, adc_stream)
             qua.wait(100000, rr.name)

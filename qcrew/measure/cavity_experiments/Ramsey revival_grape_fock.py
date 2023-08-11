@@ -12,9 +12,8 @@ from qm import qua
 # ---------------------------------- Class -------------------------------------
 
 
-class NSplitSpectroscopy(Experiment):
-
-    name = "number_split_spec_grape"
+class Ramseyrevival(Experiment):
+    name = "Ramsey_revival"
 
     _parameters: ClassVar[set[str]] = Experiment._parameters | {
         "cav_op",  # operation for displacing the cavity
@@ -22,25 +21,15 @@ class NSplitSpectroscopy(Experiment):
         "fit_fn",  # fit function
     }
 
-    def __init__(
-        self,
-        qubit_op,
-        cav_op,
-        cav_grape,
-        qubit_grape,
-        cav_amp,
-        fit_fn=None,
-        **other_params
-    ):
-
+    def __init__(self, qubit_op, cav_op, cavity_amp, qubit_grape,cav_grape,  fit_fn=None, **other_params):
         self.qubit_op = qubit_op
         self.cav_op = cav_op
-        self.cav_grape = cav_grape
-        self.qubit_grape = qubit_grape
-        self.cav_amp = cav_amp
+        self.cavity_amp = cavity_amp
         self.fit_fn = fit_fn
-
+        self.qubit_grape = qubit_grape
+        self.cav_grape = cav_grape
         super().__init__(**other_params)  # Passes other parameters to parent
+
 
     def QUA_play_pulse_sequence(self):
         """
@@ -48,51 +37,58 @@ class NSplitSpectroscopy(Experiment):
         """
         qubit, cav, rr = self.modes  # get the modes
 
-        qua.update_frequency(qubit.name, 177.304e6 + 0.0025e6 + 50e3)
-        qubit.play(self.qubit_grape, ampx=1)
-        cav.play(self.cav_grape, ampx=1)
+        qua.update_frequency(qubit.name, qubit.int_freq)
+        
+        qubit.play(self.qubit_grape)
+        cav.play(self.cav_grape)
+        qua.align(cav.name, qubit.name)
 
-        qua.align(cav.name, qubit.name)  # align modes
-
-
-        qua.update_frequency(qubit.name, self.x)  # update qubit pulse frequency
-        qubit.play(self.qubit_op, ampx=1)  # play qubit pulse
+        qua.update_frequency(qubit.name, 174.69e6)
+        qubit.play(self.qubit_op)  # play qubit pulse
+        qua.wait(self.x, qubit.name)
+        qubit.play(self.qubit_op)  # play  qubit pulse with pi/2
         qua.align(qubit.name, rr.name)  # align modes
-
         rr.measure((self.I, self.Q))  # measure transmitted signal
-        qua.align(cav.name, qubit.name, rr.name)
+        if self.single_shot:  # assign state to G or E
+            qua.assign(
+                self.state, qua.Cast.to_fixed(self.I < rr.readout_pulse.threshold)
+            )
         qua.wait(int(self.wait_time // 4), cav.name)  # wait system reset
-
         self.QUA_stream_results()  # stream variables (I, Q, x, etc)
 
 
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-    x_start = 172e6
-    x_stop =  178.5e6
-    x_step = 0.05e6  
-    
+    # x_start = 4
+    # x_stop = 600
+    # x_step = 5
+    x_start = 4
+    x_stop = 200
+    x_step = 1
     parameters = {
         "modes": ["QUBIT", "CAV", "RR"],
-        "reps": 1000,
+        "reps": 200,
         "wait_time": 10e6,
+        "cavity_amp": 1.9,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
-        "qubit_op": "qubit_gaussian_sel_pi_pulse",
-        "cav_op": "gaussian_coh1",
-        "cav_amp": 0,
-        "plot_quad": "I_AVG",
-        "fetch_period": 4,
+        "qubit_op": "qubit_gaussian_short_pi2_pulse",
+        "cav_op": "coherent_1",
         "qubit_grape": "grape_fock1_pulse",
         "cav_grape": "grape_fock1_pulse",
+        # "plot_quad": "I_AVG",
+        "fit_fn": 'gaussian',
+        "fetch_period": 2,
+        "single_shot" : True,
     }
 
     plot_parameters = {
-        "xlabel": "Qubit pulse frequency (Hz)",
-        # "plot_err" : None,
+        "xlabel": "Wait time (clock)",
+        "plot_err": False,
+
     }
 
-    experiment = NSplitSpectroscopy(**parameters)
+    experiment = Ramseyrevival(**parameters)
     experiment.setup_plot(**plot_parameters)
 
     prof.run(experiment)

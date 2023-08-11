@@ -23,7 +23,6 @@ class CavityDisplacementCal(Experiment):
     }
 
     def __init__(self, cav_op, qubit_op, fit_fn="displacement_cal", **other_params):
-
         self.cav_op = cav_op
         self.qubit_op = qubit_op
         self.fit_fn = fit_fn
@@ -40,7 +39,6 @@ class CavityDisplacementCal(Experiment):
         qua.align(cav.name, qubit.name)  # align all modes
         qubit.play(self.qubit_op)  # play qubit pulse
         qua.align(qubit.name, rr.name)  # align all modes
-        # qua.align(cav.name, rr.name)  # align all modes
         rr.measure((self.I, self.Q))  # measure transmitted signal
         qua.wait(int(self.wait_time // 4), cav.name)
 
@@ -55,20 +53,19 @@ class CavityDisplacementCal(Experiment):
 
 if __name__ == "__main__":
     x_start = 0
-    x_stop = 2.0
-    x_step = 0.04
+    x_stop = 2.0 #2.16 # DO NOT CHANGE
+    x_step = 0.08
 
     parameters = {
-        "modes": ["QUBIT", "CAVB", "RR"],
-        "reps": 5000,
-        "wait_time": 2000e3,
+        "modes": ["QUBIT", "CAV", "RR"],
+        "reps": 600,
+        "wait_time": 10e6,
         "x_sweep": (x_start, x_stop + x_step / 2, x_step),
-        # "qubit_op": "gaussian_pi_pulse",
-        "qubit_op": "qubit_gaussian_pi_sel_pulse2",
-        # "cav_op": "grape_disp_pulse",
-        "cav_op": "coherent_1",
-        "plot_quad": "I_AVG",
-        "fetch_period": 2,
+        "qubit_op": "qubit_gaussian_sel_pi_pulse",
+        "cav_op": "coherent_1_long",
+        # "plot_quad": "I_AVG",
+        "single_shot": True,
+        "fetch_period": 4,
     }
 
     plot_parameters = {

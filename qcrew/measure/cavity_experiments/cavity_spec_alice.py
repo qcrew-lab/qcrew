@@ -37,9 +37,7 @@ class CavitySpectroscopy(Experiment):
         qua.update_frequency(cav.name, self.x)  # update resonator pulse frequency
         cav.play(self.cav_op, ampx=1)  # play displacement to cavity
         qua.align(cav.name, qubit.name)  # align all modes
-        qubit.play(
-            self.qubit_op,
-        )  # play qubit pulse
+        qubit.play(self.qubit_op)  # play qubit pulse
         qua.align(qubit.name, rr.name)  # align all modes
         rr.measure((self.I, self.Q))  # measure transmitted signal
         qua.wait(int(self.wait_time // 4), cav.name)  # wait system reset
@@ -51,16 +49,25 @@ class CavitySpectroscopy(Experiment):
 
 
 if __name__ == "__main__":
-    x_start = 94.5e6
-    x_stop = 95e6
-    x_step = 0.0002e6
+    # x_start = 94.5e6
+    # x_stop = 95e6
+    # x_step = 0.0002e6
+
+    x_start = 89.2e6
+    x_stop = 89.8e6
+    x_step = 0.001e6
+
+    # x_start = 88e6
+    # x_stop = 91e6
+    # x_step = 0.01e6
+
     parameters = {
         "modes": ["QUBIT", "CAV", "RR"],
         "reps": 5000,
         "wait_time": 500e3,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
-        "qubit_op": "qubit_gaussian_pi_sel_pulse2",
-        "cav_op": "coherent1",
+        "qubit_op": "qubit_gaussian_sel_pi_pulse",
+        "cav_op": "gaussian_pulse",
         "fit_fn": "gaussian",
         "plot_quad": "I_AVG",
     }

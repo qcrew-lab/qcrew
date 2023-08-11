@@ -42,9 +42,9 @@ class WignerFunction(Experiment):
 
         qua.reset_frame(cav.name)
 
-        cav.play(self.cav_op, ampx=0.0, phase=0.0)       
+        # cav.play(self.cav_op, ampx=0.0, phase=0.0)       
 
-        cav.play(self.cav_op, ampx=self.x, phase=0)  # displacement in I direction
+        cav.play(self.cav_op, ampx=self.x, phase=0.25)  # displacement in I direction
         qua.align(cav.name, qubit.name)
         qubit.play(self.qubit_op)  # play pi/2 pulse around X
         qua.wait(
@@ -78,21 +78,22 @@ class WignerFunction(Experiment):
 if __name__ == "__main__":
     x_start = -2
     x_stop = 2
-    x_step = 0.2
+    x_step = 0.1
 
     parameters = {
-        "modes": ["QUBIT", "CAVB", "RR"],
-        "reps": 5000,
-        "wait_time": 1000e3,
-        "fetch_period": 4,  # time between data fetching rounds in sec
-        "delay": 150,  # pi/chi
+        "modes": ["QUBIT", "CAV", "RR"],
+        "reps": 600,
+        "wait_time": 10e6,
+        "fetch_period": 2,  # time between data fetching rounds in sec
+        "delay": 288,  # pi/chi
         "x_sweep": (
             x_start,
             x_stop + x_step / 2,
             x_step,
         ),  # ampitude sweep of the displacement pulses in the ECD
-        "qubit_op": "gaussian_pi2_pulse",
-        "cav_op": "gaussian_coh1_long",
+        "qubit_op": "qubit_gaussian_short_pi2_pulse",
+        "cav_op": "coherent_1_long",
+        "fit_fn": 'gaussian',
         "single_shot": False,
         "plot_quad": "I_AVG",
     }

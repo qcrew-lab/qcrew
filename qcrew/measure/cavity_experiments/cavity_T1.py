@@ -4,7 +4,6 @@ This class serves as a QUA script generator with user-defined parameters.
 """
 
 from typing import ClassVar
-
 from qcrew.control import professor as prof
 from qcrew.measure.experiment import Experiment
 from qm import qua
@@ -49,19 +48,19 @@ class CavityT1(Experiment):
 
 if __name__ == "__main__":
     x_start = 16
-    x_stop = 5000e3
-    x_step = 100e3
+    x_stop = 4000e3
+    x_step = 20e3
     parameters = {
         "modes": ["QUBIT", "CAV", "RR"],
-        "reps": 1000,
-        "wait_time": 3000e3,
+        "reps": 10000,
+        "wait_time": 10e6,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
-        "qubit_op": "qubit_gaussian_pi_sel_pulse2",
-        "cav_op": "coherent_1",
+        "qubit_op": "qubit_gaussian_sel_pi_pulse",
+        "cav_op": "coherent_3_long",
         "plot_quad": "I_AVG",
         "fit_fn": None,
         "fit_fn": "cohstate_decay",
-        "fetch_period": 2,
+        "fetch_period": 8,
     }
 
     plot_parameters = {

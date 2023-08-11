@@ -42,11 +42,12 @@ class WignerFunction(Experiment):
 
         qua.reset_frame(cav.name)
 
-        cav.play(self.cav_op, ampx=1, phase=0)
+        # State preparation template right below
+        # cav.play(self.cav_op, ampx=(self.x, self.y, -self.y, self.x), phase=-0.25)
+        cav.play(self.cav_op, ampx=(-1, 0, 0, -1), phase=-0.25)
 
-        # cav.play(self.cav_op, ampx=self.x, phase=0)  # displacement in I direction
-        # cav.play(self.cav_op, ampx=self.y, phase=0.25)  # displacement in Q direction
-        cav.play(self.cav_op, ampx=(self.x, -self.y, self.y, self.x), phase=0.5)
+        cav.play(self.cav_op, ampx=(self.x, self.y, -self.y, self.x), phase=0.25)
+        
         qua.align(cav.name, qubit.name)
         qubit.play(self.qubit_op)  # play pi/2 pulse around X
         qua.wait(
@@ -73,19 +74,19 @@ class WignerFunction(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-    x_start = -2
-    x_stop = 2
+    x_start = -1.8
+    x_stop = 1.8
     x_step = 0.2
 
-    y_start = -2
-    y_stop = 2
+    y_start = -1.8
+    y_stop = 1.8
     y_step = 0.2
 
     parameters = {
-        "modes": ["QUBIT", "CAVB", "RR"],
+        "modes": ["QUBIT", "CAV", "RR"],
         "reps": 1000,
-        "wait_time": 6000e3,
-        "delay": 700, #750/8,  # pi/chi
+        "wait_time": 7e6,
+        "delay": 294, #750/8,  # pi/chi
         "x_sweep": (
             x_start,
             x_stop + x_step / 2,
@@ -93,11 +94,11 @@ if __name__ == "__main__":
         ),  # ampitude sweep of the displacement pulses in the ECD
         "y_sweep": (y_start, y_stop + y_step / 2, y_step),
         # "y_sweep": (-2.0, 0.0),
-        "qubit_op": "constant_cosine_pi2_pulse",
-        "cav_op": "gaussian_coh1",
-        "single_shot": False,
-        "plot_quad":"I_AVG",
-        "fetch_period": 60, # time between data fetching rounds in sec
+        "qubit_op": "qubit_gaussian_short_pi2_pulse",
+        "cav_op": "coherent_1_long",
+        "single_shot": True,
+        # "plot_quad":"I_AVG",
+        "fetch_period": 10, # time between data fetching rounds in sec
     }
 
     plot_parameters = {

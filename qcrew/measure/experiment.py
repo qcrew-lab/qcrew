@@ -37,7 +37,6 @@ class Experiment(Parametrized):
         plot_quad=None,
         extra_vars: dict[str, macros.ExpVariable] = None,
     ):
-
         # List of modes used in the experiment. String values will be replaced by
         # corresponding modes by the professor module.
         self.modes = modes
@@ -280,7 +279,6 @@ class Experiment(Parametrized):
         self._configure_sweeps(["x", "y"])
 
         with qua.program() as qua_sequence:
-
             # Initial variable and stream declarations
             self.variables = macros.declare_variables(self.variables)
             self.variables = macros.declare_streams(self.variables)
@@ -352,12 +350,10 @@ class Experiment(Parametrized):
             #     np.arctan(partial_results["Q"] / partial_results["I"])
             #     - 2 * np.pi * freqs * 300e-9 * 8
             # )
+            
             phase = np.angle(
                 np.exp(-1j * 2 * np.pi * freqs * cable_delay_guess)
-                * (
-                    partial_results["I_AVG"]
-                    + 1j * partial_results["Q_AVG"]
-                )
+                * (partial_results["I_AVG"] + 1j * partial_results["Q_AVG"])
             )
 
             processed_parital_results = np.unwrap(phase)
@@ -384,7 +380,6 @@ class Experiment(Parametrized):
 
         dependent_data = []
         for tag in dep_tags:
-
             processed_data = self.preprocess_dependent_data(
                 tag, independent_data, partial_results
             )

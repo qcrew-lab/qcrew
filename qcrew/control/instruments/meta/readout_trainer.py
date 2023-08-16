@@ -318,18 +318,18 @@ class ReadoutTrainer(Parametrized):
         }
         data_hist_g = {"xs": (bins_g[1:] + bins_g[:-1]) / 2, "ys": n_g}
 
-        popt = self._fit_hist_double_gaussian(guess, data_hist_g)
-        print(popt)
-        a0 = popt[2]
-        a1 = popt[3]
-        e_population = a1 / (a1 + a0)
-        print("Excited state population: ", e_population)
+        # popt = self._fit_hist_double_gaussian(guess, data_hist_g)
+        # print(popt)
+        # a0 = popt[2]
+        # a1 = popt[3]
+        # e_population = a1 / (a1 + a0)
+        # print("Excited state population: ", e_population)
 
-        ax.plot(bins_g, [double_gaussian(x, *popt) for x in bins_g])
+        # ax.plot(bins_g, [double_gaussian(x, *popt) for x in bins_g])
 
-        ax.set_title("Projection of the IQ blobs onto the I axis")
-        ax.set_ylabel("counts")
-        ax.set_xlabel("I")
+        # ax.set_title("Projection of the IQ blobs onto the I axis")
+        # ax.set_ylabel("counts")
+        # ax.set_xlabel("I")
         ax.legend()
         plt.show()
 
@@ -342,30 +342,30 @@ class ReadoutTrainer(Parametrized):
         }
 
         # Plot manual threshold selectiveness on |g>
-        fig, ax = plt.subplots(figsize=(7, 5))
-        ax.set_title("Is qubit really in ground state if state = 0?")
-        ax.set_ylabel("Certainty")
-        ax.set_xlabel("Threshold")
-        popt
-        p_pass_if_g = lambda t: 0.5 * special.erfc((t - popt[0]) / 2 ** 0.5 / popt[-1])
-        p_pass_if_e = lambda t: 0.5 * special.erfc((t - popt[1]) / 2 ** 0.5 / popt[-1])
-        p_g = popt[2] / (popt[2] + popt[3])
-        p_e = popt[3] / (popt[2] + popt[3])
-        certainty = (
-            lambda t: p_pass_if_g(t)
-            * p_g
-            / (p_pass_if_e(t) * p_e + p_pass_if_g(t) * p_g)
-        )
-        t_rng = np.linspace(bins_g[0], bins_g[-1], 1000)
-        ax.plot(t_rng, [certainty(t) for t in t_rng])
-        ax.plot(
-            [threshold, threshold],
-            [0.4, 1.1],
-            linestyle="--",
-            label="calculated threshold",
-        )
-        ax.legend()
-        plt.show()
+        # fig, ax = plt.subplots(figsize=(7, 5))
+        # ax.set_title("Is qubit really in ground state if state = 0?")
+        # ax.set_ylabel("Certainty")
+        # ax.set_xlabel("Threshold")
+        # popt
+        # p_pass_if_g = lambda t: 0.5 * special.erfc((t - popt[0]) / 2 ** 0.5 / popt[-1])
+        # p_pass_if_e = lambda t: 0.5 * special.erfc((t - popt[1]) / 2 ** 0.5 / popt[-1])
+        # p_g = popt[2] / (popt[2] + popt[3])
+        # p_e = popt[3] / (popt[2] + popt[3])
+        # certainty = (
+        #     lambda t: p_pass_if_g(t)
+        #     * p_g
+        #     / (p_pass_if_e(t) * p_e + p_pass_if_g(t) * p_g)
+        # )
+        # t_rng = np.linspace(bins_g[0], bins_g[-1], 1000)
+        # ax.plot(t_rng, [certainty(t) for t in t_rng])
+        # ax.plot(
+        #     [threshold, threshold],
+        #     [0.4, 1.1],
+        #     linestyle="--",
+        #     label="calculated threshold",
+        # )
+        # ax.legend()
+        # plt.show()
 
         return threshold, data
 

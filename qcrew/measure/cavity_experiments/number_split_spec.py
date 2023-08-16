@@ -10,6 +10,7 @@ from qcrew.measure.experiment import Experiment
 from qm import qua
 from qcrew.control import Stagehand
 from qcrew.control.pulses.numerical_pulse import NumericalPulse
+
 # ---------------------------------- Class -------------------------------------
 
 
@@ -37,24 +38,6 @@ class NSplitSpectroscopy(Experiment):
         Defines pulse sequence to be played inside the experiment loop
         """
         qubit, cav, rr, flux = self.modes  # get the modes
-        # qua.reset_frame(cav.name)
-        qua.update_frequency(qubit.name, qubit.int_freq)  # update qubit pulse frequency
-        # cav.play(self.cav_op, ampx=self.cav_amp)  # prepare cavity state
-        # prepare fock state in cav
-
-        # fock state
-        with qua.if_(self.y):
-            if 0: #normal pulse
-                qubit.play("gaussian_pi")  # play pi qubit pulse
-                qua.align(qubit.name, flux.name)
-                flux.play(f"predist_constcos_10ns_64ns", ampx=-0.16)
-                qua.wait(int((470 + 20000) // 4))
-            if 1: #pre       
-                qua.wait(115, qubit.name)
-                qubit.play(self.qubit_op)  # play pi qubit pulse
-                flux.play(f"castle_IIR_230727_72", ampx=0.51)  # ns
-                qua.wait(int((1100 + 24) // 4), rr.name, qubit.name)  # cc
-                rr.measure((self.I, self.Q))  # measure qubit state
 
 
         # number splitting
@@ -76,42 +59,42 @@ class NSplitSpectroscopy(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-    x_start = -90e6
-    x_stop = -75e6
-    x_step = 0.05e6
+    x_start = -60e6
+    x_stop = -48e6
+    x_step = 0.1e6
 
     parameters = {
         "modes": ["QUBIT", "CAVITY", "RR", "FLUX"],
-        "reps": 500,
-        "wait_time": 1.25e6,
+        "reps": 20000,
+        "wait_time": 1.6e6,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
         "y_sweep": (False, True),
-        "qubit_op_measure": "gaussian_pi_280",
+        "qubit_op_measure": "gaussian_pi_320",
         # "cav_op": "const_cohstate_1",
-        "qubit_op": "qctrl_fock_1",
-        "cav_op": "qctrl_fock_1",
-        "single_shot": True,
+        "qubit_op": "-",
+        "cav_op": "const_cohstate_1",
+        # "single_shot": True,
         "fit_fn": "gaussian",
         "fetch_period": 8,
-        # "plot_quad": "I_AVG",
+        "plot_quad": "I_AVG",
     }
 
     plot_parameters = {
         "xlabel": "Qubit pulse frequency (Hz)",
     }
-    flux_len_list = [72]
-    
-    with Stagehand() as stage:
-        flux = stage.FLUX
-        for flux_len in flux_len_list:
-            flux.operations = {
-                f"castle_IIR_230727_{flux_len}": NumericalPulse(
-                    path=f"C:/Users/qcrew/Desktop/qcrew/qcrew/config/fast_flux_pulse/castle_max/castle_IIR_230727_{flux_len}ns_0dot06.npz",
-                    I_quad="I_quad",
-                    Q_quad="Q_quad",
-                    ampx=1,
-                ),
-            }
+    # flux_len_list = [72]
+
+    # with Stagehand() as stage:
+    #     flux = stage.FLUX
+    #     for flux_len in flux_len_list:
+    #         flux.operations = {
+    #             f"castle_IIR_230727_{flux_len}": NumericalPulse(
+    #                 path=f"C:/Users/qcrew/Desktop/qcrew/qcrew/config/fast_flux_pulse/castle_max/castle_IIR_230727_{flux_len}ns_0dot06.npz",
+    #                 I_quad="I_quad",
+    #                 Q_quad="Q_quad",
+    #                 ampx=1,
+    #             ),
+    #         }
 
     experiment = NSplitSpectroscopy(**parameters)
     experiment.setup_plot(**plot_parameters)

@@ -100,15 +100,16 @@ def run(experiment: Experiment) -> None:
     with Stagehand() as stage:
 
         ###################        LINK EXPERIMENT AND MODES        ####################
-
+        print(experiment.modes)
         for index, mode_name in enumerate(experiment.modes):
-            try:
-                mode = getattr(stage, mode_name)
-            except AttributeError:
-                logger.error(f"'{mode_name}' does not exist on stage")
-                raise
-            else:
-                experiment.modes[index] = mode
+            if type(mode_name) is str:
+                try:
+                    mode = getattr(stage, mode_name)
+                except AttributeError:
+                    logger.error(f"'{mode_name}' does not exist on stage")
+                    raise
+                else:
+                    experiment.modes[index] = mode
 
         #########################        RUN EXPERIMENT        #########################
 

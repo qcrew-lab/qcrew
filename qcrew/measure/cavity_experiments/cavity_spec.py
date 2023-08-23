@@ -61,19 +61,19 @@ if __name__ == "__main__":
     # x_start = -51.5e6
     # x_stop = -49e6
     # x_step = 0.05e6
-    x_start = -52e6
-    x_stop = -48.0e6
-    x_step = 0.025e6
+    x_start = -50e6
+    x_stop = -48.5e6
+    x_step = 0.02e6
     parameters = {
         "modes": ["QUBIT", "CAVITY", "RR", "FLUX"],
         "reps": 10000,
         "wait_time": 600e3,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
-        "qubit_op": "gaussian_pi_320",
+        "qubit_op": "gaussian_pi_160",
         "plot_quad": "Z_AVG",
         "fetch_period": 1,
         # "single_shot": True,
-        "cav_op": "cohstate_1",
+        "cav_op": "spectroscopy_pulse",
     }
 
     plot_parameters = {

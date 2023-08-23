@@ -67,7 +67,7 @@ if __name__ == "__main__":
 
     x_start = 4
     x_stop = 700
-    x_step = 6
+    x_step = 10
     detuning_ = 2e6  # 1.12e6
 
     parameters = {
@@ -78,7 +78,7 @@ if __name__ == "__main__":
         "qubit_op": "gaussian_pi2",
         "detuning": int(detuning_),
         # "single_shot": True,
-        "plot_quad": "I_AVG",
+        "plot_quad": "Z_AVG",
         "extra_vars": {
             "phase": macros.ExpVariable(
                 var_type=qua.fixed,

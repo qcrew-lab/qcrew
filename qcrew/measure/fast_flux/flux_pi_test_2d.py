@@ -36,8 +36,8 @@ class FLUXPI2D(Experiment):
         Defines pulse sequence to be played inside the experiment loop
         """
         qubit, rr, flux = self.modes  # get the modes
-        # for len in self.internal_sweep:
-        if 0:
+        for len in self.internal_sweep:
+        if 1:
             flux.play(
                 "predist_constcos_10ns_rpad_10000ns_396ns", ampx=self.x
             )  # to make off resonance
@@ -45,7 +45,7 @@ class FLUXPI2D(Experiment):
             qubit.play(self.qubit_op)  # play pi qubit pulse
             qua.wait(self.y, rr.name)
             qua.wait(int((396) // 4), rr.name)
-        if 1:  # castle
+        if 0:  # castle
             flux.play(self.flux_pulse, duration=99, ampx=0.265)  # to make off resonance
             qua.wait(int((120) // 4), rr.name, qubit.name)  # ns
             qubit.play(self.qubit_op)  # play pi qubit pulse -109e6

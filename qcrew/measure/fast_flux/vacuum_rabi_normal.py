@@ -38,7 +38,9 @@ class vacuum_rabi_normal(Experiment):
         qubit.play(self.qubit_op)  # play pi qubit pulse
         qua.align(qubit.name, flux.name)  # wait qubit pulse to end
         flux.play(self.flux_pulse, duration=self.y, ampx=self.x)  #
+        flux.play(self.flux_pulse, duration=self.y, ampx=-self.x)  # reset
         qua.align(flux.name, rr.name)  # wait for partial qubit decay
+        qua.wait(100, rr.name)
         rr.measure((self.I, self.Q))  # measure qubit state
         if self.single_shot:  # assign state to G or E
             qua.assign(
@@ -53,26 +55,25 @@ class vacuum_rabi_normal(Experiment):
 
 if __name__ == "__main__":
 
-    y_start = 10#10
-    y_stop = 100 #100
+    y_start = 1  # 10
+    y_stop = 75  # 100
     y_step = 2
 
-    x_start = -0.5
-    x_stop = -0.1
-    x_step = 0.002
+    x_start = 0.05
+    x_stop = 0.18
+    x_step = 0.004
 
     parameters = {
         "modes": ["QUBIT", "RR", "FLUX"],
         "reps": 1000,
-        "wait_time": 100000,
+        "wait_time": 700e3,
         "x_sweep": ((x_start), (x_stop + x_step / 2), (x_step)),
         "y_sweep": (int(y_start), int(y_stop + y_step / 2), int(y_step)),
         "qubit_op": "gaussian_pi",
         "flux_pulse": "constant_pulse",
-        "single_shot": False,
+        # "single_shot": False,
         "plot_quad": "I_AVG",
-        "fetch_period": 5,
-         
+        "fetch_period": 20,
     }
 
     plot_parameters = {

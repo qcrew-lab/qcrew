@@ -14,7 +14,7 @@ from qm import qua
 
 class Wigner1D(Experiment):
 
-    name = "wigner_1d_flux"
+    name = "wigner_1d_ff"
 
     _parameters: ClassVar[set[str]] = Experiment._parameters | {
         "fit_fn",  # fit function
@@ -50,13 +50,11 @@ class Wigner1D(Experiment):
 
         qua.reset_frame(cav.name)
 
-        if 1:  # castle predistorted
-            flux.play(
-                "castle_IIR_230727_76", ampx=0.574
-            )  # to make off resonance
-            qua.wait(int((650) // 4), rr.name, qubit.name)  # ns
-            qubit.play(self.qubit_op)  # play pi qubit pulse -109e6
-            qua.wait(int((250) // 4), rr.name, qubit.name)
+        if 1:  # prepare fock 1
+            qubit.play(self.qubit_op)  # play pi qubit pulse
+            qua.align(qubit.name, flux.name)
+            flux.play("reset_IIR_superf_52", ampx=self.x)  # ns
+            qua.align()
 
         qua.align(cav.name, qubit.name)
         # Wigner 1d
@@ -76,7 +74,10 @@ class Wigner1D(Experiment):
         qubit.play(self.qubit_op_wigner)  # play pi/2 pulse around X
 
         # Measure cavity state
-        qua.align(qubit.name, rr.name)  # align measurement
+        #readout pulse
+        qua.align()  # align modes
+        flux.play("detuned_readout", ampx=-0.5)
+        qua.wait(int((25) // 4), cav.name, qubit.name, rr.name)
         rr.measure((self.I, self.Q))  # measure transmitted signal
 
         # wait system reset
@@ -105,14 +106,14 @@ if __name__ == "__main__":
         "wait_time": 1.25e6,  # 700e3 #ns
         "x_sweep": (x_start, x_stop + x_step / 2, x_step),
         "cut": 0.0,
-        "qubit_op": "qctrl_fock_0p1",
+        "qubit_op": "gaussian_pi",
         "cav_op": "qctrl_fock_0p1",
-        "qubit_op_wigner": "gaussian_pi2",
+        "qubit_op_wigner": "gaussian_pi2_short",
         "cav_op_wigner": "const_cohstate_1",
         # "single_shot": True,
         "plot_quad": "I_AVG",
         "fit_fn": "gaussian",
-        "delay": 250,  # pi/chi 208 ns
+        "delay": 84,  # pi/chi 208 ns
         "fetch_period": 5,
     }
 

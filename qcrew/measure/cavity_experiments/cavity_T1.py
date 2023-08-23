@@ -34,15 +34,24 @@ class CavityT1(Experiment):
         """
         Defines pulse sequence to be played inside the experiment loop
         """
-        qubit, cav, rr = self.modes  # get the modes
+        qubit, cav, rr, flux = self.modes  # get the modes
 
         cav.play(self.cav_op, ampx=1.8)  # play displacement to cavity
+        cav.play(self.cav_op, ampx=1.3)  # play displacement to cavity
         qua.wait(self.x, cav.name)  # wait relaxation
         qua.align(cav.name, qubit.name)  # align all modes
         qubit.play(self.qubit_op)  # play qubit pulse
-        qua.align(qubit.name, rr.name)  # align all modes
+
+        qua.align(qubit.name, flux.name, rr.name)  # align measurement
+        # flux.play("square_2200ns_ApBpC", ampx=-0.0)
+        # qua.wait(50, rr.name)
+
         rr.measure((self.I, self.Q))  # measure transmitted signal
-        qua.wait(int(self.wait_time // 4), cav.name)  # wait system reset
+        qua.wait(int(self.wait_time // 4), cav.name)
+
+        # qua.align(qubit.name, rr.name)  # align all modes
+        # rr.measure((self.I, self.Q))  # measure transmitted signal
+        # qua.wait(int(self.wait_time // 4), cav.name)  # wait system reset
 
         if self.single_shot:  # assign state to G or E
             qua.assign(
@@ -57,17 +66,17 @@ class CavityT1(Experiment):
 if __name__ == "__main__":
 
     x_start = 10
-    x_stop = 500e3
-    x_step = 10e3
+    x_stop = 200e3
+    x_step = 5e3
     parameters = {
-        "modes": ["QUBIT", "CAVITY", "RR"],
+        "modes": ["QUBIT", "CAVITY", "RR", "FLUX"],
         "reps": 50000,
-        "wait_time": 1000e3,
+        "wait_time": 0.4e6,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
-        "qubit_op": "gaussian_pi_560",
-        "cav_op": "const_cohstate_2",
-        "fetch_period": 20,
-        "single_shot": True,
+        "qubit_op": "gaussian_pi_160",
+        "cav_op": "cohstate_1",
+        "fetch_period": 10,
+        # "single_shot": True,
     }
 
     plot_parameters = {

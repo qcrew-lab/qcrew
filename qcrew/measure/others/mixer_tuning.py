@@ -63,7 +63,7 @@ if __name__ == "__main__":
             "plot": False,
         }
 
-        # mixer_tuner.tune_sb(mode=mode, method="BF", **bf_params_lo)
+        mixer_tuner.tune_sb(mode=mode, method="BF", **bf_params_sb)
 
         # user Nelder-Mead (NM) minimizer
-        mixer_tuner.tune_sb(mode=mode, method="NM")
+        # mixer_tuner.tune_sb(mode=mode, method="NM")

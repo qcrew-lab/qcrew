@@ -5,7 +5,7 @@ from qcrew.control import Stagehand
 from qm import qua
 import numpy as np
 
-reps = 5000
+reps = 3000
 
 
 def get_qua_program(rr):
@@ -51,7 +51,7 @@ if __name__ == "__main__":
         axes[0].plot(results / 2 ** 12)
         axes[1].plot(freqs[5:] / 1e6, amps[5:])
         r = results / 2 ** 12
-        # np.savez("ZX8512G_biastee_10us_step_10kreps_DCblock", r)
+        np.savez("6_dot92991_GHZ_RR_20230822", r)
 
         # Retrieving and plotting FFT data.
         plt.show()

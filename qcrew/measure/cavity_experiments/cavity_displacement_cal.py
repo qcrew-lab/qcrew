@@ -35,16 +35,15 @@ class CavityDisplacementCal(Experiment):
         Defines pulse sequence to be played inside the experiment loop
         """
         qubit, cav, rr, flux = self.modes  # get the modes
-        
+
         cav.play(self.cav_op, ampx=self.x)  # play displacement to cavity
         qua.align(cav.name, qubit.name)  # align all modes
         qubit.play(self.qubit_op)  # play qubit pulse
         # qua.align()
 
-
         qua.align(qubit.name, flux.name, rr.name)  # align measurement
-        flux.play("detuned_readout", ampx=-0.5)
-        qua.wait(25, rr.name)
+        flux.play("square_2200ns_ApBpC", ampx=self.y)
+        qua.wait(50, rr.name)
 
         rr.measure((self.I, self.Q))  # measure transmitted signal
         qua.wait(int(self.wait_time // 4), cav.name)
@@ -63,17 +62,17 @@ class CavityDisplacementCal(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-    x_start = 0.01
-    x_stop = 1.8
-    x_step = 0.08
+    x_start = 0.0
+    x_stop = 1.81
+    x_step = 0.1
     parameters = {
         "modes": ["QUBIT", "CAVITY", "RR", "FLUX"],
-        "reps": 20000,
-        "wait_time": 1.2e6,
+        "reps": 100000,
+        "wait_time": 0.6e6,
         "x_sweep": (x_start, x_stop + x_step / 2, x_step),
-        # "y_sweep": (0.0, -0.5),
-        "qubit_op": "gaussian_pi_320",
-        "cav_op": "const_cohstate_1",
+        "y_sweep": (-0.0,),
+        "qubit_op": "gaussian_pi_160",
+        "cav_op": "cohstate_1",
         # "fetch_period": 2,
         # "single_shot": True,
         "plot_quad": "I_AVG",

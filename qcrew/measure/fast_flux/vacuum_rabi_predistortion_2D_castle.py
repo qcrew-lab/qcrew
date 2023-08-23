@@ -1,0 +1,133 @@
+"""
+A python class describing a vacuum rabi measurement using QM.
+This class serves as a QUA script generator with user-defined parameters.
+"""
+
+from typing import ClassVar
+
+from qcrew.control import professor as prof
+from qcrew.measure.experiment import Experiment
+from qcrew.control import Stagehand
+from qcrew.control.pulses.numerical_pulse import NumericalPulse
+from qcrew.analyze import fit
+from qm import qua
+
+import numpy as np
+import h5py
+
+# ---------------------------------- Class -------------------------------------
+# delete this comment
+
+
+class VacuumRabi(Experiment):
+
+    name = "vacuum_rabi_castle"
+
+    _parameters: ClassVar[set[str]] = Experiment._parameters | {
+        "qubit_op",  # operation used for exciting the qubit
+        "fit_fn",  # fit function
+    }
+
+    def __init__(
+        self,
+        qubit_op,
+        flux_len,
+        internal_sweep,
+        flux_scaling,
+        qubit_delay,  # ns
+        rr_delay,  # ns
+        fit_fn="",
+        **other_params,
+    ):
+        self.qubit_op = qubit_op  # pi pulse
+        self.fit_fn = fit_fn
+        self.flux_len = flux_len
+        self.internal_sweep = internal_sweep
+        self.flux_scaling = flux_scaling
+        self.rr_delay = rr_delay
+        self.qubit_delay = qubit_delay
+        super().__init__(**other_params)  # Passes other parameters to parent
+
+    def QUA_play_pulse_sequence(self):
+        """
+        Defines pulse sequence to be played inside the experiment loop
+        """
+        qubit, rr, flux = self.modes  # get the modes
+        for flux_amp in self.internal_sweep:
+            if 0:
+                qua.wait(115, qubit.name)
+                qubit.play(self.qubit_op)  # play pi qubit pulse
+                if abs(flux_amp) < 1e-3:
+                    flux_amp = 0
+                amp_str = f"{flux_amp:.2f}".replace("-", "m").replace(".", "dot")
+                flux.play(f"castle_IIR_230727_{amp_str}", ampx=self.flux_scaling)  # ns
+                qua.wait(int((1100 + 24) // 4), rr.name, qubit.name)  # cc
+            if 1:
+                if abs(flux_amp) < 1e-3:
+                    flux_amp = 0
+                amp_str = f"{flux_amp:.2f}".replace("-", "m").replace(".", "dot")
+                flux.play(
+                    f"castle_IIR_230727_{amp_str}", ampx=self.flux_scaling
+                )  # to make off resonance
+                qua.wait(int((self.qubit_delay) // 4), qubit.name)  # ns
+                qubit.play(self.qubit_op)  # play pi qubit pulse -109e6
+                qua.wait(int((self.rr_delay) // 4), rr.name)
+
+                rr.measure((self.I, self.Q))  # measure qubit state
+                if self.single_shot:  # assign state to G or E7
+                    qua.assign(
+                        self.state,
+                        qua.Cast.to_fixed(self.I < rr.readout_pulse.threshold),
+                    )
+                qua.wait(int(self.wait_time // 4))  # wait system reset
+                self.QUA_stream_results()  # stream variables (I, Q, x, etc)
+                qua.align()
+
+
+# -------------------------------- Execution -----------------------------------
+
+if __name__ == "__main__":
+
+    flux_scaling = 0.2955 #0.5283
+    flux_amp_list = np.arange(-0.2, 0.2, 0.02)
+    flux_len_list = np.arange(52, 401, 8)
+
+    plot_parameters = {
+        "xlabel": "--",
+        # "plot_type": "2D",
+    }
+
+    for flux_len in flux_len_list:
+        with Stagehand() as stage:
+            flux = stage.FLUX
+            for amp in flux_amp_list:
+                if abs(amp) < 1e-3:
+                    amp = 0
+                amp_str = f"{amp:.2f}".replace("-", "m").replace(".", "dot")
+                flux.operations = {
+                    f"castle_IIR_230727_{amp_str}": NumericalPulse(
+                        path=f"C:/Users/qcrew/Desktop/qcrew/qcrew/config/fast_flux_pulse/castle_IIR_2/castle_IIR_230727_{flux_len}ns_{amp_str}_2250.npz",
+                        I_quad="I_quad",
+                        Q_quad="Q_quad",
+                        ampx=1,
+                    ),
+                }
+
+        parameters = {
+            "modes": ["QUBIT", "RR", "FLUX"],
+            "reps": 2000,
+            "wait_time": 1.25e6,
+            "qubit_op": "gaussian_pi",
+            # "single_shot": True,
+            "plot_quad": "I_AVG",
+            "fetch_period": 20,
+            "flux_len": flux_len,
+            "internal_sweep": flux_amp_list,
+            "flux_scaling": flux_scaling,
+            "qubit_delay": 200,  # ns
+            "rr_delay": 920,  # ns  
+        }
+
+        experiment = VacuumRabi(**parameters)
+        experiment.setup_plot(**plot_parameters)
+        prof.run(experiment)

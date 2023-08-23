@@ -31,9 +31,13 @@ class RRSpectroscopy(Experiment):
         """
         Defines pulse sequence to be played inside the experiment loop
         """
-        (rr,) = self.modes  # get the modes
+        (
+            rr,
+            flux,
+        ) = self.modes  # get the modeszance
+        flux.play("square_1500ns_ApBpCpDpF", ampx=self.y)
+        qua.wait(int((1600) // 4), rr.name)
         qua.update_frequency(rr.name, self.x)  # update resonator pulse frequenc
-        # cav.play("const_cohstate_1", ampx=self.y)  # play displacement to cavity
         rr.measure((self.I, self.Q))  # measure transmitted signal
         qua.wait(int(self.wait_time // 4), rr.name)  # wait system reset
 
@@ -44,19 +48,16 @@ class RRSpectroscopy(Experiment):
 
 if __name__ == "__main__":
 
-    x_start = -53.0e6
-    x_stop = -47.0e6
-    x_step = 0.25e6
+    x_start = -54e6
+    x_stop = -46e6
+    x_step = 0.05e6
 
     parameters = {
-        "modes": [
-            "RR",
-        ],
-        "reps": 200000,
+        "modes": ["RR", "FLUX"],
+        "reps": 1000,
         "wait_time": 20000,  # 500ns*5 = 2.5us = 2500ns
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
-        # "y_sweep":[0.,1.],
-        # "y_sweep": (0.0, ),#0.5, 1.0, 1.5),
+        "y_sweep": (0.0,),  # 0.5, 1.0, 1.5),
         # "plot_quad": "PHASE_SWEEP",
         "fit_fn": "gaussian",
         # "plot_quad": "I_AVG",

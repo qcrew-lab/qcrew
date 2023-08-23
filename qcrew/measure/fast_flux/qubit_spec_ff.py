@@ -37,46 +37,16 @@ class QubitSpectroscopyFastFlux(Experiment):
         """
         Defines pulse sequence to be played inside the experiment loop
         """
-        qubit, rr, flux = self.modes  # get the modes
-
+        qubit, rr, flux, cav = self.modes  # get the modes
         qua.update_frequency(qubit.name, self.x)  # update resonator pulse frequency
-        if 0:  # castle
-            flux.play(self.flux_op, duration=99, ampx=self.y)  # to make off resonance
-            qua.wait(int((120) // 4), rr.name, qubit.name)  # ns
-            qubit.play(self.qubit_op)  # play pi qubit pulse -109e6
-            flux.play(self.flux_op, duration=99, ampx=0)  # to make on resonance
-            qua.align(flux.name, rr.name)
-            flux.play(self.flux_op, duration=1500, ampx=self.y)  # to make off resonance
-            qua.wait(int((120) // 4), rr.name)
-
-        if 0:
-            qubit.play(self.qubit_op)  # play pi qubit pulse
-            qua.align(qubit.name, flux.name)  # wait qubit pulse to end
-            flux.play(self.flux_op, duration=16, ampx=-0.25)  #
-            qua.align(qubit.name, flux.name)  # wait qubit pulse to end
-            qua.update_frequency(qubit.name, self.x)  # update resonator pulse frequency
-            qubit.play(self.qubit_op)
-            qua.align(qubit.name, rr.name)  # wait for partial qubit decay
-
-        if 0:
-            flux.play(self.flux_op, duration=99, ampx=self.y)  # length 369na self.y
-            qua.wait(int(self.qubit_delay // 4), qubit.name)
-            qubit.play(self.qubit_op)  # play qubit pulse
-            qua.wait(int(self.rr_delay // 4), rr.name)  # wait flux pulse to end
-        if 0:  # predistorted pulse
-            flux.play(
-                f"IIR_square_0726_on_time_196", ampx=self.y
-            )  # to make off resonance
-            qua.wait(int(self.qubit_delay // 4), qubit.name)
-            qubit.play(self.qubit_op)  # play pi qubit pulse
-            qua.wait(int((380 + 4) // 4), rr.name)
-        if 1:  # castle predistorted
-            flux.play(
-                "castle_IIR_230727_396ns_0dot00_2250", ampx=self.y
-            )  # to make off resonance
-            qua.wait(int((250) // 4), rr.name, qubit.name)  # ns
-            qubit.play(self.qubit_op)  # play pi qubit pulse -109e6
-            qua.wait(int((920) // 4), rr.name)
+        cav.play("cohstate_1", ampx=self.y)
+        qua.align()
+        # flux.play(self.flux_op, ampx=self.y)  # to make off resonance
+        flux.play(self.flux_op, ampx=1.85)
+        # qua.wait(int((self.qubit_delay) // 4), qubit.name)  # ns
+        qua.wait(int((20) // 4), qubit.name)  # ns
+        qubit.play(self.qubit_op)  # play pi qubit pulse -109e6
+        qua.wait(int((self.rr_delay) // 4), rr.name)
         rr.measure((self.I, self.Q))  # measure transmitted signal
         qua.wait(int(self.wait_time // 4), rr.name)  # wait system reset
 
@@ -88,30 +58,29 @@ class QubitSpectroscopyFastFlux(Experiment):
         self.QUA_stream_results()  # stream variables (I, Q, x, etc)
         qua.align()
 
-
+ 
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-    x_start = -125e6  # -100e6
-    x_stop = -55e6  # -40e6
-    x_step = 0.75e6
+    x_start = -61e6
+    x_stop = -48e6
+    x_step = 0.2e6
 
     parameters = {
-        "modes": ["QUBIT", "RR", "FLUX"],
+        "modes": ["QUBIT", "RR", "FLUX", "CAVITY"],
         "reps": 100000,
-        "wait_time": 60e3, #ns
+        "wait_time": 1000e3,  # ns
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
-        "y_sweep": [
-            0.574, 0.5,0.4,  0
-        ],
-        "qubit_op": "gaussian_pi",
-        "qubit_delay": 200,  # ns
-        "rr_delay": 700,  # ns
-        "flux_op": "constant_pulse",
+        "y_sweep": [0.0, 1.0],
+        "qubit_op": "gaussian_pi_320",
+        "qubit_delay": 4,  # ns
+        "rr_delay": 2000 + 250,  # ns
+        # "flux_op": "square_1500ns_ApBpCpD",
+        "flux_op": "square_2000ns_ApBpG",
         "fit_fn": "gaussian",
         # "single_shot": True,
-        "plot_quad": "I_AVG",
-        "fetch_period": 2,
+        "plot_quad": "Z_AVG",
+        "fetch_period": 20,
     }
 
     plot_parameters = {

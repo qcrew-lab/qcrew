@@ -1,21 +1,20 @@
 """
-A python class describing a cavity spectroscopy using QM.
+A python class describing a cavity displacement calibration using QM.
 This class serves as a QUA script generator with user-defined parameters.
 """
 
 from typing import ClassVar
 
 from qcrew.control import professor as prof
-from qcrew.control.pulses import gaussian_pulse
 from qcrew.measure.experiment import Experiment
 from qm import qua
 
 # ---------------------------------- Class -------------------------------------
 
 
-class CavitySpectroscopy(Experiment):
+class CavityDisplacementCal(Experiment):
 
-    name = "cavity_spec"
+    name = "cavity_displacement_cal"
 
     _parameters: ClassVar[set[str]] = Experiment._parameters | {
         "cav_op",  # operation for displacing the cavity
@@ -23,7 +22,7 @@ class CavitySpectroscopy(Experiment):
         "fit_fn",  # fit function
     }
 
-    def __init__(self, cav_op, qubit_op, fit_fn="gaussian", **other_params):
+    def __init__(self, cav_op, qubit_op, fit_fn="displacement_cal", **other_params):
 
         self.cav_op = cav_op
         self.qubit_op = qubit_op
@@ -36,51 +35,54 @@ class CavitySpectroscopy(Experiment):
         Defines pulse sequence to be played inside the experiment loop
         """
         qubit, cav, rr, flux = self.modes  # get the modes
-        qua.update_frequency(cav.name, self.x)  # update resonator pulse frequency
-        cav.play(self.cav_op)  # play displacement to cavity
+
+        cav.play(self.cav_op, ampx=self.x)  # play displacement to cavity
         qua.align(cav.name, qubit.name)  # align all modes
         qubit.play(self.qubit_op)  # play qubit pulse
-        qua.align(qubit.name, rr.name)  # align all modes
+        # qua.align()
+
+        qua.align(qubit.name, flux.name, rr.name)  # align measurement
+        flux.play("square_2200ns_ApBpC", ampx=self.y)
+        qua.wait(50, rr.name)
 
         rr.measure((self.I, self.Q))  # measure transmitted signal
-        qua.wait(int(self.wait_time // 4), cav.name)  # wait system reset
+        qua.wait(int(self.wait_time // 4), cav.name)
 
         if self.single_shot:  # assign state to G or E
             qua.assign(
                 self.state, qua.Cast.to_fixed(self.I < rr.readout_pulse.threshold)
             )
+        self.QUA_stream_results()
+        qua.align()
 
-        self.QUA_stream_results()  # stream variables (I, Q, x, etc)
+
+# stream variables (I, Q, x, etc)
 
 
 # -------------------------------- Execution -----------------------------------
 
-
 if __name__ == "__main__":
-
-    # x_start = -51.5e6
-    # x_stop = -49e6
-    # x_step = 0.05e6
-    x_start = -52e6
-    x_stop = -48.0e6
-    x_step = 0.025e6
+    x_start = 0.0
+    x_stop = 1.91
+    x_step = 0.15
     parameters = {
         "modes": ["QUBIT", "CAVITY", "RR", "FLUX"],
-        "reps": 10000,
-        "wait_time": 600e3,
-        "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
+        "reps": 100000,
+        "wait_time": 0.6e6,
+        "x_sweep": (x_start, x_stop + x_step / 2, x_step),
+        "y_sweep": (-0.5,),
         "qubit_op": "gaussian_pi_320",
-        "plot_quad": "Z_AVG",
-        "fetch_period": 1,
-        # "single_shot": True,
         "cav_op": "cohstate_1",
+        # "fetch_period": 2,
+        # "single_shot": True,
+        "plot_quad": "I_AVG",
     }
 
     plot_parameters = {
-        "xlabel": "Cavity pulse frequency (Hz)",
+        "xlabel": "Cavity pulse amplitude scaling",
     }
 
-    experiment = CavitySpectroscopy(**parameters)
+    experiment = CavityDisplacementCal(**parameters)
     experiment.setup_plot(**plot_parameters)
 
     prof.run(experiment)

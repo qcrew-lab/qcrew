@@ -32,6 +32,8 @@ class VacuumRabi1D(Experiment):
         qubit_op,
         internal_sweep,
         flux_scaling,
+        rr_delay,
+        qubit_delay,
         fit_fn="",
         **other_params,
     ):
@@ -39,6 +41,8 @@ class VacuumRabi1D(Experiment):
         self.fit_fn = fit_fn
         self.internal_sweep = internal_sweep
         self.flux_scaling = flux_scaling
+        self.rr_delay = rr_delay
+        self.qubit_delay = qubit_delay
         super().__init__(**other_params)  # Passes other parameters to parent
 
     def QUA_play_pulse_sequence(self):
@@ -46,35 +50,52 @@ class VacuumRabi1D(Experiment):
         Defines pulse sequence to be played inside the experiment loop
         """
         qubit, rr, flux = self.modes  # get the modes
-        for flux_amp in self.internal_sweep:
-            if abs(flux_amp) < 1e-3:
-                flux_amp = 0
-            amp_str = f"{flux_amp:.2f}".replace("-", "m").replace(".", "dot")
-            flux.play(f"castle_IIR_230727_{amp_str}_2250", ampx=self.flux_scaling)  # ns
-            qua.wait(int((250) // 4), rr.name, qubit.name)  # ns
-            qubit.play(self.qubit_op)  # play pi qubit pulse -109e6
-            qua.wait(int((920) // 4), rr.name)
-            rr.measure((self.I, self.Q))  # measure qubit state
-            if self.single_shot:  # assign state to G or E7
-                qua.assign(
-                    self.state, qua.Cast.to_fixed(self.I < rr.readout_pulse.threshold)
-                )
-            qua.wait(int(self.wait_time // 4))  # wait system reset
-            self.QUA_stream_results()  # stream variables (I, Q, x, etc)
-            qua.align()
+        if 0:
+            for flux_amp in self.internal_sweep:
+                if abs(flux_amp) < 1e-3:
+                    flux_amp = 0
+                amp_str = f"{flux_amp:.2f}".replace("-", "m").replace(".", "dot")
+                flux.play(
+                    f"castle_IIR_230727_{amp_str}_2250", ampx=self.flux_scaling
+                )  # ns
+                qua.wait(int((250) // 4), rr.name, qubit.name)  # ns
+                qubit.play(self.qubit_op)  # play pi qubit pulse -109e6
+                qua.wait(int((920) // 4), rr.name)
+        if 1:
+            for flux_amp in self.internal_sweep:
+                if abs(flux_amp) < 1e-3:
+                    flux_amp = 0
+                amp_str = f"{flux_amp:.2f}".replace("-", "m").replace(".", "dot")
+                flux.play(
+                    f"castle_IIR_230727_{amp_str}", ampx=self.flux_scaling
+                )  # to make off resonance
+                qua.wait(int((self.qubit_delay) // 4), qubit.name)  # ns
+                qubit.play(self.qubit_op)  # play pi qubit pulse -109e6
+                qua.wait(int((self.rr_delay) // 4), rr.name)
+
+                rr.measure((self.I, self.Q))  # measure qubit state
+                if self.single_shot:  # assign state to G or E7
+                    qua.assign(
+                        self.state,
+                        qua.Cast.to_fixed(self.I < rr.readout_pulse.threshold),
+                    )
+                qua.wait(int(self.wait_time // 4))  # wait system reset
+                self.QUA_stream_results()  # stream variables (I, Q, x, etc)
+                qua.align()
 
 
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
 
-    flux_scaling = 0.574
-    flux_amp_list = np.arange(-0.1, 0.1, 0.01)
+    flux_scaling = 0.2955 #0.5283
+    flux_amp_list = np.arange(-0.2, 0.2, 0.02)
     # flux_len_list = np.arange(4, 196, 4)
 
     plot_parameters = {
         "xlabel": "--",
         # "plot_type": "2D",
+        "xlabel": "Amp of fast flux",
     }
 
     with Stagehand() as stage:
@@ -84,8 +105,8 @@ if __name__ == "__main__":
                 amp = 0
             amp_str = f"{amp:.2f}".replace("-", "m").replace(".", "dot")
             flux.operations = {
-                f"castle_IIR_230727_{amp_str}_2250": NumericalPulse(
-                    path=f"C:/Users/qcrew/Desktop/qcrew/qcrew/config/fast_flux_pulse/castle_1d/castle_IIR_230727_76ns_{amp_str}_2250.npz",
+                f"castle_IIR_230727_{amp_str}": NumericalPulse(
+                    path=f"C:/Users/qcrew/Desktop/qcrew/qcrew/config/fast_flux_pulse/castle_IIR_2/castle_IIR_230727_76ns_{amp_str}_2250.npz",
                     I_quad="I_quad",
                     Q_quad="Q_quad",
                     ampx=1,
@@ -94,12 +115,14 @@ if __name__ == "__main__":
 
     parameters = {
         "modes": ["QUBIT", "RR", "FLUX"],
-        "reps": 8000,
+        "reps": 1000000,
         "wait_time": 1.25e6,
         "qubit_op": "gaussian_pi",
         # "single_shot": True,
         "plot_quad": "I_AVG",
-        "fetch_period": 20,
+        # "fetch_period": 1,
+        "qubit_delay": 200,  # ns
+        "rr_delay": 920,  # ns
         "internal_sweep": flux_amp_list,
         "flux_scaling": flux_scaling,
         "fit_fn": "gaussian",

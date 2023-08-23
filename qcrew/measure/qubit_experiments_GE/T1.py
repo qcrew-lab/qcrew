@@ -33,11 +33,12 @@ class T1(Experiment):
         """
         Defines pulse sequence to be played inside the experiment loop
         """
-        qubit, rr = self.modes  # get the modes
+        qubit, rr, flux = self.modes  # get the modes
 
         qubit.play(self.qubit_op)  # play pi qubit pulse
         qua.wait(self.x, qubit.name)  # wait for partial qubit decay
         qua.align(qubit.name, rr.name)  # wait qubit pulse to end
+
         rr.measure((self.I, self.Q))  # measure qubit state
         if self.single_shot:  # assign state to G or E
             qua.assign(
@@ -53,16 +54,16 @@ class T1(Experiment):
 if __name__ == "__main__":
 
     x_start = 10
-    x_stop = 5000
-    x_step = 100
+    x_stop = 20000
+    x_step = 600
     parameters = {
-        "modes": ["QUBIT", "RR"],
-        "reps": 1000000,
-        "wait_time": 10e3,
+        "modes": ["QUBIT", "RR", "FLUX"],
+        "reps": 10000,
+        "wait_time": 80e3,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
-        "qubit_op": "spectroscopy_pulse",
+        "qubit_op": "gaussian_pi",
         # "single_shot": True,
-        "plot_quad": "I_AVG",
+        "plot_quad": "Z_AVG",
     }
 
     plot_parameters = {

@@ -14,7 +14,7 @@ from qm import qua
 
 class Ramseyrevival(Experiment):
 
-    name = "Ramsey_revival"
+    name = "ramsey_revival"
 
     _parameters: ClassVar[set[str]] = Experiment._parameters | {
         "cav_op",  # operation for displacing the cavity
@@ -22,11 +22,15 @@ class Ramseyrevival(Experiment):
         "fit_fn",  # fit function
     }
 
-    def __init__(self, qubit_op, cav_op, fit_fn=None, **other_params):
+    def __init__(
+        self, qubit_op, rr_delay, qubit_delay, cav_op, fit_fn=None, **other_params
+    ):
 
         self.qubit_op = qubit_op
         self.cav_op = cav_op
         self.fit_fn = fit_fn
+        self.rr_delay = rr_delay
+        self.qubit_delay = qubit_delay
 
         super().__init__(**other_params)  # Passes other parameters to parent
 
@@ -35,24 +39,15 @@ class Ramseyrevival(Experiment):
         Defines pulse sequence to be played inside the experiment loop
         """
         qubit, cav, rr, flux = self.modes  # get the modes
-        if 1: 
-            cav.play(self.cav_op, ampx=1)  # prepare cavity state
-            qua.align(cav.name, qubit.name)  # align modes
-            qubit.play(self.qubit_op, ampx=1)  # play qubit pulse
-            qua.wait(self.x, qubit.name)
-            qubit.play(self.qubit_op, ampx=1)  # play  qubit pulse with pi/2
-        if 0:
-            flux.play(
-                "castle_IIR_230727_76", ampx=0.574
-            )  # to make off resonance
-            qua.wait(int((600) // 4), rr.name, qubit.name, cav.name) 
-            cav.play(self.cav_op, ampx=1)  # prepare cavity state
-            qua.align(cav.name, qubit.name)  # align modes
-            qubit.play(self.qubit_op, ampx=1)  # play qubit pulse
-            qua.wait(self.x, qubit.name)
-            qubit.play(self.qubit_op, ampx=1)  # play  qubit pulse with pi/2
-        
-        qua.align(qubit.name, rr.name)  # align modes
+        cav.play(self.cav_op, ampx=1)  # prepare cavity state
+        qua.align(cav.name, qubit.name)  # align modes
+        qubit.play(self.qubit_op, ampx=1)  # play qubit pulse
+        qua.wait(self.x, qubit.name)
+        qubit.play(self.qubit_op, ampx=1)  # play  qubit pulse with pi/2
+        qua.align()
+        ##readout pulse
+        flux.play("square_2200ns_ApBpC", ampx=-0.5)
+        qua.wait(25, rr.name)
         rr.measure((self.I, self.Q))  # measure transmitted signal
         qua.wait(int(self.wait_time // 4), cav.name)  # wait system reset
 
@@ -60,26 +55,29 @@ class Ramseyrevival(Experiment):
             qua.assign(
                 self.state, qua.Cast.to_fixed(self.I < rr.readout_pulse.threshold)
             )
- 
+
         self.QUA_stream_results()  # stream variables (I, Q, x, etc)
 
 
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-    x_start = 185
-    x_stop = 270
-    x_step = 1
+    x_start = 4
+    x_stop = 300
+    x_step = 2
 
     parameters = {
         "modes": ["QUBIT", "CAVITY", "RR", "FLUX"],
-        "reps": 10000,
-        "wait_time": 700e3,
+        "reps": 3000,
+        "wait_time": 1e6,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
-        "qubit_op": "gaussian_pi2",
-        "cav_op": "const_cohstate_1",
+        "qubit_op": "gaussian_pi2_short",
+        "cav_op": "cohstate_1",
         # "single_shot": True,
+        "fetch_period": 3,
         "plot_quad": "I_AVG",
+        "qubit_delay": 120,  # ns
+        "rr_delay": 520,  # ns
         "fit_fn": "gaussian",
     }
 

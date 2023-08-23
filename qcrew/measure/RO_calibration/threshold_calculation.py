@@ -11,7 +11,7 @@ if __name__ == "__main__":
 
         params = {
             "reps": 50000,
-            "wait_time": 60000,  # ns 5*T1 of qubit
+            "wait_time": 80000,  # ns 5*T1 of qubit
             "qubit_pi_pulse": "gaussian_pi",  # pulse to excite qubit
         }
 

@@ -66,16 +66,16 @@ class T2(Experiment):
 if __name__ == "__main__":
 
     x_start = 4
-    x_stop = 2000
-    x_step = 28
+    x_stop = 700
+    x_step = 6
     detuning_ = 2e6  # 1.12e6
 
     parameters = {
         "modes": ["QUBIT", "RR"],
         "reps": 100000,
-        "wait_time": 30000,
+        "wait_time": 80000,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
-        "qubit_op": "spectroscopy_pulse_pi2",
+        "qubit_op": "gaussian_pi2",
         "detuning": int(detuning_),
         # "single_shot": True,
         "plot_quad": "I_AVG",

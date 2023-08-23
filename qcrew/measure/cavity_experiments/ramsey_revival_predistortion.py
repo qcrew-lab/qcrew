@@ -1,5 +1,5 @@
 """
-A python class describing a cavity spectroscopy using QM.
+A python class describing a photon-number split spectroscopy using QM.
 This class serves as a QUA script generator with user-defined parameters.
 """
 
@@ -9,12 +9,14 @@ from qcrew.control import professor as prof
 from qcrew.measure.experiment import Experiment
 from qm import qua
 
+import numpy as np
+
 # ---------------------------------- Class -------------------------------------
 
 
-class CavitySpectroscopyFastFlux(Experiment):
+class Ramseyrevival(Experiment):
 
-    name = "cavity_spec_ff"
+    name = "ramsey_revival"
 
     _parameters: ClassVar[set[str]] = Experiment._parameters | {
         "cav_op",  # operation for displacing the cavity
@@ -22,11 +24,16 @@ class CavitySpectroscopyFastFlux(Experiment):
         "fit_fn",  # fit function
     }
 
-    def __init__(self, cav_op, qubit_op, fit_fn="gaussian", **other_params):
+    def __init__(
+        self, qubit_op, rr_delay, qubit_delay, cav_op, fit_fn=None, **other_params
+    ):
 
-        self.cav_op = cav_op
         self.qubit_op = qubit_op
+        self.cav_op = cav_op
         self.fit_fn = fit_fn
+        self.rr_delay = rr_delay
+        self.qubit_delay = qubit_delay
+        # self.internal_sweep = np.arange(4, 300, 8)
 
         super().__init__(**other_params)  # Passes other parameters to parent
 
@@ -35,21 +42,22 @@ class CavitySpectroscopyFastFlux(Experiment):
         Defines pulse sequence to be played inside the experiment loop
         """
         qubit, cav, rr, flux = self.modes  # get the modes
+        qua.reset_frame()
+        # prepare cavity state
+        # for flux_len in self.internal_sweep:
+        flux_len = 396
+        qua.wait(int(440 // 4), cav.name)
 
-        qua.update_frequency(cav.name, self.x)  # update resonator pulse frequency
-        
-        flux.play("square_IIR_long", ampx=0.665)
-        qua.wait(int((40) // 4), qubit.name)
-        qubit.play(self.qubit_op, ampx=self.y)  # play pi qubit pulse -109e6
-        qua.align(cav.name, qubit.name)  # align all modes
-        cav.play(self.cav_op)  # play displacement to cavity
-        qua.align(cav.name, qubit.name)  # align all modes
-        qubit.play(self.qubit_op)  # play qubit pulse
-        qua.align(rr.name, qubit.name)  # align all modes
-        #readout
-        qua.wait(25, rr.name)
-        
-        
+        cav.play(self.cav_op, ampx=1 * 0)  # prepare cavity state
+        qua.align(cav.name, qubit.name)  # align modes
+        qubit.play(self.qubit_op, ampx=1)  # play qubit pulse
+        qua.align()
+        flux.play(f"square_{flux_len}ns_ApBpC", ampx=self.y)  # to make off resonance
+
+        qua.wait(int((flux_len + 60) // 4), qubit.name)
+        qubit.play(self.qubit_op, ampx=1.0, phase=self.x)  # play  qubit pulse with piA/2
+        qua.align(qubit.name, rr.name)
+        # qua.wait(int(2000 // 4), rr.name)
         rr.measure((self.I, self.Q))  # measure transmitted signal
         qua.wait(int(self.wait_time // 4), cav.name)  # wait system reset
 
@@ -59,33 +67,37 @@ class CavitySpectroscopyFastFlux(Experiment):
             )
 
         self.QUA_stream_results()  # stream variables (I, Q, x, etc)
+        qua.align()
 
 
 # -------------------------------- Execution -----------------------------------
 
-
 if __name__ == "__main__":
+    x_start = 4
+    x_stop = 300
+    x_step = 4
 
-    x_start = -70e6
-    x_stop = -30e6
-    x_step = 0.25e6
     parameters = {
         "modes": ["QUBIT", "CAVITY", "RR", "FLUX"],
         "reps": 2000,
-        "wait_time": 1.5e6,
-        "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
-        "y_sweep": (0.0, 1),
-        "qubit_op": "gaussian_pi",
-        "fetch_period": 3,
+        "wait_time": 80e3,  # 1e6,
+        "x_sweep": (0.0, 1.91, 0.05),
+        "y_sweep": (0.412, 0.206),
+        "qubit_op": "gaussian_pi2_short",
+        "cav_op": "cohstate_1",
         # "single_shot": True,
-        "cav_op": "const_cohstate_1",
+        "fetch_period": 1,
+        "plot_quad": "I_AVG",
+        "qubit_delay": 120,  # ns
+        "rr_delay": 520,  # ns
+        "fit_fn": "sine",
     }
 
     plot_parameters = {
-        "xlabel": "Cavity pulse frequency (Hz)",
+        "xlabel": "Wait time (ns)",
     }
 
-    experiment = CavitySpectroscopyFastFlux(**parameters)
+    experiment = Ramseyrevival(**parameters)
     experiment.setup_plot(**plot_parameters)
 
     prof.run(experiment)

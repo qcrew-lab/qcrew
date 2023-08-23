@@ -29,7 +29,7 @@ class Wigner2D(Experiment):
         cav_op_wigner,
         delay,
         fit_fn=None,
-        **other_params
+        **other_params,
     ):
         self.cav_op = cav_op
         self.qubit_op = qubit_op
@@ -51,20 +51,15 @@ class Wigner2D(Experiment):
         # cav.play(self.cav_op, ampx=-1, phase=0)
 
         # # Fock satae preparation
-        # flux.play("predist_constcos_rpad_pulse", ampx=-0.295)
-        # qua.wait(int(2500 // 4), cav.name)
+        if 0: 
+            qubit.play("gaussian_pi")
+            qua.align(flux.name, qubit.name)
+            flux.play("predist_pulse_36",ampx=0.39)
+            qua.align(cav.name, flux.name)
+            qua.wait(50, cav.name)  # cc
 
-        # qubit.play(self.qubit_op)
-        # cav.play(self.cav_op)
-        # cav.play("const_cohstate_1", ampx=1, phase=0)
-        qua.align(cav.name, qubit.name)
 
-        # Wigner 2d
-        # cav.play(
-        #     self.cav_op_wigner,
-        #     ampx=(-self.x, self.y, -self.y, -self.x),
-        #     phase=0.0,  # 0.25
-        # )
+        # Wigner
         cav.play(
             self.cav_op_wigner,
             ampx=(-self.y, self.x, -self.x, -self.y),
@@ -81,11 +76,13 @@ class Wigner2D(Experiment):
         qubit.play(self.qubit_op_wigner, ampx=1)  # play pi/2 pulse around X
 
         # Measure cavity state
-        qua.align(qubit.name, rr.name)  # align measurement
+        #readout pulse
+        qua.align()  # align modes
+        flux.play("detuned_readout", ampx=-0.5)
+        qua.wait(int((25) // 4), cav.name, qubit.name, rr.name)
         rr.measure((self.I, self.Q))  # measure transmitted signal
 
         # wait system reset
-        qua.align()
         qua.wait(int(self.wait_time // 4), cav.name)
 
         if self.single_shot:  # assign state to G or E
@@ -110,17 +107,17 @@ if __name__ == "__main__":
     parameters = {
         "modes": ["QUBIT", "RR", "CAVITY", "FLUX"],
         "reps": 1000,
-        "wait_time": 1.25e6,  # ns
+        "wait_time": 0.55e6,  # ns
         "x_sweep": (x_start, x_stop + x_step / 2, x_step),
         "y_sweep": (y_start, y_stop + y_step / 2, y_step),
-        "qubit_op": "qctrl_fock_0p1",
+        "qubit_op": "gaussian_pi",
         "cav_op": "qctrl_fock_0p1",
-        "qubit_op_wigner": "gaussian_pi2",
+        "qubit_op_wigner": "gaussian_pi2_short",
         "cav_op_wigner": "const_cohstate_1",
-        # "plot_quad": "I_AVG",
-        "single_shot": True,
+        "plot_quad": "I_AVG",
+        # "single_shot": False,
         "fit_fn": "gaussian",
-        "delay": 472,
+        "delay": 160,
         "fetch_period": 10,
     }
 

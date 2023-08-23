@@ -3,8 +3,8 @@ import h5py
 import matplotlib.pyplot as plt
 import numpy as np
 
-#filepath = "C:/Users/qcrew/Desktop/qcrew/data/somerset/20230711/150526_cut.h5"
-filepath = "C:/Users/qcrew/Desktop/qcrew/data/somerset/20230714/171313_somerset_number_split_spec.h5"
+# filepath = "C:/Users/qcrew/Desktop/qcrew/data/somerset/20230711/150526_cut.h5"
+filepath = "C:/Users/qcrew/Desktop/qcrew/data/somerset/20230816/165224_somerset_ramsey_revival.h5"
 
 plt.figure(figsize=(8, 5))
 file = h5py.File(filepath, "r")
@@ -13,8 +13,8 @@ print(data.keys())
 state = data["I_AVG"]  # data["PHASE"] Z_AVG
 x = data["x"]
 print(len(state))
-#print(np.where(x == -95000000))
-#print(x[150])
+# print(np.where(x == -95000000))
+# print(x[150])
 
 plt.plot(np.array(x), np.array(state))
 plt.show()

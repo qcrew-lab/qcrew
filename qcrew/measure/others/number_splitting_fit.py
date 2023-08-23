@@ -21,22 +21,22 @@ import warnings
 
 # Read File path
 data_file_path = (
-    r"C:\Users\qcrew\Desktop\qcrew\data\somerset\20230615\102719_somerset_rr_spec.h5"
+    r"C:\Users\qcrew\Desktop\qcrew\data\somerset\20230817\211619_somerset_qubit_spec.h5"
 )
 
 # Measurement average
 data_key = "Z_AVG"
 
 # Number of peaks
-num_peaks = 3
+num_peaks = 4
 
 # Initial Parameter Guesses
-y_offset = 1 - 1e-4
+y_offset = 1- 4e-5
 
-peak1 = {"Frequency": -50e6, "FWHM": 0.3e6, "Height": 2e-4}
-peak2 = {"Frequency": -51.3e6, "FWHM": 0.3e6, "Height": 1e-4}
-peak3 = {"Frequency": -52.6e6, "FWHM": 0.3e6, "Height": 0.5e-4}
-# peak4 = {"Frequency": 58e6, "FWHM": 0.1e6, "Height": 1e4}
+peak1 = {"Frequency": -36.50e6, "FWHM": 0.5e6, "Height": 8e-5}
+peak2 = {"Frequency": -42e6, "FWHM": 0.5e6, "Height": 2e-5}
+peak3 = {"Frequency": -46e6, "FWHM": 0.5e6, "Height": 0.5e-5}
+peak4 = {"Frequency": -51e6, "FWHM": 0.5e6, "Height": 0.1e-5}
 # peak5 = {"Frequency": 58e6, "FWHM": 0.1e6, "Height": 1e4}
 
 params = [
@@ -44,6 +44,7 @@ params = [
     peak1,
     peak2,
     peak3,
+    peak4,
 ]
 
 

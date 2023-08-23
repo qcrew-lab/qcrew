@@ -27,7 +27,7 @@ class VacuumRabi2D(Experiment):
     def __init__(self, qubit_op, fit_fn="", **other_params):
         self.qubit_op = qubit_op  # pi pulse
         self.fit_fn = fit_fn
-        self.internal_sweep = list(np.arange(60, 400, 8))
+        self.internal_sweep = list(np.arange(4, 300, 8))
         super().__init__(**other_params)  # Passes other parameters to parent
 
     def QUA_play_pulse_sequence(self):
@@ -39,8 +39,9 @@ class VacuumRabi2D(Experiment):
             qua.align()
             qubit.play(self.qubit_op)  # play pi qubit pulse
             qua.align(flux.name, qubit.name)
-            flux.play(f"IIR_square_0726_on_time_{flux_len}", ampx=self.x)
-            qua.wait(int((250 + flux_len) // 4), rr.name)  # cc
+            flux.play(f"square_{flux_len}ns_ApBpC", ampx=self.x)
+
+            qua.wait(int((160 + flux_len + 200) // 4), rr.name)
             rr.measure((self.I, self.Q))  # measure qubit state
             if self.single_shot:  # assign state to G or E7
                 qua.assign(
@@ -55,19 +56,19 @@ class VacuumRabi2D(Experiment):
 
 if __name__ == "__main__":
 
-    x_start = -0.5
-    x_stop = -0.1
+    x_start = 0.45
+    x_stop = 1.05
     x_step = 0.01
 
     parameters = {
         "modes": ["QUBIT", "RR", "FLUX"],
-        "reps": 20000,
-        "wait_time": 1.25e6,
+        "reps": 1000,
+        "wait_time": 0.7e6,
         "x_sweep": ((x_start), (x_stop + x_step / 2), (x_step)),
         "qubit_op": "gaussian_pi",
         # "single_shot": True,
         "plot_quad": "I_AVG",
-        "fetch_period": 60,
+        "fetch_period": 30,
     }
 
     plot_parameters = {

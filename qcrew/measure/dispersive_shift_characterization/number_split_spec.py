@@ -8,22 +8,25 @@ from typing import ClassVar
 from qcrew.control import professor as prof
 from qcrew.measure.experiment import Experiment
 from qm import qua
+from qcrew.control import Stagehand
+from qcrew.control.pulses.numerical_pulse import NumericalPulse
 
 # ---------------------------------- Class -------------------------------------
 
 
-class Ramseyrevival(Experiment):
+class NSplitSpectroscopy(Experiment):
 
-    name = "Ramsey_revival"
+    name = "number_split_spec"
 
     _parameters: ClassVar[set[str]] = Experiment._parameters | {
         "cav_op",  # operation for displacing the cavity
-        "qubit_op",  # operation used for exciting the qubit
+        "qubit_op_measure",  # operation used for exciting the qubit
         "fit_fn",  # fit function
     }
 
-    def __init__(self, qubit_op, cav_op, fit_fn=None, **other_params):
+    def __init__(self, qubit_op_measure, cav_op, qubit_op, fit_fn=None, **other_params):
 
+        self.qubit_op_measure = qubit_op_measure
         self.qubit_op = qubit_op
         self.cav_op = cav_op
         self.fit_fn = fit_fn
@@ -35,32 +38,17 @@ class Ramseyrevival(Experiment):
         Defines pulse sequence to be played inside the experiment loop
         """
         qubit, cav, rr, flux = self.modes  # get the modes
-        if 0: 
-            flux.play("predist_constcos_reset_pulse", ampx=self.y)
-            qua.align(cav.name, flux.name)
-            qua.wait(int(1700 // 4), cav.name)
 
-            cav.play(self.cav_op, ampx=1)  # prepare cavity state
-            qua.align(cav.name, qubit.name)  # align modes
-            qua.update_frequency(qubit.name, int(-93.62e6))
-            qubit.play(self.qubit_op, ampx=1.0)  # play qubit pulse
-            qua.wait(self.x, qubit.name)
-            qua.update_frequency(qubit.name, int(-93.62e6))
-            qubit.play(self.qubit_op, ampx=1.0)  # play  qubit pulse with pi/2
-            qua.align(qubit.name, rr.name)  # align modes
-        if 1:  
-            cav.play(self.cav_op, ampx=1)  # prepare cavity state
-            qua.align()
-            qubit.play(self.qubit_op)  # play qubit pulse
-            qua.wait(self.x, qubit.name)
-            qubit.play(self.qubit_op)  # play  qubit pulse with pi/2
-            #readout pulse
-            qua.align()  # align modes
-            flux.play("detuned_readout", ampx=-0.5)
-            qua.wait(int((25) // 4), cav.name, qubit.name, rr.name)
-        
+        # Prepare cavity state
+        cav.play(self.cav_op, ampx=self.y)
+        qua.align()
+
+        # number splitting
+        qua.update_frequency(qubit.name, self.x)
+        qubit.play(self.qubit_op_measure)  # play qubit pulse
         qua.align(qubit.name, rr.name)  # align modes
         rr.measure((self.I, self.Q))  # measure transmitted signal
+        qua.align(cav.name, qubit.name, rr.name)
         qua.wait(int(self.wait_time // 4), cav.name)  # wait system reset
 
         if self.single_shot:  # assign state to G or E
@@ -74,28 +62,43 @@ class Ramseyrevival(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-    x_start = 100
-    x_stop = 500
-    x_step = 1
+    x_start = -180e6
+    x_stop = -164e6
+    x_step = 0.25e6
 
     parameters = {
         "modes": ["QUBIT", "CAVITY", "RR", "FLUX"],
-        "reps": 1000000,
-        "wait_time": 1e6,
+        "reps": 20000,
+        "wait_time": 0.6e6,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
-        # "y_sweep": (-0.295,),
-        "qubit_op": "gaussian_pi2_short",
-        "cav_op": "const_cohstate_1",
-        # "single_shot": True,
+        "y_sweep": (0.0, 0.75, 1.0),
+        "qubit_op_measure": "gaussian_pi_320",
+        # "cav_op": "const_cohstate_1",
+        "qubit_op": "-",
+        "cav_op": "cohstate_1",
         "fit_fn": "gaussian",
+        "fetch_period": 3,
         "plot_quad": "I_AVG",
     }
 
     plot_parameters = {
-        "xlabel": "Wait time (clock)",
+        "xlabel": "Qubit pulse frequency (Hz)",
     }
+    # flux_len_list = [72]
 
-    experiment = Ramseyrevival(**parameters)
+    # with Stagehand() as stage:
+    #     flux = stage.FLUX
+    #     for flux_len in flux_len_list:
+    #         flux.operations = {
+    #             f"castle_IIR_230727_{flux_len}": NumericalPulse(
+    #                 path=f"C:/Users/qcrew/Desktop/qcrew/qcrew/config/fast_flux_pulse/castle_max/castle_IIR_230727_{flux_len}ns_0dot06.npz",
+    #                 I_quad="I_quad",
+    #                 Q_quad="Q_quad",
+    #                 ampx=1,
+    #             ),
+    #         }
+
+    experiment = NSplitSpectroscopy(**parameters)
     experiment.setup_plot(**plot_parameters)
 
     prof.run(experiment)

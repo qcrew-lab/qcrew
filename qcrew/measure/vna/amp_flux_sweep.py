@@ -145,7 +145,7 @@ if __name__ == "__main__":
             # eg 1: currents = (-10e-6, 0e-6, 1e-6) will sweep current from -10uA to 0uA inclusive in steps of 1uA
             # eg 2: currents = {-15e-6, 0e-6, 15e-6} will sweep curent at -15uA, 0uA, and 15uA
             # eg 3: currents = 0 will do a frequency sweep at constant current of 0uA i.e. no current sweep
-            "currents": (-10e-3, 10e-3, 0.05e-3),
+            "currents": (2e-3, 10e-3, 0.05e-3),
         }
 
         # create measurement instance with instruments and measurement_parameters

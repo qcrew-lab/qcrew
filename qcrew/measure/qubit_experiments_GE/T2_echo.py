@@ -24,7 +24,7 @@ class T2_Echo(Experiment):
     }
 
     def __init__(
-        self, qubit_pi2, qubit_pi, detuning=0, fit_fn="exp_decay_sine", **other_params
+        self, qubit_pi2, qubit_pi, detuning=0, fit_fn="exp_decay", **other_params
     ):
 
         self.qubit_pi2 = qubit_pi2
@@ -60,8 +60,8 @@ class T2_Echo(Experiment):
 
 if __name__ == "__main__":
     x_start = 4
-    x_stop = 2500
-    x_step = 20
+    x_stop = 1000
+    x_step = 30
     detuning = 0e6
 
     parameters = {
@@ -71,7 +71,8 @@ if __name__ == "__main__":
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
         "qubit_pi2": "gaussian_pi2",
         "qubit_pi": "gaussian_pi",
-        "single_shot": False,
+        # "single_shot": False,
+        "plot_quad": "Z_AVG",
         "detuning": int(detuning)
     }
 

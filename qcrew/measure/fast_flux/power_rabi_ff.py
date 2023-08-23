@@ -24,7 +24,7 @@ class PowerRabi_FF(Experiment):
 
     def __init__(
         self,
-        freq_01,
+        # freq_01,
         flux_amp,
         flux_op,
         qubit_op,
@@ -38,7 +38,7 @@ class PowerRabi_FF(Experiment):
         self.fit_fn = fit_fn
         self.qubit_delay = qubit_delay
         self.rr_delay = rr_delay
-        self.freq_01 = freq_01
+        # self.freq_01 = freq_01
         self.flux_amp = flux_amp
         self.flux_op = flux_op
 
@@ -50,13 +50,18 @@ class PowerRabi_FF(Experiment):
         """
         qubit, rr, flux = self.modes  # get the modes
 
-        if 0:
-            flux.play(self.flux_op, ampx=self.flux_amp)
-            qua.wait(int(self.qubit_delay // 4), qubit.name)
-            qua.update_frequency(qubit.name, self.freq_01)
-            qubit.play(self.qubit_op, ampx=self.x)  # play qubit pulse
-            qua.wait(int(self.rr_delay // 4), rr.name)  # wait qubit pulse to end
         if 1:
+            flux.play("square_IIR_long", ampx=0.625)
+            qua.wait(int((20) // 4), qubit.name)
+            qubit.play(self.qubit_op, ampx=self.x)  # play qubit pulse
+            qubit.play(self.qubit_op, ampx=self.x)  # play qubit pulse
+            # qua.align()
+            
+            ##readout pulse
+            # qua.align()  # align measurement
+            # flux.play("detuned_readout", ampx=-0.5)
+            qua.wait(100, rr.name)
+        if 0:
             flux.play(
                 "castle_IIR_230727_300ns_0dot00", ampx=0.49
             )  # to make off resonance
@@ -79,8 +84,8 @@ class PowerRabi_FF(Experiment):
 
 if __name__ == "__main__":
 
-    amp_start = -1.3
-    amp_stop = 1.3
+    amp_start = -1.2
+    amp_stop = 1.2
     amp_step = 0.05
     parameters = {
         "modes": ["QUBIT", "RR", "FLUX"],
@@ -88,11 +93,11 @@ if __name__ == "__main__":
         "wait_time": 60e3,
         "x_sweep": (amp_start, amp_stop + amp_step / 2, amp_step),
         "qubit_op": "gaussian_pi",
-        "freq_01": int(-48.68e6),
+        # "freq_01": int(-48.68e6),
         "qubit_delay": 400,  # ns
         "rr_delay": 2500 + 900,  # ns
-        "flux_op": "predist_square_plusminus_pulse",
-        "flux_amp": -0.28,
+        "flux_op": "square_IIR_superf_readout",
+        "flux_amp": -0.5,
         # "single_shot": True,
         "plot_quad": "I_AVG",
     }

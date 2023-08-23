@@ -44,7 +44,8 @@ class PiPulseScope(Experiment):
         qua.wait(self.y, qubit.name)
         qubit.play(self.qubit_op, ampx=1)  # play qubit pulse
         qua.wait(int(self.flux_delay // 4), flux.name)  # ns, buffer time for pi pulse
-        flux.play(self.flux_op, ampx=0.6)
+        flux.play(self.flux_op, ampx=-0.16 * 4)
+        # flux.play(self.flux_op, ampx=-0.3)
         qua.wait(int(self.rr_delay // 4), rr.name)  # ns
         rr.measure((self.I, self.Q))  # measure transmitted signal
         qua.align()
@@ -58,30 +59,30 @@ class PiPulseScope(Experiment):
         self.QUA_stream_results()  # stream variables (I, Q, x, etc)
 
 
-# -------------------------------- Execution -----------------------------------
+# -------------------------------- Execution -  ----------------------------------
 
 if __name__ == "__main__":
-    x_start = -200e6  # 181.25e6
-    x_stop = -85e6  # 181.5 e6
-    x_step = 2.0e6
+    x_start = 30e6  # 181.25e6
+    x_stop = 130e6  # 181.5 e6
+    x_step = 2.5e6
 
-    y_start = 880  # cc
-    y_stop = 1300
-    y_step = 5
+    y_start = 1  # cc
+    y_stop = 500
+    y_step = 1
 
     parameters = {
         "modes": ["QUBIT", "FLUX", "RR"],
-        "reps": 5000,
-        "wait_time": 60000,
+        "reps": 2500,
+        "wait_time": 80000,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
         "y_sweep": (int(y_start), int(y_stop + y_step / 2), int(y_step)),
-        "flux_delay": 40,  # ns
-        "rr_delay": 5600,  # ns
-        "qubit_op": "constant_pi_16ns",
-        "flux_op": "castle_IIR_230727_396ns_0dot00",  # "castle_96",
-        "fetch_period": 5,
+        "flux_delay": 62,  # ns
+        "rr_delay": 2200,  # ns
+        "qubit_op": "constant_pi_short",
+        "flux_op": "square_2000ns_ApBpG",  # "castle_96",
+        "fetch_period": 120,
         # "single_shot": True,
-        "plot_quad": "I_AVG",
+        "plot_quad": "Z_AVG",
         # "fit_fn": "gaussian",
     }
 

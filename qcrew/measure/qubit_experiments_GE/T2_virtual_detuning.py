@@ -29,7 +29,7 @@ class T2(Experiment):
         "detuning",  # qubit pulse detuning
     }
 
-    def __init__(self, qubit_op, detuning=0, fit_fn="exp_decay_sine", **other_params):
+    def __init__(self, qubit_op, fit_fn, detuning=0, **other_params):
 
         self.qubit_op = qubit_op  # half pi pulse
         self.fit_fn = fit_fn
@@ -56,7 +56,7 @@ class T2(Experiment):
         rr.measure((self.I, self.Q))  # measure qubit state
         if self.single_shot:  # assign state to G or E
             qua.assign(
-                self.state, qua.Cast.to_fixed(self.I < rr.readout_pulse.threshold)
+                self.state, qua.Cast.to_fixed(self.I > rr.readout_pulse.threshold)
             )
         qua.wait(int(self.wait_time // 4), rr.name)  # wait system reset
 
@@ -68,19 +68,20 @@ class T2(Experiment):
 if __name__ == "__main__":
 
     x_start = 4
-    x_stop = 15000
-    x_step = 100
-    detuning_ = 0.2e6  # 1.12e6
+    x_stop = 1000
+    x_step = 5
+    detuning_ = 0.0e6  # 1.12e6
 
     parameters = {
         "modes": ["QUBIT", "RR"],
-        "reps": 10_000,
-        "wait_time": 500e3,
+        "reps": 2000,
+        "wait_time": 600e3,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
-        "qubit_op": "qubit_gaussian_sel_pi2_pulse",
+        "qubit_op": "qubit_gaussian_48ns_pi2_pulse",
         "detuning": int(detuning_),
         "single_shot": True,
-        # "fit_fn": "ramsey_photon_fit",
+        "fit_fn": "exp_decay_sine",
+        # "fit_fn": None,
         "extra_vars": {
             "phase": macros.ExpVariable(
                 var_type=qua.fixed,
@@ -91,7 +92,7 @@ if __name__ == "__main__":
             )
         },
         # "plot_quad": "I_AVG",
-        # "fetch_period": 2,
+        "fetch_period": 2,
     }
 
     plot_parameters = {

@@ -34,9 +34,9 @@ class RRSpecDispersiveShift(Experiment):
         (rr, qubit) = self.modes  # get the modes
 
         qua.update_frequency(rr.name, self.x)  # update resonator pulse frequency
-        qubit.play(self.qubit_op, ampx=self.y)
+        # qubit.play(self.qubit_op, ampx=1)
         qua.align(rr.name, qubit.name)
-        rr.measure((self.I, self.Q), ampx=1)  # measure transmitted signal
+        rr.measure((self.I, self.Q), ampx=0.05)  # measure transmitted signal
         qua.wait(int(self.wait_time // 4), rr.name)  # wait system reset
 
         self.QUA_stream_results()  # stream variables (I, Q, x, etc)
@@ -45,20 +45,19 @@ class RRSpecDispersiveShift(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-    x_start = 47e6
+    x_start = 48e6
     x_stop = 52e6
     x_step = 0.1e6
 
     parameters = {
         "modes": ["RR", "QUBIT"],
-        "reps": 100,
+        "reps": 1000,
         "wait_time": 500e3,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
-        "y_sweep": [0.0, 1.0],
-        "qubit_op": "qubit_gaussian_pi_pulse",
+        # "y_sweep": [0.05, 0.1, 0.15, 0.2, 0.25],
+        "qubit_op": "qubit_gaussian_120ns_pi_pulse",
         # "plot_quad": "I_AVG",
-        "plot_quad": "I_AVG",
-        "fit_fn": None,
+        # "fit_fn":"gaussian",
     }
 
     plot_parameters = {

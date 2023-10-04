@@ -33,9 +33,13 @@ class StarkShift(Experiment):
         # qua.wait(int(100 / 4), qubit.name)
         qubit.play(self.qubit_op)  # play qubit pi pulse
         qua.align()
+        
         rr.measure((self.I, self.Q))  # measure transmitted signal
+        if self.single_shot:  # assign state to G or E
+            qua.assign(
+                self.state, qua.Cast.to_fixed(self.I < rr.readout_pulse.threshold)
+            )
         qua.wait(int(self.wait_time // 4), rr.name)  # wait system reset
-
         self.QUA_stream_results()  # stream variables (I, Q, x, etc)
 
 

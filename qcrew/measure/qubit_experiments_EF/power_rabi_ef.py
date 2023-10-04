@@ -37,8 +37,8 @@ class PowerRabiEF(Experiment):
         qubit.play(self.qubit_pi_pulse_name)  # g-> e
         qua.align(qubit.name, qubit_ef.name)
         qubit_ef.play(self.qubit_ef_op, ampx=self.x)  # e-> f
-        qubit_ef.play(self.qubit_ef_op, ampx=self.x)  # e-> f
-        qubit_ef.play(self.qubit_ef_op, ampx=self.x)  # e-> f
+        # qubit_ef.play(self.qubit_ef_op, ampx=self.x)  # e-> f
+        # qubit_ef.play(self.qubit_ef_op, ampx=self.x)  # e-> f
         
         qua.align(qubit.name, qubit_ef.name)
         # qua.update_frequency(qubit.name, qubit.int_freq)
@@ -46,7 +46,10 @@ class PowerRabiEF(Experiment):
         qua.align(qubit.name, rr.name)  # wait qubit pulse to end
         rr.measure((self.I, self.Q))  # measure qubit state
         qua.wait(int(self.wait_time // 4), rr.name)  # wait system reset
-
+        if self.single_shot:  # assign state to G or E
+            qua.assign(
+                self.state, qua.Cast.to_fixed(self.I < rr.readout_pulse.threshold)
+            )
         self.QUA_stream_results()  # stream variables (I, Q, x, etc)
 
 
@@ -64,7 +67,8 @@ if __name__ == "__main__":
         "qubit_pi_pulse_name": "qubit_gaussian_short_pi_pulse",
         "x_sweep": (amp_start, amp_stop + amp_step / 2, amp_step),
         "qubit_ef_op": "qubit_ef_gaussian_short_pi_pulse",
-        "plot_quad": "I_AVG",
+        # "plot_quad": "I_AVG",
+        "single_shot": True,
     }
 
     plot_parameters = {

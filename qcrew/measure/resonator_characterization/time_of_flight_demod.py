@@ -6,7 +6,7 @@ from qm import qua
 import numpy as np
 from scipy import signal
 
-reps = 40000
+reps = 1
 
 
 def get_qua_program(rr, qubit):
@@ -16,7 +16,7 @@ def get_qua_program(rr, qubit):
 
         with qua.for_(n, 0, n < reps, n + 1):
             qua.reset_phase(rr.name)
-            qubit.play("qubit_gaussian_pi_pulse", ampx=1)
+            qubit.play("qubit_gaussian_short_pi_pulse", ampx=0)
             qua.align(qubit.name, rr.name)
             qua.measure("readout_pulse" * qua.amp(1.0), rr.name, adc_stream)
             qua.wait(100000, rr.name)
@@ -74,3 +74,4 @@ if __name__ == "__main__":
 
         # Retrieving and plotting FFT data.
         plt.show()
+        np.savez('C:/Users/qcrew/Desktop/time of flight_g.npz', results = results, real= np.real(demod_sig), imag = np.imag(demod_sig) )

@@ -31,15 +31,10 @@ class PowerRabiGRAPE(Experiment):
         qubit, rr, cav = self.modes  # get the modes
 
         qua.update_frequency(qubit.name, qubit.int_freq)
-        qubit.play(self.qubit_grape, ampx=1)
-        cav.play(self.cav_grape, ampx=1)
-        qua.align()
-
-        # qua.update_frequency(qubit.name, 176.05e6)
-
-        qubit.play(self.qubit_op, ampx=self.x)  # play qubit pulse
-        qubit.play(self.qubit_op, ampx=self.x)  # play qubit pulse
-
+        qubit.play(self.qubit_grape, ampx=self.x)
+        qubit.play(self.qubit_grape, ampx=self.x)
+        qubit.play(self.qubit_grape, ampx=self.x)
+        qubit.play(self.qubit_grape, ampx=self.x)
         qua.align(qubit.name, rr.name)  # wait qubit pulse to end
         rr.measure((self.I, self.Q), ampx=1)
         if self.single_shot:  # assign state to G or E
@@ -49,27 +44,28 @@ class PowerRabiGRAPE(Experiment):
         qua.wait(int(self.wait_time // 4), rr.name)  # wait system reset
         self.QUA_stream_results()  # stream variables (I, Q, x, etc)
 
+
 # -------------------------------- Execution -----------------------------------
 if __name__ == "__main__":
     amp_start = -1.4
     amp_stop = 1.4
-    amp_step = 0.02
+    amp_step = 0.05
 
     parameters = {
         "modes": ["QUBIT", "RR", "CAV"],
-        "reps": 1000,
+        "reps": 500,
         "wait_time": 10e6,
         "x_sweep": (amp_start, amp_stop + amp_step / 2, amp_step),
         "qubit_op": "qubit_gaussian_short_pi2_pulse",
         "single_shot": True,
-        "cav_grape": "grape_fock1_pulse",
-        "qubit_grape": "grape_fock1_pulse",
+        "cav_grape": "0_plus_alpha2",
+        "qubit_grape": "grape_pi_pulse",
         # "plot_quad": "I_AVG",
     }
 
     plot_parameters = {
         "xlabel": "Qubit pulse amplitude scaling",
-        "plot_err": False,
+        # "plot_err": False,
         # "zlimits": (0.35, 0.5)
     }
 

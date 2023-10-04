@@ -88,15 +88,15 @@ class ALLXY(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-
+    
     parameters = {
         "modes": ["QUBIT", "RR"],
         "reps": 10000,
-        "wait_time": 500e3,
-        "qubit_pi_op": "qubit_gaussian_sel_pi_pulse",
-        "qubit_pi2_op": "qubit_gaussian_sel_pi2_pulse",
-        "single_shot": False,
-        "plot_quad": "I_AVG",
+        "wait_time": 600e3,
+        "qubit_pi_op": "qubit_gaussian_sig250ns_pi_pulse",
+        "qubit_pi2_op": "qubit_gaussian_48ns_pi2_pulse",
+        "single_shot": True,
+        # "plot_quad": "I_AVG",
     }
 
     plot_parameters = {

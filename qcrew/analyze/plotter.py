@@ -15,6 +15,46 @@ COLOR_LIST = (
     "#009966",
     "#66CCCC",
     "#000000",
+    "#FCE6C9",
+    "#1874CD",
+    "#00C957",
+    "#483D8B",
+    "#0000FF",
+    "#FF3300",
+    "#2cde00",
+    "#FF9933",
+    "#663399",
+    "#009966",
+    "#66CCCC",
+    "#000000",
+    "#FCE6C9",
+    "#1874CD",
+    "#00C957",
+    "#483D8B",
+    "#0000FF",
+    "#FF3300",
+    "#2cde00",
+    "#FF9933",
+    "#663399",
+    "#009966",
+    "#66CCCC",
+    "#000000",
+    "#FCE6C9",
+    "#1874CD",
+    "#00C957",
+    "#483D8B",
+    "#0000FF",
+    "#FF3300",
+    "#2cde00",
+    "#FF9933",
+    "#663399",
+    "#009966",
+    "#66CCCC",
+    "#000000",
+    "#FCE6C9",
+    "#1874CD",
+    "#00C957",
+    "#483D8B",
 )
 
 
@@ -52,7 +92,6 @@ class Plotter:
         self.hdisplay = display.display(self.fig, display_id=True)
 
     def fit(self, xs, ys, fit_fn, data_analysis=None) -> tuple:
-
         # get fit parameters
         params = fit.do_fit(fit_fn, xs, ys)
         fit_ys = fit.eval_fit(fit_fn, params, xs)
@@ -89,7 +128,6 @@ class Plotter:
 
         # Determine how to plot the data
         if self.plot_setup["plot_type"] == "1D":
-
             # If only one independent variable, plot a single trace
             if len(independent_data) == 1:
                 x_data = independent_data[0]
@@ -113,9 +151,8 @@ class Plotter:
                 x_data = independent_data[0]
                 y_data = independent_data[1]
                 z_data = dependent_data[0]
-            
-                for indx, trace_y in enumerate(y_data[0]):
 
+                for indx, trace_y in enumerate(y_data[0]):
                     # Pass user-defined label to the plot if provided, else pass
                     # y_value as a string
                     try:
@@ -166,7 +203,6 @@ class Plotter:
         self.hdisplay.update(self.fig)
 
     def plot_2D(self, x, y, z):
-
         if self.plot_setup["zlog"]:
             if self.plot_setup["zlimits"]:
                 vmin = self.plot_setup["zlimits"][0]
@@ -194,7 +230,6 @@ class Plotter:
     def plot_1D(
         self, x, z, fit_fn, indx, label=None, err=None, color="b", data_analysis=None
     ):
-
         ax = self.fig.gca()
 
         # plot the data

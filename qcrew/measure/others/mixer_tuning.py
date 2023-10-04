@@ -27,7 +27,7 @@ if __name__ == "__main__":
         mixer_tuner = MixerTuner(sa, qm)
 
         # this is the mode whose mixer's LO or SB leakage you are tuning
-        mode = cav_drive
+        mode = cav
         # minimize LO leakage
 
         # use brute force (BF) minimizer
@@ -35,7 +35,7 @@ if __name__ == "__main__":
             # range of DC offsets you want to sweep to tune LO
             "offset_range": (-0.2, 0.2),  # (min = -0.5, max = 0.5)
             # number of DC offset sweep points in the given range i.e. decide step size
-            "num_points": 41,
+            "num_points": 51,
             # number of iterations of the minimization you want to run
             "num_iterations": 5,
             # after each iteration, the sweep range will be reduced by this factor
@@ -43,7 +43,7 @@ if __name__ == "__main__":
             # if you want the full minimization traceback, set this to True
             "verbose": True,
             # if you want a plot that shows minimization summary, set this to True
-            "plot": False,
+            "plot": True,
         }
 # 
         mixer_tuner.tune_lo(mode=mode, method="BF", **bf_params_lo)
@@ -58,7 +58,7 @@ if __name__ == "__main__":
             # range of DC offsets you want to sweep to tune LO
             "offset_range": (-0.2, 0.2),  # (min = -0.5, max = 0.5)
             # number of DC offset sweep points in the given range i.e. decide step size
-            "num_points": 41,
+            "num_points": 51,
             # number of iterations of the minimization you want to run
             "num_iterations": 5,
             # after each iteration, the sweep range will be reduced by this factor
@@ -66,7 +66,7 @@ if __name__ == "__main__":
             # if you want the full minimization traceback, set this to True
             "verbose": True,
             # if you want a plot that shows minimization summary, set this to True
-            "plot": False,
+            "plot": True,
         }
 
         mixer_tuner.tune_sb(mode=mode, method="BF", **bf_params_lo)

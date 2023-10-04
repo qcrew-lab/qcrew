@@ -5,7 +5,7 @@ from qcrew.control import Stagehand
 from qm import qua
 import numpy as np
 
-reps = 20_000
+reps = 5_000
 
 
 def get_qua_program(rr):
@@ -44,11 +44,14 @@ if __name__ == "__main__":
 
         amps = results_fft[: int(np.ceil(pulse_len / 2))]
         freqs = np.linspace(0, 0.5, len(amps)) * 1e9
+        print('yes',amps)
+        
 
         fig, axes = plt.subplots(2, 1)
 
         axes[0].plot(results)
         axes[1].plot(freqs[5:] / 1e6, amps[5:])
-
+        np.savez('C:/Users/qcrew/Desktop/time of flight.npz', amps = amps, freqs=amps, results = results )
+        
         # Retrieving and plotting FFT data.
         plt.show()

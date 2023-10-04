@@ -4,7 +4,6 @@ This class serves as a QUA script generator with user-defined parameters.
 """
 
 from typing import ClassVar
-
 from qcrew.control import professor as prof
 from qcrew.measure.experiment import Experiment
 from qm import qua
@@ -13,7 +12,6 @@ from qm import qua
 
 
 class CavityDisplacementCal(Experiment):
-
     name = "cavity_displacement_cal"
 
     _parameters: ClassVar[set[str]] = Experiment._parameters | {
@@ -44,7 +42,7 @@ class CavityDisplacementCal(Experiment):
 
         if self.single_shot:  # assign state to G or E
             qua.assign(
-                self.state, qua.Cast.to_fixed(self.I < rr.readout_pulse.threshold)
+                self.state, qua.Cast.to_fixed(self.I > rr.readout_pulse.threshold)
             )
         self.QUA_stream_results()  # stream variables (I, Q, x, etc)
 
@@ -53,16 +51,19 @@ class CavityDisplacementCal(Experiment):
 
 if __name__ == "__main__":
     x_start = 0
-    x_stop = 2.0 #2.16 # DO NOT CHANGE
-    x_step = 0.08
+    x_stop = 1.8  
+    x_step = 0.05
 
     parameters = {
         "modes": ["QUBIT", "CAV", "RR"],
-        "reps": 600,
-        "wait_time": 10e6,
+        "reps": 500,
+        "wait_time": 16e6,
         "x_sweep": (x_start, x_stop + x_step / 2, x_step),
-        "qubit_op": "qubit_gaussian_sel_pi_pulse",
-        "cav_op": "coherent_1_long",
+        "qubit_op": "qubit_gaussian_sig800ns_pi_pulse",
+        # "cav_op": "grape_disp_pulse",
+        # "y_sweep": [0.25, 0.5, 0.75, 1],
+        "cav_op": "grape_disp_pulse",
+        # "cav_op": "coherent_1_long",
         # "plot_quad": "I_AVG",
         "single_shot": True,
         "fetch_period": 4,

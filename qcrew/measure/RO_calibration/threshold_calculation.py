@@ -11,8 +11,8 @@ if __name__ == "__main__":
 
         params = {
             "reps": 20_000,
-            "wait_time": 500_000,  # ns
-            "qubit_pi_pulse": "qubit_gaussian_short_pi_pulse",  # pulse to excite qubit
+            "wait_time": 600_000,  # ns
+            "qubit_pi_pulse": "qubit_gaussian_96ns_pi_pulse",  # pulse to excite qubit
         }
 
         # ddrop_params = {

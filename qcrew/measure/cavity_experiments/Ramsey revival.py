@@ -47,7 +47,6 @@ class Ramseyrevival(Experiment):
         qua.align(cav.name, qubit.name)  # align modes
         qubit.play(self.qubit_op)  # play qubit pulse
         qua.wait(self.x, qubit.name)
-
         # qua.assign(self.phase, qua.Cast.mul_fixed_by_int(factor, self.x))
 
         qubit.play(self.qubit_op, phase=self.phase)  # play  qubit pulse with pi/2
@@ -66,8 +65,8 @@ class Ramseyrevival(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-    x_start = 4
-    x_stop = 600
+    x_start = 300
+    x_stop = 400
     x_step = 4
     # x_start = 300
     # x_stop = 400
@@ -78,11 +77,11 @@ if __name__ == "__main__":
     parameters = {
         "modes": ["QUBIT", "CAV", "RR"],
         "reps": 200,
-        "wait_time": 10e6,
-        "cavity_amp": 1.0,
+        "wait_time": 16e6,
+        "cavity_amp": 3.0,
         "detuning": int(detuning_),
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
-        "qubit_op": "qubit_gaussian_short_pi2_pulse",
+        "qubit_op": "qubit_gaussian_64ns_pi2_pulse",
         "cav_op": "coherent_1_long",
         # "plot_quad": "I_AVG",
         "fetch_period": 8,

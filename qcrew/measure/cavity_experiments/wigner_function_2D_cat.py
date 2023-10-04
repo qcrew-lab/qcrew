@@ -62,21 +62,21 @@ class WignerFunction(Experiment):
             self.cav_op,  ampx = 1,
         )
 
-        # qua.align(cav.name, qubit.name)
-        qua.align()
-        qubit.play("constant_cosine_pi2_pulse")
-        qua.align()
-        qua.wait(int(self.delay // 4))
-        cav.play(
-            self.cav_op,  ampx = 1,
-        )
-        qua.align()
-        qubit.play("constant_cosine_pi_selective_pulse0")
-        qua.align()
-        cav.play(
-            self.cav_op,  ampx = -1,
-        )
-        qua.align()
+        # # qua.align(cav.name, qubit.name)
+        # qua.align()
+        # qubit.play("constant_cosine_pi2_pulse")
+        # qua.align()
+        # qua.wait(int(self.delay // 4))
+        # cav.play(
+        #     self.cav_op,  ampx = 1,
+        # )
+        # qua.align()
+        # qubit.play("constant_cosine_pi_selective_pulse0")
+        # qua.align()
+        # cav.play(
+        #     self.cav_op,  ampx = -1,
+        # )
+        # qua.align()
 
 
 
@@ -118,12 +118,12 @@ class WignerFunction(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-    x_start = -3
-    x_stop = 3
+    x_start = -1.8
+    x_stop = 1.8
     x_step = 0.2
 
-    y_start = -3
-    y_stop = 3
+    y_start = -1.8
+    y_stop = 1.8
     y_step = 0.2
 
     # pulselist = ['grape_fock1_pulse', 'grape_fock01_pulse', 'grape_fock0-1_pulse', 'grape_fock0i1_pulse', 'grape_fock0-i1_pulse', 'vacuum', 'coh1',]

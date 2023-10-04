@@ -29,7 +29,6 @@ class WignerFunction(Experiment):
         delay=4,
         **other_params
     ):
-
         self.cav_op = cav_op
         self.qubit_op = qubit_op
         self.fit_fn = fit_fn
@@ -47,27 +46,35 @@ class WignerFunction(Experiment):
 
         qua.reset_frame(cav.name)
 
-        '''State preparation'''
+        """State preparation"""
 
-        if self.qubit_grape != None:
-            qubit.play(
-                self.qubit_grape,# ampx = 0,
-            )
-            cav.play(
-                self.cav_grape, #ampx = 0,
-            )
-        else:
-            # EXAMPLE: 
-            cav.play(self.cav_op, ampx=(self.x, self.y, -self.y, self.x), phase=-0.25)
+        # if self.qubit_grape != None:
+        #     qubit.play(
+        #         self.qubit_grape,  # ampx = 0,
+        #     )
+        #     cav.play(
+        #         self.cav_grape,  # ampx = 0,
+        #     )
+        # else:
+        #     # EXAMPLE:
+        #     cav.play(self.cav_op, ampx=(self.x, self.y, -self.y, self.x), phase=-0.25)
             # cav.play(self.cav_op, ampx=(0, -1, 1, 0), phase = 0)
 
-        '''Measurement'''
-      
-        qua.align(cav.name, qubit.name)
-      
+        # qua.align(cav.name, qubit.name)
+        # qubit.play('qubit_gaussian_short_pi_pulse_faster')
+        # # qua.wait(int(10))
+        # qubit.play('qubit_gaussian_short_pi_pulse_faster')
+
+        """Measurement"""
+
+        # qua.align(cav.name, qubit.name)
+        qubit.play(self.qubit_grape)
+        cav.play(self.cav_grape)
         
+        qua.align()
+
         ## single displacement
-        cav.play(self.cav_op, ampx=(self.x, self.y, -self.y, self.x), phase=0.25)        
+        cav.play(self.cav_op, ampx=(self.x, self.y, -self.y, self.x), phase=0.25)
         qua.align(cav.name, qubit.name)
 
         qubit.play(self.qubit_op)  # play pi/2 pulse around X
@@ -75,7 +82,7 @@ class WignerFunction(Experiment):
             int(self.delay // 4),
             cav.name,
             qubit.name,
-        )  
+        )
         qubit.play(self.qubit_op)  # play pi/2 pulse around X
 
         # Measure cavity state
@@ -109,7 +116,7 @@ if __name__ == "__main__":
     # fock1
     parameters = {
         "modes": ["QUBIT", "CAV", "RR"],
-        "reps": 200,
+        "reps": 1500,
         "wait_time": 10e6,
         "fetch_period": 10,  # time between data fetching rounds in sec
         "delay": 289,  # pi/chi
@@ -119,10 +126,10 @@ if __name__ == "__main__":
             x_step,
         ),  # ampitude sweep of the displacement pulses in the ECD
         "y_sweep": (y_start, y_stop + y_step / 2, y_step),
-        "qubit_op": "qubit_gaussian_short_pi2_pulse",
+        "qubit_op": "qubit_gaussian_64ns_pi2_pulse",
         "cav_op": "coherent_1_long",
-        "qubit_grape": "grape_fock7_pulse",
-        "cav_grape": "grape_fock7_pulse",
+        "qubit_grape": "grape_fock03",
+        "cav_grape": "grape_fock03",
         "single_shot": True,
         # "plot_quad": "I_AVG",
     }

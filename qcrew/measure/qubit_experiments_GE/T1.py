@@ -14,7 +14,6 @@ from qm import qua
 
 
 class T1(Experiment):
-
     name = "T1"
 
     _parameters: ClassVar[set[str]] = Experiment._parameters | {
@@ -23,7 +22,6 @@ class T1(Experiment):
     }
 
     def __init__(self, qubit_op, fit_fn="exp_decay", **other_params):
-
         self.qubit_op = qubit_op  # pi pulse
         self.fit_fn = fit_fn
 
@@ -41,7 +39,7 @@ class T1(Experiment):
         rr.measure((self.I, self.Q))  # measure qubit state
         if self.single_shot:  # assign state to G or E
             qua.assign(
-                self.state, qua.Cast.to_fixed(self.I < rr.readout_pulse.threshold)
+                self.state, qua.Cast.to_fixed(self.I > rr.readout_pulse.threshold)
             )
         qua.wait(int(self.wait_time // 4), rr.name)  # wait system reset
 
@@ -52,19 +50,18 @@ class T1(Experiment):
 
 if __name__ == "__main__":
     x_start = 4
-    x_stop = 150_000   # Clock cycles
-    x_step = 2000
+    x_stop = 190_000  # Clock cycles
+    x_step = 4000
 
     parameters = {
         "modes": ["QUBIT", "RR"],
-        "reps": 10000,
-        "wait_time": 125e3,
+        "reps": 1000,
+        "wait_time": 600e3,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
-        "qubit_op": "qubit_gaussian_short_pi_pulse",
-        "single_shot": False,
-        "plot_quad": "I_AVG",
+        "qubit_op": "qubit_gaussian_96ns_pi_pulse",
+        "single_shot": True,
+        # "plot_quad": "I_AVG",
     }
-
 
     plot_parameters = {
         "xlabel": "Relaxation time (clock cycles)",

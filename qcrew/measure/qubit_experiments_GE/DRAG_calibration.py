@@ -13,7 +13,6 @@ from qm import qua
 
 
 class DRAGCalibration(Experiment):
-
     name = "DRAG_calibration"
 
     _parameters: ClassVar[set[str]] = Experiment._parameters | {
@@ -23,14 +22,13 @@ class DRAGCalibration(Experiment):
     }
 
     def __init__(self, qubit_pi_op, qubit_pi2_op, fit_fn="linear", **other_params):
-
         self.qubit_pi_op = qubit_pi_op
         self.qubit_pi2_op = qubit_pi2_op
         self.fit_fn = fit_fn
 
         self.gate_list = [
-            (self.qubit_pi_op, 0.25, self.qubit_pi2_op, 0.00, "YpX9"),  # YpX9
-            (self.qubit_pi_op, 0.00, self.qubit_pi2_op, 0.25, "XpY9"),  # XpY9
+            (self.qubit_pi_op, 0.25, self.qubit_pi2_op, 0.00, "Y X2"),  # YpX9
+            (self.qubit_pi_op, 0.00, self.qubit_pi2_op, 0.25, "X Y2"),  # XpY9
         ]
 
         # Assign one sweep value for each time QUA_stream_results method is executed in
@@ -80,25 +78,25 @@ if __name__ == "__main__":
     # x_stop = 0.05
     # x_step = 0.005
 
-    x_start = 0.0
-    x_stop = 0.03
-    x_step = 0.005
+    x_start = -0.02
+    x_stop = 0.010
+    x_step = 0.0005
 
     parameters = {
         "modes": ["QUBIT", "RR"],
         "reps": 5000,
         "wait_time": 500e3,
         "x_sweep": (x_start, x_stop + x_step / 2, x_step),
-        "qubit_pi_op": "qubit_gaussian_sel_pi_pulse",
-        "qubit_pi2_op": "qubit_gaussian_sel_pi2_pulse",
-        "single_shot": True,
+        "qubit_pi_op": "qubit_gaussian_sig250ns_pi_pulse",
+        "qubit_pi2_op": "qubit_gaussian_sig250ns_pi2_pulse",
+        "single_shot": False,
         # "plot_quad": "I_AVG"
-        #"fetch_period": 3,
+        # "fetch_period": 3,
     }
 
     plot_parameters = {
         "xlabel": "DRAG pulse amplitude scaling",
-        "plot_type" : "1D",
+        "plot_type": "1D",
     }
 
     experiment = DRAGCalibration(**parameters)

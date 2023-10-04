@@ -48,19 +48,19 @@ class RRSpecDispersiveShift(Experiment):
 
 if __name__ == "__main__":
 
-    x_start = 45e6
-    x_stop = 52e6
-    x_step = 0.1e6
+    x_start = 49e6
+    x_stop = 51e6
+    x_step = 0.05e6
 
     parameters = {
         "modes": ["RR", "CAV"],
         "reps": 300,
-        "wait_time": 10e6,
+        "wait_time": 16e6,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
         "y_sweep": [1.0, 0.0],
-        "cav_op": "cc_2",
-        "plot_quad": "Z_AVG",
-        "fetch_period": 4,
+        "cav_op": "coherent_1_long",
+        "plot_quad": "I_AVG",
+        "fetch_period": 8,
         # "plot_quad": "PHASE_SWEEP",
     }
 

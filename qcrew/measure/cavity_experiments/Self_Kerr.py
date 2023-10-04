@@ -40,12 +40,12 @@ class SelfKerr(Experiment):
 
         qua.reset_frame(cav.name)
 
-        cav.play(self.cav_op, ampx=self.y)  # displace cavity
+        cav.play(self.cav_op, ampx = self.y)  # displace cavity
         qua.wait(self.x, cav.name)  # wait for self-kerr to dephase cavity
 
         qua.assign(self.phase, qua.Cast.mul_fixed_by_int(factor, self.x))
 
-        cav.play(self.cav_op, ampx=self.y, phase= self.phase + 0.5)  # displace cavity back
+        cav.play(self.cav_op, ampx = self.y, phase= self.phase + 0.5)  # displace cavity back
         qua.align(qubit.name, cav.name)
         qubit.play(self.qubit_sel_op)  # flip qubit if cavity in vacuum
         qua.align(qubit.name, rr.name)
@@ -61,28 +61,30 @@ class SelfKerr(Experiment):
 
 # -------------------------------- Execution -----------------------------------
 if __name__ == "__main__":
-    wait_start = 10000
-    wait_stop = 30000
-    wait_step = 100
+    wait_start = 4
+    wait_stop = 15e3
+    wait_step = 12*5
 
-    detuning_ = 10e3  # 1.12e6
+    detuning_ = 0.1e6  # Unit is Hz
 
     parameters = {
         "modes": ["QUBIT", "CAV", "RR"],
-        "reps": 80,
-        "wait_time": 10e6,
+        "reps": 100,
+        "wait_time": 16e6,
         "x_sweep": (
             int(wait_start),
             int(wait_stop + wait_step / 2),
             int(wait_step),
         ),
-        "y_sweep":[0.5, 1.0, 1.5, 2.0],
+        # "y_sweep":[0.5, 1.0, 1.5, 2.0],
+        # "y_sweep":[0.25, 0.75, 1.25, 1.75, 2.25],
+        "y_sweep":[0.5, 1.0, 1.25, 1.5, 1.75, 2.0],
         # "y_sweep": [2.0],
         "detuning": int(detuning_),
         "qubit_sel_op": "qubit_gaussian_sel_pi_pulse",
         "cav_op": "coherent_1_long",
         # "plot_quad": "I_AVG",
-        "fetch_period": 8,
+        "fetch_period": 60,
         # "fit_fn": "gaussian",
         "single_shot": True,
         "extra_vars": {

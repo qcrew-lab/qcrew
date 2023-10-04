@@ -54,6 +54,10 @@ class QubitPopulation(Experiment):
                 self.state, qua.Cast.to_fixed(self.I < rr.readout_pulse.threshold)
             )
         qua.wait(int(self.wait_time // 4), rr.name)  # wait system reset
+        if self.single_shot:  # assign state to G or E
+            qua.assign(
+                self.state, qua.Cast.to_fixed(self.I < rr.readout_pulse.threshold)
+            )
 
         self.QUA_stream_results()  # stream variables (I, Q, x, etc)
 
@@ -68,10 +72,10 @@ if __name__ == "__main__":
 
     parameters = {
         "modes": ["QUBIT", "QUBIT_EF", "RR"],
-        "reps": 10000,
-        "wait_time": 100e3,
-        "qubit_ef_pi": "gaussian_pi_pulse",
-        "qubit_ge_pi": "gaussian_pi_pulse",
+        "reps": 5000,
+        "wait_time": 500e3,
+        "qubit_ef_pi": "qubit_ef_gaussian_short_pi_pulse",
+        "qubit_ge_pi": "qubit_gaussian_short_pi_pulse",
         "x_sweep": (amp_start, amp_stop + amp_step / 2, amp_step),
         "y_sweep": [0.0, 1.0],
         "single_shot": False,

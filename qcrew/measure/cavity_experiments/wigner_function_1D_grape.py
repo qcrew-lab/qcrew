@@ -14,9 +14,8 @@ import numpy as np
 # ---------------------------------- Class -------------------------------------
 
 
-class WignerFunction(Experiment):
-
-    name = "wigner_function"
+class WignerFunction1DGrape(Experiment):
+    name = "wigner_function_1D_grape"
 
     _parameters: ClassVar[set[str]] = Experiment._parameters | {
         "cav_op",  # operation for displacing the cavity
@@ -25,15 +24,26 @@ class WignerFunction(Experiment):
         "delay",  # describe...
     }
 
-    def __init__(self, cav_op, qubit_op, qubit_grape, cav_grape, fit_fn=None, delay=4, **other_params):
-
+    def __init__(
+        self,
+        cav_op,
+        qubit_op,
+        qubit_grape,
+        cav_grape,
+        # qubit_grape_2,
+        # cav_grape_2,
+        fit_fn,
+        delay=4,
+        **other_params
+    ):
         self.cav_op = cav_op
         self.qubit_op = qubit_op
         self.fit_fn = fit_fn
         self.delay = delay
         self.qubit_grape = qubit_grape
         self.cav_grape = cav_grape
-
+        # self.qubit_grape_2 = qubit_grape_2
+        # self.cav_grape_2 = cav_grape_2
 
         super().__init__(**other_params)  # Passes other parameters to parent
 
@@ -46,12 +56,29 @@ class WignerFunction(Experiment):
         qua.reset_frame(cav.name)
 
         # cav.play(self.cav_op, ampx=0, phase=0)
-        # qubit.play(self.qubit_grape,)
-        # cav.play(self.cav_grape,)
+
+        qubit.play(self.qubit_grape)
+        cav.play(self.cav_grape)
+
+        # qua.align()
+        # cav.play('coherent_1.327_long', ampx=-1)
+
+        # qua.align()
+        # qubit.play(self.qubit_grape_2, ampx=0.95)
+        # cav.play(self.cav_grape_2, ampx=0.95)
         
         qua.align()
-        qua.wait(int(20 // 4))
-        cav.play(self.cav_op, ampx=(self.x)/1.5, phase=0)  # displacement in I direction
+
+        # cav.play(
+        #     self.cav_op, ampx=[self.x, 0, 0, self.x], phase=0.25
+        # )  # displacement in x direction
+
+        # cav.play(
+        #     self.cav_op, ampx=[self.x, 0, 0, self.x], phase=0.32
+        # )  # displacement in x direction
+
+        cav.play(self.cav_op, ampx=[self.x, 0, 0, self.x], phase=0.25)  # displacement in I direction
+
         qua.align(cav.name, qubit.name)
         qubit.play(self.qubit_op)  # play pi/2 pulse around X
         qua.wait(
@@ -82,27 +109,31 @@ class WignerFunction(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-    x_start = -2.8
-    x_stop = 2.8
-    x_step = 0.04
+    x_start = -1.8
+    x_stop = 1.8
+    x_step = 0.1
 
     parameters = {
-        "modes": ["QUBIT", "CAVB", "RR"],
-        "reps": 1000,
-        "wait_time": 3000e3,
-        "fetch_period": 2,  # time between data fetching rounds in sec
-        "delay": 700,  # pi/chi
+        "modes": ["QUBIT", "CAV", "RR"],
+        "reps": 500,
+        "wait_time": 10e6,
+        "fetch_period": 8,  # time between data fetching rounds in sec
+        "delay": 289,  # pi/chi
         "x_sweep": (
             x_start,
             x_stop + x_step / 2,
             x_step,
         ),  # ampitude sweep of the displacement pulses in the ECD
-        "qubit_op": "constant_cosine_pi2_pulse",
-        "cav_op": "gaussian_coh1",
-        "qubit_grape": "grape_fock02_pulse",
-        "cav_grape": "grape_fock02_pulse",
-        "single_shot": False,
-        "plot_quad": "I_AVG",
+        # "y_sweep": [0.8, 0.85, 0.9, 0.95, 1, 1.05, 1.1, 1.15, 1.2],
+        "qubit_op": "qubit_gaussian_64ns_pi2_pulse",  # "qubit_gaussian_short_pi2_pulse",
+        "cav_op": "coherent_1_long",
+        "qubit_grape": "grape_fock1",
+        "cav_grape": "grape_fock1",
+        # "qubit_grape_2": "g_0_plus_alpha2_to_vac",
+        # "cav_grape_2": "g_0_plus_alpha2_to_vac",
+        "single_shot": True,
+        "fit_fn": "",
+        # "plot_quad": "I_AVG",
     }
 
     plot_parameters = {
@@ -112,7 +143,7 @@ if __name__ == "__main__":
         "cmap": "bwr",
     }
 
-    experiment = WignerFunction(**parameters)
+    experiment = WignerFunction1DGrape(**parameters)
     experiment.setup_plot(**plot_parameters)
 
     prof.run(experiment)

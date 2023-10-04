@@ -197,10 +197,10 @@ class ReadoutTrainer(Parametrized):
     def _update_weights(self, squeezed_diff):
         weights = {}
         weights["I"] = np.array(
-            [np.real(squeezed_diff).tolist(), (np.imag(-squeezed_diff)).tolist()]
+            [np.real(-squeezed_diff).tolist(), (np.imag(squeezed_diff)).tolist()]
         )
         weights["Q"] = np.array(
-            [np.imag(-squeezed_diff).tolist(), np.real(-squeezed_diff).tolist()]
+            [np.imag(squeezed_diff).tolist(), np.real(squeezed_diff).tolist()]
         )
 
         path = self.weights_file_path

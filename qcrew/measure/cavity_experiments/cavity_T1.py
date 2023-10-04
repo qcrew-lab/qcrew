@@ -40,7 +40,10 @@ class CavityT1(Experiment):
         qua.align(qubit.name, rr.name)  # align all modes
         rr.measure((self.I, self.Q))  # measure transmitted signal
         qua.wait(int(self.wait_time // 4), cav.name)  # wait system reset
-
+        if self.single_shot:  # assign state to G or E
+            qua.assign(
+                self.state, qua.Cast.to_fixed(self.I < rr.readout_pulse.threshold)
+            )
         self.QUA_stream_results()  # stream variables (I, Q, x, etc)
 
 
@@ -48,7 +51,7 @@ class CavityT1(Experiment):
 
 if __name__ == "__main__":
     x_start = 16
-    x_stop = 4000e3
+    x_stop = 5000e3
     x_step = 20e3
     parameters = {
         "modes": ["QUBIT", "CAV", "RR"],
@@ -56,9 +59,10 @@ if __name__ == "__main__":
         "wait_time": 10e6,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
         "qubit_op": "qubit_gaussian_sel_pi_pulse",
-        "cav_op": "coherent_3_long",
-        "plot_quad": "I_AVG",
-        "fit_fn": None,
+        "cav_op": "coherent_4_long",
+        # "plot_quad": "I_AVG",
+        # "fit_fn": None,
+        "single_shot": True, 
         "fit_fn": "cohstate_decay",
         "fetch_period": 8,
     }

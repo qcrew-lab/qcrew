@@ -36,21 +36,27 @@ class NSplitSpectroscopy(Experiment):
         """
         qubit, cav, rr = self.modes  # get the modes
 
+        qua.reset_frame(cav.name)
         qua.update_frequency(qubit.name, qubit.int_freq)
-        qubit.play(self.qubit_grape)
-        cav.play(self.cav_grape)
 
-        qua.align()
+        if self.cav_grape == "vacuum":
+            pass
+        elif self.cav_grape == "coh1":
+            cav.play(self.cav_op, ampx=(1, 0, 0, 1), phase=-0.25)
+        else:
+            qubit.play(self.qubit_grape)
+            cav.play(self.cav_grape)
+
+        # qua.align()
         # cav.play(self.cav_op, ampx=self.cav_amp, phase = -0.25)  # prepare cavity state
         qua.align(cav.name, qubit.name)  # align modes
         qua.update_frequency(qubit.name, self.x)  # update qubit pulse frequency
         qubit.play(self.qubit_op)  # play qubit pulse
         qua.align(qubit.name, rr.name)  # align modes
-
         rr.measure((self.I, self.Q))  # measure transmitted signal
         if self.single_shot:  # assign state to G or E
             qua.assign(
-                self.state, qua.Cast.to_fixed(self.I < rr.readout_pulse.threshold)
+                self.state, qua.Cast.to_fixed(self.I > rr.readout_pulse.threshold)
             )
         qua.align(cav.name, qubit.name, rr.name)
         qua.wait(int(self.wait_time // 4), cav.name)  # wait system reset
@@ -60,29 +66,43 @@ class NSplitSpectroscopy(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-    x_start = 171.8e6
-    x_stop = 172.1e6
-    x_step = 0.005e6
+    x_start = -67.4e6
+    x_stop = -66.4e6
+    x_step = 0.01e6
 
-    parameters = {
-        "modes": ["QUBIT", "CAV", "RR"],
-        "reps": 100,
-        "wait_time": 7e6,
-        "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
-        "qubit_op": "qubit_gaussian_sel_pi_pulse",
-        "cav_op": "coherent_1_long",
-        "cav_amp": 1,
-        # "plot_quad": "I_AVG",
-        "single_shot": "True",
-        "fit_fn": None,
-        "fetch_period": 8,
-        "qubit_grape": "grape_fock4_pulse",
-        "cav_grape": "grape_fock4_pulse",
-    }
+    fock_pulses = [
+        # "coh1",
+        # "vacuum",
+        # "grape_fock1",
+        # "grape_fock2",
+        # "grape_fock3",
+        # "grape_fock4",
+        "grape_fock5",
+        # "grape_fock6_pulse",
+        # "grape_fock7_pulse",
+        # "grape_fock8_pulse",
+    ]
 
-    plot_parameters = {"xlabel": "Qubit pulse frequency (Hz)", "plot_err": None}
+    for fock in fock_pulses:
+        parameters = {
+            "modes": ["QUBIT", "CAV", "RR"],
+            "reps": 300,
+            "wait_time": 12e6,
+            "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
+            "qubit_op": "qubit_gaussian_sig800ns_pi_pulse",
+            "cav_op": "coherent_1_long",
+            "cav_amp": 1,
+            # "plot_quad": "I_AVG",
+            "single_shot": "True",
+            "fit_fn": "gaussian",
+            "fetch_period": 1,
+            "qubit_grape": fock,
+            "cav_grape": fock,
+        }
 
-    experiment = NSplitSpectroscopy(**parameters)
-    experiment.setup_plot(**plot_parameters)
+        plot_parameters = {"xlabel": "Qubit pulse frequency (Hz)", "plot_err": None}
 
-    prof.run(experiment)
+        experiment = NSplitSpectroscopy(**parameters)
+        experiment.setup_plot(**plot_parameters)
+
+        prof.run(experiment)

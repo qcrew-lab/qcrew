@@ -41,7 +41,10 @@ class QubitSpectroscopyEF(Experiment):
         qua.align(qubit.name, rr.name)  # wait qubit pulse to end
         rr.measure((self.I, self.Q))  # measure transmitted signal
         qua.wait(int(self.wait_time // 4), rr.name)  # wait system reset
-
+        if self.single_shot:  # assign state to G or E
+            qua.assign(
+                self.state, qua.Cast.to_fixed(self.I < rr.readout_pulse.threshold)
+            )
         self.QUA_stream_results()  # stream variables (I, Q, x, etc)
 
 
@@ -61,7 +64,8 @@ if __name__ == "__main__":
         "qubit_ef_op": "gaussian_pulse",
         "qubit_pi_pulse_name": "qubit_gaussian_short_pi_pulse",
         "fit_fn": "gaussian",
-        "plot_quad": "I_AVG",
+        # "plot_quad": "I_AVG",
+        "single_shot": True, 
     }
 
     plot_parameters = {

@@ -81,9 +81,9 @@ class OutAndBackKerr(Experiment):
 if __name__ == "__main__":
 
     # ampx
-    x_start = 0.2
-    x_stop = 1.2
-    x_step = 0.025
+    x_start = 0.5
+    x_stop = 1.9
+    x_step = 0.03
 
     # disp_phase
     y_start = 0.1
@@ -97,10 +97,10 @@ if __name__ == "__main__":
         "x_sweep": ((x_start), (x_stop + x_step / 2), (x_step)),
         "y_sweep": ((y_start), (y_stop + y_step / 2), (y_step)),
         "delay": 1000,
-        "qubit_pi": "pi",
-        "qubit_pi_selective": "pi_selective_350",
-        "cav_displacement": "daddy_large_displacement",
-        "fetch_period": 4,
+        "qubit_pi": "gaussian_pi_short_ecd",
+        "qubit_pi_selective": "gaussian_pi_320",
+        "cav_displacement": "cohstate_5_short",
+        "fetch_period": 20,
         "single_shot": False,
         "plot_quad": "I_AVG",
         "extra_vars": {

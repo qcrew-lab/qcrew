@@ -45,15 +45,21 @@ class OutAndBack(Experiment):
         Defines pulse sequence to be played inside the experiment loop
         """
 
-        qubit, cav, rr = self.modes  # get the modes
+        qubit, cav, rr, flux = self.modes  # get the modes
         qua.reset_frame(cav.name)
         qua.reset_phase(qubit.name)
         qua.reset_phase(cav.name)
+
+        # flux.play("constcos80ns_2000ns_E2pF2pG2pH2", ampx=-0.075)
+        # qua.wait(int(80 // 4), cav.name)
         cav.play(self.cav_displacement)  # displace cavity
         qua.align(qubit.name, cav.name)  # align all modes
 
-        qubit.play(self.qubit_pi)  # put qubit into excited state to start rotation
-        # qua.align(qubit.name, cav.name)
+        # qua.update_frequency(qubit.name, int(-176.4e6))
+        qubit.play(
+            self.qubit_pi, ampx=1.0 * 1
+        )  # put qubit into excited state to start rotation
+        qua.align(qubit.name, cav.name)
 
         qua.wait(self.x, cav.name)  # wait for state to rotate
         qua.assign(self.phase, self.y)
@@ -62,10 +68,11 @@ class OutAndBack(Experiment):
         qubit.play(
             self.qubit_pi_selective
         )  # play conditional pi pulse to flip qubit if cav is in vac or close to vac
-        qua.align(qubit.name, rr.name)  # align all modes
-
+        qua.align()
+        # qua.wait(int((800 + 1200) // 4), rr.name, "QUBIT_EF")  # ns
+        qua.play("digital_pulse", "QUBIT_EF")
         rr.measure((self.I, self.Q))  # measure transmitted signal
-        qua.wait(int(self.wait_time // 4), cav.name)  # wait system reset
+        qua.wait(int(self.wait_time // 4), rr.name)  # wait system reset
 
         if self.single_shot:  # assign state to G or E
             qua.assign(
@@ -81,25 +88,25 @@ if __name__ == "__main__":
 
     # wait time tau in clock cycle
     x_start = 4
-    x_stop = 1000
+    x_stop = 300
     x_step = 20
 
     # disp_phase
-    y_start = 0
-    y_stop = 1
-    y_step = 0.025
+    y_start = 0.1
+    y_stop = 0.9
+    y_step = 0.01
     parameters = {
-        "modes": ["QUBIT", "CAVITY", "RR"],
-        "reps": 50000,
-        "wait_time": 600e3,
+        "modes": ["QUBIT", "CAVITY", "RR", "FLUX"],
+        "reps": 50,
+        "wait_time": 1e6,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
         "y_sweep": ((y_start), (y_stop + y_step / 2), (y_step)),
-        "qubit_pi": "gaussian_pi",
-        "qubit_pi_selective": "gaussian_pi_160",
-        "cav_displacement": "large_displacement",
+        "qubit_pi": "gaussian_pi_short_ecd",
+        "qubit_pi_selective": "gaussian_pi_560_char",
+        "cav_displacement": "gaussian_cohstate_4",
         "fetch_period": 30,
-        "single_shot": False,
-        "plot_quad": "Z_AVG",
+        # "single_shot": True,
+        "plot_quad": "I_AVG",
         "extra_vars": {
             "phase": macros.ExpVariable(
                 var_type=qua.fixed,

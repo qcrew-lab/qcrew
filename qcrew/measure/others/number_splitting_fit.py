@@ -20,23 +20,22 @@ import h5py
 import warnings
 
 # Read File path
-data_file_path = (
-    r"C:\Users\qcrew\Desktop\qcrew\data\somerset\20230817\211619_somerset_qubit_spec.h5"
-)
+data_file_path = f"C:\\Users\\qcrew\\Desktop\\qcrew\\data\\somerset\\20231013\\175714_somerset_qubit_spec_ff.h5"
 
 # Measurement average
-data_key = "Z_AVG"
+data_key = "state"
 
 # Number of peaks
-num_peaks = 4
+num_peaks = 5
 
 # Initial Parameter Guesses
-y_offset = 1- 4e-5
+y_offset = 1 - 0.1
 
-peak1 = {"Frequency": -36.50e6, "FWHM": 0.5e6, "Height": 8e-5}
-peak2 = {"Frequency": -42e6, "FWHM": 0.5e6, "Height": 2e-5}
-peak3 = {"Frequency": -46e6, "FWHM": 0.5e6, "Height": 0.5e-5}
-peak4 = {"Frequency": -51e6, "FWHM": 0.5e6, "Height": 0.1e-5}
+peak1 = {"Frequency": -46.20e6, "FWHM": 0.5e6, "Height": 0.3}
+peak2 = {"Frequency": -49.8e6, "FWHM": 0.5e6, "Height": 0.3}
+peak3 = {"Frequency": -49.8e6 - 3.6e6, "FWHM": 0.5e6, "Height": 0.2}
+peak4 = {"Frequency": -49.8e6 - 2 * 3.6e6, "FWHM": 0.5e6, "Height": 0.1}
+peak5 = {"Frequency": -49.8e6 - 3 * 3.6e6, "FWHM": 0.5e6, "Height": 0.05}
 # peak5 = {"Frequency": 58e6, "FWHM": 0.1e6, "Height": 1e4}
 
 params = [
@@ -45,6 +44,7 @@ params = [
     peak2,
     peak3,
     peak4,
+    peak5,
 ]
 
 
@@ -52,7 +52,8 @@ params = [
 f = h5py.File(data_file_path, "r")
 data = f["data"][data_key]
 data = np.array(data)
-
+data = data
+print(data.shape)
 # Flip the peaks upright
 min_val = np.min(data)
 max_val = np.max(data)
@@ -67,7 +68,8 @@ data += 1
 
 x_values = f["data"]["x"]
 x_values = np.array(x_values)
-
+x_values = x_values
+print(x_values.shape)
 # Lorentzian fit function
 def Lorentzian(x, x0, gamma, I):
     """

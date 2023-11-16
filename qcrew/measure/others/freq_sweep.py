@@ -11,6 +11,7 @@ def get_qua_program(mode):
     with qua.program() as play_constant_pulse:
         with qua.infinite_loop_():
             mode.play("constant_pulse", ampx=1)
+            # qua.play("digital_pulse", "QUBIT_EF")
     return play_constant_pulse
 
 
@@ -32,8 +33,6 @@ if __name__ == "__main__":
             stage.QUBIT,
             stage.RR,
         )
-        # rr.int_freq = -50e6
-        # rr.lo_freq = 7.5e9
 
         mode = qubit  # select the mode whose spectrum you want to sweep
 

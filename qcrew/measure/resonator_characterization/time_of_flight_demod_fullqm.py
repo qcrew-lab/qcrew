@@ -6,7 +6,7 @@ from qm import qua
 import numpy as np
 from scipy import signal
 
-reps = 10000
+reps = 60000
 
 
 def get_qua_program(rr, qubit):
@@ -15,18 +15,11 @@ def get_qua_program(rr, qubit):
         n = qua.declare(int)
 
         with qua.for_(n, 0, n < reps, n + 1):
-            qua.reset_phase("RR")
-            qubit.play("gaussian_pi")
-            qua.align()
-            # qua.play("digital_pulse", "QUBIT_EF")
-            # qua.measure("readout_pulse", rr.name, adc_stream)
-            # qua.wait(80000, rr.name)
-            qua.play("digital_pulse", "QUBIT_EF")
-            qua.measure("readout_pulse" * qua.amp(0), rr.name, adc_stream)
-            qua.wait(
-                5000,
-                rr.name,
-            ) ## cc
+            qua.reset_phase(rr.name)
+            # qubit.play("gaussian_pi")
+            qua.align(qubit.name, rr.name)
+            qua.measure("readout_pulse" * qua.amp(1.0), rr.name, adc_stream)
+            qua.wait(80000, rr.name)
 
         with qua.stream_processing():
             adc_stream.input1().average().save("adc_results")
@@ -44,7 +37,7 @@ if __name__ == "__main__":
         # Execute script
         job = stage.QM.execute(get_qua_program(rr, qubit))  # play IF to mode
         int_freq = np.abs(rr.int_freq)
-
+        
         handle = job.result_handles
         handle.wait_for_all_values()
         results = handle.get("adc_results").fetch_all()
@@ -74,16 +67,14 @@ if __name__ == "__main__":
 
         # This is the envelope of the average trace. In ge-discriminator
         # we take the average of the envelopes of each single trace
-        axes[2].plot(np.real(demod_sig), label="real")
-        axes[2].plot(np.imag(demod_sig), label="imag")
+        axes[2].plot(np.real(demod_sig), label = "real")
+        axes[2].plot(np.imag(demod_sig), label = "imag")
         axes[2].legend()
         axes[3].set_title("amp = sqrt(I^2+Q^2)")
-        axes[3].plot(
-            np.sqrt(np.real(demod_sig) ** 2 + np.imag(demod_sig) ** 2), label="real"
-        )
-        fig.subplots_adjust(hspace=1, wspace=1)
+        axes[3].plot(np.sqrt(np.real(demod_sig)**2+ np.imag(demod_sig)**2), label = "real")
+        fig.subplots_adjust(hspace=1, wspace = 1)
 
         # Retrieving and plotting FFT data.
         plt.show()
-        # np.savez('C:/Users/qcrew/Documents/Candace/somerset_tof/optimize/tof_demod_e_square_1000.npz',
-        #          results = results, t_rel = t_rel, int_freq = int_freq, freqs = freqs, amps_sig = amps_sig, real= np.real(demod_sig), imag = np.imag(demod_sig) )
+        np.savez('C:/Users/qcrew/Documents/Candace/somerset_tof/optimize/tof_demod_g_square_900.npz', 
+                 results = results, t_rel = t_rel, int_freq = int_freq, freqs = freqs, amps_sig = amps_sig, real= np.real(demod_sig), imag = np.imag(demod_sig) )

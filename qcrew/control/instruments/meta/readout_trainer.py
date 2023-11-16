@@ -86,18 +86,19 @@ class ReadoutTrainer(Parametrized):
         weights = self._update_weights(squeezed_diff)
 
         # Plot envelopes
-        fig, axes = plt.subplots(2, 1, sharex=True, figsize=(7, 10))
-        axes[0].plot(1000 * np.real(env_g), label="Re")
-        axes[0].plot(1000 * np.imag(env_g), label="Imag")
-        axes[0].set_title("|g> envelope")
-        axes[0].set_ylabel("Amplitude (mV)")
-        axes[0].legend()
-        axes[1].plot(1000 * np.real(env_e))
-        axes[1].plot(1000 * np.imag(env_e))
-        axes[1].set_title("|e> envelope")
-        axes[1].set_ylabel("Amplitude (mV)")
-        axes[1].set_xlabel("Time (ns)")
-        plt.show()
+        if 1:
+            fig, axes = plt.subplots(2, 1, sharex=True, figsize=(7, 10))
+            axes[0].plot(1000 * np.real(env_g), label="Re")
+            axes[0].plot(1000 * np.imag(env_g), label="Imag")
+            axes[0].set_title("|g> envelope")
+            axes[0].set_ylabel("Amplitude (mV)")
+            axes[0].legend()
+            axes[1].plot(1000 * np.real(env_e))
+            axes[1].plot(1000 * np.imag(env_e))
+            axes[1].set_title("|e> envelope")
+            axes[1].set_ylabel("Amplitude (mV)")
+            axes[1].set_xlabel("Time (ns)")
+            plt.show()
 
         return env_g, env_e
 
@@ -154,10 +155,14 @@ class ReadoutTrainer(Parametrized):
                 if excite_qubit:
                     # qua.align("FLUX", self._qubit.name)
                     self._qubit.play(qubit_pi_pulse)
-                    qua.align(self._rr.name, self._qubit.name)
+                    # qua.align(self._rr.name, self._qubit.name)
+                qua.wait(int(50 // 4), self._rr.name, "QUBIT_EF")  # ns
+                qua.align(self._rr.name, self._qubit.name, "QUBIT_EF")
 
+                qua.play("digital_pulse", "QUBIT_EF")
+                # self._rr.measure((I, Q))
                 qua.measure(readout_pulse, self._rr.name, adc)
-                qua.wait(wait_time, self._rr.name)
+                qua.wait(wait_time, self._rr.name)  # cc
 
             with qua.stream_processing():
                 # streams for envelope calculation
@@ -266,39 +271,39 @@ class ReadoutTrainer(Parametrized):
 
         # Calculates the confusion matrix of the readout
         conf_matrix = self._calculate_confusion_matrix(Ig_list, Ie_list, threshold)
+        if 1:
+            # Plot scatter and contour of each blob
+            fig, ax = plt.subplots(figsize=(7, 7))
+            ax.set_aspect("equal")
+            ax.scatter(Ig_list, Qg_list, label="|g>", s=5)
+            ax.scatter(Ie_list, Qe_list, label="|e>", s=5)
+            ax.contour(
+                data_g["I_grid"],
+                data_g["Q_grid"],
+                data_g["counts_fit"],
+                levels=5,
+                cmap="winter",
+            )
+            ax.contour(
+                data_e["I_grid"],
+                data_e["Q_grid"],
+                data_e["counts_fit"],
+                levels=5,
+                cmap="autumn",
+            )
+            ax.plot(
+                [threshold, threshold],
+                [np.min(data_g["Q_grid"]), np.max(data_g["Q_grid"])],
+                label="threshold",
+                c="k",
+                linestyle="--",
+            )
 
-        # Plot scatter and contour of each blob
-        fig, ax = plt.subplots(figsize=(7, 7))
-        ax.set_aspect("equal")
-        ax.scatter(Ig_list, Qg_list, label="|g>", s=5)
-        ax.scatter(Ie_list, Qe_list, label="|e>", s=5)
-        ax.contour(
-            data_g["I_grid"],
-            data_g["Q_grid"],
-            data_g["counts_fit"],
-            levels=5,
-            cmap="winter",
-        )
-        ax.contour(
-            data_e["I_grid"],
-            data_e["Q_grid"],
-            data_e["counts_fit"],
-            levels=5,
-            cmap="autumn",
-        )
-        ax.plot(
-            [threshold, threshold],
-            [np.min(data_g["Q_grid"]), np.max(data_g["Q_grid"])],
-            label="threshold",
-            c="k",
-            linestyle="--",
-        )
-
-        ax.set_title("IQ blobs for each qubit state")
-        ax.set_ylabel("Q")
-        ax.set_xlabel("I")
-        ax.legend()
-        plt.show()
+            ax.set_title("IQ blobs for each qubit state")
+            ax.set_ylabel("Q")
+            ax.set_xlabel("I")
+            ax.legend()
+            plt.show()
 
         # Plot I histogram
         fig, ax = plt.subplots(figsize=(7, 4))
@@ -330,8 +335,8 @@ class ReadoutTrainer(Parametrized):
         # ax.set_title("Projection of the IQ blobs onto the I axis")
         # ax.set_ylabel("counts")
         # ax.set_xlabel("I")
-        ax.legend()
-        plt.show()
+        # ax.legend()
+        # plt.show()
 
         # Organize the raw I and Q data for each G and E measurement
         data = {
@@ -403,13 +408,13 @@ class ReadoutTrainer(Parametrized):
         qubit_pi_pulse = self.qubit_pi_pulse
 
         with qua.program() as acquire_IQ:
+            # qua.update_frequency(self._rr.name, self._rr.int_freq)
             I = qua.declare(qua.fixed)
             Q = qua.declare(qua.fixed)
             n = qua.declare(int)
 
             with qua.for_(n, 0, n < reps, n + 1):
-
-                # qua.play("predist_square_plusminus_pulse" * qua.amp(-0.3), "FLUX")
+                # qua.play("predist_square_plusminus_pulse" * qua.amp(-0.3), )
                 # qua.wait(int(2500 // 4), self._qubit.name, self._rr.name)
 
                 if self.ddrop_params:
@@ -418,8 +423,11 @@ class ReadoutTrainer(Parametrized):
                 if excite_qubit:
                     # qua.align(self._rr.name, self._qubit.name)
                     self._qubit.play(qubit_pi_pulse)
-                    qua.align(self._rr.name, self._qubit.name)
 
+                qua.wait(int(700 // 4), self._rr.name, "QUBIT_EF")  # ns
+                qua.align(self._rr.name, self._qubit.name, "QUBIT_EF")
+
+                qua.play("digital_pulse", "QUBIT_EF")
                 self._rr.measure((I, Q))
                 qua.save(I, "I")
                 qua.save(Q, "Q")

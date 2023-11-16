@@ -27,7 +27,7 @@ class VacuumRabi2D(Experiment):
     def __init__(self, qubit_op, fit_fn="", **other_params):
         self.qubit_op = qubit_op  # pi pulse
         self.fit_fn = fit_fn
-        self.internal_sweep = list(np.arange(4, 300, 8))
+        self.internal_sweep = list(np.arange(4, 301, 8))
         super().__init__(**other_params)  # Passes other parameters to parent
 
     def QUA_play_pulse_sequence(self):
@@ -37,44 +37,53 @@ class VacuumRabi2D(Experiment):
         qubit, rr, flux = self.modes  # get the modes
         for flux_len in self.internal_sweep:
             qua.align()
-            qubit.play(self.qubit_op)  # play pi qubit pulse
+            
+                
+            # # Fock satae preparation
+            # qubit.play("gaussian_pi", ampx = 0.5)
+            # qua.align(qubit.name, flux.name)
+            # flux.play(f"constcos6ns_reset_1to2_25ns_E2pF2pG2pH2", ampx=0.14)
+            # qua.align()
+            
+            # Vacuum rabi of next transition
+            qubit.play(self.qubit_op, ampx=0.5)  # play pi qubit pulse
             qua.align(flux.name, qubit.name)
-            flux.play(f"square_{flux_len}ns_ApBpC", ampx=self.x)
-
-            qua.wait(int((160 + flux_len + 200) // 4), rr.name)
+            flux.play(f"constcos6ns_reset_1to2_{flux_len}ns_E2pF2pG2pH2", ampx=self.x)
+            qua.wait(int((200 + 3 * flux_len) // 4), rr.name, "QUBIT_EF")
+            qua.play("digital_pulse", "QUBIT_EF")
             rr.measure((self.I, self.Q))  # measure qubit state
             if self.single_shot:  # assign state to G or E7
                 qua.assign(
                     self.state, qua.Cast.to_fixed(self.I < rr.readout_pulse.threshold)
                 )
-            qua.wait(int(self.wait_time // 4))  # wait system reset
+            qua.wait(int(self.wait_time // 4))  # wait system   reset
             self.QUA_stream_results()  # stream variables (I, Q, x, etc)
             qua.align()
 
 
-# -------------------------------- Execution -----------------------------------
+# ------------------    -------------- Execution -----------------------------------
 
 if __name__ == "__main__":
 
-    x_start = 0.45
-    x_stop = 1.05
-    x_step = 0.01
-
+    x_start = 0.01
+    x_stop = 0.25
+    x_step = 0.005
     parameters = {
         "modes": ["QUBIT", "RR", "FLUX"],
-        "reps": 1000,
-        "wait_time": 0.7e6,
+        "reps": 500,
+        "wait_time": 1e6,
         "x_sweep": ((x_start), (x_stop + x_step / 2), (x_step)),
         "qubit_op": "gaussian_pi",
-        # "single_shot": True,
-        "plot_quad": "I_AVG",
-        "fetch_period": 30,
+        "single_shot": True,
+        # "plot_quad": "I_AVG",
+        "fetch_period": 120,
     }
 
     plot_parameters = {
         "xlabel": "Amp of Fast Flux",
         "ylabel": "Flux_len (ns)",
         "plot_type": "2D",
+        "cmap": "viridis_r",
     }
 
     experiment = VacuumRabi2D(**parameters)

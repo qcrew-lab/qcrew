@@ -17,7 +17,7 @@ import numpy as np
 
 class VacuumRabi(Experiment):
 
-    name = "vacuum_rabi"
+    name = "vacuum_rabi_amp"
 
     _parameters: ClassVar[set[str]] = Experiment._parameters | {
         "qubit_op",  # operation used for exciting the qubit

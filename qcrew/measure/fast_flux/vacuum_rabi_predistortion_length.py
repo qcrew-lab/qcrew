@@ -17,7 +17,7 @@ import numpy as np
 
 class VacuumRabi(Experiment):
 
-    name = "vacuum_rabi"
+    name = "vacuum_rabi_length"
 
     _parameters: ClassVar[set[str]] = Experiment._parameters | {
         "qubit_op",  # operation used for exciting the qubit
@@ -27,7 +27,7 @@ class VacuumRabi(Experiment):
     def __init__(self, qubit_op, fit_fn="", **other_params):
         self.qubit_op = qubit_op  # pi pulse
         self.fit_fn = fit_fn
-        self.internal_sweep = list(np.arange(4, 200, 8))
+        self.internal_sweep = list(np.arange(4, 151, 1))
         super().__init__(**other_params)  # Passes o4her parameters to parent
 
     def QUA_play_pulse_sequence(self):
@@ -37,11 +37,19 @@ class VacuumRabi(Experiment):
         qubit, rr, flux = self.modes  # get the modes
         for flux_len in self.internal_sweep:
             qua.align()
-            qubit.play(self.qubit_op)  # play pi qubit pulse
-            qua.align(flux.name, qubit.name)
-            flux.play(f"square_{flux_len}ns_ApBpC", ampx=self.x)
 
-            qua.wait(int((160 + flux_len + 200) // 4), rr.name)
+            # # Fock satae preparation
+            # qubit.play("gaussian_pi")
+            # qua.align(qubit.name, flux.name)
+            # flux.play(f"constcos6ns_reset_1to2_25ns_E2pF2pG2pH2", ampx=0.15)
+            # qua.align()
+
+            # Vacuum rabi of next transition
+            qubit.play(self.qubit_op, ampx=0.5)  # play pi qubit pulse
+            qua.align(flux.name, qubit.name)
+            flux.play(f"constcos6ns_reset_1to2_{flux_len}ns_E2pF2pG2pH2", ampx=0.14)
+            qua.wait(int((200 + 3 * flux_len) // 4), rr.name, "QUBIT_EF")
+            qua.play("digital_pulse", "QUBIT_EF")
             rr.measure((self.I, self.Q))  # measure qubit state
             if self.single_shot:  # assign state to G or E7
                 qua.assign(
@@ -58,14 +66,14 @@ if __name__ == "__main__":
 
     parameters = {
         "modes": ["QUBIT", "RR", "FLUX"],
-        "reps": 3000,
-        "wait_time":1e6,
+        "reps": 1000,
+        "wait_time": 1.0e6,
         "qubit_op": "gaussian_pi",
         # "flux_pulse": "constant_pulse",
-        # "single_shot": True,
-        "plot_quad": "I_AVG",
+        "single_shot": True,
+        # "plot_quad": "I_AVG",
         "fetch_period": 3,
-        # "fit_fn": "gaussian",
+        # "fit_fn": "sine",
     }
 
     plot_parameters = {

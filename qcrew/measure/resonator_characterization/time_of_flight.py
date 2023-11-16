@@ -5,7 +5,7 @@ from qcrew.control import Stagehand
 from qm import qua
 import numpy as np
 
-reps = 3000
+reps = 5000
 
 
 def get_qua_program(rr):
@@ -14,11 +14,16 @@ def get_qua_program(rr):
         n = qua.declare(int)
 
         with qua.for_(n, 0, n < reps, n + 1):
-            qua.reset_phase(rr.name)
-            qua.measure("readout_pulse" * qua.amp(1), rr.name, adc_stream)
-            # qua.play("constant_pulse" * qua.amp(0.3), "FLUX")
-            qua.wait(2000, rr.name)
+            # qua.reset_phase(rr.name)
+            # qua.play("gaussian_pi", "QUBIT")
             qua.align()
+            
+            # flux.play("constcos80ns_tomo_RO_tomo_E2pF2pG2pH2", ampx=0.0522)
+            # qua.wait(int(30 // 4), rr.name, "QUBIT_EF") 
+            
+            qua.play("digital_pulse", "QUBIT_EF")
+            qua.measure("readout_pulse" * qua.amp(0), rr.name, adc_stream)
+            qua.wait(20000, rr.name)
 
         with qua.stream_processing():
             adc_stream.input1().average().save("adc_results")
@@ -31,7 +36,7 @@ if __name__ == "__main__":
 
     with Stagehand() as stage:
 
-        rr = stage.RR
+        rr, flux, rr_digital_pulse = stage.RR, stage.FLUX, stage.QUBIT_EF
 
         # Execute script
         qm = stage.QM
@@ -51,7 +56,7 @@ if __name__ == "__main__":
         axes[0].plot(results / 2 ** 12)
         axes[1].plot(freqs[5:] / 1e6, amps[5:])
         r = results / 2 ** 12
-        np.savez("6_dot92991_GHZ_RR_20230822", r)
+        # np.savez("6_dot932_GHZ_RR_20230830", r)
 
         # Retrieving and plotting FFT data.
         plt.show()

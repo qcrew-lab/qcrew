@@ -51,37 +51,32 @@ class Wigner1D(Experiment):
         qua.reset_frame(cav.name)
 
         # Fock satae preparation
+        qubit.play("gaussian_pi", ampx=1)
+        qua.align(qubit.name, flux.name)
+        flux.play(f"constcos6ns_reset_1to2_28ns_E2pF2pG2pH2", ampx=0.1458)
+        qua.align()
+        # # Fock satae 2 preparation
         # qubit.play("gaussian_pi")
-        # qua.align(flux.name, qubit.name)
-        # flux.play("predist_pulse_36",ampx=0.39)
-        # qua.align(cav.name, flux.name)
-        # qua.wait(50, cav.name)  # cc
+        # qua.align(qubit.name, flux.name)
+        # flux.play(f"constcos2ns_reset_1to2_23ns_E2pF2pG2pH2", ampx=0.25)
 
         # Wigner 1d
         ## single displacement
         qua.align()
         cav.play(
             self.cav_op_wigner,
-            # ampx=self.x,
             ampx=(-self.cut, self.x, -self.x, -self.cut),
-            phase=0.0,  # 0.25
+            phase=0.0,
         )
         qua.align(cav.name, qubit.name)
-        qubit.play(self.qubit_op_wigner)  # play pi/2 pulse around X
-        qua.wait(
-            int(self.delay // 4),
-            cav.name,
-            qubit.name,
-        )  # conditional phase gate on even, odd Fock state
-        qubit.play(self.qubit_op_wigner, phase=self.y)  # play pi/2 pulse around X
+        qubit.play(self.qubit_op_wigner)
+        qua.wait(int(self.delay // 4), cav.name, qubit.name)
+        qubit.play(self.qubit_op_wigner, phase=self.y)
 
         # Measure cavity state
-        ### First detune qubit from cavity to reduce cross-kerr
-        qua.align(qubit.name, flux.name, rr.name)  # align measurement
-        # flux.play("square_2200ns_ApBpC", ampx=-0.3)
-        qua.wait(50, rr.name)
-
-        rr.measure((self.I, self.Q))  # measure transmitted signal
+        qua.align(qubit.name, rr.name, "QUBIT_EF")  # align measurement
+        qua.play("digital_pulse", "QUBIT_EF")
+        rr.measure((self.I, self.Q), ampx=0)  # measure qubit state
 
         # wait system reset
         qua.align()
@@ -100,28 +95,24 @@ class Wigner1D(Experiment):
 if __name__ == "__main__":
     x_start = -1.9
     x_stop = 1.91
-    x_step = 0.15
-
-    y_start = -1.96
-    y_stop = 1.96
-    y_step = 0.1
+    x_step = 0.1
 
     parameters = {
         "modes": ["QUBIT", "RR", "CAVITY", "FLUX"],
-        "reps": 50000,
-        "wait_time": 1e6,  # 700e3 #ns
+        "reps": 10000,
+        "wait_time": 1.0e6,  # 700e3 #ns
         "x_sweep": (x_start, x_stop + x_step / 2, x_step),
         "y_sweep": (0.0, 0.5),
         "cut": 0.0,
-        "qubit_op": "qctrl_fock_0p1",
-        "cav_op": "qctrl_fock_0p1",
+        "qubit_op": "_",
+        "cav_op": "_",
         "qubit_op_wigner": "gaussian_pi2_short",
         "cav_op_wigner": "cohstate_1",
-        # "single_shot": True,
-        "plot_quad": "I_AVG",
-        # "fit_fn": None,
-        "delay": 98,  # pi/chi 208 ns 472
-        "fetch_period": 3,
+        "single_shot": True,
+        # "plot_quad": "I_AVG",
+        "fit_fn": "gaussian",
+        "delay": 74 * 4,  # pi/chi 208 ns 472
+        "fetch_period": 5,
     }
 
     plot_parameters = {

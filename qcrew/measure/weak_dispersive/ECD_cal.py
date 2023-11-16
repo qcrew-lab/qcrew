@@ -57,6 +57,7 @@ class ECDCalibration(Experiment):
         qua.reset_frame(cav.name)
         ###################### do a first measurement  #####################
 
+        qua.align()
         ######################  charactristic function  1D measurement #####################
         Char_1D_singledisplacement(
             cav,
@@ -69,12 +70,12 @@ class ECDCalibration(Experiment):
             measure_real=self.measure_real,
             tomo_phase=0,
         )
-        # play pi/2 pulse around X or Y, to measure either the real or imaginary part of the characteristic function
-        qua.align()  # align measurement
-        rr.measure((self.I, self.Q))
+        # Measure cavity state
+        qua.align(rr.name, "QUBIT_EF", qubit.name)
+        qua.play("digital_pulse", "QUBIT_EF")
+        rr.measure((self.I, self.Q))  # measure transmitted signal
+        qua.wait(int(self.wait_time // 4), rr.name)  # wait system reset
 
-        # wait system reset
-        qua.wait(int(self.wait_time // 4))
         if self.single_shot:  # assign state to G or E
             qua.assign(
                 self.state, qua.Cast.to_fixed(self.I < rr.readout_pulse.threshold)
@@ -82,24 +83,23 @@ class ECDCalibration(Experiment):
 
         self.QUA_stream_results()  # stream variables (I, Q, x, etc)
 
-
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-    x_start = -1.1
-    x_stop = 1.1
-    x_step = 0.05
+    x_start = -1.7
+    x_stop = 1.71
+    x_step = 0.1
 
     parameters = {
         "modes": ["QUBIT", "CAVITY", "RR"],
-        "reps": 10000,
-        "wait_time": 200e3,
-        "fetch_period": 2,  # time between data fetching rounds in sec
-        "delay": 200,  # pi/chi
+        "reps": 100000,
+        "wait_time": 1e6,
+        "fetch_period": 4,  # time between data fetching rounds in sec
+        "delay": 160, 
         "x_sweep": (x_start, x_stop + x_step / 2, x_step),
-        "qubit_pi2": "pi2",
-        "qubit_pi": "pi",
-        "ecd_displacement": "bob_ecd_1",
+        "qubit_pi2": "gaussian_pi2_short_ecd",
+        "qubit_pi": "gaussian_pi_short_ecd",
+        "ecd_displacement": "ecd2_displacement",
         "single_shot": False,
         "plot_quad": "I_AVG",
         "measure_real": True,

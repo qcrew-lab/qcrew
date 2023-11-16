@@ -39,12 +39,40 @@ class NSplitSpectroscopy(Experiment):
         """
         qubit, cav, rr, flux = self.modes  # get the modes
 
+        # Vacuum rabi:
+        # with qua.switch_(self.y):
+        #     with qua.case_(0):
+        #         qubit.play("gaussian_pi", ampx=0)
+        #     with qua.case_(1):
+        #         # Fock satae preparation
+        #         qubit.play("gaussian_pi")
+        #         qua.align(qubit.name, flux.name)
+        #         flux.play(f"constcos6ns_reset_1to2_28ns_E2pF2pG2pH2", ampx=0.1458)
+        #         qua.align()
+        #     with qua.case_(2):
+        #         # Fock satae preparation
+        #         qubit.play("gaussian_pi")
+        #         qua.align(qubit.name, flux.name)
+        #         flux.play(f"constcos6ns_reset_1to2_28ns_E2pF2pG2pH2", ampx=0.1458)
+        #         qua.align()
+        #         # Fock satae 2 preparation
+        #         qubit.play("gaussian_pi")
+        #         qua.align(qubit.name, flux.name)
+        #         flux.play(f"constcos2ns_reset_1to2_23ns_E2pF2pG2pH2", ampx=0.25)
 
+        #     # Fock satae 2 preparation
+        #     qubit.play("gaussian_pi")
+        #     qua.align(qubit.name, flux.name)
+        #     flux.play(f"constcos2ns_reset_1to2_23ns_E2pF2pG2pH2", ampx=0.25)
+
+        cav.play(self.cav_op, ampx=1.7)  # play displacement to cavity
+        qua.align(cav.name, qubit.name)  # align all modes
         # number splitting
         qua.update_frequency(qubit.name, self.x)
         qubit.play(self.qubit_op_measure)  # play qubit pulse
-        qua.align(qubit.name, rr.name)  # align modes
-        rr.measure((self.I, self.Q))  # measure transmitted signal
+        qua.align(qubit.name, rr.name, "QUBIT_EF")  # align modes
+        qua.play("digital_pulse", "QUBIT_EF")
+        rr.measure((self.I, self.Q))  # measure qubit state
         qua.align(cav.name, qubit.name, rr.name)
         qua.wait(int(self.wait_time // 4), cav.name)  # wait system reset
 
@@ -59,23 +87,22 @@ class NSplitSpectroscopy(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-    x_start = -60e6
-    x_stop = -48e6
-    x_step = 0.1e6
+    x_start = -98e6
+    x_stop = -92e6
+    x_step = 0.2e6
 
     parameters = {
         "modes": ["QUBIT", "CAVITY", "RR", "FLUX"],
-        "reps": 20000,
-        "wait_time": 1.6e6,
+        "reps": 10000,
+        "wait_time": 1e6,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
-        "y_sweep": (False, True),
+        # "y_sweep": (0, 1,),
         "qubit_op_measure": "gaussian_pi_320",
-        # "cav_op": "const_cohstate_1",
-        "qubit_op": "-",
-        "cav_op": "const_cohstate_1",
+        "qubit_op": "gaussian_pi_320",
+        "cav_op": "cohstate_1_short",
         # "single_shot": True,
-        "fit_fn": "gaussian",
-        "fetch_period": 8,
+        # "fit_fn": "gaussian",
+        "fetch_period": 5,
         "plot_quad": "I_AVG",
     }
 

@@ -37,21 +37,18 @@ class CavitySpectroscopyFastFlux(Experiment):
         qubit, cav, rr, flux = self.modes  # get the modes
 
         qua.update_frequency(cav.name, self.x)  # update resonator pulse frequency
-        
-        flux.play("square_IIR_long", ampx=0.665)
-        qua.wait(int((40) // 4), qubit.name)
-        qubit.play(self.qubit_op, ampx=self.y)  # play pi qubit pulse -109e6
-        qua.align(cav.name, qubit.name)  # align all modes
-        cav.play(self.cav_op)  # play displacement to cavity
-        qua.align(cav.name, qubit.name)  # align all modes
-        qubit.play(self.qubit_op)  # play qubit pulse
-        qua.align(rr.name, qubit.name)  # align all modes
-        #readout
-        qua.wait(25, rr.name)
-        
-        
+
+        flux.play("constcos80ns_2000ns_E2pF2pG2pH2", ampx=-0.1057)
+        qua.wait(int(80 // 4), qubit.name, cav.name)
+        cav.play(self.cav_op)
+        qua.align(qubit.name, cav.name)
+        qua.update_frequency(qubit.name, int(-226.3e6))
+        qubit.play(self.qubit_op, ampx=1)  # play qubit pulse
+
+        qua.wait(int((800 + 1200) // 4), rr.name, "QUBIT_EF")  # ns
+        qua.play("digital_pulse", "QUBIT_EF")
         rr.measure((self.I, self.Q))  # measure transmitted signal
-        qua.wait(int(self.wait_time // 4), cav.name)  # wait system reset
+        qua.wait(int(self.wait_time // 4), rr.name)  # wait system reset
 
         if self.single_shot:  # assign state to G or E
             qua.assign(
@@ -66,19 +63,18 @@ class CavitySpectroscopyFastFlux(Experiment):
 
 if __name__ == "__main__":
 
-    x_start = -70e6
+    x_start = -50e6
     x_stop = -30e6
-    x_step = 0.25e6
+    x_step = 0.15e6
     parameters = {
         "modes": ["QUBIT", "CAVITY", "RR", "FLUX"],
         "reps": 2000,
-        "wait_time": 1.5e6,
+        "wait_time": 0.4e6,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
-        "y_sweep": (0.0, 1),
-        "qubit_op": "gaussian_pi",
+        "qubit_op": "gaussian_pi_weak_160",
         "fetch_period": 3,
         # "single_shot": True,
-        "cav_op": "const_cohstate_1",
+        "cav_op": "cohstate_1_long",
     }
 
     plot_parameters = {

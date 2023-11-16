@@ -17,9 +17,9 @@ if __name__ == "__main__":
         file_path = Path("C:/Users/qcrew/Desktop/qcrew/qcrew/config/weights") / date_str
 
         params = {
-            "reps": 50000,
-            "wait_time": 80000,  # ns
-            "qubit_pi_pulse": "gaussian_pi",  # pulse to excite qubit
+            "reps": 20000,
+            "wait_time": 80000,  # cc 5e3 cc= 20000ns qubit t1: 
+            "qubit_pi_pulse": "gaussian_pi_rr",  # pulse to excite qubit
             "weights_file_path": file_path,
         }
 

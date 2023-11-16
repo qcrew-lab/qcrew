@@ -10,3 +10,4 @@ from qcrew.control.pulses.gaussian_pulse import GaussianPulse
 from qcrew.control.pulses.numerical_pulse import NumericalPulse
 from qcrew.control.pulses.constant_cosine_pulse import ConstantCosinePulse
 from qcrew.control.pulses.digital_marker_pulse import DigitalMarkerPulse
+# from qcrew.control.pulses.castle_pulse import CastlePulse, ReadoutPulse

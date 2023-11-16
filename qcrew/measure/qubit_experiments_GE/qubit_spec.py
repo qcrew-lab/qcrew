@@ -33,18 +33,24 @@ class QubitSpectroscopy(Experiment):
         """
         Defines pulse sequence to be played inside the experiment loop
         """
-        qubit, rr = self.modes  # get the modes
-
+        qubit, rr, cav, flux = self.modes  # get the modes
+        qubit.lo_freq = 5.1937e9
+        # qubit.lo_freq = 5.77e9
         qua.update_frequency(qubit.name, self.x)  # update resonator pulse frequency
         qubit.play(self.qubit_op)  # play qubit pulse
-        qua.align(qubit.name, rr.name)  # wait qubit pulse to end
-        rr.measure((self.I, self.Q))  # measure transmitted signal
+        qua.align()
+
+        flux.play("constcos80ns_2000ns_E2pF2pG2pH2", ampx=-0.258)
+        qua.wait(int(300 // 4), rr.name, "QUBIT_EF")  # ns
+        
+        qua.play("digital_pulse", "QUBIT_EF")
+        rr.measure((self.I, self.Q), ampx=0)  # measure transmitted signal
         qua.wait(int(self.wait_time // 4), rr.name)  # wait system reset
 
-        if self.single_shot:  # assign state to G or E
+        if self.single_shot:  # assign state to G or 
             qua.assign(
                 self.state, qua.Cast.to_fixed(self.I < rr.readout_pulse.threshold)
-            )
+            ) 
 
         self.QUA_stream_results()  # stream variables (I, 4Q, x, etc)
         qua.align()
@@ -53,16 +59,21 @@ class QubitSpectroscopy(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-    x_start = -80e6
+
+    # x_start =-150e6
+    # x_stop = -120e6
+    # x_step = 0.1e6
+    x_start = -60e6
     x_stop = -40e6
-    x_step = 0.5e6
+    x_step = 0.4e6
+
     parameters = {
-        "modes": ["QUBIT", "RR"],
-        "reps": 80000,
+        "modes": ["QUBIT", "RR", "CAVITY", "FLUX"],
+        "reps": 3000,
         "wait_time": 60e3,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
-        "qubit_op": "gaussian_pi",
-        "plot_quad": "Z_AVG",
+        "qubit_op": "gaussian_pi_400_lk", #gaussian_pi_400_lk
+        "plot_quad": "I_AVG",
         # "single_shot": True,
         "fit_fn": "gaussian",
     }

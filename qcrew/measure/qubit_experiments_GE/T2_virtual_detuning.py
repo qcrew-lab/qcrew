@@ -50,8 +50,13 @@ class T2(Experiment):
         qua.wait(self.x, qubit.name)  # wait for partial qubit decay
         qua.assign(self.phase, qua.Cast.mul_fixed_by_int(factor, self.x))
         qubit.play(self.qubit_op, phase=self.phase)  # play half pi qubit pulse
-        qua.align(qubit.name, rr.name)  # wait last qubit pulse to end
-        rr.measure((self.I, self.Q))  # measure qubit state
+        # qua.align(qubit.name, rr.name)  # wait last qubit pulse to end
+        # rr.measure((self.I, self.Q))  # measure qubit state
+        
+        qua.align()  # wait qubit pulse to end
+        qua.play("digital_pulse", "QUBIT_EF")
+        rr.measure((self.I, self.Q), ampx = 0)  # measure qubit state
+        
         if self.single_shot:  # assign state to G or E
             qua.assign(
                 self.state, qua.Cast.to_fixed(self.I < rr.readout_pulse.threshold)
@@ -66,19 +71,19 @@ class T2(Experiment):
 if __name__ == "__main__":
 
     x_start = 4
-    x_stop = 700
-    x_step = 10
-    detuning_ = 2e6  # 1.12e6
+    x_stop = 400
+    x_step = 8
+    detuning_ = 6e6  # 1.12e6
 
     parameters = {
         "modes": ["QUBIT", "RR"],
-        "reps": 100000,
-        "wait_time": 80000,
+        "reps": 10000,
+        "wait_time": 80e3,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
         "qubit_op": "gaussian_pi2",
         "detuning": int(detuning_),
         # "single_shot": True,
-        "plot_quad": "Z_AVG",
+        "plot_quad": "I_AVG",
         "extra_vars": {
             "phase": macros.ExpVariable(
                 var_type=qua.fixed,

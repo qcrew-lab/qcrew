@@ -32,17 +32,21 @@ class DoubleReadout(Experiment):
         """
         Defines pulse sequence to be played inside the experiment loop
         """
-        (rr,) = self.modes  # get the modes
+        (rr, qubit) = self.modes  # get the modes
 
+        qubit.play("gaussian_pi")
+        qua.align()
         # first readout
+        qua.play("digital_pulse", "QUBIT_EF")
         rr.measure((self.I, self.Q))  # measure qubit state
         if self.single_shot:  # assign state to G or E
             qua.assign(
                 self.state, qua.Cast.to_fixed(self.I < rr.readout_pulse.threshold)
             )
 
-        qua.wait(1500, rr.name)
+        qua.wait(2000, rr.name, "QUBIT_EF")
         # # second readout
+        qua.play("digital_pulse", "QUBIT_EF")
         rr.measure((self.I, self.Q))  # measure qubit state
         if self.single_shot:  # assign state to G or E
             qua.assign(
@@ -59,7 +63,7 @@ class DoubleReadout(Experiment):
 if __name__ == "__main__":
 
     parameters = {
-        "modes": ["RR"],
+        "modes": ["RR", "QUBIT"],
         "reps": 200000,
         "wait_time": 80000,  # 500ns*5 = 2.5us = 2500ns
         "fit_fn": "gaussian",

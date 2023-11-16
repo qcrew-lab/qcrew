@@ -43,12 +43,17 @@ class DRAGCalibration(Experiment):
         """
         Defines pulse sequence to be played inside the experiment loop
         """
-        (qubit, rr) = self.modes  # get the modes
+        (qubit, rr, flux) = self.modes  # get the modes
 
         for gate_pair in self.gate_list:
             gate1_rot, gate1_axis, gate2_rot, gate2_axis, _ = gate_pair
 
             qua.reset_frame(qubit.name)
+            qua.align()
+
+            # qua.update_frequency(qubit.name, int(-176.4e6))
+            # flux.play("constcos80ns_1000ns_E2pF2pG2pH2", ampx=-0.0565)
+            qua.wait(int(120 // 4), qubit.name)
 
             # Play the first gate
             # The DRAG correction is scaled by self.x
@@ -58,37 +63,37 @@ class DRAGCalibration(Experiment):
             # The DRAG correction is scaled by self.x
             qubit.play(gate2_rot, ampx=(1.0, 0.0, 0.0, self.x), phase=gate2_axis)
 
-            qua.align(qubit.name, rr.name)  # align gates to measurement pulse
-
-            rr.measure((self.I, self.Q))  # measure transmitted signal
+            qua.wait(int(1000 // 4), qubit.name)
+            qua.align(qubit.name, rr.name, "QUBIT_EF")  # align measurement
+            qua.play("digital_pulse", "QUBIT_EF")
+            rr.measure((self.I, self.Q), ampx=0)  # measure qubit state
             if self.single_shot:  # assign state to G or E
                 qua.assign(
                     self.state, qua.Cast.to_fixed(self.I < rr.readout_pulse.threshold)
                 )
 
             qua.wait(int(self.wait_time // 4), rr.name)  # wait system reset
-
             qua.align(qubit.name, rr.name)  # align to the next gate pair
-
             self.QUA_stream_results()  # stream variables (I, Q, x, etc)
 
 
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-    x_start = 0.02
-    x_stop = 0.06
-    x_step = 0.0025
+    x_start = -0.15
+    x_stop = -0.07
+    x_step = 0.005
 
     parameters = {
-        "modes": ["QUBIT", "RR"],
-        "reps": 50000,
-        "wait_time": 60000,
+        "modes": ["QUBIT", "RR", "FLUX"],
+        "reps": 200000,
+        "wait_time": 80000,
         "x_sweep": (x_start, x_stop + x_step / 2, x_step),
-        "qubit_pi_op": "gaussian_pi_short",
-        "qubit_pi2_op": "gaussian_pi2_short",
-        "single_shot": False,
-        #"fetch_period": 3,
+        "qubit_pi_op": "gaussian_pi_short_ecd",
+        "qubit_pi2_op": "gaussian_pi2_short_ecd",
+        # "single_shot": True,
+        "plot_quad": "I_AVG",
+        # "fetch_period": 3,
     }
 
     plot_parameters = {

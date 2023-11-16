@@ -62,12 +62,17 @@ class ALLXY(Experiment):
         """
         Defines pulse sequence to be played inside the experiment loop
         """
-        (qubit, rr) = self.modes  # get the modes
+        (qubit, rr, flux) = self.modes  # get the modes
 
         for gate_pair in self.gate_list:
             gate1_rot, gate1_axis, gate2_rot, gate2_axis, _ = gate_pair
 
             qua.reset_frame(qubit.name)
+            qua.align()
+
+            # qua.update_frequency(qubit.name, int(-176.4e6))
+            # flux.play("constcos80ns_1000ns_E2pF2pG2pH2", ampx=-0.0565)
+            # qua.wait(int(120 // 4), qubit.name)
 
             # Play the first gate
             if gate1_rot != "idle":
@@ -77,9 +82,10 @@ class ALLXY(Experiment):
             if gate2_rot != "idle":
                 qubit.play(gate2_rot, phase=gate2_axis)
 
-            qua.align(qubit.name, rr.name)  # align gates to measurement pulse
-
-            rr.measure((self.I, self.Q))  # measure transmitted signal
+            # qua.wait(int(1240 // 4), rr.name, "QUBIT_EF")  # ns
+            qua.align(qubit.name, rr.name, "QUBIT_EF")  # align measurement
+            qua.play("digital_pulse", "QUBIT_EF")
+            rr.measure((self.I, self.Q), ampx=0)  # measure qubit state
 
             if self.single_shot:  # assign state to G or E
                 qua.assign(
@@ -88,7 +94,7 @@ class ALLXY(Experiment):
 
             qua.wait(int(self.wait_time // 4), rr.name)  # wait system reset
 
-            qua.align(qubit.name, rr.name)  # align to the next gate pair
+            qua.align()  # align to the next gate pair
 
             self.QUA_stream_results()  # stream variables (I, Q, x, etc)
 
@@ -98,13 +104,13 @@ class ALLXY(Experiment):
 if __name__ == "__main__":
 
     parameters = {
-        "modes": ["QUBIT", "RR"],
+        "modes": ["QUBIT", "RR", "FLUX"],
         "reps": 20000,
-        "wait_time": 60000,
-        "qubit_pi_op": "gaussian_pi_short",
-        "qubit_pi2_op": "gaussian_pi2_short",
-        # "single_shot": True,
-        "plot_quad": "I_AVG",
+        "wait_time": 80000,
+        "qubit_pi_op": "gaussian_pi_short_ecd",
+        "qubit_pi2_op": "gaussian_pi2_short_ecd",
+        "single_shot": True,
+        # "plot_quad": "I_AVG",
     }
 
     plot_parameters = {

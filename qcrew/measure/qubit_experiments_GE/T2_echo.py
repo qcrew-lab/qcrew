@@ -45,8 +45,20 @@ class T2_Echo(Experiment):
         qubit.play(self.qubit_pi)  # play pi qubit pulse
         qua.wait(self.x / 2, qubit.name)  # wait for partial qubit decay
         qubit.play(self.qubit_pi2)  # play half pi qubit pulse
-        qua.align(qubit.name, rr.name)  # wait last qubit pulse to end
-        rr.measure((self.I, self.Q))  # measure qubit state
+        # qua.align(qubit.name, rr.name)  # wait last qubit pulse to end
+        # rr.measure((self.I, self.Q))  # measure qubit state
+        # if self.single_shot:  # assign state to G or E
+        #     qua.assign(
+        #         self.state, qua.Cast.to_fixed(self.I < rr.readout_pulse.threshold)
+        #     )
+        # qua.wait(int(self.wait_time // 4), rr.name)  # wait system reset
+
+        # self.QUA_stream_results()  # stream variables (I, Q, x, etc)
+
+        qua.align()  # wait qubit pulse to end
+        qua.play("digital_pulse", "QUBIT_EF")
+        rr.measure((self.I, self.Q), ampx = 0)  # measure qubit state
+        
         if self.single_shot:  # assign state to G or E
             qua.assign(
                 self.state, qua.Cast.to_fixed(self.I < rr.readout_pulse.threshold)
@@ -55,25 +67,24 @@ class T2_Echo(Experiment):
 
         self.QUA_stream_results()  # stream variables (I, Q, x, etc)
 
-
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-    x_start = 4
-    x_stop = 1000
-    x_step = 30
+    x_start = 2
+    x_stop = 2000
+    x_step = 50
     detuning = 0e6
 
     parameters = {
         "modes": ["QUBIT", "RR"],
-        "reps": 30000,
-        "wait_time": 60000,
+        "reps": 10000,
+        "wait_time": 80000,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
         "qubit_pi2": "gaussian_pi2",
         "qubit_pi": "gaussian_pi",
-        # "single_shot": False,
-        "plot_quad": "Z_AVG",
-        "detuning": int(detuning)
+        "single_shot": True,
+        # "plot_quad": "I_AVG",
+        "detuning": int(detuning),
     }
 
     plot_parameters = {

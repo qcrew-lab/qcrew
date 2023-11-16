@@ -15,7 +15,8 @@ def load(path: Path):
     try:
         with open(path, mode="r") as file:
             return yaml.safe_load(file)
-    except AttributeError:
+    except AttributeError as e:
+        logger.error(f"{e}")
         logger.error("Bad key found in yaml map")
         raise
     except IOError:

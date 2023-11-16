@@ -37,15 +37,22 @@ class CavityDisplacementCal(Experiment):
         qubit, cav, rr, flux = self.modes  # get the modes
 
         cav.play(self.cav_op, ampx=self.x)  # play displacement to cavity
+        # cav.play(self.cav_op, ampx=self.x)  # play displacement to cavity
+        # cav.play(self.cav_op, ampx=self.x)  # play displacement to cavity
+        # cav.play(self.cav_op, ampx=self.x)  # play displacement to cavity
+        # cav.play(self.cav_op, ampx=self.x)  # play displacement to cavity
         qua.align(cav.name, qubit.name)  # align all modes
         qubit.play(self.qubit_op)  # play qubit pulse
-        # qua.align()
 
-        qua.align(qubit.name, flux.name, rr.name)  # align measurement
-        flux.play("square_2200ns_ApBpC", ampx=self.y)
-        qua.wait(50, rr.name)
+        # qua.align()  # wait qubit pulse to end
+        qua.align()
+        # flux.play("constcos10ns_1500ns_E2pF2pG2pH2", ampx=-0.2) #constcos80ns_2000ns_E2pF2pG2pH2
+        # flux.play("constcos80ns_2000ns_E2pF2pG2pH2", ampx=0.2)
+        # qua.wait(int(220 // 4), rr.name, "QUBIT_EF")
+        qua.play("digital_pulse", "QUBIT_EF")
+        rr.measure((self.I, self.Q), ampx=0)  # measure qubit state
 
-        rr.measure((self.I, self.Q))  # measure transmitted signal
+        # rr.measure((self.I, self.Q))  # measure transmitted signal
         qua.wait(int(self.wait_time // 4), cav.name)
 
         if self.single_shot:  # assign state to G or E
@@ -62,18 +69,18 @@ class CavityDisplacementCal(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-    x_start = 0.0
-    x_stop = 1.81
-    x_step = 0.1
+    x_start = 0.01
+    x_stop = 1
+    x_step = 0.05
     parameters = {
-        "modes": ["QUBIT", "CAVITY", "RR", "FLUX"],
+        "modes": ["QUBIT", "CAVITY", "RR", "FLUX"], 
         "reps": 100000,
-        "wait_time": 0.6e6,
+        "wait_time": 2e6,
         "x_sweep": (x_start, x_stop + x_step / 2, x_step),
-        "y_sweep": (-0.0,),
-        "qubit_op": "gaussian_pi_160",
-        "cav_op": "cohstate_1",
-        # "fetch_period": 2,
+        # "y_sweep": [-0.4, 0.0, 0.4],
+        "qubit_op": "gaussian_pi_560",
+        "cav_op": "gaussian_cohstate_4",
+        # "fetch_period": 20,
         # "single_shot": True,
         "plot_quad": "I_AVG",
     }

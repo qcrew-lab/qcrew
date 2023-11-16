@@ -21,7 +21,7 @@ class CavityT1(Experiment):
         "qubit_op",  # operation used for exciting the qubit
         "fit_fn",  # fit function
     }
-
+    # cohstate_decay
     def __init__(self, cav_op, qubit_op, fit_fn="cohstate_decay", **other_params):
 
         self.cav_op = cav_op
@@ -36,22 +36,20 @@ class CavityT1(Experiment):
         """
         qubit, cav, rr, flux = self.modes  # get the modes
 
-        cav.play(self.cav_op, ampx=1.8)  # play displacement to cavity
-        cav.play(self.cav_op, ampx=1.3)  # play displacement to cavity
+        cav.play(self.cav_op, ampx=2)  # play displacement to cavity
+        # cav.play(self.cav_op, ampx=1)  # play displacement to cavity
         qua.wait(self.x, cav.name)  # wait relaxation
         qua.align(cav.name, qubit.name)  # align all modes
         qubit.play(self.qubit_op)  # play qubit pulse
 
-        qua.align(qubit.name, flux.name, rr.name)  # align measurement
-        # flux.play("square_2200ns_ApBpC", ampx=-0.0)
-        # qua.wait(50, rr.name)
-
-        rr.measure((self.I, self.Q))  # measure transmitted signal
+        qua.align()  # wait qubit pulse to end
+        # flux.play("constcos10ns_1500ns_E2pF2pG2pH2", ampx=-0.2)
+        #flux.play("constcos80ns_2000ns_E2pF2pG2pH2", ampx=-0.4)
+        # flux.play("constcos10ns_1500ns_E2pF2pG2pH2", ampx=0.18) #constcos80ns_2000ns_E2pF2pG2pH2
+        qua.wait(50, rr.name, "QUBIT_EF")
+        qua.play("digital_pulse", "QUBIT_EF")
+        rr.measure((self.I, self.Q), ampx=0)  # measure qubit state
         qua.wait(int(self.wait_time // 4), cav.name)
-
-        # qua.align(qubit.name, rr.name)  # align all modes
-        # rr.measure((self.I, self.Q))  # measure transmitted signal
-        # qua.wait(int(self.wait_time // 4), cav.name)  # wait system reset
 
         if self.single_shot:  # assign state to G or E
             qua.assign(
@@ -65,18 +63,19 @@ class CavityT1(Experiment):
 
 if __name__ == "__main__":
 
-    x_start = 10
-    x_stop = 200e3
-    x_step = 5e3
+    x_start = 1
+    x_stop = 60e3
+    x_step = 1.5e3
     parameters = {
         "modes": ["QUBIT", "CAVITY", "RR", "FLUX"],
-        "reps": 50000,
-        "wait_time": 0.4e6,
+        "reps": 5000,
+        "wait_time": 1e6,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
-        "qubit_op": "gaussian_pi_160",
-        "cav_op": "cohstate_1",
-        "fetch_period": 10,
+        "qubit_op": "gaussian_pi_560",
+        "cav_op": "gaussian_cohstate_1",
+        "fetch_period": 20,
         # "single_shot": True,
+        "plot_quad": "I_AVG",
     }
 
     plot_parameters = {

@@ -5,7 +5,9 @@ import numpy.ma as ma
 import matplotlib.pyplot as plt
 from qcrew.control import Stagehand
 
-filepath = "C:/Users/qcrew/Desktop/qcrew/data/somerset/20230726/160834_somerset_double_readout.h5"
+filepath = (
+    "C:/Users/qcrew/Desktop/qcrew/data/somerset/20231030/152342_somerset_power_rabi.h5"
+)
 
 file = h5py.File(filepath, "r")
 data = file["data"]
@@ -18,11 +20,17 @@ ss_data = np.where(data_i < thresh, 1, 0)
 # proj e: 1 (data_i < thresh)
 # proj g: 0 (data_i > thresh)
 
-m1 = ss_data[:, 0]
-m2 = ss_data[:, 1]
+ss_data = ss_data.flatten()
+# m1 = ss_data[:, 0]
+# m2 = ss_data[:, 1]
+m1 = ss_data[::2]
+m2 = ss_data[1::2]
 
 mx_e = ma.masked_array(m2, mask=m1)
 mx_g = ma.masked_array(m2, mask=np.logical_not(m1))
+
+print(m1[:20])
+print(m2[:20])
 
 print(filepath)
 print("\nP(m1:g) = ", 1 - m1.mean(axis=0))
@@ -33,4 +41,3 @@ print("P(m2:g|m1:g) = ", 1 - np.average(ma.masked_array(m2, mask=m1)))
 print("P(m2:g|m1:e) = ", 1 - np.average(ma.masked_array(m2, mask=np.logical_not(m1))))
 print("P(m2:e|m1:g) = ", np.average(ma.masked_array(m2, mask=m1)))
 print("P(m2:e|m1:e) = ", np.average(ma.masked_array(m2, mask=np.logical_not(m1))))
-

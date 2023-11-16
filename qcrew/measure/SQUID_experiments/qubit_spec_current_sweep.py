@@ -24,13 +24,13 @@ import time
 
 if __name__ == "__main__":
 
-    current_start = -3.7e-3
-    current_stop = -17.5e-3
-    current_step = -0.5e-3
+    current_start = 0.5e-3
+    current_stop = 0e-3
+    current_step = -0.01e-3
     current_sweep = np.arange(current_start, current_stop, current_step)
 
-    qubit_lo_start = 5.5e9 #6.57e9
-    qubit_lo_stop = 4.5e9
+    qubit_lo_start = 5.79989425e9  # 6.57e9
+    qubit_lo_stop = 5.78989425e9
     qubit_lo_step = -400e6
     qubit_lo_sweep = np.arange(qubit_lo_start, qubit_lo_stop, qubit_lo_step)
 
@@ -67,7 +67,7 @@ if __name__ == "__main__":
 
                 rr_spec_parameters = {
                     "modes": [stage.RR],
-                    "reps": 3000,
+                    "reps": 500,
                     "wait_time": 20000,
                     "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
                     "fit_fn": None,
@@ -124,20 +124,20 @@ if __name__ == "__main__":
                     ## Change qubit LO
                     stage.QUBIT.lo_freq = qubit_lo
 
-                    x_start = -200e6
-                    x_stop = 200e6
+                    x_start = -120e6
+                    x_stop = 100e6
                     x_step = 0.6e6
 
                     qubit_spec_parameters = {
                         "modes": [stage.QUBIT, stage.RR, stage.FLUX],
-                        "reps": 5000,
+                        "reps": 10000,
                         "wait_time": 60000,
                         "x_sweep": (
                             int(x_start),
                             int(x_stop + x_step / 2),
                             int(x_step),
                         ),
-                        "qubit_op": "gaussian_pi",
+                        "qubit_op": "gaussian_pi_160",
                         "fit_fn": None,
                         "fetch_period": 6,
                     }

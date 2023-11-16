@@ -31,7 +31,7 @@ class PowerRabi_FF(Experiment):
         qubit_delay,
         rr_delay,
         fit_fn="sine",
-        **other_params
+        **other_params,
     ):
 
         self.qubit_op = qubit_op
@@ -50,26 +50,17 @@ class PowerRabi_FF(Experiment):
         """
         qubit, rr, flux = self.modes  # get the modes
 
-        if 1:
-            flux.play("square_IIR_long", ampx=0.625)
-            qua.wait(int((20) // 4), qubit.name)
-            qubit.play(self.qubit_op, ampx=self.x)  # play qubit pulse
-            qubit.play(self.qubit_op, ampx=self.x)  # play qubit pulse
-            # qua.align()
-            
-            ##readout pulse
-            # qua.align()  # align measurement
-            # flux.play("detuned_readout", ampx=-0.5)
-            qua.wait(100, rr.name)
-        if 0:
-            flux.play(
-                "castle_IIR_230727_300ns_0dot00", ampx=0.49
-            )  # to make off resonance
-            qua.wait(int((450) // 4), rr.name, qubit.name)  # ns
-            qubit.play(self.qubit_op, ampx=self.x)  # play pi qubit pulse -109e6
-            qua.wait(int((920) // 4), rr.name)
+        qua.update_frequency(qubit.name, int(-176.4e6))
+        flux.play("constcos20ns_tomo_RO_tomo_E2pF2pG2pH2_11142023", ampx=-0.5662) #-0.5625
+        qua.wait(int(900 // 4), qubit.name)
+        qubit.play(self.qubit_op, ampx=self.x)  # play qubit pulse
+        qubit.play(self.qubit_op, ampx=self.x)  # play qubit pulse
+        qubit.play(self.qubit_op, ampx=self.x)  # play qubit pulse
+        qubit.play(self.qubit_op, ampx=self.x)  # play qubit pulse
 
-        rr.measure((self.I, self.Q))  # measure qubit state
+        qua.wait(int(self.rr_delay // 4), rr.name, "QUBIT_EF")  # ns
+        qua.play("digital_pulse", "QUBIT_EF")
+        rr.measure((self.I, self.Q))  # measure transmitted signal
         qua.wait(int(self.wait_time // 4), rr.name)  # wait system reset
 
         if self.single_shot:  # assign state to G or E
@@ -84,22 +75,22 @@ class PowerRabi_FF(Experiment):
 
 if __name__ == "__main__":
 
-    amp_start = -1.2
-    amp_stop = 1.2
-    amp_step = 0.05
+    amp_start = -1.9
+    amp_stop = 1.91
+    amp_step = 0.1
     parameters = {
         "modes": ["QUBIT", "RR", "FLUX"],
-        "reps": 100000,
-        "wait_time": 60e3,
+        "reps": 20000,
+        "wait_time": 80e3,
         "x_sweep": (amp_start, amp_stop + amp_step / 2, amp_step),
-        "qubit_op": "gaussian_pi",
+        "qubit_op": "gaussian_pi_short_ecd",
         # "freq_01": int(-48.68e6),
-        "qubit_delay": 400,  # ns
-        "rr_delay": 2500 + 900,  # ns
-        "flux_op": "square_IIR_superf_readout",
-        "flux_amp": -0.5,
-        # "single_shot": True,
-        "plot_quad": "I_AVG",
+        "qubit_delay": 120,  # ns
+        "rr_delay": 1400,  # ns
+        "flux_op": "constcos80ns_2000ns_E2pF2pG2pH2", #constcos80ns_tomo_RO_4_E2pF2pG2pH2
+        "flux_amp": -0.0696,
+        "single_shot": True,
+        # "plot_quad": "I_AVG",
     }
 
     plot_parameters = {

@@ -33,11 +33,12 @@ class RRSpecDispersiveShift(Experiment):
         """
         Defines pulse sequence to be played inside the experiment loop
         """
-        (rr, qubit) = self.modes  # get the modes
+        (rr, qubit, rr_digital_pulse) = self.modes  # get the modes
 
         qua.update_frequency(rr.name, self.x)  # update resonator pulse frequency
         qubit.play(self.qubit_op, ampx=self.y)
         qua.align(qubit.name, rr.name)
+        # rr_digital_pulse.play("digital_pulse")
         rr.measure((self.I, self.Q))  # measure transmitted signal
         qua.wait(int(self.wait_time // 4), rr.name)  # wait system reset
 
@@ -48,14 +49,14 @@ class RRSpecDispersiveShift(Experiment):
 
 if __name__ == "__main__":
 
-    x_start = -52e6
-    x_stop = -47e6
-    x_step = 0.1e6
+    x_start = -55e6
+    x_stop = -51e6  # -45
+    x_step = 0.05e6
 
     parameters = {
-        "modes": ["RR", "QUBIT"],
-        "reps": 20000,
-        "wait_time": 80000,
+        "modes": ["RR", "QUBIT", "QUBIT_EF"],
+        "reps": 1000,
+        "wait_time": 160000,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
         "y_sweep": [0.0, 1.0],
         "qubit_op": "gaussian_pi",

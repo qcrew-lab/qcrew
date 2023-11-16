@@ -32,7 +32,7 @@ class RRSpectroscopy(Experiment):
         Defines pulse sequence to be played inside the experiment loop
         """
         (rr, cav) = self.modes  # get the modeszance
-        cav.play("cohstate_1", ampx=self.y)
+        # cav.play("gaussian_cohstate_2", ampx = self.y)
         qua.align()
         qua.update_frequency(rr.name, self.x)  # update resonator pulse frequenc
         rr.measure((self.I, self.Q))  # measure transmitted signal
@@ -45,16 +45,16 @@ class RRSpectroscopy(Experiment):
 
 if __name__ == "__main__":
 
-    x_start = -50.5e6
-    x_stop = -47.5e6
-    x_step = 0.1e6
+    x_start = -55e6
+    x_stop = -48e6
+    x_step = 0.05e6
 
     parameters = {
         "modes": ["RR", "CAVITY"],
-        "reps": 5000,
-        "wait_time": 1e6,
+        "reps": 1000,
+        "wait_time": 20e3, #ns = 5e3 cc
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
-        "y_sweep": (0.0, 1.0, 1.8),  # 0.5, 1.0, 1.5),
+        # "y_sweep": (0.0, 1.75),
         # "plot_quad": "PHASE_SWEEP",
         "fit_fn": "gaussian",
         # "plot_quad": "I_AVG",

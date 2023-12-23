@@ -156,10 +156,10 @@ class ReadoutTrainer(Parametrized):
                     # qua.align("FLUX", self._qubit.name)
                     self._qubit.play(qubit_pi_pulse)
                     # qua.align(self._rr.name, self._qubit.name)
-                qua.wait(int(50 // 4), self._rr.name, "QUBIT_EF")  # ns
-                qua.align(self._rr.name, self._qubit.name, "QUBIT_EF")
+                # qua.wait(int(50 // 4), self._rr.name, "QUBIT_EF")  # ns
+                qua.align(self._rr.name, self._qubit.name)
 
-                qua.play("digital_pulse", "QUBIT_EF")
+                # qua.play("digital_pulse", "QUBIT_EF")
                 # self._rr.measure((I, Q))
                 qua.measure(readout_pulse, self._rr.name, adc)
                 qua.wait(wait_time, self._rr.name)  # cc
@@ -424,10 +424,10 @@ class ReadoutTrainer(Parametrized):
                     # qua.align(self._rr.name, self._qubit.name)
                     self._qubit.play(qubit_pi_pulse)
 
-                qua.wait(int(700 // 4), self._rr.name, "QUBIT_EF")  # ns
-                qua.align(self._rr.name, self._qubit.name, "QUBIT_EF")
+                # qua.wait(int(700 // 4), self._rr.name)  # ns
+                qua.align(self._rr.name, self._qubit.name)
 
-                qua.play("digital_pulse", "QUBIT_EF")
+                # qua.play("digital_pulse", "QUBIT_EF")
                 self._rr.measure((I, Q))
                 qua.save(I, "I")
                 qua.save(Q, "Q")

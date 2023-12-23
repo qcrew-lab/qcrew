@@ -40,7 +40,7 @@ def characteristic_coherent(xy, A, B, C, alpha, theta):
     envelope = np.exp(-(A * x ** 2 + 2 * B * x * y + C * y ** 2))
     # envelope = np.exp(-(x ** 2) / 2 / A ** 2) * np.exp(-(y ** 2) / 2 / B ** 2)
     oscillation = np.exp(
-        1j * y * alpha * np.cos(theta) - 1j * x * alpha * np.sin(theta)
+        2 * 1j * y * alpha * np.cos(theta) - 2 * 1j * x * alpha * np.sin(theta)
     )
     return np.imag(envelope * oscillation)
 
@@ -84,9 +84,9 @@ plt.show()
 print(ofs)
 file = h5py.File(data_filename, "r")
 data = file["data"]
-state = np.array(data["state"])#.T # transpose to 90 degree
-x = np.array(data["x"][:,0]) 
-y = np.array(data["y"][0,:]) 
+state = np.array(data["state"])  # .T # transpose to 90 degree
+x = np.array(data["x"][:, 0])
+y = np.array(data["y"][0, :])
 # state = (np.array(data["I"]) < threshold).astype(int)
 # state = state.flatten()  # revert the buffering of qcore
 file.close()

@@ -39,12 +39,21 @@ class Ramseyrevival(Experiment):
         Defines pulse sequence to be played inside the experiment loop
         """
         qubit, cav, rr, flux = self.modes  # get the modes
-        cav.play(self.cav_op, ampx=1.6)  # prepare cavity state
+        cav.play(self.cav_op, ampx=3)  # prepare cavity state
         qua.align(cav.name, qubit.name)  # align modes
         qubit.play(self.qubit_op, ampx=1)  # play qubit pulse
         qua.wait(self.x, qubit.name)
         qubit.play(self.qubit_op, ampx=1)  # play  qubit pulse with pi/2
         qua.align()
+        if 0:
+            flux.play("constcos20ns_tomo_RO_tomo_new_E2pF2pG2pH2_3", ampx=-0.5705)  # lk
+        if 0:
+            flux.play("constcos80ns_tomo_RO_tomo_E2pF2pG2pH2", ampx=0.1)  # rr
+        if 1:
+            flux.play("constcos80ns_tomo_RO_tomo_E2pF2pG2pH2", ampx=0.0526)  # hk
+
+        # Preselection
+        qua.wait(int(30 // 4), rr.name, "QUBIT_EF")  # ns
         qua.play("digital_pulse", "QUBIT_EF")
         rr.measure((self.I, self.Q), ampx=0)  # measure transmitted signal
         qua.wait(int(self.wait_time // 4), cav.name)  # wait system reset
@@ -66,14 +75,14 @@ if __name__ == "__main__":
 
     parameters = {
         "modes": ["QUBIT", "CAVITY", "RR", "FLUX"],
-        "reps": 1000,
+        "reps": 10000,
         "wait_time": 1e6,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
         "qubit_op": "gaussian_pi2_short",
-        "cav_op": "cohstate_1",
-        "single_shot": True,
+        "cav_op": "gaussian_cohstate_1_hk",
+        # "single_shot": True,
         "fetch_period": 5,
-        # "plot_quad": "I_AVG",
+        "plot_quad": "I_AVG",
         "qubit_delay": 120,  # ns
         "rr_delay": 520,  # ns
         "fit_fn": "gaussian",

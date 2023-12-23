@@ -41,15 +41,15 @@ class QubitSpectroscopyFastFlux(Experiment):
         qubit, rr, flux, cav = self.modes  # get the modes
 
         qua.update_frequency(qubit.name, self.x)  # update resonator pulse frequency
-        if 1:  # castle predistorted
-            flux.play(
-                "castle_IIR_230727_76", ampx=0.574
-            )  # to make off resonance
-            qua.wait(int((250) // 4), rr.name, qubit.name)  # ns
-            qubit.play(self.qubit_op, amp=self.y) 
-            qua.wait(int((250) // 4), rr.name, qubit.name)
-        
-  
+        with qua.switch_(self.y):
+            with qua.case_(0):
+                qua.align()
+            with qua.case_(1):        #nothing
+                 # prepare fock one
+                qubit.play("gaussian_pi_hk")
+                qua.align(qubit.name, flux.name)  
+                flux.play(f"constcos6ns_reset_1to2_25ns_E2pF2pG2pH2",ampx=-0.23)
+                qua.align()
         # number splitting
         qua.update_frequency(qubit.name, self.x)
         qubit.play(self.qubit_op_measure)  # play qubit pulse
@@ -70,14 +70,14 @@ class QubitSpectroscopyFastFlux(Experiment):
 # -------------------------------- Execution -----------------------------------
 
 if __name__ == "__main__":
-    x_start = -110e6  # -100e6
+    x_start = -96e6  # -100e6
     x_stop = -90e6  # -40e6
-    x_step = 0.25e6
+    x_step = 0.1e6
 
     parameters = {
         "modes": ["QUBIT", "RR", "FLUX", "CAVITY"],
-        "reps": 10000,
-        "wait_time": 60e3,
+        "reps": 100000,
+        "wait_time": 1e6,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
         "y_sweep": [
             0,1,
@@ -87,7 +87,7 @@ if __name__ == "__main__":
         "rr_delay": 700,  # ns
         "flux_op": "constant_pulse",
         "fit_fn": "gaussian",
-        "qubit_op_measure": "gaussian_pi_280",
+        "qubit_op_measure": "gaussian_pi_hk_320",
         # "single_shot": True,
         "plot_quad": "I_AVG",
         "fetch_period": 2,

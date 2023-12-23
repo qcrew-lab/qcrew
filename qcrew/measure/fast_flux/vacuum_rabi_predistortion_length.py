@@ -15,9 +15,9 @@ import numpy as np
 # delete this comment
 
 
-class VacuumRabi(Experiment):
+class vacuum_rabi_predistortion_length(Experiment):
 
-    name = "vacuum_rabi_length"
+    name = "vacuum_rabi_predistortion_length"
 
     _parameters: ClassVar[set[str]] = Experiment._parameters | {
         "qubit_op",  # operation used for exciting the qubit
@@ -27,12 +27,12 @@ class VacuumRabi(Experiment):
     def __init__(self, qubit_op, fit_fn="", **other_params):
         self.qubit_op = qubit_op  # pi pulse
         self.fit_fn = fit_fn
-        self.internal_sweep = list(np.arange(4, 151, 1))
+        self.internal_sweep = list(np.arange(8, 41, 1))
         super().__init__(**other_params)  # Passes o4her parameters to parent
 
     def QUA_play_pulse_sequence(self):
         """
-        Defines pulse sequence to be played inside the experiment loop
+        Defines pulse sequence to be  played inside the experiment loop
         """
         qubit, rr, flux = self.modes  # get the modes
         for flux_len in self.internal_sweep:
@@ -45,11 +45,11 @@ class VacuumRabi(Experiment):
             # qua.align()
 
             # Vacuum rabi of next transition
-            qubit.play(self.qubit_op, ampx=0.5)  # play pi qubit pulse
+            qubit.play(self.qubit_op, ampx=1)  # play pi qubit pulse
             qua.align(flux.name, qubit.name)
-            flux.play(f"constcos6ns_reset_1to2_{flux_len}ns_E2pF2pG2pH2", ampx=0.14)
-            qua.wait(int((200 + 3 * flux_len) // 4), rr.name, "QUBIT_EF")
-            qua.play("digital_pulse", "QUBIT_EF")
+            flux.play(f"constcos6ns_reset_1to2_{flux_len}ns_E2pF2pG2pH2", ampx=-0.23)
+            qua.wait(int((200 + 3 * flux_len) // 4), rr.name)
+            # qua.play("digital_pulse", "QUBIT_EF")
             rr.measure((self.I, self.Q))  # measure qubit state
             if self.single_shot:  # assign state to G or E7
                 qua.assign(
@@ -66,12 +66,12 @@ if __name__ == "__main__":
 
     parameters = {
         "modes": ["QUBIT", "RR", "FLUX"],
-        "reps": 1000,
+        "reps": 10000,
         "wait_time": 1.0e6,
-        "qubit_op": "gaussian_pi",
+        "qubit_op": "gaussian_pi_hk",
         # "flux_pulse": "constant_pulse",
-        "single_shot": True,
-        # "plot_quad": "I_AVG",
+        # "single_shot": True,
+        "plot_quad": "I_AVG",
         "fetch_period": 3,
         # "fit_fn": "sine",
     }
@@ -81,7 +81,7 @@ if __name__ == "__main__":
         # "plot_type": "2D",
     }
 
-    experiment = VacuumRabi(**parameters)
+    experiment = vacuum_rabi_predistortion_length(**parameters)
     experiment.setup_plot(**plot_parameters)
 
     prof.run(experiment)

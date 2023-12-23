@@ -41,16 +41,16 @@ class PiPulseScope(Experiment):
         """
         qubit, flux, rr = self.modes  # get the modes
         qua.update_frequency(qubit.name, self.x)  # update qubit pulse frequency
+        qua.wait(50, flux.name)
         qua.wait(self.y, qubit.name)
         qubit.play(self.qubit_op)  # play qubit pulse
-        qua.wait(int(self.flux_delay // 4), flux.name)  # ns, buffer time for pi pulse
-        flux.play(self.flux_op, ampx=-0.1)
+        flux.play(self.flux_op, ampx=0.6)
         # flux.play(self.flux_op, ampx=-0.3)
         # qua.wait(int(self.rr_delay // 4), rr.name, "QUBIT_EF")  # ns
-        qua.align()
+
         # flux.play("constcos80ns_2000ns_E2pF2pG2pH2", ampx=-0.1) #-0.258
-        # qua.wait(int(200 // 4), rr.name, "QUBIT_EF")  # ns
-        qua.play("digital_pulse", "QUBIT_EF")
+        qua.wait(int(1400 // 4), rr.name)  # ns
+        # qua.play("digital_pulse", "QUBIT_EF")
         rr.measure((self.I, self.Q))  # measure transmitted signal
         qua.align()
         qua.wait(int(self.wait_time // 4), flux.name)  # wait system reset
@@ -66,25 +66,25 @@ class PiPulseScope(Experiment):
 # -------------------------------- Execution -  ----------------------------------
 
 if __name__ == "__main__":
-    x_start = -200e6  # 181.25e6
-    x_stop = 0e6  # 181.5 e6
-    x_step = 2.5e6
+    x_start = -220e6  # 181.25e6
+    x_stop = 100e6  # 181.5 e6
+    x_step = 1e6  # 2.5e6
 
     y_start = 1  # cc
-    y_stop = 860 #620#420
-    y_step = 1
+    y_stop = 160  # 620#420
+    y_step = 2
 
     parameters = {
         "modes": ["QUBIT", "FLUX", "RR"],
-        "reps": 5000,
+        "reps": 1000,
         "wait_time": 80000,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
         "y_sweep": (int(y_start), int(y_stop + y_step / 2), int(y_step)),
-        "flux_delay": 60,  # ns
+        "flux_delay": 20,  # ns
         "rr_delay": 2600,  # ns
-        "qubit_op": "constant_pi_short",
-        "flux_op": "constcos20ns_tomo_RO_tomo_E2pF2pG2pH2_11142023",  # "castle_96",
-        "fetch_period": 180,
+        "qubit_op": "gaussian_pi_short",
+        "flux_op": "square_4200_1k_1k",  # "castle_96",
+        "fetch_period": 20,
         # "single_shot": True,
         "plot_quad": "I_AVG",
         # "fit_fn": "gaussian",

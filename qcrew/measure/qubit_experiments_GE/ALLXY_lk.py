@@ -62,38 +62,39 @@ class ALLXY(Experiment):
         """
         Defines pulse sequence to be played inside the experiment loop
         """
-        (qubit, rr, flux, qubit_lk) = self.modes  # get the modes
+        (qubit_lk, rr, flux) = self.modes  # get the modes
 
         for gate_pair in self.gate_list:
             gate1_rot, gate1_axis, gate2_rot, gate2_axis, _ = gate_pair
 
-            qua.reset_frame(qubit.name)
+            qua.reset_frame(qubit_lk.name)
             qua.align()
-
+            qua.update_frequency(qubit_lk.name, int(-50e6), keep_phase=True)
             # qua.update_frequency(qubit.name, int(-176.4e6))
             # flux.play("constcos80ns_1000ns_E2pF2pG2pH2", ampx=-0.0565)
             # qua.wait(int(120 // 4), qubit.name)
 
             # Play the first gate
             if gate1_rot != "idle":
-                qubit.play(gate1_rot, phase=gate1_axis)
+                qubit_lk.play(gate1_rot, phase=gate1_axis)
 
             # Play the second gate
             if gate2_rot != "idle":
-                qubit.play(gate2_rot, phase=gate2_axis)
+                qubit_lk.play(gate2_rot, phase=gate2_axis)
 
             qua.align()
-            if 0:
+            if 1:
                 flux.play("constcos20ns_tomo_RO_tomo_new_E2pF2pG2pH2_3", ampx=-0.5705)  # lk
             if 0:
                 flux.play("constcos80ns_tomo_RO_tomo_E2pF2pG2pH2", ampx=0.1)  # rr
             if 0:
                 flux.play("constcos80ns_tomo_RO_tomo_E2pF2pG2pH2", ampx=0.0527)  # hk
-            # qua.align(qubit.name, rr.name, "QUBIT_EF")  # align measurement
+            # qua.align(qubit_lk.name, rr.name, "QUBIT_EF")  # align measurement
             # qua.play("digital_pulse", "QUBIT_EF")
-            qua.align(qubit.name, rr.name, qubit_lk.name)  # align measurement
+            qua.align(rr.name, qubit_lk.name)  # align measurement
             qua.update_frequency(qubit_lk.name, int(-250e6), keep_phase=True)
             qua.play("digital_pulse", qubit_lk.name)
+            
             rr.measure((self.I, self.Q), ampx=0)  # measure qubit state
 
             if self.single_shot:  # assign state to G or E
@@ -113,11 +114,11 @@ class ALLXY(Experiment):
 if __name__ == "__main__":
 
     parameters = {
-        "modes": ["QUBIT", "RR", "FLUX", "QUBIT_LK"],
+        "modes": ["QUBIT_LK", "RR", "FLUX"],
         "reps": 20000,
         "wait_time": 80000,
-        "qubit_pi_op": "gaussian_pi_short_ecd",
-        "qubit_pi2_op": "gaussian_pi2_short_ecd",
+        "qubit_pi_op": "gaussian_pi_lk",
+        "qubit_pi2_op": "gaussian_pi2_lk",
         "single_shot": True,
         # "plot_quad": "I_AVG",
     }

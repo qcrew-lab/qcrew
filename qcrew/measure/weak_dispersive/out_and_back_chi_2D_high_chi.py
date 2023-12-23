@@ -69,8 +69,13 @@ class OutAndBack(Experiment):
             self.qubit_pi_selective
         )  # play conditional pi pulse to flip qubit if cav is in vac or close to vac
         qua.align()
-        flux.play("constcos80ns_2000ns_E2pF2pG2pH2", ampx=-0.258) ## lower chi
-        qua.wait(int(300 // 4), rr.name, "QUBIT_EF")  # ns
+        if 0:
+            flux.play("constcos20ns_tomo_RO_tomo_new_E2pF2pG2pH2_3", ampx=-0.5685)  # lk
+        if 0:
+            flux.play("constcos80ns_tomo_RO_tomo_E2pF2pG2pH2", ampx=0.1)  # rr
+        if 1:
+            flux.play("constcos80ns_tomo_RO_tomo_E2pF2pG2pH2", ampx=0.0526)  # hk
+        qua.wait(int(30 // 4), rr.name, "QUBIT_EF")  # ns
         qua.play("digital_pulse", "QUBIT_EF")
         rr.measure((self.I, self.Q))  # measure transmitted signal
         qua.wait(int(self.wait_time // 4), rr.name)  # wait system reset
@@ -98,14 +103,14 @@ if __name__ == "__main__":
     y_step = 0.01
     parameters = {
         "modes": ["QUBIT", "CAVITY", "RR", "FLUX"],
-        "reps": 100,
+        "reps": 400,
         "wait_time": 1e6,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
         "y_sweep": ((y_start), (y_stop + y_step / 2), (y_step)),
         "qubit_pi": "gaussian_pi_hk_short", # "gaussian_pi_short_ecd",
         "qubit_pi_selective": "gaussian_pi_560_hk",
         "cav_displacement": "gaussian_cohstate_4", # "gaussian_cohstate_4",
-        "fetch_period": 30,
+        "fetch_period": 60,
         # "single_shot": True,
         "plot_quad": "I_AVG",
         "extra_vars": {

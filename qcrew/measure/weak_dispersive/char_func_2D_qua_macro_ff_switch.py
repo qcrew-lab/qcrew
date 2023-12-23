@@ -12,7 +12,7 @@ from qcrew.measure.qua_macros import *
 
 class CharacteristicFunction1D(Experiment):
 
-    name = "char_func_2D_qua_macro_ff"
+    name = "char_func_2D_qua_macro_ff_switch"
 
     _parameters: ClassVar[set[str]] = Experiment._parameters | {
         "cav_state_op",

@@ -10,15 +10,16 @@ from qcrew.measure.qua_macros import *
 # ---------------------------------- Class -------------------------------------
 
 
-class CharacteristicFunction1D(Experiment):
+class char_func_1D_preselection_hk_vac(Experiment):
 
-    name = "char_func_1D_chi_preselect_lk"
+    name = "char_func_1D_preselection_hk_vac"
 
     _parameters: ClassVar[set[str]] = Experiment._parameters | {
         "cav_state_op",
         "char_func_displacement",  # operation for displacing the cavity
         "qubit_pi",
         "qubit_pi2",  # operation used for exciting the qubit
+        "corrected_phase",
         "fit_fn",  # fit function
         "delay",  # describe...
         "measure_real",
@@ -30,6 +31,7 @@ class CharacteristicFunction1D(Experiment):
         char_func_displacement,
         qubit_pi,
         qubit_pi2,
+        corrected_phase,
         fit_fn="gaussian",
         delay=4,
         measure_real=True,
@@ -39,6 +41,7 @@ class CharacteristicFunction1D(Experiment):
         self.char_func_displacement = char_func_displacement
         self.qubit_pi = qubit_pi
         self.qubit_pi2 = qubit_pi2
+        self.corrected_phase = corrected_phase
         self.fit_fn = fit_fn
         self.delay = delay
         self.measure_real = measure_real
@@ -53,15 +56,39 @@ class CharacteristicFunction1D(Experiment):
         qua.reset_frame(cav.name)
         qua.reset_frame(qubit.name)
 
-        # Bias qubit to ECD point
-        flux.play("constcos20ns_tomo_RO_tomo_new_E2pF2pG2pH2_2", ampx=-0.571)
-        qubit.lo_freq = 5.77e9  # char
+        # # Coherent state preparation and evolution
+        # if 1:  # low chi evolution
+        #     qubit.lo_freq = 5.1937e9
+        #     qua.update_frequency(cav.name, int(-39.21e6), keep_phase=True)
+        #     qua.update_frequency(qubit.name, int(-50e6), keep_phase=True)
+        #     cav.play("cohstate_5_short_lk", ampx=1)
+        # if 0:  # high chi evolution
+        #     qubit.lo_freq = 5.77e9
+        #     qua.update_frequency(cav.name, int(-38.67e6), keep_phase=True)
+        #     qua.update_frequency(qubit.name, int(-93.19e6), keep_phase=True)
+        #     cav.play("cohstate_5_short_hk", ampx=1)
+        # # qua.align(cav.name, qubit.name)
+
+        # char
+        # qubit.lo_freq = 5.77e9  # char
         qua.update_frequency(qubit.name, int(-176.4e6), keep_phase=True)
         qua.update_frequency(cav.name, int(-39.185e6), keep_phase=True)
 
+        qua.align()
+        # qua.wait(int(40 // 4), flux.name)  # ns
+
+        # Bias qubit to ECD point
+
+        if 0:
+            flux.play("constcos20ns_tomo_RO_tomo_new_E2pF2pG2pH2_3", ampx=-0.5685)  # lk
+        if 0:
+            flux.play("constcos80ns_tomo_RO_tomo_E2pF2pG2pH2", ampx=0.1)  # rr
+        if 1:
+            flux.play("constcos80ns_tomo_RO_tomo_E2pF2pG2pH2", ampx=0.0527)  # hk
+
         # Preselection
         qua.wait(int(30 // 4), rr.name, "QUBIT_EF")  # ns
-        qua.play("digital_pulse" * qua.amp(1.0), "QUBIT_EF")
+        qua.play("digital_pulse", "QUBIT_EF")
         rr.measure((self.I, self.Q))  # measure transmitted signal=
 
         if self.single_shot:  # assign state to G or E
@@ -70,7 +97,7 @@ class CharacteristicFunction1D(Experiment):
             )
 
         self.QUA_stream_results()  # stream variables (I, Q, x, etc)
-        qua.wait(int((60 + 850) // 4), cav.name, qubit.name)
+        qua.wait(int(970 // 4), cav.name, qubit.name)
 
         with qua.switch_(self.y):
             with qua.case_(0):
@@ -84,8 +111,8 @@ class CharacteristicFunction1D(Experiment):
                     self.x,
                     delay=self.delay,
                     measure_real=self.measure_real,
-                    tomo_phase=0.0,
-                    correction_phase=0.502349,  # 0.01595
+                    tomo_phase=0,
+                    correction_phase=self.corrected_phase,
                 )
             with qua.case_(1):
                 Char_2D_singledisplacement(
@@ -98,10 +125,9 @@ class CharacteristicFunction1D(Experiment):
                     self.x,
                     delay=self.delay,
                     measure_real=not self.measure_real,
-                    tomo_phase=0.0,
-                    correction_phase=0.502349,  # 0.01595
+                    tomo_phase=0,
+                    correction_phase=self.corrected_phase,
                 )
-        # Measure cavity state
         # Measure cavity state
         qua.align(rr.name, "QUBIT_EF", qubit.name)
         qua.wait(int(20 // 4), rr.name, "QUBIT_EF")  # ns
@@ -115,21 +141,6 @@ class CharacteristicFunction1D(Experiment):
             )
 
         self.QUA_stream_results()  # stream variables (I, Q, x, etc)
-        # # qua.wait(int(self.rr_delay // 4), rr.name, "QUBIT_EF")  # ns
-        # qua.wait(360, rr.name, "QUBIT_EF")
-        # # qua.wait(int(1400 // 4), rr.name, "QUBIT_EF")  # ns
-        # qua.play("digital_pulse", "QUBIT_EF")
-        # rr.measure((self.I, self.Q))  # measure transmitted signal
-        # qua.wait(int(self.wait_time // 4), rr.name)  # wait system reset
-
-        # if self.single_shot:  # assign state to G or E
-        #     qua.assign(
-        #         self.state, qua.Cast.to_fixed(self.I < rr.readout_pulse.threshold)
-        #     )
-
-        # self.QUA_stream_results()  # stream variables (I, Q, x, etc)
-
-        # wait system reset
 
 
 # -------------------------------- Execution -----------------------------------
@@ -141,10 +152,11 @@ if __name__ == "__main__":
 
     parameters = {
         "modes": ["QUBIT", "CAVITY", "RR", "FLUX"],
-        "reps": 20000,  # 25000
+        "reps": 10000,  # 25000
         "wait_time": 1e6,
-        "fetch_period": 5,  # time between data fetching rounds in sec
+        "fetch_period": 60,  # time between data fetching rounds in sec
         "delay": 116,  # 188,  # wait time between opposite sign displacements
+        "corrected_phase": 0.36626,
         "x_sweep": (x_start, x_stop + x_step / 2, x_step),
         "y_sweep": (0, 1),
         "qubit_pi": "gaussian_pi_short_ecd",
@@ -165,7 +177,7 @@ if __name__ == "__main__":
         "skip_plot": True,
     }
 
-    experiment = CharacteristicFunction1D(**parameters)
+    experiment = char_func_1D_preselection_hk_vac(**parameters)
     experiment.setup_plot(**plot_parameters)
 
     prof.run(experiment)

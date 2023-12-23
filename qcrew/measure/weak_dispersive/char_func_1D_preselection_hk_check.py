@@ -10,9 +10,9 @@ from qcrew.measure.qua_macros import *
 # ---------------------------------- Class -------------------------------------
 
 
-class CharacteristicFunction1D(Experiment):
+class char_func_1D_preselection_hk_check(Experiment):
 
-    name = "characteristic_function_1D_check"
+    name = "char_func_1D_preselection_hk_check"
     # without first measruemtn resutls saved
     _parameters: ClassVar[set[str]] = Experiment._parameters | {
         "cav_state_op",
@@ -52,30 +52,30 @@ class CharacteristicFunction1D(Experiment):
         """
         Defines pulse sequence to be played inside the experiment loop
         """
-        qubit, cav, rr, flux, qubit_lk = self.modes  # get the modes
+        qubit, cav, rr, flux = self.modes  # get the modes
         qua.reset_frame(cav.name)
         qua.reset_frame(qubit.name)
-        qua.reset_frame(qubit_lk.name)
 
-        # Bias qubit to ECD point
-        flux.play("constcos20ns_tomo_RO_tomo_new_E2pF2pG2pH2_3", ampx=-0.568)  # lk
-        # flux.play("constcos80ns_tomo_RO_tomo_E2pF2pG2pH2", ampx=0.0524) #hk
-        #qubit.lo_freq =5.77e9 #char
-        
+        # char
+        # qubit.lo_freq =5.77e9 
         qua.update_frequency(qubit.name, int(-176.4e6), keep_phase = True)
         qua.update_frequency(cav.name, int(-39.185e6), keep_phase = True)
+        qua.align()
         
-        # # Preselection
-        # qua.wait(int(30 // 4), rr.name, "QUBIT_EF")  # ns
-        # qua.play("digital_pulse" * qua.amp(0.0), "QUBIT_EF")
-        # rr.measure((self.I, self.Q))  # measure transmitted signal=
+         # Bias qubit to ECD point
+
+        if 0:
+            flux.play("constcos20ns_tomo_RO_tomo_new_E2pF2pG2pH2_3", ampx=-0.5685)  # lk
+        if 0:
+            flux.play("constcos80ns_tomo_RO_tomo_E2pF2pG2pH2", ampx=0.1)  # rr
+        if 1:
+            flux.play("constcos80ns_tomo_RO_tomo_E2pF2pG2pH2", ampx=0.0527)  # hk
+        
         
         # Preselection
-        qua.update_frequency(qubit_lk.name, int(-250e6), keep_phase=True)
-        qua.wait(int(30 // 4), rr.name, qubit_lk.name)  # ns
-        qua.play("digital_pulse"* qua.amp(0.0), qubit_lk.name)
-        rr.measure((self.I, self.Q), ampx =0)  # measure transmitted signal=
-
+        qua.wait(int(30 // 4), rr.name, "QUBIT_EF")  # ns
+        qua.play("digital_pulse" * qua.amp(0.0), "QUBIT_EF")
+        rr.measure((self.I, self.Q))  # measure transmitted signal=
 
         # if self.single_shot:  # assign state to G or E
         #     qua.assign(
@@ -115,9 +115,9 @@ class CharacteristicFunction1D(Experiment):
                     correction_phase=self.corrected_phase,
                 )
         # Measure cavity state
-        qua.align(rr.name, qubit_lk.name, qubit.name)
-        qua.wait(int(20 // 4), rr.name, qubit_lk.name)  # ns
-        qua.play("digital_pulse", qubit_lk.name)
+        qua.align(rr.name, "QUBIT_EF", qubit.name)
+        qua.wait(int(20 // 4), rr.name, "QUBIT_EF")  # ns
+        qua.play("digital_pulse", "QUBIT_EF")
         rr.measure((self.I, self.Q))  # measure transmitted signal
         qua.wait(int(self.wait_time // 4), rr.name)  # wait system reset
 
@@ -139,12 +139,12 @@ if __name__ == "__main__":
     x_step = 0.1
 
     parameters = {
-        "modes": ["QUBIT", "CAVITY", "RR", "FLUX", "QUBIT_LK"],
-        "reps": 1000,
+        "modes": ["QUBIT", "CAVITY", "RR", "FLUX"],
+        "reps": 10000,
         "wait_time": 1e6,
         "fetch_period": 5,  # time between data fetching rounds in sec
         "delay": 116,  # 188,  # wait time between opposite sign displacements
-        "corrected_phase": 0.577821, 
+        "corrected_phase": 0.37378, 
         "x_sweep": (x_start, x_stop + x_step / 2, x_step),
         "y_sweep": (0, 1),
         "qubit_pi": "gaussian_pi_short_ecd",
@@ -165,7 +165,7 @@ if __name__ == "__main__":
         # "skip_plot": True,
     }
 
-    experiment = CharacteristicFunction1D(**parameters)
+    experiment = char_func_1D_preselection_hk_check(**parameters)
     experiment.setup_plot(**plot_parameters)
 
     prof.run(experiment)

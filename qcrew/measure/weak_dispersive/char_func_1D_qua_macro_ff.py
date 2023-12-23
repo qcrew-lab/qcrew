@@ -10,7 +10,7 @@ from qcrew.measure.qua_macros import *
 # ---------------------------------- Class -------------------------------------
 
 
-class CharacteristicFunction1D(Experiment):
+class char_func_1D_qua_macro_ff(Experiment):
 
     name = "char_func_1D_qua_macro_ff"
     #with fast flux and measure real and imag
@@ -55,7 +55,9 @@ class CharacteristicFunction1D(Experiment):
 
         # Bias qubit to ECD point
         # char
-        flux.play("constcos20ns_tomo_RO_tomo_new_E2pF2pG2pH2_2", ampx=-0.571) #-0.5625 # -0.5625 -0.5667 -0.567
+        flux.play("constcos20ns_tomo_RO_tomo_new_E2pF2pG2pH2_3", ampx=-0.567) #lk
+        # flux.play("constcos80ns_tomo_RO_tomo_E2pF2pG2pH2", ampx=0.0524) #hk
+        
         qubit.lo_freq =5.77e9 #char
         qua.update_frequency(qubit.name, int(-176.4e6), keep_phase = True)
         qua.update_frequency(cav.name, int(-39.185e6), keep_phase = True)
@@ -74,7 +76,7 @@ class CharacteristicFunction1D(Experiment):
                     delay=self.delay,
                     measure_real=self.measure_real,
                     tomo_phase=0.0,
-                    correction_phase=0.11277, #0.01595
+                    correction_phase=0, #0.01595
                 )
             with qua.case_(1):
                 Char_2D_singledisplacement(
@@ -83,12 +85,12 @@ class CharacteristicFunction1D(Experiment):
                     self.char_func_displacement,
                     self.qubit_pi,
                     self.qubit_pi2,
-                    0,
+                    0,0
                     self.x,
                     delay=self.delay,
                     measure_real=not self.measure_real,
                     tomo_phase=0.0,
-                    correction_phase=0.11277, #0.01595
+                    correction_phase=0,#0.11277, #0.01595
                 )
         # Measure cavity state
         # qua.wait(int(self.rr_delay // 4), rr.name, "QUBIT_EF")  # ns
@@ -118,9 +120,9 @@ if __name__ == "__main__":
     parameters = {
         "modes": ["QUBIT", "CAVITY", "RR", "FLUX"],
         "reps": 1000,
-        "wait_time": 2e6,
+        "wait_time": 1e6,
         "fetch_period": 5,  # time between data fetching rounds in sec
-        "delay": 116,  # 188,  # wait time between opposite sign displacements
+        "delay": 120,  # 188,  # wait time between opposite sign displacements
         "x_sweep": (x_start, x_stop + x_step / 2, x_step),
         "y_sweep": (0, 1),
         "qubit_pi": "gaussian_pi_short_ecd",
@@ -140,7 +142,7 @@ if __name__ == "__main__":
         "cmap": "bwr",
     }
 
-    experiment = CharacteristicFunction1D(**parameters)
+    experiment = char_func_1D_qua_macro_ff(**parameters)
     experiment.setup_plot(**plot_parameters)
 
     prof.run(experiment)

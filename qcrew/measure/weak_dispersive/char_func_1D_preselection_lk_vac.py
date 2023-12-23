@@ -10,10 +10,10 @@ from qcrew.measure.qua_macros import *
 # ---------------------------------- Class -------------------------------------
 
 
-class CharacteristicFunction1D(Experiment):
+class char_func_1D_preselection_lk_vac(Experiment):
 
-    name = "characteristic_function_1D_check"
-    # without first measruemtn resutls saved
+    name = "char_func_1D_preselection_lk_vac"
+
     _parameters: ClassVar[set[str]] = Experiment._parameters | {
         "cav_state_op",
         "char_func_displacement",  # operation for displacing the cavity
@@ -31,7 +31,7 @@ class CharacteristicFunction1D(Experiment):
         char_func_displacement,
         qubit_pi,
         qubit_pi2,
-        corrected_phase, 
+        corrected_phase,
         fit_fn="gaussian",
         delay=4,
         measure_real=True,
@@ -56,35 +56,50 @@ class CharacteristicFunction1D(Experiment):
         qua.reset_frame(cav.name)
         qua.reset_frame(qubit.name)
         qua.reset_frame(qubit_lk.name)
+        # # Coherent state preparation and evolution
+        # if 1:  # low chi evolution
+        #     qubit.lo_freq = 5.1937e9
+        #     qua.update_frequency(cav.name, int(-39.21e6), keep_phase=True)
+        #     qua.update_frequency(qubit.name, int(-50e6), keep_phase=True)
+        #     cav.play("cohstate_5_short_lk", ampx=1)
+        # if 0:  # high chi evolution
+        #     qubit.lo_freq = 5.77e9
+        #     qua.update_frequency(cav.name, int(-38.67e6), keep_phase=True)
+        #     qua.update_frequency(qubit.name, int(-93.19e6), keep_phase=True)
+        #     cav.play("cohstate_5_short_hk", ampx=1)
+        # # qua.align(cav.name, qubit.name)
+
+        # char
+        # qubit.lo_freq = 5.77e9  # char
+        qua.update_frequency(qubit.name, int(-176.4e6), keep_phase=True)
+        qua.update_frequency(cav.name, int(-39.185e6), keep_phase=True)
+
+        qua.align()
+        # qua.wait(int(40 // 4), flux.name)  # ns
 
         # Bias qubit to ECD point
-        flux.play("constcos20ns_tomo_RO_tomo_new_E2pF2pG2pH2_3", ampx=-0.568)  # lk
-        # flux.play("constcos80ns_tomo_RO_tomo_E2pF2pG2pH2", ampx=0.0524) #hk
-        #qubit.lo_freq =5.77e9 #char
-        
-        qua.update_frequency(qubit.name, int(-176.4e6), keep_phase = True)
-        qua.update_frequency(cav.name, int(-39.185e6), keep_phase = True)
-        
-        # # Preselection
-        # qua.wait(int(30 // 4), rr.name, "QUBIT_EF")  # ns
-        # qua.play("digital_pulse" * qua.amp(0.0), "QUBIT_EF")
-        # rr.measure((self.I, self.Q))  # measure transmitted signal=
-        
+
+        if 1:
+            flux.play("constcos20ns_tomo_RO_tomo_new_E2pF2pG2pH2_3", ampx=-0.5675)  # lk
+        if 0:
+            flux.play("constcos80ns_tomo_RO_tomo_E2pF2pG2pH2", ampx=0.1)  # rr
+        if 0:
+            flux.play("constcos80ns_tomo_RO_tomo_E2pF2pG2pH2", ampx=0.0524)  # hk
+
         # Preselection
-        qua.update_frequency(qubit_lk.name, int(-250e6), keep_phase=True)
+        qua.update_frequency(qubit_lk.name, int(250e6), keep_phase=True)
         qua.wait(int(30 // 4), rr.name, qubit_lk.name)  # ns
-        qua.play("digital_pulse"* qua.amp(0.0), qubit_lk.name)
-        rr.measure((self.I, self.Q), ampx =0)  # measure transmitted signal=
+        qua.play("digital_pulse", qubit_lk.name)
+        rr.measure((self.I, self.Q), ampx=0)  # measure transmitted signal=
 
+        if self.single_shot:  # assign state to G or E
+            qua.assign(
+                self.state, qua.Cast.to_fixed(self.I < rr.readout_pulse.threshold)
+            )
 
-        # if self.single_shot:  # assign state to G or E
-        #     qua.assign(
-        #         self.state, qua.Cast.to_fixed(self.I < rr.readout_pulse.threshold)
-        #     )
-
-        # self.QUA_stream_results()  # stream variables (I, Q, x, etc)
-
+        self.QUA_stream_results()  # stream variables (I, Q, x, etc)
         qua.wait(int(970 // 4), cav.name, qubit.name)
+
         with qua.switch_(self.y):
             with qua.case_(0):
                 Char_2D_singledisplacement(
@@ -97,7 +112,7 @@ class CharacteristicFunction1D(Experiment):
                     self.x,
                     delay=self.delay,
                     measure_real=self.measure_real,
-                    tomo_phase=0.0,
+                    tomo_phase=0,
                     correction_phase=self.corrected_phase,
                 )
             with qua.case_(1):
@@ -111,7 +126,7 @@ class CharacteristicFunction1D(Experiment):
                     self.x,
                     delay=self.delay,
                     measure_real=not self.measure_real,
-                    tomo_phase=0.0,
+                    tomo_phase=0,
                     correction_phase=self.corrected_phase,
                 )
         # Measure cavity state
@@ -128,8 +143,6 @@ class CharacteristicFunction1D(Experiment):
 
         self.QUA_stream_results()  # stream variables (I, Q, x, etc)
 
-        # wait system reset
-
 
 # -------------------------------- Execution -----------------------------------
 
@@ -140,11 +153,11 @@ if __name__ == "__main__":
 
     parameters = {
         "modes": ["QUBIT", "CAVITY", "RR", "FLUX", "QUBIT_LK"],
-        "reps": 1000,
+        "reps": 10000,  # 25000
         "wait_time": 1e6,
-        "fetch_period": 5,  # time between data fetching rounds in sec
+        "fetch_period": 20,  # time between data fetching rounds in sec
         "delay": 116,  # 188,  # wait time between opposite sign displacements
-        "corrected_phase": 0.577821, 
+        "corrected_phase": 0.529801,
         "x_sweep": (x_start, x_stop + x_step / 2, x_step),
         "y_sweep": (0, 1),
         "qubit_pi": "gaussian_pi_short_ecd",
@@ -162,10 +175,10 @@ if __name__ == "__main__":
         # "ylabel": "Y",
         # "plot_type": "2D",
         "cmap": "bwr",
-        # "skip_plot": True,
+        "skip_plot": True,
     }
 
-    experiment = CharacteristicFunction1D(**parameters)
+    experiment = char_func_1D_preselection_lk_vac(**parameters)
     experiment.setup_plot(**plot_parameters)
 
     prof.run(experiment)

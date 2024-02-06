@@ -54,7 +54,7 @@ class VNASweep:
             "datagroup": "data",
             "datasets": vna.datakeys,  # each group will have datasets of these names
             "datashape": datashape,
-            "datatype": "f8",
+            "datatype": "f4",
         }
 
     def run(self, saver) -> None:
@@ -96,19 +96,22 @@ if __name__ == "__main__":
         vna.connect()
 
         # the routine below can handle multiple measurement runs at once
-        fcenters = [6e9,7e9]#[6.663523615e9, 6.88327455e9, 6.663523615e9, 6.88327455e9, 6.663523615e9, 6.88327455e9, 6.663523615e9, 6.88327455e9]
-        fspans = [10e6, 10e6]
-        powers = [10, 10]
-        repetitions = [1,  1]
+        # fcenterlist = [5.5e9, 5.6e9, 5.7e9, 5.8e9, 5.9e9, 6e9, 6.1e9, 6.2e9, 6.3e9, 6.4e9, 6.5e9, 6.6e9, 6.7e9, 6.8e9, 6.9e9, 7e9]
+        # fspanlist = [0.1e9,  0.1e9,  0.1e9,  0.1e9,0.1e9, 0.1e9,0.1e9, 0.1e9, 0.1e9, 0.1e9, 0.1e9, 0.1e9, 0.1e9, 0.1e9, 0.1e9, 0.1e9] #[0.25e9] #
+        # pointslist = [20001,20001,20001,20001,20001,20001,20001,20001,20001,20001,20001,20001,20001,20001,20001,20001]
 
-        num_runs = len(fcenters)
+        fcenterlist = [5.5e9, 5.75e9, 6e9, 6.25e9, 6.35e9, 6.45e9, 6.55e9, 6.75e9, 7e9]
+        fspanlist = [0.25e9, 0.25e9, 0.25e9, 0.25e9, 0.25e9, 0.25e9, 0.25e9, 0.25e9, 0.25e9]
+        pointslist = [20001, 20001, 20001, 20001, 20001, 20001, 20001, 20001, 20001]
+        
+        num_runs = len(fcenterlist)
         for idx in range(num_runs):
             # these parameters are set on VNA and do not change during a measurement run
             vna_parameters = {
                 # frequency sweep center (Hz)
-                "fcenter": fcenters[idx],
+                "fcenter": fcenterlist[idx],
                 # frequency sweep span (Hz)
-                "fspan": fspans[idx],
+                "fspan": fspanlist[idx],
                 # frequency sweep start value (Hz)
                 # "fstart": 4e9,
                 # frequency sweep stop value (Hz)
@@ -116,14 +119,14 @@ if __name__ == "__main__":
                 # IF bandwidth (Hz), [1, 500000]
                 "bandwidth": 100,
                 # number of frequency sweep points, [2, 200001]
-                "sweep_points": 1001,
+                "sweep_points": pointslist[idx],
                 # delay (s) between successive sweep points, [0.0, 100.0]
                 "sweep_delay": 1e-3,
                 # trace data to be displayed and acquired, max traces = 16
                 # each tuple in the list is (<S parameter>, <trace format>)
                 # valid S parameter keys = ("s11", "s12", "s21", "s22")
                 # see VNA.VALID_TRACE_FORMATS for full list of trace format keys
-                "traces": [("s21", "real"), ("s21", "imag")],
+                "traces": [("s21", "phase"), ("s21", "mlog")],
                 # if true, VNA will display averaged traces on the Shockline app
                 # if false, VNA will display the trace of the current run
                 "is_averaging": False,
@@ -133,7 +136,7 @@ if __name__ == "__main__":
             # these parameters are looped over during the measurement
             measurement_parameters = {
                 # Number of sweep averages, must be an integer > 0
-                "repetitions": repetitions[idx],
+                "repetitions": 1,
                 # Input powers at (<port1>, <port2>) (dBm), range [-30.0, 15.0]
                 # <portX> (X=1,2) can be a set {a, b,...}, tuple (st, stop, step), or constant x
                 # use set for discrete sweep points a, b, ...
@@ -143,7 +146,7 @@ if __name__ == "__main__":
                 # eg 1: powers = ((-30, 15, 5), 0) will sweep port 1 power from -30dBm to 15dBm inclusive in steps of 5dBm with port 2 power remaining constant at 0 dBm
                 # eg 2: powers = ({-15, 0, 15}, {-5, 0}) will result in sweep points (-15, -5), (-15, 0), (0, -5), (0, 0), (15, -5), (15, 0)
                 # eg 3: powers = (0, 0) will set both port powers to 0, no power sweep happens
-                "powers": (powers[idx], 0),
+                "powers": (-15, 0),
             }
 
             # create measurement instance with instruments and measurement_parameters
@@ -154,10 +157,9 @@ if __name__ == "__main__":
             # {datapath} / {YYYYMMDD} / {HHMMSS}_{measurementname}_{usersuffix}.hdf5
             reps = measurement_parameters["repetitions"]
             power = measurement_parameters["powers"][0]
-            fcenter = vna_parameters["fcenter"]
             save_parameters = {
-                "datapath": pathlib.Path(stage.datapath) / "wheel",
-                "usersuffix": f"{fcenter:.3}",
+                "datapath": pathlib.Path(stage.datapath) / "exitB_rr",
+                "usersuffix": f"{fcenterlist[idx]}" + f"_{power}pow_{reps}reps",
                 "measurementname": measurement.__class__.__name__.lower(),
                 **measurement.dataspec,
             }

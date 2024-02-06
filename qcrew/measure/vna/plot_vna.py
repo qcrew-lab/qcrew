@@ -2,9 +2,7 @@ import h5py
 import matplotlib.pyplot as plt
 import numpy as np
 
-filepath = (
-    "C:/Users/qcrew/Desktop/qcrew/data/jonny/20220131/155337_vnasweep_4.5111GHz.hdf5"
-)
+filepath = rf"C:\Users\qcrew\Desktop\qcrew\data\cheddar\20240206\153812_vnasweep_6000000000.0_-15pow_1reps.hdf5"
 file = h5py.File(filepath, "r")
 data = file["data"]
 s21_mlog = data["s21_mlog"]

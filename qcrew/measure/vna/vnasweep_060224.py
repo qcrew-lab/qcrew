@@ -102,7 +102,7 @@ if __name__ == "__main__":
 
         fcenterlist = [6e9, 7e9] #[5.5e9, 5.75e9, 6e9, 6.25e9, 6.35e9, 6.45e9, 6.55e9, 6.75e9, 7e9]
         fspanlist = [1e6, 1e6]#[0.25e9, 0.25e9, 0.25e9, 0.25e9, 0.25e9, 0.25e9, 0.25e9, 0.25e9, 0.25e9]
-        pointslist = [1001, 1001#[20001, 20001, 20001, 20001, 20001, 20001, 20001, 20001, 20001]
+        pointslist = [1001, 1001]#[20001, 20001, 20001, 20001, 20001, 20001, 20001, 20001, 20001]
         
         num_runs = len(fcenterlist)
         for idx in range(num_runs):
@@ -158,7 +158,7 @@ if __name__ == "__main__":
             reps = measurement_parameters["repetitions"]
             power = measurement_parameters["powers"][0]
             save_parameters = {
-                "datapath": pathlib.Path(stage.datapath) / "exitB_rr",
+                "datapath": pathlib.Path(stage.datapath) / "cheddar",
                 "usersuffix": f"{fcenterlist[idx]}" + f"_{power}pow_{reps}reps",
                 "measurementname": measurement.__class__.__name__.lower(),
                 **measurement.dataspec,

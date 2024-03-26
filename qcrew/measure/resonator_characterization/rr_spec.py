@@ -44,19 +44,23 @@ class RRSpectroscopy(Experiment):
 
 if __name__ == "__main__":
 
-    x_start = -56e6#
-    x_stop = -42e6#
-    x_step = 0.02e6
+    x_start = -55e6  #
+    x_stop = -45e6  #
+    x_step = 0.08e6
 
     parameters = {
         "modes": ["RR"],
         "reps": 20000,
         "wait_time": 10000,
         "x_sweep": (int(x_start), int(x_stop + x_step / 2), int(x_step)),
+        "plot_quad" : "Z_AVG"
+
+        
     }
 
     plot_parameters = {
         "xlabel": "Resonator pulse frequency (Hz)",
+
     }
 
     experiment = RRSpectroscopy(**parameters)

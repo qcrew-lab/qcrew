@@ -71,6 +71,8 @@ class VNASweep:
         for rep in range(self.repetitions):
             self.vna.sweep()
             saver.save_data(self.vna.data, pos=(rep,))  # save to root group
+            for key, data in self.vna.data.items():
+                logger.info(f"{key}: {len(data)}")
             logger.info(f"Frequency sweep count = {rep+1} / {self.repetitions}")
 
     def _run_fpsweep(self, saver) -> None:
@@ -101,8 +103,10 @@ if __name__ == "__main__":
         vna.connect()
 
         # the routine below can handle multiple measurement runs at once
-        fcenterlist = [6.2035056e9, 4.67654e9, 6.644832e9]
-        fspanlist = [10e6, 5e6, 5e6]
+        # fcenterlist = [6.2035056e9, 4.67654e9, 6.644832e9]
+        # fspanlist = [10e6, 5e6, 5e6]
+        fcenterlist = [6e9]
+        fspanlist = [500e6]
         powerspeclist = [
             ({0.0, 10.0, -10.0}, 0),
             ({-20.0, -10.0}, 0),
@@ -124,7 +128,7 @@ if __name__ == "__main__":
                 # IF bandwidth (Hz), [1, 500000]
                 "bandwidth": 1e2,
                 # number of frequency sweep points, [2, 200001]
-                "sweep_points": 2501,
+                "sweep_points": 201,
                 # delay (s) between successive sweep points, [0.0, 100.0]
                 "sweep_delay": 1e-3,
                 # trace data to be displayed and acquired, max traces = 16
@@ -135,13 +139,14 @@ if __name__ == "__main__":
                 # if true, VNA will display averaged traces on the Shockline app
                 # if false, VNA will display the trace of the current run
                 "is_averaging": False,
+                # "averaging_count": 100,
             }
             vna.configure(**vna_parameters)
 
             # these parameters are looped over during the measurement
             measurement_parameters = {
                 # Number of sweep averages, must be an integer > 0
-                "repetitions": 400,
+                "repetitions": 2,
                 # Input powers at (<port1>, <port2>) (dBm), range [-30.0, 15.0]
                 # <portX> (X=1,2) can be a set {a, b,...}, tuple (st, stop, step), or constant x
                 # use set for discrete sweep points a, b, ...
@@ -151,10 +156,11 @@ if __name__ == "__main__":
                 # eg 1: powers = ((-30, 15, 5), 0) will sweep port 1 power from -30dBm to 15dBm inclusive in steps of 5dBm with port 2 power remaining constant at 0 dBm
                 # eg 2: powers = ({-15, 0, 15}, {-5, 0}) will result in sweep points (-15, -5), (-15, 0), (0, -5), (0, 0), (15, -5), (15, 0)
                 # eg 3: powers = (0, 0) will set both port powers to 0, no power sweep happens
-                "powers": powerspeclist[idx],
+                # "powers": powerspeclist[idx],
                 # total physical attenuation added to VNA ports, if any
                 # (port_1_attenuation, port_2_attenuation) in dB
                 "attenuation": (70.0, 0),
+                "powers": (0, 0),
             }
 
             # create measurement instance with instruments and measurement_parameters

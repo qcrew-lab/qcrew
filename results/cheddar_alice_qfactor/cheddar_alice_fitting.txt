@@ -1,0 +1,45 @@
+RESONATOR RESPONSE FIT TO EXTRACT QUALITY FACTORS 
+
+Datafile: 20240219/C:/Users/qcrew/Desktop/qcrew/data/cheddar/alice/20240219/160104_vnasweep_6078866250.0_0pow_1reps.hdf5
+Measurement mode: Reflection
+Repetitions: 1
+Number of sweep points: 2501
+Input power: -40.00 dBm
+
+Summary of results
+
+Resonance frequency: 6.079e+09
+Loaded quality factor: 6.958e+05
+Internal quality factor: 8.352e+05
+Absolute value of coupling quality factor: 4.176e+06
+Impedance mismatch angle phi: -0.0606
+Phase fit data selection: [0:2500]
+
+Calibration parameters
+Cable delay: 0.0000000e+00
+Off-resonant point: (-0.003047956-0.002037861j)
+Number of FWHM for phase fit: 3
+
+Lorentzian fit to get Ql guess
+Full width half maxmimum: 8.750e+03
+Resonance frequency: 6.079e+09
+Peak height: -0.00122
+Y offset: 0.00367
+Impedance mismatch angle: 0.06
+
+Phase fit of S21 around origin to extract Ql
+Phase Y offset: -3.08
+
+Circle fit
+Resonant point: (0.667, -0.0202)
+Off-resonant point: (1.0, 4.57e-06)
+Center: (0.834-0.0101j)
+Radius: 0.167
+Complex coupling quality factor: (4.17e+06-2.53e+05j)
+Radius after phi correction: 0.167
+
+Number of FWHM selected for fitting: 6
+Circle center: (-0.00256-0.00167j)
+Circle radius: 0.000611
+Phase fit of S21 around origin to extract Ql
+Resonant point after background removal: (0.667-0.0202j)
